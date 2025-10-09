@@ -1,0 +1,31 @@
+{
+  "corporales": {
+    "lipo body elite": {
+      "descripcion": "HIFU 12D + Cavitación + Radiofrecuencia + EMS Sculptor. Reduce grasa localizada y tonifica abdomen y cintura.",
+      "tecnologias": ["HIFU 12D", "Cavitación", "Radiofrecuencia", "EMS Sculptor"],
+      "precio": 664000
+    },
+    "push up": {
+      "descripcion": "Tonificación de glúteos con EMS Sculptor + RF. Mejora textura y firmeza.",
+      "tecnologias": ["EMS Sculptor", "Radiofrecuencia"],
+      "precio": 376000
+    },
+    "lipo express": {
+      "descripcion": "Reducción rápida localizada mediante cavitación y drenaje.",
+      "tecnologias": ["Cavitación", "Radiofrecuencia"],
+      "precio": 432000
+    }
+  },
+  "faciales": {
+    "face elite": {
+      "descripcion": "Lifting facial no invasivo con HIFU, RF y Pink Glow.",
+      "tecnologias": ["HIFU", "Radiofrecuencia", "Pink Glow"],
+      "precio": 358400
+    },
+    "limpieza facial full": {
+      "descripcion": "Limpieza profunda profesional con extracción y mascarilla purificante.",
+      "tecnologias": ["Alta Frecuencia", "Mascarilla purificante"],
+      "precio": 120000
+    }
+  }
+}
