@@ -1,35 +1,35 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import OpenAI from "openai";
 
 const app = express();
 app.use(bodyParser.json());
 
-// === VARIABLES DE ENTORNO ===
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "zara-bodyelite-token";
-const WHATSAPP_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// ✅ Token de verificación que pusiste en Meta
+const VERIFY_TOKEN = "bodyelite2024";
 
-// === CONFIGURAR OPENAI ===
-const client = new OpenAI({ apiKey: OPENAI_API_KEY });
+// ✅ Token de acceso de la API de WhatsApp (desde tu app de Meta)
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 
-// === WEBHOOK GET (verificación con Meta) ===
+// ✅ Configuración base de la API de WhatsApp Cloud
+const WHATSAPP_API_URL = "https://graph.facebook.com/v19.0";
+
+// --- ✅ Verificación del webhook (GET) ---
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente.");
+  if (mode && token === VERIFY_TOKEN) {
+    console.log("🟢 Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
+    console.warn("🔴 Error: Token de verificación inválido");
     res.sendStatus(403);
   }
 });
 
-// === WEBHOOK POST (mensajes entrantes) ===
+// --- ✅ Recepción de mensajes (POST) ---
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
@@ -40,59 +40,63 @@ app.post("/webhook", async (req, res) => {
       const messages = changes?.value?.messages;
 
       if (messages && messages.length > 0) {
-        const msg = messages[0];
-        const from = msg.from;
-        const text = msg.text?.body || "";
+        const message = messages[0];
+        const from = message.from; // número del cliente
+        const text = message.text?.body?.toLowerCase() || "";
 
-        console.log("📩 Mensaje recibido:", text, "de", from);
+        console.log(`💬 Mensaje recibido de ${from}: ${text}`);
 
-        // === Generar respuesta con IA (modelo Zara-BodyElite) ===
-        const prompt = `
-Eres Zara 💙, asistente inteligente de Body Elite Estética Avanzada (centro en Peñalolén, Chile).
-Tu tono es cálido, profesional y femenino. Responde en español.
-Ofreces ayuda sobre:
-- tratamientos faciales (Face Elite, Face Smart, Face Light, etc.)
-- tratamientos corporales (Lipo Body Elite, Push Up, Body Fitness, etc.)
-- reservas o evaluaciones gratuitas en https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9
-- promociones vigentes o beneficios de Body Elite.
-No inventes precios nuevos, usa los oficiales. Si no sabes algo, ofrece derivar a una asesora humana.
+        // --- 🤖 Respuesta básica ---
+        let reply = "";
 
-Usuario: ${text}
-Zara:
-`;
+        if (text.includes("hola") || text.includes("buenas")) {
+          reply = "👋 Hola! Soy el asistente virtual de *Body Elite*. ¿Quieres agendar una evaluación gratuita o conocer nuestros planes?";
+        } else if (text.includes("agenda") || text.includes("reserva")) {
+          reply = "📅 Puedes agendar directamente desde este link:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+        } else if (text.includes("plan") || text.includes("precio")) {
+          reply = "💎 Nuestros planes corporales y faciales están disponibles en bodyelite.cl, o puedo ayudarte a elegir uno según tus objetivos 💆‍♀️";
+        } else {
+          reply = "✨ Hola! Soy el bot de *Body Elite Estética Avanzada*. Escríbeme 'planes' o 'agenda' para comenzar 💬";
+        }
 
-        const completion = await client.chat.completions.create({
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.8,
-        });
-
-        const aiReply = completion.choices[0].message.content.trim();
-        console.log("🤖 Respuesta IA:", aiReply);
-
-        // === Enviar la respuesta al usuario ===
-        await fetch(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: from,
-            text: { body: aiReply },
-          }),
-        });
+        await sendWhatsAppMessage(from, reply);
       }
-    }
 
-    res.sendStatus(200);
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
+    }
   } catch (error) {
-    console.error("❌ Error en webhook:", error);
+    console.error("Error procesando mensaje:", error);
     res.sendStatus(500);
   }
 });
 
-// === PUERTO DE RENDER ===
+// --- ✅ Función para enviar mensajes a WhatsApp ---
+async function sendWhatsAppMessage(to, message) {
+  const payload = {
+    messaging_product: "whatsapp",
+    to,
+    text: { body: message },
+  };
+
+  const response = await fetch(`${WHATSAPP_API_URL}/1555268005502427/messages`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("❌ Error al enviar mensaje:", errorText);
+  } else {
+    console.log("✅ Mensaje enviado correctamente a", to);
+  }
+}
+
+// --- 🚀 Servidor en Render ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Servidor activo en puerto ${PORT}`));
