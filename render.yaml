@@ -7,3 +7,17 @@ services:
     plan: free
     branch: main
     autoDeploy: true
+
+    envVars:
+      - key: META_TOKEN
+        value: "TU_TOKEN_DE_META_AQUI"
+      - key: META_APP_ID
+        value: "TU_APP_ID_AQUI"
+      - key: META_APP_SECRET
+        value: "TU_APP_SECRET_AQUI"
+      - key: RESERVO_API_KEY
+        value: "TU_API_KEY_RESERVO_AQUI"
+      - key: RESERVO_URL
+        value: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+      - key: NODE_ENV
+        value: "production"
