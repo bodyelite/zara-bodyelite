@@ -9,15 +9,24 @@ services:
     autoDeploy: true
 
     envVars:
+      # META (Agente IA WhatsApp)
       - key: META_TOKEN
-        value: "TU_TOKEN_DE_META_AQUI"
+        value: "EAAQZBWPqKZAhsBACfZCN7c3k4ZBVoEGALrjZATsb0cCZBjlXfJmL0fFQqlZCO4we3btmOkM4ZCAh7sv89F2vnhPZCV7lPZBVh9eVxZBAhKgAFVzYKy8pl1MV2cRga6FnVKxAJp9P9HZCE4dQi8XvwpMZA4OZAg63qUchvbjaHnYZAVj4r5jZCUZCyt6b"
       - key: META_APP_ID
-        value: "TU_APP_ID_AQUI"
+        value: "1058026462824251"
       - key: META_APP_SECRET
-        value: "TU_APP_SECRET_AQUI"
+        value: "e13e5fa067bca4f186d0a47c5b3de66e"
+      - key: META_PHONE_ID
+        value: "422524617608742"
+      - key: META_VERSION
+        value: "v20.0"
+
+      # RESERVO (Agendamiento Body Elite)
       - key: RESERVO_API_KEY
-        value: "TU_API_KEY_RESERVO_AQUI"
+        value: "f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
       - key: RESERVO_URL
         value: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+
+      # General
       - key: NODE_ENV
         value: "production"
