@@ -1,102 +1,134 @@
+// index.js — Bot Zara Body Elite (Render versión token fijo)
 import express from "express";
+import axios from "axios";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
 
 const app = express();
 app.use(bodyParser.json());
 
-// ✅ Token de verificación que pusiste en Meta
-const VERIFY_TOKEN = "bodyelite2024";
+// === CONFIGURACIÓN FIJA ===
+const VERIFY_TOKEN = "zara_bodyelite_verify"; // Token fijo para verificación Meta
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.PAGE_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID || "840360109156943";
+const PORT = process.env.PORT || 10000;
 
-// ✅ Token de acceso de la API de WhatsApp (desde tu app de Meta)
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-
-// ✅ Configuración base de la API de WhatsApp Cloud
-const WHATSAPP_API_URL = "https://graph.facebook.com/v19.0";
-
-// --- ✅ Verificación del webhook (GET) ---
+// === VERIFICACIÓN WEBHOOK ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
   if (mode && token === VERIFY_TOKEN) {
-    console.log("🟢 Webhook verificado correctamente");
+    console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
-    console.warn("🔴 Error: Token de verificación inválido");
+    console.log("❌ Error: Token de verificación inválido");
     res.sendStatus(403);
   }
 });
 
-// --- ✅ Recepción de mensajes (POST) ---
+// === RECEPCIÓN DE MENSAJES ===
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
+    if (body.object) {
+      const entry = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      if (entry) {
+        const from = entry.from;
+        const text = entry.text?.body?.toLowerCase() || "";
 
-    if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const messages = changes?.value?.messages;
+        console.log("📩 Mensaje recibido de", from, ":", text);
 
-      if (messages && messages.length > 0) {
-        const message = messages[0];
-        const from = message.from; // número del cliente
-        const text = message.text?.body?.toLowerCase() || "";
-
-        console.log(`💬 Mensaje recibido de ${from}: ${text}`);
-
-        // --- 🤖 Respuesta básica ---
         let reply = "";
 
+        // === RESPUESTAS ===
         if (text.includes("hola") || text.includes("buenas")) {
-          reply = "👋 Hola! Soy el asistente virtual de *Body Elite*. ¿Quieres agendar una evaluación gratuita o conocer nuestros planes?";
-        } else if (text.includes("agenda") || text.includes("reserva")) {
-          reply = "📅 Puedes agendar directamente desde este link:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-        } else if (text.includes("plan") || text.includes("precio")) {
-          reply = "💎 Nuestros planes corporales y faciales están disponibles en bodyelite.cl, o puedo ayudarte a elegir uno según tus objetivos 💆‍♀️";
+          reply =
+            "👋 ¡Hola! Soy Zara, asistente virtual de Body Elite.\n" +
+            "La *lipoescultura no invasiva* ayuda a moldear tu cuerpo sin cirugía, combinando *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor*.\n" +
+            "💬 Agenda tu *evaluación gratuita con asistencia IA* y descubre tu plan ideal.\n¿Deseas que te ayude a agendar?";
+        } else if (
+          text.includes("celulitis") ||
+          text.includes("flacidez") ||
+          text.includes("piernas")
+        ) {
+          reply =
+            "✨ Podemos ayudarte con *BODY TENSOR* o *LIPO REDUCTIVA*, ideales para mejorar textura y firmeza con cavitación y radiofrecuencia.\n" +
+            "💬 Agenda tu *evaluación gratuita con asistencia IA* y descubre tu plan ideal en Body Elite.\n¿Deseas que te ayude a agendar?";
+        } else if (
+          text.includes("cintura") ||
+          text.includes("moldear") ||
+          text.includes("abdomen")
+        ) {
+          reply =
+            "🔥 Te recomiendo *LIPO BODY ELITE*, con *HIFU 12D + Cavitación + EMS Sculptor*, ideal para definir cintura y reducir grasa localizada.\n" +
+            "💬 Agenda tu *evaluación gratuita con asistencia IA*.\n¿Deseas que te ayude a agendar?";
+        } else if (
+          text.includes("sin cirugía") ||
+          text.includes("sin bisturí")
+        ) {
+          reply =
+            "💎 En Body Elite usamos tecnología estética avanzada para modelar el cuerpo *sin cirugía ni dolor*, con resultados visibles desde las primeras sesiones.\n" +
+            "💬 Agenda tu *evaluación gratuita con asistencia IA*.\n¿Deseas que te ayude a agendar?";
+        } else if (
+          text.includes("sí") ||
+          text.includes("agenda") ||
+          text.includes("quiero") ||
+          text.includes("reserva")
+        ) {
+          reply =
+            "Perfecto 💫 selecciona aquí para ver los horarios disponibles:\n" +
+            "🗓️ *[Agenda Body Elite](https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9)*";
+        } else if (
+          text.includes("humano") ||
+          text.includes("asesora") ||
+          text.includes("persona") ||
+          text.includes("llámenme") ||
+          text.includes("contacto")
+        ) {
+          reply =
+            "Te conectaré con una de nuestras asesoras 💬\n" +
+            "👉 [Hablar con asesora](https://wa.me/56983300262)";
+        } else if (
+          text.includes("dirección") ||
+          text.includes("dónde") ||
+          text.includes("ubicación")
+        ) {
+          reply =
+            "📍 Nos encuentras en *Av. Las Perdices Nº2990, Local 23, Peñalolén*.\n🕓 Horarios: *Lun–Vie 9:30–20:00* / *Sáb 9:30–13:00*.";
         } else {
-          reply = "✨ Hola! Soy el bot de *Body Elite Estética Avanzada*. Escríbeme 'planes' o 'agenda' para comenzar 💬";
+          reply =
+            "Soy Zara 💙, asistente virtual de Body Elite.\nPuedo orientarte sobre tratamientos, precios o agendar tu *evaluación gratuita con asistencia IA*.\n¿Te gustaría conocer nuestros planes?";
         }
 
-        await sendWhatsAppMessage(from, reply);
-      }
+        // === ENVÍO DE RESPUESTA ===
+        await axios.post(
+          `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
+          {
+            messaging_product: "whatsapp",
+            to: from,
+            type: "text",
+            text: { body: reply },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
+        console.log("✅ Respuesta enviada a", from);
+      }
       res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
-    }
-  } catch (error) {
-    console.error("Error procesando mensaje:", error);
+    } else res.sendStatus(404);
+  } catch (err) {
+    console.error("❌ Error en webhook:", err.message);
     res.sendStatus(500);
   }
 });
 
-// --- ✅ Función para enviar mensajes a WhatsApp ---
-async function sendWhatsAppMessage(to, message) {
-  const payload = {
-    messaging_product: "whatsapp",
-    to,
-    text: { body: message },
-  };
-
-  const response = await fetch(`${WHATSAPP_API_URL}/1555268005502427/messages`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("❌ Error al enviar mensaje:", errorText);
-  } else {
-    console.log("✅ Mensaje enviado correctamente a", to);
-  }
-}
-
-// --- 🚀 Servidor en Render ---
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Servidor activo en puerto ${PORT}`));
+// === INICIO DE SERVIDOR ===
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor activo en puerto ${PORT}`);
+});
