@@ -1,28 +1,29 @@
-// index.js — Bot Body Elite versión estable para Render + Meta verificado
 import express from "express";
-import axios from "axios";
 import bodyParser from "body-parser";
+import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
-// === VARIABLES DE ENTORNO ===
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "zara_bodyelite_verify";
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID || "840360109156943";
-const PORT = process.env.PORT || 10000;
+// Variables de entorno
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-// === ENDPOINT DE VERIFICACIÓN WEBHOOK ===
+// === VERIFICACIÓN DEL WEBHOOK ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
   if (mode && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente");
+    console.log("🟢 Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
-    console.log("❌ Verificación fallida");
+    console.error("🔴 Falló la verificación del webhook");
     res.sendStatus(403);
   }
 });
@@ -33,97 +34,18 @@ app.post("/webhook", async (req, res) => {
     const body = req.body;
 
     if (body.object) {
-      if (
-        body.entry &&
-        body.entry[0].changes &&
-        body.entry[0].changes[0].value.messages &&
-        body.entry[0].changes[0].value.messages[0]
-      ) {
-        const message = body.entry[0].changes[0].value.messages[0];
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const value = changes?.value;
+      const message = value?.messages?.[0];
+
+      if (message && message.text) {
         const from = message.from;
-        const text = message.text?.body?.toLowerCase() || "";
+        const msgBody = message.text.body;
+        console.log(`📩 Mensaje recibido de ${from}: ${msgBody}`);
 
-        console.log("📩 Mensaje recibido de", from, ":", text);
-
-        // === RESPUESTAS AUTOMÁTICAS ===
-        let reply = "";
-
-        if (
-          text.includes("hola") ||
-          text.includes("buenas") ||
-          text.includes("saludo")
-        ) {
-          reply =
-            "👋 ¡Hola! Soy la asistente virtual de *Body Elite*.\n" +
-            "La *lipoescultura no invasiva* combina *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor* para moldear tu cuerpo sin cirugía.\n" +
-            "💬 ¿Te gustaría agendar tu *evaluación gratuita*?";
-        } else if (
-          text.includes("celulitis") ||
-          text.includes("flacidez") ||
-          text.includes("piernas")
-        ) {
-          reply =
-            "✨ Podemos ayudarte con *BODY TENSOR* o *LIPO REDUCTIVA*, tratamientos que mejoran textura y firmeza de la piel.\n" +
-            "💬 ¿Quieres que te ayude a reservar tu evaluación gratuita?";
-        } else if (
-          text.includes("cintura") ||
-          text.includes("moldear") ||
-          text.includes("abdomen") ||
-          text.includes("reductor")
-        ) {
-          reply =
-            "🔥 Te recomiendo el plan *LIPO BODY ELITE*, con *HIFU 12D + Cavitación + EMS Sculptor*, ideal para definir cintura y reducir grasa localizada.\n" +
-            "💬 ¿Deseas agendar tu evaluación gratuita?";
-        } else if (
-          text.includes("agenda") ||
-          text.includes("quiero") ||
-          text.includes("sí") ||
-          text.includes("reserva")
-        ) {
-          reply =
-            "Perfecto 💫 selecciona aquí para ver los horarios disponibles:\n" +
-            "🗓️ *[Agenda Body Elite](https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9)*";
-        } else if (
-          text.includes("humano") ||
-          text.includes("asesora") ||
-          text.includes("persona") ||
-          text.includes("contacto")
-        ) {
-          reply =
-            "Te conectaré con una asesora 💬\n" +
-            "👉 [Hablar con asesora](https://wa.me/56983300262)";
-        } else if (
-          text.includes("dirección") ||
-          text.includes("ubicación") ||
-          text.includes("dónde")
-        ) {
-          reply =
-            "📍 Nos encuentras en *Av. Las Perdices Nº2990, Local 23, Peñalolén*.\n🕘 Horario: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.";
-        } else {
-          reply =
-            "Soy la asistente virtual de Body Elite 💙.\nPuedo orientarte sobre tratamientos, precios o ayudarte a agendar tu *evaluación gratuita con asistencia IA*.\n¿Quieres que te ayude a empezar?";
-        }
-
-        // === ENVÍO DE RESPUESTA ===
-        await axios.post(
-          `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
-          {
-            messaging_product: "whatsapp",
-            to: from,
-            type: "text",
-            text: { body: reply },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        console.log("✅ Respuesta enviada a", from);
+        await sendMessage(from, `👋 Hola, soy Zara de Body Elite. ¿Cómo puedo ayudarte hoy?`);
       }
-
       res.sendStatus(200);
     } else {
       res.sendStatus(404);
@@ -134,7 +56,34 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// === INICIO DE SERVIDOR ===
+// === FUNCIÓN PARA ENVIAR MENSAJES ===
+async function sendMessage(to, text) {
+  const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
+
+  try {
+    await axios.post(
+      url,
+      {
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: text },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(`✅ Mensaje enviado a ${to}: ${text}`);
+  } catch (error) {
+    console.error("❌ Error al enviar mensaje:", error.response?.data || error.message);
+  }
+}
+
+// === SERVIDOR EN PUERTO ===
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor activo en puerto ${PORT}`);
 });
