@@ -1,137 +1,108 @@
 import express from "express";
 import bodyParser from "body-parser";
-import axios from "axios";
-import dotenv from "dotenv";
 import fs from "fs";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
 
 dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
+// Cargar conocimiento local
+const conocimiento = JSON.parse(fs.readFileSync("./base_conocimiento.json", "utf8"));
+
+// Variables de entorno
+const TOKEN = process.env.WHATSAPP_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const FILE_PATH = "./conversaciones.json";
+const PHONE_ID = process.env.PHONE_ID;
+const AI_ENDPOINT = process.env.AI_ENDPOINT || "";
 
-// Cargar memoria persistente
-let conversaciones = {};
-if (fs.existsSync(FILE_PATH)) {
-  try {
-    conversaciones = JSON.parse(fs.readFileSync(FILE_PATH, "utf8"));
-    console.log("🧠 Memoria cargada desde disco.");
-  } catch (e) {
-    console.error("⚠️ Error al cargar conversaciones:", e.message);
-  }
-}
+// Función generadora de respuesta
+async function generarRespuestaZara(mensaje) {
+  const msg = mensaje.toLowerCase().trim();
 
-// Guardar en disco
-function guardarConversaciones() {
-  try {
-    fs.writeFileSync(FILE_PATH, JSON.stringify(conversaciones, null, 2));
-  } catch (e) {
-    console.error("⚠️ Error al guardar conversaciones:", e.message);
-  }
-}
+  // 1️⃣ Interacciones básicas
+  if (msg.match(/hola|buenas|saludo/)) return conocimiento.mensajes.saludo;
+  if (msg.match(/ayuda|info|tratamiento|precio/)) return conocimiento.mensajes.ayuda;
 
-// === ENTRENAMIENTO DE ZARA ===
-function generarRespuestaZara(texto, historial = []) {
-  const msg = texto.toLowerCase();
-  const ultimoTema = historial.slice(-1)[0]?.tema || null;
-  let respuesta = "";
+  // 2️⃣ Datos de la clínica
+  if (msg.match(/ubicacion|donde|direccion/)) return conocimiento.mensajes.ubicacion;
+  if (msg.match(/hora|horario|abren|cierran/)) return conocimiento.clinica.horario;
+  if (msg.match(/contacto|telefono|whatsapp/)) return `📞 Puedes escribirnos al ${conocimiento.clinica.contacto}`;
+  if (msg.match(/reserva|agendar|agenda|cita/)) return conocimiento.mensajes.reserva;
 
-  if (msg.includes("hola") || msg.includes("buenas")) {
-    respuesta =
-      "👋 ¡Hola! Soy Zara, asistente virtual de Body Elite Estética Avanzada. ¿Deseas conocer nuestros tratamientos corporales o faciales?";
-  } else if (msg.includes("lipo")) {
-    respuesta =
-      "💎 Nuestro tratamiento *Lipo Body Elite* combina HIFU 12D, Cavitación y EMS Sculptor. El pack de 10 sesiones tiene un valor de $664 000 CLP e incluye diagnóstico gratuito.";
-    historial.push({ tema: "lipo" });
-  } else if (msg.includes("botox") || msg.includes("antiage") || msg.includes("facial")) {
-    respuesta =
-      "💆‍♀️ Para rejuvenecimiento facial te recomiendo el plan *FACE ELITE*, que combina Pink Glow, RF Fraccional y HIFU focal. Valor $358 400 CLP (6 sesiones).";
-    historial.push({ tema: "facial" });
-  } else if (msg.includes("fitness") || msg.includes("sculptor")) {
-    respuesta =
-      "💪 El plan *BODY FITNESS* utiliza EMS Sculptor para tonificar abdomen, glúteos y piernas. Equivale a 20 000 contracciones por sesión. Pack 8 sesiones $360 000 CLP.";
-    historial.push({ tema: "fitness" });
-  } else if (msg.includes("celulitis") || msg.includes("flacidez")) {
-    respuesta =
-      "✨ El *BODY TENSOR* es ideal para tratar flacidez y celulitis con Radiofrecuencia y Prosculpt. Incluye 8 sesiones por $232 000 CLP.";
-    historial.push({ tema: "tensor" });
-  } else if (msg.includes("precio") || msg.includes("valor")) {
-    if (ultimoTema === "lipo") respuesta = "💰 El plan *Lipo Body Elite* cuesta $664 000 CLP (10 sesiones).";
-    else if (ultimoTema === "facial") respuesta = "💰 El plan *FACE ELITE* tiene un valor de $358 400 CLP (6 sesiones).";
-    else if (ultimoTema === "fitness") respuesta = "💰 El plan *BODY FITNESS* tiene un valor de $360 000 CLP (8 sesiones).";
-    else if (ultimoTema === "tensor") respuesta = "💰 El plan *BODY TENSOR* tiene un valor de $232 000 CLP (8 sesiones).";
-    else respuesta = "💰 Los precios varían según el plan. ¿Buscas facial o corporal?";
-  } else if (msg.includes("agenda") || msg.includes("diagnóstico")) {
-    if (ultimoTema)
-      respuesta = `📅 Perfecto, puedo ayudarte a agendar tu diagnóstico gratuito para el plan ${ultimoTema.toUpperCase()}.`;
-    respuesta +=
-      "\nReserva directamente aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  } else if (msg.includes("humano") || msg.includes("asesora") || msg.includes("persona")) {
-    respuesta =
-      "Te conectaré con una asesora 💬 👉 [Abrir chat con asesora](https://wa.me/56983300262)";
-  } else if (msg.includes("ubicación") || msg.includes("dirección")) {
-    respuesta =
-      "📍 Estamos en *Av. Las Perdices Nº2990, Local 23, Peñalolén*. Horarios: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.";
-  } else {
-    respuesta =
-      "💫 Soy Zara IA, asistente de Body Elite. Puedo ayudarte con tratamientos, precios o agendamiento. ¿Qué te gustaría mejorar hoy: rostro o cuerpo?";
+  // 3️⃣ Coincidencias exactas con planes
+  for (const [nombre, plan] of Object.entries(conocimiento.planes)) {
+    if (msg.includes(nombre.split(" ")[0]) || msg.includes(nombre.split(" ")[1])) {
+      return `💎 *${nombre.toUpperCase()}*\n${plan.descripcion}\n💰 Valor: $${plan.precio.toLocaleString("es-CL")} CLP\n✨ ${plan.beneficios}`;
+    }
   }
 
-  return { respuesta, historial };
+  // 4️⃣ Temas generales
+  if (msg.match(/grasa|abdomen|reducir|bajar|moldear|cintura|lipo/))
+    return `🔥 Nuestro tratamiento *Lipo Body Elite* combina HIFU 12D, Cavitación y EMS Sculptor para reducción y tonificación. Incluye diagnóstico gratuito.`;
+
+  if (msg.match(/flacidez|firmeza|tonificar|musculo/))
+    return `💪 Podrías evaluar *Body Tensor* o *Body Fitness*, ambos con tecnología Sculptor para mejorar firmeza y tono muscular. ¿Quieres que te explique la diferencia?`;
+
+  if (msg.match(/rostro|cara|arrugas|rejuvenecer|piel|facial/))
+    return `✨ Te recomiendo *Face Elite* o *Face Light*, según tus objetivos. Ambas mejoran colágeno y textura de piel con Pink Glow y Radiofrecuencia.`;
+
+  // 5️⃣ Conexión IA externa
+  if (AI_ENDPOINT) {
+    try {
+      const aiResponse = await fetch(AI_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: msg })
+      });
+      const data = await aiResponse.json();
+      if (data && data.reply) return data.reply;
+    } catch (e) {
+      console.error("Error consultando IA externa:", e);
+    }
+  }
+
+  // 6️⃣ Fallback
+  return conocimiento.mensajes.error;
 }
 
-// === VERIFICACIÓN WEBHOOK ===
+// ✅ Verificación Webhook
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente");
-    res.status(200).send(challenge);
-  } else res.sendStatus(403);
+  if (mode && token === VERIFY_TOKEN) return res.status(200).send(challenge);
+  res.sendStatus(403);
 });
 
-// === RECEPCIÓN DE MENSAJES ===
+// 📩 Recepción de mensajes
 app.post("/webhook", async (req, res) => {
   try {
-    const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-    const from = message?.from;
-    const text = message?.text?.body;
-    if (!text) return res.sendStatus(200);
-
-    console.log(`💬 Mensaje de ${from}: ${text}`);
-    const historial = conversaciones[from] || [];
-    const { respuesta, historial: nuevoHistorial } = generarRespuestaZara(text, historial);
-    conversaciones[from] = nuevoHistorial;
-    guardarConversaciones();
-
-    await axios.post(
-      `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`,
-      {
-        messaging_product: "whatsapp",
-        to: from,
-        type: "text",
-        text: { body: respuesta },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    console.log(`🤖 Zara → ${from}: ${respuesta}`);
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const messages = changes?.value?.messages;
+    if (messages) {
+      const msgBody = messages[0].text?.body;
+      const from = messages[0].from;
+      console.log(`📩 Mensaje recibido de ${from}: ${msgBody}`);
+      const respuesta = await generarRespuestaZara(msgBody);
+      await fetch(`https://graph.facebook.com/v18.0/${PHONE_ID}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: from,
+          text: { body: respuesta }
+        })
+      });
+    }
     res.sendStatus(200);
-  } catch (error) {
-    console.error("🚨 Error en webhook:", error.response?.data || error.message);
+  } catch (err) {
+    console.error("❌ Error en webhook:", err);
     res.sendStatus(500);
   }
 });
 
-// === SERVIDOR ===
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT}`));

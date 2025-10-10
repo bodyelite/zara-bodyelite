@@ -1,0 +1,50 @@
+{
+  "clinica": {
+    "nombre": "Body Elite Estética Avanzada",
+    "direccion": "Av. Las Perdices Nº2990, Local 23. Peñalolén",
+    "horario": "Lun–Vie 9:30–20:00; Sáb 9:30–13:00",
+    "contacto": "+56 9 8330 4436",
+    "reserva_url": "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+
+  "planes": {
+    "lipo body elite": {
+      "descripcion": "Combinación avanzada de HIFU 12D, Cavitación y EMS Sculptor para reducción de grasa, tonificación y definición corporal.",
+      "precio": 664000,
+      "beneficios": "Reduce grasa localizada, mejora tonicidad y define contornos. Incluye diagnóstico gratuito."
+    },
+    "lipo reductiva": {
+      "descripcion": "Tratamiento focalizado con Cavitación y Radiofrecuencia para reducir centímetros.",
+      "precio": 480000,
+      "beneficios": "Ideal para abdomen, cintura o piernas con acumulación grasa leve o moderada."
+    },
+    "body tensor": {
+      "descripcion": "Radiofrecuencia y Sculptor para firmeza, flacidez y textura de piel.",
+      "precio": 232000,
+      "beneficios": "Mejora elasticidad y aspecto de la piel. Recomendado post-lipo o post-parto."
+    },
+    "body fitness": {
+      "descripcion": "Programa con EMS Sculptor para tonificar, fortalecer y definir musculatura.",
+      "precio": 360000,
+      "beneficios": "Simula hasta 20.000 contracciones por sesión. Ideal para abdomen o glúteos."
+    },
+    "face elite": {
+      "descripcion": "Pink Glow, Radiofrecuencia Fraccional y HIFU focal para rejuvenecimiento facial completo.",
+      "precio": 358400,
+      "beneficios": "Reafirma, estimula colágeno y mejora la textura. Ideal desde los 30 años."
+    },
+    "face light": {
+      "descripcion": "Limpieza, exfoliación y radiofrecuencia suave para piel joven o de mantenimiento.",
+      "precio": 128800,
+      "beneficios": "Renueva, limpia y da luminosidad sin tiempos de recuperación."
+    }
+  },
+
+  "mensajes": {
+    "saludo": "👋 Hola, soy Zara IA, asistente de Body Elite. ¿Cómo puedo ayudarte hoy?",
+    "ayuda": "Puedo orientarte con tratamientos, precios, agendamiento o diagnóstico gratuito 💎. ¿Qué te gustaría mejorar: rostro o cuerpo?",
+    "error": "Perdón 😅 no te entendí del todo. ¿Buscas algo facial o corporal?",
+    "ubicacion": "📍 Estamos en Av. Las Perdices Nº2990, Local 23 (Peñalolén). Te esperamos de lunes a viernes 9:30–20:00 y sábado 9:30–13:00.",
+    "reserva": "✨ Puedes agendar directamente desde aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  }
+}
