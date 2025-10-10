@@ -1,4 +1,4 @@
-// index.js — Bot Zara Body Elite (Render versión token fijo)
+// index.js — Bot Body Elite versión estable para Render + Meta verificado
 import express from "express";
 import axios from "axios";
 import bodyParser from "body-parser";
@@ -6,13 +6,13 @@ import bodyParser from "body-parser";
 const app = express();
 app.use(bodyParser.json());
 
-// === CONFIGURACIÓN FIJA ===
-const VERIFY_TOKEN = "zara_bodyelite_verify"; // Token fijo para verificación Meta
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.PAGE_ACCESS_TOKEN;
+// === VARIABLES DE ENTORNO ===
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "zara_bodyelite_verify";
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID || "840360109156943";
 const PORT = process.env.PORT || 10000;
 
-// === VERIFICACIÓN WEBHOOK ===
+// === ENDPOINT DE VERIFICACIÓN WEBHOOK ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -22,7 +22,7 @@ app.get("/webhook", (req, res) => {
     console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
-    console.log("❌ Error: Token de verificación inválido");
+    console.log("❌ Verificación fallida");
     res.sendStatus(403);
   }
 });
@@ -31,49 +31,53 @@ app.get("/webhook", (req, res) => {
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
+
     if (body.object) {
-      const entry = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      if (entry) {
-        const from = entry.from;
-        const text = entry.text?.body?.toLowerCase() || "";
+      if (
+        body.entry &&
+        body.entry[0].changes &&
+        body.entry[0].changes[0].value.messages &&
+        body.entry[0].changes[0].value.messages[0]
+      ) {
+        const message = body.entry[0].changes[0].value.messages[0];
+        const from = message.from;
+        const text = message.text?.body?.toLowerCase() || "";
 
         console.log("📩 Mensaje recibido de", from, ":", text);
 
+        // === RESPUESTAS AUTOMÁTICAS ===
         let reply = "";
 
-        // === RESPUESTAS ===
-        if (text.includes("hola") || text.includes("buenas")) {
+        if (
+          text.includes("hola") ||
+          text.includes("buenas") ||
+          text.includes("saludo")
+        ) {
           reply =
-            "👋 ¡Hola! Soy Zara, asistente virtual de Body Elite.\n" +
-            "La *lipoescultura no invasiva* ayuda a moldear tu cuerpo sin cirugía, combinando *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor*.\n" +
-            "💬 Agenda tu *evaluación gratuita con asistencia IA* y descubre tu plan ideal.\n¿Deseas que te ayude a agendar?";
+            "👋 ¡Hola! Soy la asistente virtual de *Body Elite*.\n" +
+            "La *lipoescultura no invasiva* combina *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor* para moldear tu cuerpo sin cirugía.\n" +
+            "💬 ¿Te gustaría agendar tu *evaluación gratuita*?";
         } else if (
           text.includes("celulitis") ||
           text.includes("flacidez") ||
           text.includes("piernas")
         ) {
           reply =
-            "✨ Podemos ayudarte con *BODY TENSOR* o *LIPO REDUCTIVA*, ideales para mejorar textura y firmeza con cavitación y radiofrecuencia.\n" +
-            "💬 Agenda tu *evaluación gratuita con asistencia IA* y descubre tu plan ideal en Body Elite.\n¿Deseas que te ayude a agendar?";
+            "✨ Podemos ayudarte con *BODY TENSOR* o *LIPO REDUCTIVA*, tratamientos que mejoran textura y firmeza de la piel.\n" +
+            "💬 ¿Quieres que te ayude a reservar tu evaluación gratuita?";
         } else if (
           text.includes("cintura") ||
           text.includes("moldear") ||
-          text.includes("abdomen")
+          text.includes("abdomen") ||
+          text.includes("reductor")
         ) {
           reply =
-            "🔥 Te recomiendo *LIPO BODY ELITE*, con *HIFU 12D + Cavitación + EMS Sculptor*, ideal para definir cintura y reducir grasa localizada.\n" +
-            "💬 Agenda tu *evaluación gratuita con asistencia IA*.\n¿Deseas que te ayude a agendar?";
+            "🔥 Te recomiendo el plan *LIPO BODY ELITE*, con *HIFU 12D + Cavitación + EMS Sculptor*, ideal para definir cintura y reducir grasa localizada.\n" +
+            "💬 ¿Deseas agendar tu evaluación gratuita?";
         } else if (
-          text.includes("sin cirugía") ||
-          text.includes("sin bisturí")
-        ) {
-          reply =
-            "💎 En Body Elite usamos tecnología estética avanzada para modelar el cuerpo *sin cirugía ni dolor*, con resultados visibles desde las primeras sesiones.\n" +
-            "💬 Agenda tu *evaluación gratuita con asistencia IA*.\n¿Deseas que te ayude a agendar?";
-        } else if (
-          text.includes("sí") ||
           text.includes("agenda") ||
           text.includes("quiero") ||
+          text.includes("sí") ||
           text.includes("reserva")
         ) {
           reply =
@@ -83,22 +87,21 @@ app.post("/webhook", async (req, res) => {
           text.includes("humano") ||
           text.includes("asesora") ||
           text.includes("persona") ||
-          text.includes("llámenme") ||
           text.includes("contacto")
         ) {
           reply =
-            "Te conectaré con una de nuestras asesoras 💬\n" +
+            "Te conectaré con una asesora 💬\n" +
             "👉 [Hablar con asesora](https://wa.me/56983300262)";
         } else if (
           text.includes("dirección") ||
-          text.includes("dónde") ||
-          text.includes("ubicación")
+          text.includes("ubicación") ||
+          text.includes("dónde")
         ) {
           reply =
-            "📍 Nos encuentras en *Av. Las Perdices Nº2990, Local 23, Peñalolén*.\n🕓 Horarios: *Lun–Vie 9:30–20:00* / *Sáb 9:30–13:00*.";
+            "📍 Nos encuentras en *Av. Las Perdices Nº2990, Local 23, Peñalolén*.\n🕘 Horario: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.";
         } else {
           reply =
-            "Soy Zara 💙, asistente virtual de Body Elite.\nPuedo orientarte sobre tratamientos, precios o agendar tu *evaluación gratuita con asistencia IA*.\n¿Te gustaría conocer nuestros planes?";
+            "Soy la asistente virtual de Body Elite 💙.\nPuedo orientarte sobre tratamientos, precios o ayudarte a agendar tu *evaluación gratuita con asistencia IA*.\n¿Quieres que te ayude a empezar?";
         }
 
         // === ENVÍO DE RESPUESTA ===
@@ -120,10 +123,13 @@ app.post("/webhook", async (req, res) => {
 
         console.log("✅ Respuesta enviada a", from);
       }
+
       res.sendStatus(200);
-    } else res.sendStatus(404);
-  } catch (err) {
-    console.error("❌ Error en webhook:", err.message);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (error) {
+    console.error("❌ Error en webhook:", error.message);
     res.sendStatus(500);
   }
 });
