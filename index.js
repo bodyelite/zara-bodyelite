@@ -2,168 +2,133 @@ import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
+
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
-// === VARIABLES DE ENTORNO ===
-const TOKEN = process.env.ACCESS_TOKEN;
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bodyelitezara";
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 
-const RESERVO_LINK =
-  "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-
-// === MEMORIA TEMPORAL ===
-const memoriaUsuarios = {};
-
-// === FUNCIONES ===
-async function sendMessage(to, text) {
-  await axios.post(
-    `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`,
-    {
-      messaging_product: "whatsapp",
-      to,
-      text: { body: text },
-    },
-    { headers: { Authorization: `Bearer ${TOKEN}` } }
-  );
-}
-
-function detectarNombre(texto) {
-  const match = texto.match(/(?:soy|me llamo|mi nombre es)\s+([A-ZÁÉÍÓÚÑa-záéíóúñ]+)/i);
-  return match ? match[1].trim() : null;
-}
-
-function detectarIntencion(msg) {
-  const texto = msg.toLowerCase();
-
-  if (texto.includes("hola") || texto.includes("buenas") || texto.includes("zara"))
-    return "saludo";
-
-  if (
-    texto.includes("rostro") ||
-    texto.includes("cara") ||
-    texto.includes("arruga") ||
-    texto.includes("verme joven") ||
-    texto.includes("flacidez facial") ||
-    texto.includes("piel")
-  )
-    return "rostro";
-
-  if (
-    texto.includes("cuerpo") ||
-    texto.includes("abdomen") ||
-    texto.includes("guata") ||
-    texto.includes("grasa") ||
-    texto.includes("lipo") ||
-    texto.includes("celulitis") ||
-    texto.includes("reductor") ||
-    texto.includes("tonificar")
-  )
-    return "cuerpo";
-
-  if (texto.includes("hifu")) return "hifu";
-  if (texto.includes("sculptor")) return "sculptor";
-  if (texto.includes("cavitacion") || texto.includes("cavitación")) return "cavitacion";
-  if (texto.includes("resultado") || texto.includes("experiencia")) return "resultados";
-  if (texto.includes("agenda") || texto.includes("hora") || texto.includes("reserva"))
-    return "agenda";
-
-  return "noEntiende";
-}
-
+// Respuestas base
 const respuestas = {
-  saludo: [
-    "Hola 🌸 Soy *Zara IA*, asistente virtual de Body Elite. Puedo ayudarte a elegir el mejor tratamiento según lo que quieras mejorar. ¿Qué parte te gustaría trabajar: rostro o cuerpo?"
-  ],
-  rostro: [
-    "💆‍♀️ Para rostro tenemos varias opciones según lo que busques:\n\n• *Face Light* $128.800 → limpieza profunda + LED.\n• *Face Smart* $198.400 → mejora textura y tono.\n• *Face Antiage* $281.600 → lifting sin bisturí.\n• *Face Elite* $358.400 → protocolo completo con radiofrecuencia y HIFU facial.\n\nMuchas pacientes notan piel más firme y luminosa desde la primera sesión ✨.\n📅 Puedes agendar tu diagnóstico gratuito acá 👉 " +
-      RESERVO_LINK
-  ],
-  cuerpo: [
-    "💪 Te cuento 💙 los planes más solicitados para cuerpo son:\n\n• *Lipo Body Elite* $664.000 → HIFU 12D + Cavitación + EMS Sculptor para moldear y tonificar.\n• *Lipo Reductiva* $480.000 → ideal para celulitis y grasa localizada.\n• *Lipo Express* $432.000 → resultados más rápidos.\n\n👩‍🦰 Muchas pacientes sienten su abdomen más firme desde la 3ª sesión.\n📅 Agenda tu evaluación gratuita acá 👉 " +
-      RESERVO_LINK
-  ],
-  hifu: [
-    "💎 *HIFU 12D* trabaja con ultrasonido focalizado, reafirma la piel y reduce grasa sin cirugía. Es excelente para rostro, abdomen y piernas.\n📅 Agenda tu diagnóstico gratuito acá 👉 " +
-      RESERVO_LINK
-  ],
-  sculptor: [
-    "⚡ *EMS Sculptor* provoca contracciones musculares profundas (como 20.000 abdominales en 30 min). Perfecto para glúteos, abdomen o piernas. Mejora firmeza y tonificación 💪."
-  ],
-  cavitacion: [
-    "💠 *Cavitación* rompe células grasas mediante ultrasonido, ayudando a eliminar grasa localizada. Se complementa con radiofrecuencia o HIFU para potenciar resultados."
-  ],
-  resultados: [
-    "🌟 Nuestros pacientes suelen notar cambios desde la 3ª a 5ª sesión: menos volumen, piel más firme y mejor definición corporal. Resultados progresivos, sin dolor ni cirugía 💙."
-  ],
-  agenda: [
-    "📅 Puedes agendar tu diagnóstico gratuito directamente acá 👉 " + RESERVO_LINK
-  ],
-  noEntiende: [
-    "😅 No entendí muy bien, ¿me explicas un poquito mejor por favor?"
-  ]
+  saludo: "👋 Soy Zara IA, asistente virtual de *Body Elite Estética Avanzada*. Puedo orientarte con tratamientos, precios, tecnologías y resultados. ¿Qué te gustaría mejorar hoy: rostro o cuerpo?",
+  fallback: "No entendí muy bien 🤔, ¿me podrías explicar un poco mejor?",
 };
 
-// === WEBHOOKS ===
-app.get("/", (req, res) => res.send("✅ Zara IA lista y en línea."));
+// Plantillas comerciales
+const tratamientos = {
+  lipo: {
+    titulo: "💎 *Lipo Body Elite*",
+    descripcion: "Combina *HIFU 12D*, *Cavitación* y *EMS Sculptor* para reducir grasa localizada y tensar la piel sin cirugía.",
+    detalle:
+      "🔹 El *HIFU 12D* descompone el tejido graso y estimula colágeno.\n🔹 La *Cavitación* rompe microburbujas de grasa.\n🔹 El *EMS Sculptor* tonifica el músculo.\n✨ Pacientes suelen notar menos volumen y mejor contorno desde la 3ª sesión.",
+    precios:
+      "• Lipo Body Elite $664.000 (10 sesiones)\n• Lipo Reductiva $480.000\n• Lipo Express $432.000",
+  },
+  facial: {
+    titulo: "✨ *Face Elite*",
+    descripcion: "Tratamiento facial con radiofrecuencia, vitaminas y HIFU facial para rejuvenecer y tensar la piel.",
+    detalle:
+      "Estimula la producción de colágeno, mejora la textura de la piel y reduce líneas de expresión sin bisturí.",
+    precios: "• Face Elite $358.400\n• Face Antiage $281.600\n• Face Smart $198.400",
+  },
+};
 
+// Procesar mensajes entrantes
+app.post("/webhook", async (req, res) => {
+  const body = req.body;
+
+  if (body.object) {
+    const entry = body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const value = changes?.value;
+    const message = value?.messages?.[0];
+
+    if (message && message.type === "text") {
+      const phone = message.from;
+      const texto = message.text.body.toLowerCase();
+      const nombre = value.contacts?.[0]?.profile?.name?.split(" ")[0] || null;
+      let respuesta = "";
+
+      // Detectar intenciones
+      if (texto.includes("hola") || texto.includes("buenas")) {
+        respuesta = nombre
+          ? `👋 Hola ${nombre}! ${respuestas.saludo}`
+          : respuestas.saludo;
+      } else if (
+        texto.includes("lipo") ||
+        texto.includes("grasa") ||
+        texto.includes("abdomen") ||
+        texto.includes("cuerpo") ||
+        texto.includes("bajar")
+      ) {
+        const t = tratamientos.lipo;
+        respuesta = `${t.titulo}\n\n${t.descripcion}\n\n${t.detalle}\n\n${t.precios}\n\n📅 Agenda tu diagnóstico gratuito y conoce la experiencia Body Elite, agenda acá 👉 *Agenda*`;
+      } else if (
+        texto.includes("rostro") ||
+        texto.includes("cara") ||
+        texto.includes("joven") ||
+        texto.includes("facial")
+      ) {
+        const t = tratamientos.facial;
+        respuesta = `${t.titulo}\n\n${t.descripcion}\n\n${t.detalle}\n\n${t.precios}\n\n📅 Agenda tu diagnóstico gratuito y vive la #ExperienciaElite 👉 *Agenda*`;
+      } else {
+        respuesta = respuestas.fallback;
+      }
+
+      // Enviar mensaje a WhatsApp API
+      try {
+        await axios.post(
+          "https://graph.facebook.com/v19.0/101523683003043/messages",
+          {
+            messaging_product: "whatsapp",
+            to: phone,
+            type: "text",
+            text: {
+              body: respuesta.replace(
+                "Agenda",
+                "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+              ),
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("✅ Mensaje enviado a", phone);
+      } catch (error) {
+        console.error("❌ Error enviando mensaje:", error.response?.data || error.message);
+      }
+    }
+
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+// Verificación webhook
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode && token === VERIFY_TOKEN) res.status(200).send(challenge);
-  else res.sendStatus(403);
-});
-
-app.post("/webhook", async (req, res) => {
-  try {
-    const entry = req.body.entry?.[0];
-    const message = entry?.changes?.[0]?.value?.messages?.[0];
-    if (!message) return res.sendStatus(200);
-
-    const from = message.from;
-    const texto = message.text?.body || "";
-    console.log(`💬 ${from}: ${texto}`);
-
-    // Registrar nombre si lo dice
-    const nombreDetectado = detectarNombre(texto);
-    if (nombreDetectado) {
-      memoriaUsuarios[from] = { nombre: nombreDetectado };
-      await sendMessage(from, `Encantada ${nombreDetectado} 💙. Cuéntame, ¿te interesa mejorar rostro o cuerpo?`);
-      return res.sendStatus(200);
-    }
-
-    // Si no hay nombre aún → preguntar
-    if (!memoriaUsuarios[from]?.nombre) {
-      await sendMessage(from, "Encantada 💙 Antes de continuar, ¿me recuerdas tu nombre?");
-      return res.sendStatus(200);
-    }
-
-    // Si ya lo tiene
-    const nombre = memoriaUsuarios[from].nombre;
-    const intencion = detectarIntencion(texto);
-    let respuesta =
-      respuestas[intencion]?.[Math.floor(Math.random() * respuestas[intencion].length)] ||
-      respuestas.noEntiende[0];
-
-    // Personalizar respuesta
-    if (intencion !== "noEntiende") {
-      respuesta = `${nombre} 💙 ${respuesta}`;
-    }
-
-    await sendMessage(from, respuesta);
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("❌ Error:", err.message);
-    res.sendStatus(500);
+  if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("✅ Webhook verificado correctamente.");
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
   }
 });
 
-// === SERVIDOR ===
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log("🚀 Zara IA Full Conversacional v4 ejecutándose en puerto", PORT);
+  console.log(`🚀 Servidor activo en puerto ${PORT}`);
+  console.log("🤖 Zara IA lista para responder mensajes 💬");
 });
