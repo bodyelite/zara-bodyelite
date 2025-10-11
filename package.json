@@ -1,22 +1,12 @@
 {
   "name": "zara-bodyelite",
   "version": "4.0.0",
-  "description": "Asistente IA de Body Elite con memoria de nombre y conocimiento clínico/comercial.",
+  "description": "Asistente IA de Body Elite con memoria, respuestas naturales y agenda.",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": [
-    "bodyelite",
-    "whatsapp",
-    "meta",
-    "bot",
-    "ai",
-    "assistant"
-  ],
-  "author": "Body Elite IA",
-  "license": "MIT",
   "dependencies": {
     "axios": "^1.6.8",
     "express": "^4.18.2",
