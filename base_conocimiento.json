@@ -1,50 +1,39 @@
 {
-  "clinica": {
-    "nombre": "Body Elite Estética Avanzada",
-    "direccion": "Av. Las Perdices Nº2990, Local 23. Peñalolén",
-    "horario": "Lun–Vie 9:30–20:00; Sáb 9:30–13:00",
-    "contacto": "+56 9 8330 4436",
-    "reserva_url": "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-
-  "planes": {
-    "lipo body elite": {
-      "descripcion": "Combinación avanzada de HIFU 12D, Cavitación y EMS Sculptor para reducción de grasa, tonificación y definición corporal.",
-      "precio": 664000,
-      "beneficios": "Reduce grasa localizada, mejora tonicidad y define contornos. Incluye diagnóstico gratuito."
+  "presentacion": "¡Hola! Soy Zara 💙, asistente virtual de Body Elite Estética Avanzada. Te ayudaré a conocer nuestros tratamientos, agendar tu diagnóstico gratuito y acompañarte durante tu experiencia estética sin bisturí.",
+  "direccion": "Av. Las Perdices Nº 2990, Local 23, Peñalolén",
+  "horarios": "Lunes a Viernes 9:30–20:00, Sábados 9:30–13:00",
+  "link_reservo": "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+  "contacto_humano": "https://wa.me/56983300262",
+  "procedimientos": {
+    "corporales": {
+      "HIFU 12D": "Ultrasonido focalizado de alta intensidad que elimina grasa localizada y estimula colágeno. Ideal para abdomen, brazos o muslos.",
+      "Cavitación": "Ondas ultrasónicas que rompen cúmulos grasos, ayudando a reducir volumen corporal.",
+      "Radiofrecuencia": "Estimula colágeno y elastina, mejorando firmeza y textura de la piel.",
+      "EMS Sculptor": "Contrae el músculo más de 20.000 veces por sesión. Tonifica, eleva y define sin esfuerzo.",
+      "Láser Lipolítico": "Reduce grasa sin cirugía y potencia los resultados de cavitación y HIFU."
     },
-    "lipo reductiva": {
-      "descripcion": "Tratamiento focalizado con Cavitación y Radiofrecuencia para reducir centímetros.",
-      "precio": 480000,
-      "beneficios": "Ideal para abdomen, cintura o piernas con acumulación grasa leve o moderada."
-    },
-    "body tensor": {
-      "descripcion": "Radiofrecuencia y Sculptor para firmeza, flacidez y textura de piel.",
-      "precio": 232000,
-      "beneficios": "Mejora elasticidad y aspecto de la piel. Recomendado post-lipo o post-parto."
-    },
-    "body fitness": {
-      "descripcion": "Programa con EMS Sculptor para tonificar, fortalecer y definir musculatura.",
-      "precio": 360000,
-      "beneficios": "Simula hasta 20.000 contracciones por sesión. Ideal para abdomen o glúteos."
-    },
-    "face elite": {
-      "descripcion": "Pink Glow, Radiofrecuencia Fraccional y HIFU focal para rejuvenecimiento facial completo.",
-      "precio": 358400,
-      "beneficios": "Reafirma, estimula colágeno y mejora la textura. Ideal desde los 30 años."
-    },
-    "face light": {
-      "descripcion": "Limpieza, exfoliación y radiofrecuencia suave para piel joven o de mantenimiento.",
-      "precio": 128800,
-      "beneficios": "Renueva, limpia y da luminosidad sin tiempos de recuperación."
+    "faciales": {
+      "Pink Glow": "Bioestimulación con péptidos y vitaminas que renuevan y revitalizan la piel.",
+      "Toxina Botulínica": "Relaja líneas de expresión y previene arrugas dinámicas.",
+      "HIFU Facial": "Efecto lifting sin bisturí, estimula colágeno en profundidad.",
+      "Radiofrecuencia Facial": "Tensa, mejora textura y redefine contornos."
     }
   },
-
-  "mensajes": {
-    "saludo": "👋 Hola, soy Zara IA, asistente de Body Elite. ¿Cómo puedo ayudarte hoy?",
-    "ayuda": "Puedo orientarte con tratamientos, precios, agendamiento o diagnóstico gratuito 💎. ¿Qué te gustaría mejorar: rostro o cuerpo?",
-    "error": "Perdón 😅 no te entendí del todo. ¿Buscas algo facial o corporal?",
-    "ubicacion": "📍 Estamos en Av. Las Perdices Nº2990, Local 23 (Peñalolén). Te esperamos de lunes a viernes 9:30–20:00 y sábado 9:30–13:00.",
-    "reserva": "✨ Puedes agendar directamente desde aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  "planes_y_precios": {
+    "LIMPIEZA FACIAL FULL": 120000,
+    "RF": 60000,
+    "FACE LIGHT": 128800,
+    "FACE SMART": 198400,
+    "FACE INICIA": 270400,
+    "FACE ANTIAGE": 281600,
+    "FACE ELITE": 358400,
+    "FULL FACE": 584000,
+    "LIPO FOCALIZADA REDUCTIVA": 348800,
+    "LIPO EXPRESS": 432000,
+    "LIPO REDUCTIVA": 480000,
+    "LIPO BODY ELITE": 664000,
+    "BODY TENSOR": 232000,
+    "BODY FITNESS": 360000,
+    "PUSH UP": 376000
   }
 }

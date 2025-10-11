@@ -1,87 +1,140 @@
 import express from "express";
-import axios from "axios";
-import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config();
 const app = express();
-app.use(cors());
 app.use(bodyParser.json());
 
-// 🌐 Configuración general
+// ==============================
+// 🔧 CONFIGURACIÓN BASE
+// ==============================
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PORT = process.env.PORT || 10000;
-const RESERVO_LINK = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-// 🧠 Memoria base de Zara (respuestas aprendidas)
-const respuestasZara = [
-  {
-    patrones: ["hola", "buenas", "qué tal", "buen día"],
-    respuesta: "¡Hola! Soy Zara, la asistente de Body Elite 💙 ¿Te gustaría agendar tu diagnóstico gratuito o saber más sobre nuestros tratamientos?"
-  },
-  {
-    patrones: ["agenda", "reservar", "cita", "hora"],
-    respuesta: `Puedes agendar directamente tu hora aquí 👉 ${RESERVO_LINK}`
-  },
-  {
-    patrones: ["tratamientos", "planes", "precios"],
-    respuesta: "Ofrecemos planes corporales y faciales personalizados como Lipo Body Elite, Lipo Express, Push Up y Face Elite. ¿Quieres que te ayude a elegir el mejor para ti?"
-  },
-  {
-    patrones: ["dónde están", "ubicación", "dirección"],
-    respuesta: "Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén. Te esperamos de lunes a viernes 9:30 a 20:00 y sábado 9:30 a 13:00 🕐"
-  },
-  {
-    patrones: ["contacto", "whatsapp", "hablar", "número"],
-    respuesta: "Puedes escribirnos directamente por WhatsApp haciendo clic en el botón de nuestra página o en el link de Reservo 📲"
-  },
-  {
-    patrones: ["gracias", "perfecto", "ok"],
-    respuesta: "¡Con gusto 💙! ¿Quieres que te ayude a agendar tu evaluación o te cuento más sobre un tratamiento?"
-  },
-  {
-    patrones: ["hifu", "sculptor", "radiofrecuencia", "cavitación"],
-    respuesta: "Usamos tecnología avanzada como HIFU 12D, EMS Sculptor y Radiofrecuencia para modelar, tonificar y reafirmar sin bisturí. Resultados visibles desde las primeras sesiones ✨"
+// ==============================
+// 🧠 DATOS COMERCIALES Y CLÍNICOS
+// ==============================
+const NEGOCIO = process.env.NEGOCIO || "Body Elite Estética Avanzada";
+const UBICACION = process.env.UBICACION;
+const HORARIO = process.env.HORARIO;
+const RESERVO_URL = process.env.RESERVO_URL;
+const WSP_DIRECTO = process.env.WSP_DIRECTO;
+const CONTACTO_HUMANO = process.env.CONTACTO_HUMANO;
+const CONTACTO_NOMBRE = process.env.CONTACTO_NOMBRE;
+const CONTACTO_ROL = process.env.CONTACTO_ROL;
+
+const PLANES_FACIALES = process.env.PLANES_FACIALES?.split(";") || [];
+const PLANES_CORPORALES = process.env.PLANES_CORPORALES?.split(";") || [];
+
+const ZARA_DERIVA_PALABRAS = process.env.ZARA_DERIVA_PALABRAS?.split(",") || [];
+const ZARA_CONFIRMA_PALABRAS = process.env.ZARA_CONFIRMA_PALABRAS?.split(",") || [];
+
+let memoriaUsuarios = {}; // memoria temporal por número
+
+// ==============================
+// 🧩 VERIFICACIÓN WEBHOOK META
+// ==============================
+app.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+  if (mode && token === VERIFY_TOKEN) {
+    console.log("✅ Webhook verificado correctamente con Meta");
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).send("Error de verificación");
   }
-];
+});
 
-// 🎯 Función de respuesta automática
-function obtenerRespuesta(mensaje) {
-  mensaje = mensaje.toLowerCase();
-  for (const item of respuestasZara) {
-    if (item.patrones.some(p => mensaje.includes(p))) {
-      return item.respuesta;
+// ==============================
+// 📩 RECEPCIÓN DE MENSAJES WHATSAPP
+// ==============================
+app.post("/webhook", async (req, res) => {
+  try {
+    const entry = req.body.entry?.[0];
+    const message = entry?.changes?.[0]?.value?.messages?.[0];
+
+    if (message && message.type === "text") {
+      const from = message.from;
+      const text = message.text.body.trim().toLowerCase();
+      if (!memoriaUsuarios[from]) memoriaUsuarios[from] = { nombre: null };
+
+      const usuario = memoriaUsuarios[from];
+      let respuesta = "";
+
+      // === DERIVACIÓN HUMANA ===
+      if (ZARA_DERIVA_PALABRAS.some(p => text.includes(p.trim()))) {
+        respuesta = `🤝 Te conecto con *${CONTACTO_NOMBRE}*, ${CONTACTO_ROL}. Escríbele directamente aquí:\n👉 ${WSP_DIRECTO}`;
+        await enviarMensaje(from, respuesta);
+        return res.sendStatus(200);
+      }
+
+      // === NOMBRE DEL CLIENTE ===
+      if (!usuario.nombre) {
+        if (text.startsWith("soy ") || text.startsWith("me llamo ")) {
+          usuario.nombre = text.replace("soy ", "").replace("me llamo ", "").trim();
+          respuesta = `Encantada, ${usuario.nombre} 💙 ¿qué área te gustaría mejorar? (por ejemplo: *abdomen*, *rostro*, *glúteos*, *flacidez*)`;
+          await enviarMensaje(from, respuesta);
+          return res.sendStatus(200);
+        } else {
+          respuesta = "¿Podrías contarme tu nombre para personalizar tu diagnóstico gratuito? 💙";
+          await enviarMensaje(from, respuesta);
+          return res.sendStatus(200);
+        }
+      }
+
+      // === RECOMENDACIONES ===
+      if (["rostro", "facial", "cara"].some(p => text.includes(p))) {
+        respuesta = `✨ ${usuario.nombre}, te recomiendo nuestras opciones faciales:\n${listarPlanes(PLANES_FACIALES)}\n\nPodés agendar aquí:\n🗓️ ${RESERVO_URL}`;
+      } else if (["abdomen", "cuerpo", "celulitis", "glúteo", "flacidez"].some(p => text.includes(p))) {
+        respuesta = `💪 ${usuario.nombre}, estos planes corporales son ideales para ti:\n${listarPlanes(PLANES_CORPORALES)}\n\nAgenda tu evaluación gratuita:\n🗓️ ${RESERVO_URL}`;
+      } else if (["agenda", "reserva", "evaluación"].some(p => text.includes(p))) {
+        respuesta = `📅 ${usuario.nombre}, puedes agendar tu evaluación gratuita aquí:\n${RESERVO_URL}`;
+      } else {
+        respuesta = `Soy Zara 💙 asistente virtual de ${NEGOCIO}. Puedo contarte sobre tratamientos, precios o ayudarte a agendar tu diagnóstico gratuito.`;
+      }
+
+      await enviarMensaje(from, respuesta);
     }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Error procesando mensaje:", err.message);
+    res.sendStatus(500);
   }
-  return "No entendí muy bien 🤔 ¿Podrías explicarlo un poco mejor? Puedo ayudarte a agendar, mostrarte precios o contarte sobre nuestros tratamientos.";
+});
+
+// === Envío de mensajes ===
+async function enviarMensaje(to, body) {
+  try {
+    await axios.post(
+      "https://graph.facebook.com/v19.0/105928049208947/messages",
+      {
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body },
+      },
+      { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` } }
+    );
+  } catch (err) {
+    console.error("Error enviando mensaje:", err.response?.data || err.message);
+  }
 }
 
-// 📩 Endpoint principal para interacción
-app.post("/zara", async (req, res) => {
-  try {
-    const { mensaje } = req.body;
-    console.log("📩 Mensaje recibido:", mensaje);
+// === Listar planes ===
+function listarPlanes(planes) {
+  return planes
+    .map(p => {
+      const [nombre, precio] = p.split("|");
+      const precioFmt = parseInt(precio).toLocaleString("es-CL");
+      return `• *${nombre}* — $${precioFmt} CLP`;
+    })
+    .join("\n");
+}
 
-    const respuesta = obtenerRespuesta(mensaje);
-    res.json({ respuesta });
-  } catch (error) {
-    console.error("❌ Error al procesar mensaje:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-});
-
-// 🌍 Página de prueba (opcional)
-app.get("/", (req, res) => {
-  res.send(`
-    <div style="font-family:sans-serif; text-align:center; margin-top:50px;">
-      <h2>🤖 Zara IA - Body Elite</h2>
-      <p>Asistente conversacional activo y listo para recibir mensajes.</p>
-      <a href="${RESERVO_LINK}" target="_blank" style="color:#007bff;">Agendar en Reservo</a>
-    </div>
-  `);
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor activo en puerto ${PORT}`);
-  console.log(`🤖 Zara IA lista para responder mensajes 💬`);
-});
+// === Servidor ===
+app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT} — Zara IA lista 💙`));
