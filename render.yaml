@@ -4,6 +4,13 @@ services:
     env: node
     buildCommand: "npm install"
     startCommand: "npm start"
+    plan: free
     envVars:
+      - key: VERIFY_TOKEN
+        value: zara_bodyelite_verify
+      - key: PHONE_NUMBER_ID
+        value: 840360109156943
+      - key: WHATSAPP_TOKEN
+        value: EAAUydX2y57wBPlP4IYfdgzO2TKXcV2BQbvK7J7D2QZBG2HnFbw5aAIWeHaOnm0sCncOd4F5i0CAL9cWaiEBFwa6vhPUkucRgfCV6m6ENTaZBh4ZC9kLXxxOlhBLZBEM3myLqTG7VP5QZADVVV5qknwCJQfMF9AVSZCcQPWCDms56KTOR2ZCKcYKoxtUGgZDZD
       - key: PORT
         value: 10000

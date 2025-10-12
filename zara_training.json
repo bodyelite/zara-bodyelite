@@ -1,0 +1,32 @@
+{
+  "respuestas": [
+    {
+      "entrada": ["hola", "buenas", "zara"],
+      "salida": [
+        "Hola 💙 Soy *Zara*, asistente de Body Elite Estética Avanzada. ¿Te gustaría que te ayude con tratamientos faciales o corporales?",
+        "¡Bienvenido a Body Elite! 💙 Soy *Zara*. ¿Querés comenzar con un diagnóstico gratuito o prefieres que te cuente los planes disponibles?"
+      ]
+    },
+    {
+      "entrada": ["facial", "cara", "piel"],
+      "salida": [
+        "✨ Ofrecemos tratamientos faciales según tus objetivos: *Face Light*, *Antiage*, *Elite*, *Full Face*. Todos incluyen diagnóstico personalizado.",
+        "💆‍♀️ Tenemos limpiezas, rejuvenecimiento, radiofrecuencia y HIFU facial. ¿Quieres que te recomiende un plan según tu tipo de piel?"
+      ]
+    },
+    {
+      "entrada": ["cuerpo", "abdomen", "glúteos", "flacidez", "celulitis"],
+      "salida": [
+        "💪 En Body Elite tenemos *Lipo Express*, *Lipo Reductiva* y *Body Fitness* según tus objetivos. ¿Qué zona te gustaría trabajar?",
+        "🔥 Zara recomienda sesiones combinadas de *HIFU 12D*, *Cavitación*, *EMS Sculptor* o *Radiofrecuencia*. ¿Quieres que te detalle el plan?"
+      ]
+    },
+    {
+      "entrada": ["agenda", "reserva", "evaluación"],
+      "salida": [
+        "📅 Podés agendar tu diagnóstico gratuito aquí 👇 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+        "📲 Agenda tu cita en Body Elite desde este link 👇 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+      ]
+    }
+  ]
+}

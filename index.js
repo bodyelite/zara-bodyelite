@@ -1,46 +1,33 @@
 import express from "express";
+import axios from "axios";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import axios from "axios";
 
 dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-// ==============================
-// 🔧 CONFIGURACIÓN BASE
-// ==============================
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const VERIFY_TOKEN = "zara_bodyelite_verify";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_NUMBER_ID = "840360109156943"; // Tu número verificado en Meta
+
+// Servidor activo
 const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor activo en puerto ${PORT}`);
+  console.log("🤖 Zara IA Body Elite lista para responder 💬");
+});
 
-// ==============================
-// 🧠 DATOS COMERCIALES Y CLÍNICOS
-// ==============================
-const NEGOCIO = process.env.NEGOCIO || "Body Elite Estética Avanzada";
-const UBICACION = process.env.UBICACION;
-const HORARIO = process.env.HORARIO;
-const RESERVO_URL = process.env.RESERVO_URL;
-const WSP_DIRECTO = process.env.WSP_DIRECTO;
-const CONTACTO_HUMANO = process.env.CONTACTO_HUMANO;
-const CONTACTO_NOMBRE = process.env.CONTACTO_NOMBRE;
-const CONTACTO_ROL = process.env.CONTACTO_ROL;
+// =============================
+//  WEBHOOK PARA META
+// =============================
 
-const PLANES_FACIALES = process.env.PLANES_FACIALES?.split(";") || [];
-const PLANES_CORPORALES = process.env.PLANES_CORPORALES?.split(";") || [];
-
-const ZARA_DERIVA_PALABRAS = process.env.ZARA_DERIVA_PALABRAS?.split(",") || [];
-const ZARA_CONFIRMA_PALABRAS = process.env.ZARA_CONFIRMA_PALABRAS?.split(",") || [];
-
-let memoriaUsuarios = {}; // memoria temporal por número
-
-// ==============================
-// 🧩 VERIFICACIÓN WEBHOOK META
-// ==============================
+// ✅ Verificación inicial del webhook
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
+
   if (mode && token === VERIFY_TOKEN) {
     console.log("✅ Webhook verificado correctamente con Meta");
     res.status(200).send(challenge);
@@ -49,92 +36,118 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// ==============================
-// 📩 RECEPCIÓN DE MENSAJES WHATSAPP
-// ==============================
+// 📩 Recepción de mensajes de WhatsApp
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
-    const message = entry?.changes?.[0]?.value?.messages?.[0];
+    const changes = entry?.changes?.[0];
+    const message = changes?.value?.messages?.[0];
+    const from = message?.from;
+    const text = message?.text?.body;
 
-    if (message && message.type === "text") {
-      const from = message.from;
-      const text = message.text.body.trim().toLowerCase();
-      if (!memoriaUsuarios[from]) memoriaUsuarios[from] = { nombre: null };
-
-      const usuario = memoriaUsuarios[from];
-      let respuesta = "";
-
-      // === DERIVACIÓN HUMANA ===
-      if (ZARA_DERIVA_PALABRAS.some(p => text.includes(p.trim()))) {
-        respuesta = `🤝 Te conecto con *${CONTACTO_NOMBRE}*, ${CONTACTO_ROL}. Escríbele directamente aquí:\n👉 ${WSP_DIRECTO}`;
-        await enviarMensaje(from, respuesta);
-        return res.sendStatus(200);
-      }
-
-      // === NOMBRE DEL CLIENTE ===
-      if (!usuario.nombre) {
-        if (text.startsWith("soy ") || text.startsWith("me llamo ")) {
-          usuario.nombre = text.replace("soy ", "").replace("me llamo ", "").trim();
-          respuesta = `Encantada, ${usuario.nombre} 💙 ¿qué área te gustaría mejorar? (por ejemplo: *abdomen*, *rostro*, *glúteos*, *flacidez*)`;
-          await enviarMensaje(from, respuesta);
-          return res.sendStatus(200);
-        } else {
-          respuesta = "¿Podrías contarme tu nombre para personalizar tu diagnóstico gratuito? 💙";
-          await enviarMensaje(from, respuesta);
-          return res.sendStatus(200);
-        }
-      }
-
-      // === RECOMENDACIONES ===
-      if (["rostro", "facial", "cara"].some(p => text.includes(p))) {
-        respuesta = `✨ ${usuario.nombre}, te recomiendo nuestras opciones faciales:\n${listarPlanes(PLANES_FACIALES)}\n\nPodés agendar aquí:\n🗓️ ${RESERVO_URL}`;
-      } else if (["abdomen", "cuerpo", "celulitis", "glúteo", "flacidez"].some(p => text.includes(p))) {
-        respuesta = `💪 ${usuario.nombre}, estos planes corporales son ideales para ti:\n${listarPlanes(PLANES_CORPORALES)}\n\nAgenda tu evaluación gratuita:\n🗓️ ${RESERVO_URL}`;
-      } else if (["agenda", "reserva", "evaluación"].some(p => text.includes(p))) {
-        respuesta = `📅 ${usuario.nombre}, puedes agendar tu evaluación gratuita aquí:\n${RESERVO_URL}`;
-      } else {
-        respuesta = `Soy Zara 💙 asistente virtual de ${NEGOCIO}. Puedo contarte sobre tratamientos, precios o ayudarte a agendar tu diagnóstico gratuito.`;
-      }
-
-      await enviarMensaje(from, respuesta);
+    if (text && from) {
+      console.log(`📩 Mensaje recibido de ${from}: "${text}"`);
+      await responderZara(from, text);
     }
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("Error procesando mensaje:", err.message);
+    console.error("❌ Error procesando mensaje:", err);
     res.sendStatus(500);
   }
 });
 
-// === Envío de mensajes ===
-async function enviarMensaje(to, body) {
+// =============================
+//  ZARA BODY ELITE IA
+// =============================
+
+async function responderZara(to, texto) {
+  const t = texto.toLowerCase();
+  let respuesta = "";
+
+  // SALUDO BASE
+  if (t.includes("hola") || t.includes("buenas") || t.includes("zara")) {
+    respuesta = `¡Hola! 💙 Soy *Zara*, asistente virtual de *Body Elite Estética Avanzada*.
+Puedo ayudarte a conocer tratamientos, planes corporales o faciales, y agendar tu diagnóstico gratuito.`;
+
+  // PLANES CORPORALES
+  } else if (t.includes("lipo") || t.includes("plan corporal") || t.includes("cuerpo")) {
+    respuesta = `💪 *Planes corporales más solicitados*:
+
+• *Lipo Focalizada Reductiva* — $348.800  
+• *Lipo Express* — $432.000  
+• *Lipo Reductiva* — $480.000  
+• *Lipo Body Elite* — $664.000  
+• *Body Fitness* — $360.000  
+• *Push Up* — $376.000  
+
+Cada uno combina *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor*.  
+¿Deseas que te recomiende el más adecuado según tus medidas o tipo de grasa?`;
+
+  // PLANES FACIALES
+  } else if (t.includes("face") || t.includes("facial") || t.includes("piel") || t.includes("cara")) {
+    respuesta = `💆‍♀️ *Planes faciales disponibles:*
+
+• *Face Light* — $128.800  
+• *Face Smart* — $198.400  
+• *Face Antiage* — $281.600  
+• *Face Elite* — $358.400  
+• *Full Face* — $584.000  
+
+✨ Todos los tratamientos incluyen diagnóstico facial avanzado.  
+¿Quieres que te recomiende uno según tu tipo de piel o edad?`;
+
+  // AGENDA
+  } else if (t.includes("agenda") || t.includes("reservar") || t.includes("diagnóstico")) {
+    respuesta = `📅 Perfecto. Puedes agendar directamente tu diagnóstico gratuito aquí:
+👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9  
+📍 *Body Elite Estética Avanzada*  
+Av. Las Perdices Nº2990, Local 23, Peñalolén.`;
+
+  // HUMANO / CONTACTO DIRECTO
+  } else if (t.includes("humano") || t.includes("ayuda") || t.includes("hablar")) {
+    respuesta = `Te conecto con una de nuestras especialistas 👩‍⚕️💬  
+Escríbenos al WhatsApp principal 👉 https://wa.me/56983304436`;
+
+  // FITDAYS / DIAGNÓSTICO PERSONALIZADO
+  } else if (t.includes("fitdays") || t.includes("diagnóstico corporal") || t.includes("medidas")) {
+    respuesta = `📊 El diagnóstico FitDays analiza peso, grasa visceral, masa muscular y edad corporal.  
+Con esos datos puedo recomendarte el *plan más efectivo* según tu composición corporal.  
+¿Quieres enviarme tus resultados o foto del escáner FitDays?`;
+
+  // OTROS CASOS / RESPUESTA GENERAL
+  } else {
+    respuesta = `No estoy segura de entender 😅.  
+Puedo ayudarte con *planes corporales, faciales, diagnóstico FitDays o agendar tu hora.*  
+¿Qué deseas hacer ahora?`;
+  }
+
+  await enviarMensajeWhatsApp(to, respuesta);
+}
+
+// =============================
+//  API DE META - ENVÍO DE RESPUESTAS
+// =============================
+
+async function enviarMensajeWhatsApp(to, body) {
   try {
     await axios.post(
-      "https://graph.facebook.com/v19.0/105928049208947/messages",
+      `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`,
       {
         messaging_product: "whatsapp",
         to,
         type: "text",
         text: { body },
       },
-      { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` } }
+      {
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
     );
-  } catch (err) {
-    console.error("Error enviando mensaje:", err.response?.data || err.message);
+    console.log(`✅ Mensaje enviado a ${to}`);
+  } catch (error) {
+    console.error("⚠️ Error enviando mensaje:", error.response?.data || error.message);
   }
 }
-
-// === Listar planes ===
-function listarPlanes(planes) {
-  return planes
-    .map(p => {
-      const [nombre, precio] = p.split("|");
-      const precioFmt = parseInt(precio).toLocaleString("es-CL");
-      return `• *${nombre}* — $${precioFmt} CLP`;
-    })
-    .join("\n");
-}
-
-// === Servidor ===
-app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT} — Zara IA lista 💙`));
