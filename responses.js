@@ -1,30 +1,50 @@
 import fs from "fs";
 
-// Carga dinámica del conocimiento
+// Cargar base de conocimiento
 let knowledge = {};
 try {
   const data = fs.readFileSync("./knowledge.json", "utf8");
   knowledge = JSON.parse(data);
 } catch (err) {
   console.error("Error cargando knowledge.json:", err);
+  knowledge = {
+    saludo: "Hola, soy Zara 💬 asistente de Body Elite.",
+    fallback: "No puedo responder por ahora."
+  };
 }
 
-// Respuestas adaptadas según intención
+// Normalizador de texto (minúsculas + sin tildes)
+function cleanText(msg) {
+  return msg
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+// Respuestas según intención
 const responses = {
   saludo: () => knowledge.saludo,
   agendar: () => knowledge.agendar,
   precios: () => knowledge.precios,
   tratamientos: (msg) => {
-    if (msg.includes("lipo") || msg.includes("grasa") || msg.includes("abdomen") || msg.includes("cintura"))
+    const text = cleanText(msg);
+
+    if (text.includes("grasa") || text.includes("abdomen") || text.includes("cintura"))
       return knowledge.lipo;
-    if (msg.includes("flacidez") || msg.includes("celulitis"))
+
+    if (text.includes("flacidez") || text.includes("celulitis") || text.includes("reafirmar") || text.includes("piel"))
       return knowledge.body_tens;
-    if (msg.includes("face") || msg.includes("facial") || msg.includes("piel"))
+
+    if (text.includes("musculo") || text.includes("tonificar") || text.includes("gluteo"))
+      return knowledge.body_fit;
+
+    if (text.includes("cara") || text.includes("rostro") || text.includes("facial"))
       return knowledge.face;
+
     return knowledge.tratamientos;
   },
-  derivar: () => knowledge.derivar,
   tecnologias: () => knowledge.tecnologias,
+  derivar: () => knowledge.derivar,
   fallback: () => knowledge.fallback
 };
 
