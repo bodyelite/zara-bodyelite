@@ -2,13 +2,17 @@ services:
   - type: web
     name: zara-bodyelite1
     env: node
+    buildCommand: npm install
+    startCommand: node index.js
     plan: free
-    buildCommand: "npm install"
-    startCommand: "npm start"
     envVars:
       - key: VERIFY_TOKEN
-        value: zara_bodyelite_verify
-      - key: PORT
-        value: 10000
+        value: bodyelitezara
       - key: WHATSAPP_TOKEN
         sync: false
+      - key: PHONE_NUMBER_ID
+        value: 84036109156943
+      - key: APP_ID
+        value: 1462855084992444
+      - key: PORT
+        value: 10000
