@@ -1,78 +1,78 @@
-export const responses = {
-  generar: (dominio, intencion, ultima) => {
-    dominio = dominio || "general";
-    intencion = intencion || "fallback";
+// --- RESPUESTAS INTELIGENTES BODY ELITE (v4.5) ---
 
-    const grupo = {
-      facial: {
-        saludo:
-          "👋 ¡Hola! Soy Zara, asistente IA de Body Elite. Cuéntame si buscas rejuvenecer, lifting o mejorar firmeza facial.",
-        descripcion:
-          "✨ *Face Elite* combina HIFU focal, Radiofrecuencia y toxina cosmética para rejuvenecer rostro sin cirugía. Efecto lifting visible desde la primera sesión.",
-        precio:
-          "💰 El plan *Face Elite* tiene un valor de *$358.400 CLP*. Incluye 3 tecnologías faciales avanzadas y resultados desde la primera sesión.",
-        sensacion:
-          "😊 No duele. Es un tratamiento no invasivo y cómodo, puedes retomar tus actividades de inmediato.",
-        resultados:
-          "📸 Los resultados del *Face Elite* incluyen piel más firme, contorno definido y reducción de arrugas finas desde la primera sesión.",
-        rechazo:
-          "✅ Perfecto, si cambias de idea puedo contarte más sobre nuestros tratamientos faciales o corporales.",
-        fallback:
-          "¿Quieres que te cuente los resultados, precios o cómo funciona el tratamiento facial?",
-      },
-      corporal: {
-        saludo:
-          "👋 ¡Hola! Soy Zara, asistente IA de Body Elite. Cuéntame qué zona deseas mejorar: abdomen, glúteos o piernas.",
-        descripcion:
-          "💎 Los tratamientos corporales combinan *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor* para reducir grasa, reafirmar y tonificar.",
-        precio:
-          "💰 Planes corporales más solicitados:\n- Lipo Body Elite $664.000\n- Push Up $376.000\n- Body Fitness $360.000",
-        sensacion:
-          "✨ No genera dolor, solo calor leve o contracciones musculares tolerables. Son procedimientos no invasivos.",
-        resultados:
-          "🏆 Desde la segunda sesión ya se observa reducción de grasa localizada, firmeza y mejor tono muscular.",
-        rechazo:
-          "Perfecto, puedo contarte más adelante o ayudarte con otra zona si lo prefieres.",
-        fallback:
-          "¿Quieres conocer precios, resultados o cómo funciona el tratamiento corporal?",
-      },
-      general: {
-        saludo:
-          "👋 ¡Hola! Soy Zara, asistente IA de Body Elite. ¿Buscas información sobre tratamientos corporales, faciales o deseas agendar una evaluación gratuita?",
-        descripcion:
-          "📋 Ofrecemos planes corporales (Lipo, Push Up, Fitness) y faciales (Face Elite, HIFU). Todos son no invasivos y con resultados visibles.",
-        precio:
-          "💎 Planes destacados:\n- Lipo Body Elite $664.000\n- Push Up $376.000\n- Face Elite $358.400",
-        sensacion:
-          "Todos nuestros procedimientos son seguros, sin bisturí ni recuperación. Solo una leve sensación de calor o activación muscular.",
-        resultados:
-          "Los resultados son progresivos y visibles desde las primeras sesiones, tanto en rostro como cuerpo.",
-        rechazo: "De acuerdo, puedo ayudarte más adelante o enviarte información general.",
-        fallback:
-          "¿Deseas que te recomiende un plan facial o corporal según tu objetivo?",
-      },
-    };
+export async function getResponse(msg) {
+  if (!msg) return respuestas.fallback();
 
-    return grupo[dominio]?.[intencion] || grupo[dominio]?.fallback || grupo.general.fallback;
-  },
+  msg = msg.toLowerCase();
+
+  // === INTENCIÓN FACIAL ===
+  if (msg.includes("arruga") || msg.includes("cara") || msg.includes("rostro") || msg.includes("facial"))
+    return respuestas.face();
+
+  // === INTENCIÓN CORPORAL ===
+  if (msg.includes("glute") || msg.includes("celulitis") || msg.includes("abdomen") || msg.includes("pierna"))
+    return respuestas.body();
+
+  // === TECNOLOGÍAS ===
+  if (msg.includes("hifu")) return respuestas.hifu();
+  if (msg.includes("radiofrecuencia")) return respuestas.radiofrecuencia();
+  if (msg.includes("ems") || msg.includes("sculpt") || msg.includes("prosculpt")) return respuestas.ems();
+  if (msg.includes("pinkglow") || msg.includes("pink glow")) return respuestas.pinkglow();
+  if (msg.includes("toxina") || msg.includes("botox")) return respuestas.toxina();
+
+  // === CONSULTAS COMUNES ===
+  if (msg.includes("vale") || msg.includes("precio") || msg.includes("cuesta")) return respuestas.precios();
+  if (msg.includes("sesion") || msg.includes("cuantas")) return respuestas.sesiones();
+  if (msg.includes("duele") || msg.includes("dolor")) return respuestas.duele();
+  if (msg.includes("resultad")) return respuestas.resultados();
+  if (msg.includes("agenda") || msg.includes("evaluacion") || msg.includes("reserva"))
+    return respuestas.agendar();
+  if (msg.includes("hola") || msg.includes("buenas")) return respuestas.saludo();
+
+  // === SIN COINCIDENCIA ===
+  return respuestas.fallback();
+}
+
+const respuestas = {
+  saludo: () =>
+    "👋 ¡Hola! Soy Zara, asistente IA de Body Elite Estética Avanzada. ¿Te gustaría conocer tratamientos, precios o agendar tu diagnóstico gratuito?",
+
+  face: () =>
+    "✨ Face Elite combina HIFU focal, Radiofrecuencia y toxina cosmética para rejuvenecer rostro sin cirugía. Logra piel más firme y efecto lifting visible desde la primera sesión.",
+
+  body: () =>
+    "🍑 Push Up Body Elite trabaja glúteos con ProSculpt EMS + Radiofrecuencia Focalizada. Tonifica, eleva y redefine sin bisturí. Resultados desde la 2ª sesión.",
+
+  hifu: () =>
+    "💎 El HIFU 12D estimula colágeno y reduce grasa localizada. Ideal para rostro, cuello o abdomen.",
+
+  radiofrecuencia: () =>
+    "🌡️ La radiofrecuencia calienta las capas profundas de la piel, estimulando colágeno y mejorando firmeza y textura.",
+
+  ems: () =>
+    "⚡ EMS (ProSculpt) genera contracciones musculares profundas equivalentes a 20.000 abdominales o sentadillas por sesión. Ideal para tonificar y definir.",
+
+  pinkglow: () =>
+    "🌸 PinkGlow es un tratamiento facial que aporta luminosidad, hidratación y mejora el tono de la piel. Se puede combinar con Face Elite para potenciar resultados.",
+
+  toxina: () =>
+    "💉 En algunos protocolos faciales se usa toxina cosmética (no invasiva) para relajar líneas finas y mejorar el efecto lifting sin alterar la expresión natural.",
+
+  sesiones: () =>
+    "📅 Los planes incluyen entre 6 y 10 sesiones según el diagnóstico. La evaluación gratuita define la cantidad exacta y el tipo de tecnología recomendada.",
+
+  precios: () =>
+    "💰 Planes más solicitados:\n\n• Lipo Body Elite $664.000\n• Face Elite $358.400\n• Body Fitness $360.000\n• Push Up $376.000\n\n¿Quieres que te recomiende el ideal según tus objetivos?",
+
+  resultados: () =>
+    "📸 Los resultados del Face Elite incluyen piel más firme, reducción de arrugas finas y contorno definido. En tratamientos corporales, tonificación visible desde la 2ª sesión.",
+
+  duele: () =>
+    "🙂 No duele. Es un tratamiento cómodo, no invasivo y puedes retomar tus actividades inmediatamente después de la sesión.",
+
+  agendar: () =>
+    "📅 Puedes agendar tu evaluación gratuita aquí:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\nHorarios: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.",
+
+  fallback: () =>
+    "🤔 No logré entenderte bien. ¿Buscas información sobre tratamientos, precios o deseas agendar tu evaluación gratuita?",
 };
-
-// === INTERPRETACIÓN ===
-export function interpretarIntencion(text) {
-  const t = text.toLowerCase();
-  if (/hola|buenas|hey/.test(t)) return "saludo";
-  if (/precio|vale|cu[aá]nto/.test(t)) return "precio";
-  if (/duele|dolor|molesta|seguro/.test(t)) return "sensacion";
-  if (/qué hace|consiste|funciona/.test(t)) return "descripcion";
-  if (/resultad/.test(t)) return "resultados";
-  if (/no|ninguno/.test(t)) return "rechazo";
-  return "fallback";
-}
-
-export function obtenerDominio(text) {
-  const t = text.toLowerCase();
-  if (/face|facial|cara|hifu|arrugas|antiage|lifting/.test(t)) return "facial";
-  if (/lipo|abdomen|grasa|cintura|gluteos|piernas|fitness|push/.test(t)) return "corporal";
-  if (/agenda|evaluaci|cita|hora/.test(t)) return "general";
-  return null;
-}

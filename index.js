@@ -1,8 +1,9 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import fs from "fs";
-import { responses, interpretarIntencion, obtenerDominio } from "./responses.js";
+import { getResponse } from "./responses.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
@@ -11,118 +12,70 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PORT = process.env.PORT || 10000;
 
-// === CONTEXTO LOCAL ===
-const contextoPath = "./contexto.json";
-if (!fs.existsSync(contextoPath)) fs.writeFileSync(contextoPath, "{}");
-
-// === WEBHOOK VERIFY ===
+// === VERIFICACIÓN WEBHOOK ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
+
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado con Meta");
+    console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
-  } else res.sendStatus(403);
+  } else {
+    res.sendStatus(403);
+  }
 });
 
-// === WEBHOOK RECEPCIÓN ===
+// === RECEPCIÓN DE MENSAJES ===
 app.post("/webhook", async (req, res) => {
   try {
-    const body = req.body;
-    if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const msg = entry?.changes?.[0]?.value?.messages?.[0];
-      if (!msg?.text?.body) return res.sendStatus(200);
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const value = changes?.value;
+    const messageObj = value?.messages?.[0];
 
-      const from = msg.from;
-      const text = msg.text.body.trim().toLowerCase();
-      console.log(`📩 ${from}: "${text}"`);
+    if (!messageObj) return res.sendStatus(200);
 
-      // Cargar contexto anterior
-      const contexto = cargarContexto(from);
-      const ahora = Date.now();
-      const diferencia = contexto.timestamp ? ahora - contexto.timestamp : Infinity;
-      if (diferencia > 30 * 60 * 1000) {
-        contexto.dominio = null;
-        contexto.ultimaIntencion = null;
-      }
+    const from = messageObj.from;
+    const text = messageObj.text?.body?.toLowerCase().trim();
 
-      // === Interpretar texto ===
-      let intencion = interpretarIntencion(text);
-      let dominio = obtenerDominio(text) || contexto.dominio || "general";
+    console.log("📩 Mensaje recibido:", text);
 
-      // === Reacciones cortas (sí / no / resultados / precio / descripción) ===
-      if (/^s[ií]$|claro|ok|dale/.test(text)) {
-        intencion = contexto.ultimaIntencion || "descripcion";
-      } else if (/no|ninguno/.test(text)) {
-        intencion = "rechazo";
-      } else if (/resultad/.test(text)) {
-        intencion = "resultados";
-      }
+    const reply = await getResponse(text);
 
-      // === Si habla de precio o descripción, mantener dominio ===
-      if (/cu[aá]nto|vale|precio/.test(text)) intencion = "precio";
-      if (/qué hace|en qué consiste|como funciona|cómo funciona/.test(text))
-        intencion = "descripcion";
-      if (/duele|dolor|molesta|seguro/.test(text)) intencion = "sensacion";
-
-      // === Actualizar contexto ===
-      guardarContexto(from, {
-        dominio,
-        ultimaIntencion: intencion,
-        timestamp: ahora,
-      });
-
-      // === Generar respuesta ===
-      const reply = responses.generar(dominio, intencion, contexto.ultimaIntencion);
-      await enviarMensajeWhatsApp(from, reply);
-    }
+    await enviarMensaje(from, reply);
     res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Error webhook:", err);
+    console.error("Error en webhook:", err);
     res.sendStatus(500);
   }
 });
 
-// === ENVÍO WHATSAPP ===
-async function enviarMensajeWhatsApp(to, text) {
-  const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
+// === FUNCIÓN DE ENVÍO DE MENSAJE ===
+async function enviarMensaje(to, body) {
   const payload = {
     messaging_product: "whatsapp",
     to,
-    type: "text",
-    text: { body: text },
+    text: { body },
   };
-  const options = {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  };
-  const res = await fetch(url, options);
-  const data = await res.json();
-  if (!res.ok) console.error("❌ Error al enviar:", data);
-  else console.log("✅ Respuesta enviada:", text);
+
+  const r = await fetch(
+    `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const data = await r.json();
+  console.log("📤 Enviado a WhatsApp:", data);
 }
 
-// === CONTEXTO LOCAL ===
-function cargarContexto(id) {
-  const data = JSON.parse(fs.readFileSync(contextoPath, "utf8"));
-  return data[id] || {};
-}
-function guardarContexto(id, info) {
-  const data = JSON.parse(fs.readFileSync(contextoPath, "utf8"));
-  data[id] = info;
-  fs.writeFileSync(contextoPath, JSON.stringify(data, null, 2));
-}
-
-// === SERVIDOR ===
 app.listen(PORT, () => {
-  console.log("//////////////////////////////////////////////////////////");
-  console.log(`✅ Zara IA Body Elite activa en puerto ${PORT}`);
-  console.log("🧠 Nivel 4.0: comprensión contextual y memoria dinámica");
-  console.log("//////////////////////////////////////////////////////////");
+  console.log(`🚀 Zara IA Body Elite activa en puerto ${PORT}`);
+  console.log("🧠 Versión 4.5 — comprensión contextual extendida");
 });
