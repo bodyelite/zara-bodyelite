@@ -1,60 +1,64 @@
-import stringSimilarity from "string-similarity";
-
 export const responses = {
-  saludo: () =>
-    "👋 ¡Hola! Soy Zara, asistente IA de Body Elite Estética Avanzada. ¿Quieres conocer tratamientos, precios o agendar tu diagnóstico gratuito?",
+  generar: (dominio, intencion) => {
+    dominio = dominio || "general";
+    intencion = intencion || "fallback";
 
-  lipo: () =>
-    "💎 Lipo Body Elite combina HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor. Moldea abdomen, cintura y muslos con resultados visibles desde la 2ª sesión.",
+    const grupo = {
+      facial: {
+        saludo: "👋 ¡Hola! Soy Zara, asistente IA de Body Elite. Cuéntame si buscas rejuvenecer, lifting o mejorar firmeza facial.",
+        descripcion:
+          "✨ *Face Elite* combina HIFU focal, Radiofrecuencia y Pink Glow para lifting facial sin cirugía. Estimula colágeno y mejora textura.",
+        precio:
+          "💰 El plan *Face Elite* tiene un valor de *$358.400 CLP* e incluye 3 tecnologías faciales avanzadas.",
+        sensacion:
+          "😊 No duele. Es un tratamiento no invasivo y cómodo, puedes retomar tus actividades de inmediato.",
+        fallback:
+          "¿Te interesa conocer resultados o precios del tratamiento facial?",
+      },
+      corporal: {
+        saludo: "👋 ¡Hola! Soy Zara, asistente IA de Body Elite. Cuéntame qué zona deseas mejorar: abdomen, glúteos o piernas.",
+        descripcion:
+          "💎 Los tratamientos corporales combinan *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor* para reducir grasa y tonificar.",
+        precio:
+          "💰 Planes corporales más solicitados:\n- Lipo Body Elite $664.000\n- Push Up $376.000\n- Body Fitness $360.000",
+        sensacion:
+          "✨ No genera dolor, solo calor leve o contracciones musculares tolerables. Son procedimientos no invasivos.",
+        fallback:
+          "¿Te gustaría saber qué plan corporal es ideal según tu objetivo?",
+      },
+      general: {
+        saludo:
+          "👋 ¡Hola! Soy Zara, asistente IA de Body Elite. ¿Buscas información sobre tratamientos corporales, faciales o deseas agendar una evaluación gratuita?",
+        descripcion:
+          "📋 Ofrecemos planes corporales (Lipo, Push Up, Fitness) y faciales (Face Elite, HIFU). Todos son no invasivos y con resultados visibles.",
+        precio:
+          "💎 Planes destacados:\n- Lipo Body Elite $664.000\n- Push Up $376.000\n- Face Elite $358.400",
+        sensacion:
+          "Todos nuestros procedimientos son seguros, sin bisturí ni recuperación. Solo una leve sensación de calor o activación muscular.",
+        fallback:
+          "¿Quieres que te recomiende un tratamiento según tu objetivo corporal o facial?",
+      },
+    };
 
-  pushup: (texto = "", contexto = {}) => {
-    if (/precio|vale|cuánto/.test(texto)) {
-      return "💰 El Push Up Body Elite cuesta $376.000 CLP el plan completo (EMS + Radiofrecuencia Focalizada).";
-    }
-    return "🍑 Push Up Body Elite levanta y tonifica glúteos con ProSculpt EMS + Radiofrecuencia Focalizada. Resultados visibles desde la 2ª sesión. ¿Quieres saber su valor o agendar tu evaluación gratuita?";
+    return grupo[dominio]?.[intencion] || grupo.general.fallback;
   },
-
-  fitness: () =>
-    "🏋️ Body Fitness Pro mejora tono y definición muscular con EMS y ondas electromagnéticas focalizadas. Ideal para piernas, brazos y abdomen.",
-
-  face: () =>
-    "✨ Face Elite combina HIFU focal, Radiofrecuencia y toxina cosmética para rejuvenecer rostro sin cirugía. Efecto lifting visible desde la primera sesión.",
-
-  evaluacion: () =>
-    "📅 Puedes agendar tu evaluación gratuita aquí:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\nHorarios: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.",
-
-  hifu: () =>
-    "💠 HIFU 12D estimula colágeno y reduce grasa localizada. Ideal para rostro, cuello o abdomen. Tratamiento indoloro y sin bisturí.",
-
-  fallback: () =>
-    "🤔 No logré entenderte bien. ¿Buscas información sobre tratamientos, precios o agendar tu evaluación gratuita?",
 };
 
-// ==== INTENCIÓN BÁSICA ====
+// === CLASIFICADORES DE INTENCIÓN Y DOMINIO ===
 export function interpretarIntencion(text) {
-  const frases = text.toLowerCase();
-  const patrones = {
-    saludo: ["hola", "buenas", "qué tal", "ola"],
-    lipo: ["bajar grasa", "abdomen", "cintura", "lipo"],
-    pushup: ["glúteo", "gluteos", "glúteos", "levantar", "tonificar"],
-    fitness: ["músculo", "ejercicio", "tonificar cuerpo", "fitness"],
-    face: ["cara", "rostro", "facial", "antiage"],
-    evaluacion: ["agendar", "evaluación", "cita", "reservo"],
-    hifu: ["hifu", "colágeno", "piel", "flacidez"],
-  };
-
-  let coincidencias = [];
-  for (const [intencion, lista] of Object.entries(patrones)) {
-    lista.forEach((palabra) => {
-      const score = stringSimilarity.compareTwoStrings(frases, palabra);
-      coincidencias.push({ intencion, score });
-    });
-  }
-
-  const mejor = coincidencias.sort((a, b) => b.score - a.score)[0];
-  return mejor && mejor.score > 0.35 ? mejor.intencion : "fallback";
+  const t = text.toLowerCase();
+  if (/hola|buenas|hey/.test(t)) return "saludo";
+  if (/precio|vale|cu[aá]nto/.test(t)) return "precio";
+  if (/duele|dolor|molesta|seguro/.test(t)) return "sensacion";
+  if (/qué hace|consiste|funciona/.test(t)) return "descripcion";
+  return "fallback";
 }
 
-export function integrarPatrones(patronesExternos) {
-  Object.assign(responses, patronesExternos);
+export function obtenerDominio(text) {
+  const t = text.toLowerCase();
+  if (/face|facial|cara|hifu|arrugas|antiage|lifting/.test(t)) return "facial";
+  if (/lipo|abdomen|grasa|cintura|gluteos|piernas|fitness|push/.test(t))
+    return "corporal";
+  if (/agenda|evaluaci|cita|hora/.test(t)) return "general";
+  return null;
 }
