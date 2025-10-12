@@ -1,3 +1,7 @@
+// === Zara IA Body Elite ===
+// Integración oficial con Meta WhatsApp Cloud API
+// Autor: JC | Fecha: Octubre 2025
+
 import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
@@ -5,118 +9,117 @@ import axios from "axios";
 const app = express();
 app.use(bodyParser.json());
 
-// --- CONFIGURACIÓN PRINCIPAL ---
-const VERIFY_TOKEN = "zara_bodyelite_verify";
-const WHATSAPP_TOKEN = "EAAUydX2y57wBPqTsqUaN8MuF7Hmk8Dt7vYmVqedN1Hfzrn3nsPpmUnOjtgRgwmkGpEEbWHCaiMEfnSa6ZAHuZAZBhzclxHpPISlq2nq3hZAg3wLdgN1P1eTyTptsy06arN8ptVt1DYQZBv0vy495ZCZB7kAQlnxo1L8r6A397ZCZAZCBF8ROizi4gbfPBA6x8M9Gve3Bq9os4fBoGmkjvuIAFWxq3iQs5fiZAE3SUSa7aMZD";
-const PHONE_NUMBER_ID = "84036109156943";
+// 🔐 Token extendido (válido 60 días)
+const WHATSAPP_TOKEN = "EAAUydX2y57wBPoPahaD8YwZBP92Cos5Qp1AmMV2yym8ZAbjE1BmjpBkvidN5VVaUSBKsSPTjR5Khmxh24HAZBHAGEVzRLQTt8lRyhTWlZCDjQHeaNuyIq1T33tZB6EUJrnsZCcOzQEZB7zxUZCcEdIrXG9pnZAPwpfIyWy6HKLMZAKZAscFZB5GswRZAUMoUJIgZDZD";
 
-// --- WEBHOOK DE VERIFICACIÓN (GET) ---
+// 📞 ID del número conectado a la API de WhatsApp
+const PHONE_NUMBER_ID = "84036109156943"; // Body Elite WhatsApp Cloud API
+
+// =======================
+// 🔍 VERIFICACIÓN WEBHOOK
+// =======================
 app.get("/webhook", (req, res) => {
+  const VERIFY_TOKEN = "zara_bodyelite_verify";
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode && token === VERIFY_TOKEN) {
+  if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("✅ Webhook verificado correctamente con Meta");
     res.status(200).send(challenge);
   } else {
+    console.error("❌ Error de verificación de webhook");
     res.sendStatus(403);
   }
 });
 
-// --- RECEPCIÓN DE MENSAJES (POST) ---
+// =======================
+// 💬 RECEPCIÓN DE MENSAJES
+// =======================
 app.post("/webhook", async (req, res) => {
   try {
-    const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const message = changes?.value?.messages?.[0];
+    const body = req.body;
 
-    if (message && message.text) {
+    if (body.object === "whatsapp_business_account") {
+      const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      if (!message) return res.sendStatus(200);
+
       const from = message.from;
-      const userMsg = message.text.body.toLowerCase().trim();
-      console.log(`💬 Mensaje recibido de ${from}: "${userMsg}"`);
+      const text = message.text?.body?.toLowerCase() || "";
+      console.log(`💬 Mensaje recibido de ${from}: "${text}"`);
 
-      const reply = await generarRespuestaZara(userMsg);
-      await enviarMensajeWhatsApp(from, reply);
+      let responseText = "";
+
+      // === 🧠 Lógica de respuesta de Zara ===
+      if (text.includes("hola") || text.includes("buenas")) {
+        responseText =
+          "👋 ¡Hola! Soy *Zara*, asistente virtual de *Body Elite Estética Avanzada*.\n¿Quieres conocer nuestros planes *corporales* o *faciales*?";
+      } else if (
+        text.includes("lipo") ||
+        text.includes("grasa") ||
+        text.includes("abdomen") ||
+        text.includes("cintura") ||
+        text.includes("reductiva")
+      ) {
+        responseText =
+          "🔥 *Tratamientos corporales reductivos Body Elite:*\n\n• Lipo Body Elite — $664.000 (10 sesiones)\n• Lipo Reductiva — $480.000\n• Lipo Express — $432.000\n\n✨ Resultados desde la 3ª sesión.\nReserva tu diagnóstico aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      } else if (
+        text.includes("face") ||
+        text.includes("facial") ||
+        text.includes("piel") ||
+        text.includes("rostro")
+      ) {
+        responseText =
+          "💆‍♀️ *Tratamientos faciales disponibles:*\n\n• Face Smart — $198.400\n• Face Antiage — $281.600\n• Full Face — $584.000\n\n✨ Incluyen limpieza profunda, radiofrecuencia y luz LED avanzada.";
+      } else if (text.includes("agendar") || text.includes("reserva")) {
+        responseText =
+          "📅 Puedes agendar tu hora directamente aquí 👇\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\nO dime el día y hora que prefieres 🧡";
+      } else if (text.includes("promocion") || text.includes("gratis")) {
+        responseText =
+          "🎁 Este mes Body Elite tiene *HIFU facial gratis* al contratar tu plan corporal.\n\nConsulta disponibilidad escribiendo *agendar* o visita:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      } else {
+        responseText =
+          "🤖 No estoy segura de haber entendido. Puedes escribir:\n👉 *Lipo* para conocer planes corporales\n👉 *Face* para faciales\n👉 *Agendar* para reservar tu diagnóstico gratuito";
+      }
+
+      // === 📨 Enviar respuesta al usuario ===
+      await axios.post(
+        `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`,
+        {
+          messaging_product: "whatsapp",
+          to: from,
+          type: "text",
+          text: { body: responseText },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("✅ Mensaje enviado correctamente ✔️");
     }
+
     res.sendStatus(200);
-  } catch (err) {
-    console.error("❌ Error en recepción de mensaje:", err);
+  } catch (error) {
+    console.error(
+      "⚠️ Error enviando mensaje:",
+      error.response?.data || error.message
+    );
     res.sendStatus(500);
   }
 });
 
-// --- FUNCIÓN: ENVÍO DE RESPUESTAS ---
-async function enviarMensajeWhatsApp(to, text) {
-  try {
-    await axios.post(
-      `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`,
-      {
-        messaging_product: "whatsapp",
-        to,
-        type: "text",
-        text: { body: text },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    console.log("✅ Respuesta enviada correctamente");
-  } catch (error) {
-    console.error("⚠️ Error enviando mensaje:", error.response?.data || error.message);
-  }
-}
-
-// --- FUNCIÓN: LÓGICA DE RESPUESTA DE ZARA ---
-async function generarRespuestaZara(msg) {
-  // === SALUDO ===
-  if (["hola", "buenas", "holaa", "hola zara"].includes(msg))
-    return "👋 Hola, soy Zara — asistente virtual de *Body Elite Estética Avanzada*. ¿En qué puedo ayudarte hoy?";
-
-  // === PLANES CORPORALES ===
-  if (msg.includes("lipo") || msg.includes("cintura") || msg.includes("abdomen"))
-    return `💆‍♀️ Tenemos varios planes corporales para moldear y reducir contorno:
-• *Lipo Body Elite* – $664.000 (10 sesiones)
-• *Lipo Reductiva* – $480.000 (8 sesiones)
-• *Lipo Express* – $432.000 (6 sesiones)
-✨ Todos combinan HIFU 12D + Radiofrecuencia + EMS Sculptor según diagnóstico.
-📅 Puedes agendar tu evaluación gratuita aquí:
-https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
-
-  // === PLANES FACIALES ===
-  if (msg.includes("facial") || msg.includes("rostro") || msg.includes("cara"))
-    return `✨ Estos son nuestros planes faciales más consultados:
-• *Face Elite* $358.400  
-• *Face Antiage* $281.600  
-• *Face Smart* $198.400  
-• *Limpieza Facial Full* $120.000  
-Todos incluyen protocolos personalizados según tu tipo de piel.`;
-
-  // === TONIFICACIÓN / ESCULTOR ===
-  if (msg.includes("gluteo") || msg.includes("sculptor") || msg.includes("tonificar"))
-    return `🍑 Nuestro plan *Push Up* ($376.000) combina EMS Sculptor + Radiofrecuencia para levantar y tonificar glúteos desde la 1ª sesión.`;
-
-  // === CONTACTO / AGENDAMIENTO ===
-  if (msg.includes("agenda") || msg.includes("reserva") || msg.includes("hora"))
-    return `📅 Puedes agendar directamente tu cita aquí:
-https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9  
-📍 Body Elite – Av. Las Perdices 2990 Local 23 Peñalolén  
-🕓 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00`;
-
-  // === AYUDA GENERAL ===
-  return `💙 Soy *Zara IA Body Elite*. Puedo ayudarte a conocer nuestros planes corporales, faciales o agendar tu diagnóstico gratuito.  
-Escríbeme por ejemplo:  
-👉 "planes corporales"  
-👉 "tratamientos faciales"  
-👉 "quiero agendar"`;
-}
-
-// --- INICIO DEL SERVIDOR ---
+// =======================
+// 🚀 SERVIDOR ACTIVO
+// =======================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log("🚀 Servidor activo en puerto", PORT);
-  console.log("🤖 Zara IA Body Elite lista y escuchando mensajes...");
+  console.log(`🚀 Servidor activo en puerto ${PORT}`);
+  console.log("💬 Zara IA Body Elite lista y escuchando mensajes...");
+  console.log(
+    "🌐 Disponible en https://zara-bodyelite1.onrender.com"
+  );
 });

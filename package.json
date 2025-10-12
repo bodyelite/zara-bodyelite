@@ -1,15 +1,20 @@
 {
   "name": "zara-bodyelite",
-  "version": "6.0.0",
+  "version": "5.0.0",
+  "description": "Zara IA Body Elite - Bot conectado a Meta WhatsApp Cloud API",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "axios": "^1.6.8",
-    "body-parser": "^1.20.2",
-    "dotenv": "^16.4.5",
+    "axios": "^1.7.3",
+    "body-parser": "^1.20.3",
     "express": "^4.19.2"
-  }
+  },
+  "engines": {
+    "node": ">=22.x"
+  },
+  "author": "Body Elite Estética Avanzada",
+  "license": "MIT"
 }
