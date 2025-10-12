@@ -1,51 +1,108 @@
 import fs from "fs";
 
-// Cargar base de conocimiento
 let knowledge = {};
 try {
   const data = fs.readFileSync("./knowledge.json", "utf8");
   knowledge = JSON.parse(data);
 } catch (err) {
   console.error("Error cargando knowledge.json:", err);
-  knowledge = {
-    saludo: "Hola, soy Zara 💬 asistente de Body Elite.",
-    fallback: "No puedo responder por ahora."
-  };
 }
 
-// Normalizador de texto (minúsculas + sin tildes)
-function cleanText(msg) {
-  return msg
+function clean(text) {
+  return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s]/g, "")
+    .trim();
 }
 
-// Respuestas según intención
+// Clasificador de intención con prioridad por contexto
+function detectarIntencion(msg) {
+  const text = clean(msg);
+
+  // 1. saludos
+  if (/(hola|buenas|saludo|hey)/.test(text)) return "saludo";
+
+  // 2. agendamiento o diagnóstico
+  if (/(agenda|hora|reserva|diagnostico)/.test(text)) return "agendar";
+
+  // 3. precios o costos
+  if (/(precio|cuesta|valor)/.test(text)) return "precios";
+
+  // 4. palabras de promoción
+  if (/(gratis|promocion|descuento|oferta|promo)/.test(text)) return "promocion";
+
+  // 5. tecnologías o dudas explicativas
+  if (/(hifu|cavitacion|radiofrecuencia|ems|sculptor|pink glow)/.test(text)) return "tecnologia_detalle";
+
+  // 6. planes mencionados directamente (modo campaña)
+  const planes = [
+    "push up", "lipo body elite", "lipo express", "lipo reductiva", "lipo reductiva 12d",
+    "lipo full body", "body fitness", "body tensor",
+    "face elite", "face smart", "face inicia", "face light", "limpieza facial"
+  ];
+  for (const plan of planes) {
+    if (text.includes(clean(plan))) return plan;
+  }
+
+  // 7. objetivos generales
+  if (/(grasa|abdomen|cintura|moldear|reducir)/.test(text)) return "lipo";
+  if (/(flacidez|celulitis|piel|reafirmar|pierna|muslo)/.test(text)) return "body_tens";
+  if (/(tonificar|gluteo|musculo|marcar|firmeza)/.test(text)) return "body_fit";
+  if (/(cara|rostro|facial|arruga|mancha)/.test(text)) return "face";
+  if (/(asesora|humano|persona|hablar)/.test(text)) return "derivar";
+
+  return "fallback";
+}
+
+// Mapa de respuestas de planes y tecnologías
+const planesMap = {
+  "push up": "push_up",
+  "lipo body elite": "lipo",
+  "lipo express": "lipo_express",
+  "lipo reductiva": "lipo_reductiva",
+  "lipo reductiva 12d": "lipo_12d",
+  "lipo full body": "lipo_full",
+  "body fitness": "body_fit",
+  "body tensor": "body_tens",
+  "face elite": "face_elite",
+  "face smart": "face_smart",
+  "face inicia": "face_inicia",
+  "face light": "face_light",
+  "limpieza facial": "face_light"
+};
+
 const responses = {
   saludo: () => knowledge.saludo,
   agendar: () => knowledge.agendar,
   precios: () => knowledge.precios,
-  tratamientos: (msg) => {
-    const text = cleanText(msg);
-
-    if (text.includes("grasa") || text.includes("abdomen") || text.includes("cintura"))
-      return knowledge.lipo;
-
-    if (text.includes("flacidez") || text.includes("celulitis") || text.includes("reafirmar") || text.includes("piel"))
-      return knowledge.body_tens;
-
-    if (text.includes("musculo") || text.includes("tonificar") || text.includes("gluteo"))
-      return knowledge.body_fit;
-
-    if (text.includes("cara") || text.includes("rostro") || text.includes("facial"))
-      return knowledge.face;
-
-    return knowledge.tratamientos;
+  promocion: () => knowledge.promocion,
+  lipo: () => knowledge.lipo,
+  body_tens: () => knowledge.body_tens,
+  body_fit: () => knowledge.body_fit,
+  face: () => knowledge.face,
+  tecnologia_detalle: (msg) => {
+    const text = clean(msg);
+    if (text.includes("hifu")) return knowledge.hifu;
+    if (text.includes("cavitacion")) return knowledge.cavitacion;
+    if (text.includes("radiofrecuencia")) return knowledge.radiofrecuencia;
+    if (text.includes("ems") || text.includes("sculptor")) return knowledge.ems;
+    if (text.includes("pink glow")) return knowledge.pink_glow;
+    return knowledge.tecnologias;
   },
   tecnologias: () => knowledge.tecnologias,
   derivar: () => knowledge.derivar,
   fallback: () => knowledge.fallback
 };
 
-export default responses;
+// Controlador principal
+function obtenerRespuesta(msg) {
+  const intent = detectarIntencion(msg);
+  if (planesMap[intent]) return knowledge[planesMap[intent]];
+  if (intent === "tecnologia_detalle") return responses.tecnologia_detalle(msg);
+  const respuesta = responses[intent] || responses.fallback;
+  return respuesta();
+}
+
+export default obtenerRespuesta;
