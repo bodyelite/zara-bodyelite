@@ -1,5 +1,6 @@
 import fs from "fs";
 
+// --- Carga de base de conocimiento ---
 let knowledge = {};
 try {
   const data = fs.readFileSync("./knowledge.json", "utf8");
@@ -8,6 +9,7 @@ try {
   console.error("Error cargando knowledge.json:", err);
 }
 
+// --- Utilidad para limpiar texto ---
 function clean(text) {
   return text
     .toLowerCase()
@@ -17,18 +19,19 @@ function clean(text) {
     .trim();
 }
 
+// --- Detección de intención ---
 function detectarIntencion(msg) {
   const text = clean(msg);
 
   if (/(hola|buenas|saludo|hey)/.test(text)) return "saludo";
-  if (/(agenda|hora|reserva|diagnostico)/.test(text)) return "agendar";
+  if (/(agenda|hora|reserva|diagnostico|cita)/.test(text)) return "agendar";
   if (/(precio|cuesta|valor)/.test(text)) return "precios";
-  if (/(gratis|promocion|descuento|oferta|promo)/.test(text)) return "promocion";
+  if (/(promocion|descuento|oferta|promo|gratis)/.test(text)) return "promocion";
   if (/(hifu|cavitacion|radiofrecuencia|ems|sculptor|pink glow)/.test(text)) return "tecnologia_detalle";
 
   const planes = [
-    "push up", "lipo body elite", "lipo express", "lipo reductiva", "lipo reductiva 12d",
-    "lipo full body", "body fitness", "body tensor",
+    "push up", "lipo body elite", "lipo express", "lipo reductiva",
+    "lipo reductiva 12d", "lipo full body", "body fitness", "body tensor",
     "face elite", "face smart", "face inicia", "face light", "limpieza facial"
   ];
   for (const plan of planes) {
@@ -44,6 +47,7 @@ function detectarIntencion(msg) {
   return "fallback";
 }
 
+// --- Asociación de planes ---
 const planesMap = {
   "push up": "push_up",
   "lipo body elite": "lipo",
@@ -60,6 +64,7 @@ const planesMap = {
   "limpieza facial": "face_light"
 };
 
+// --- Respuestas ---
 const responses = {
   saludo: () => knowledge.saludo,
   agendar: () => knowledge.agendar,
@@ -80,20 +85,20 @@ const responses = {
   },
   tecnologias: () => knowledge.tecnologias,
   derivar: () => knowledge.derivar,
-  fallback: () => knowledge.fallback || "No entendí del todo, pero puedo ayudarte con tratamientos o precios."
+  fallback: () =>
+    knowledge.fallback ||
+    "No entendí del todo 🤔 pero puedo ayudarte con tratamientos, precios o agendamiento. ¿Qué deseas revisar?"
 };
 
+// --- Obtiene la respuesta final ---
 function obtenerRespuesta(msg) {
   const intent = detectarIntencion(msg);
 
-  // Prioridad de respuestas definidas
   if (planesMap[intent]) return knowledge[planesMap[intent]];
 
-  // Manejo seguro de intenciones sin función
   if (intent === "tecnologia_detalle") return responses.tecnologia_detalle(msg);
   if (responses[intent]) return responses[intent](msg);
 
-  // fallback garantizado
   return responses.fallback();
 }
 
