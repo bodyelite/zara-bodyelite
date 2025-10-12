@@ -7,26 +7,31 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
+// === VARIABLES DE ENTORNO ===
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 
+// === FETCH COMPATIBLE CON RENDER ===
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
 console.log("🚀 Zara IA Body Elite activa en puerto", PORT);
 
-// --- Ruta raíz ---
+// === RUTA RAÍZ ===
 app.get("/", (req, res) => {
   res.status(200).send("Zara IA Body Elite en línea ✅");
 });
 
-// --- Webhook de verificación ---
+// === VERIFICACIÓN DEL WEBHOOK ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
   if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente");
+    console.log("✅ Webhook verificado correctamente con Meta");
     res.status(200).send(challenge);
   } else {
     console.warn("❌ Error en la verificación del webhook");
@@ -34,10 +39,11 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// --- Recepción de mensajes ---
+// === RECEPCIÓN DE MENSAJES ===
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
+
     if (body.object) {
       const entry = body.entry?.[0];
       const changes = entry?.changes?.[0];
@@ -46,20 +52,18 @@ app.post("/webhook", async (req, res) => {
       if (messages && messages[0]) {
         const msg = messages[0];
         const from = msg.from;
-        const text = msg.text?.body;
+        const text = msg.text?.body?.toLowerCase().trim();
 
-        console.log("💬 Mensaje recibido de", from + ":", text);
+        console.log("💬 Mensaje recibido:", text);
 
         const respuesta = obtenerRespuesta(text);
 
         if (!respuesta) {
-          console.log("⚠️ No se generó respuesta, usando fallback");
           await enviarMensaje(from, responses.fallback());
         } else {
           await enviarMensaje(from, respuesta);
         }
       }
-
       res.sendStatus(200);
     } else {
       res.sendStatus(404);
@@ -70,7 +74,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// --- Función para enviar mensajes ---
+// === FUNCIÓN DE ENVÍO ===
 async function enviarMensaje(to, message) {
   try {
     const url = `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`;
@@ -80,7 +84,7 @@ async function enviarMensaje(to, message) {
       text: { body: message },
     };
 
-    const r = await fetch(url, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${WHATSAPP_TOKEN}`,
@@ -89,19 +93,19 @@ async function enviarMensaje(to, message) {
       body: JSON.stringify(payload),
     });
 
-    if (!r.ok) {
-      const err = await r.text();
+    if (!response.ok) {
+      const err = await response.text();
       console.error("❌ Error enviando mensaje:", err);
     } else {
-      console.log("✅ Mensaje enviado a", to, ":", message);
+      console.log("✅ Mensaje enviado:", message);
     }
   } catch (err) {
-    console.error("❌ Error general al enviar mensaje:", err);
+    console.error("❌ Error general en enviarMensaje:", err);
   }
 }
 
-// --- Servidor ---
+// === SERVIDOR ACTIVO ===
 app.listen(PORT, () => {
-  console.log(`✅ Your service is live 🎉`);
-  console.log(`🌐 Available at: https://zara-bodyelite1.onrender.com`);
+  console.log("✅ Your service is live 🎉");
+  console.log("🌐 Disponible en: https://zara-bodyelite1.onrender.com");
 });

@@ -1,105 +1,34 @@
-import fs from "fs";
+export const responses = {
+  saludo: () =>
+    "👋 Hola, soy Zara, asistente virtual de Body Elite Estética Avanzada. Puedo ayudarte con tratamientos, precios o agendar una cita. ¿Qué deseas revisar hoy?",
 
-// --- Carga de base de conocimiento ---
-let knowledge = {};
-try {
-  const data = fs.readFileSync("./knowledge.json", "utf8");
-  knowledge = JSON.parse(data);
-} catch (err) {
-  console.error("Error cargando knowledge.json:", err);
-}
+  bajar_grasa: () =>
+    "💎 Nuestro plan *Lipo Body Elite* combina HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor. Moldea abdomen, cintura y muslos con resultados visibles desde la segunda sesión.",
 
-// --- Utilidad para limpiar texto ---
-function clean(text) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\w\s]/g, "")
-    .trim();
-}
+  celulitis: () =>
+    "✨ Para tratar celulitis te recomiendo el *Body Tensor* o *Lipo Reductiva*, con Radiofrecuencia, Cavitación y drenaje. Mejoran firmeza y textura desde las primeras sesiones.",
 
-// --- Detección de intención ---
-function detectarIntencion(msg) {
-  const text = clean(msg);
+  push_up: () =>
+    "🍑 El *Push Up Body Elite* trabaja glúteos con *ProSculpt EMS + Radiofrecuencia Focalizada*. Tonifica y eleva sin dolor ni bisturí, con resultados visibles desde la segunda sesión.",
 
-  if (/(hola|buenas|saludo|hey)/.test(text)) return "saludo";
-  if (/(agenda|hora|reserva|diagnostico|cita)/.test(text)) return "agendar";
-  if (/(precio|cuesta|valor)/.test(text)) return "precios";
-  if (/(promocion|descuento|oferta|promo|gratis)/.test(text)) return "promocion";
-  if (/(hifu|cavitacion|radiofrecuencia|ems|sculptor|pink glow)/.test(text)) return "tecnologia_detalle";
+  hifu: () =>
+    "⚡️El *HIFU 12D* utiliza ultrasonido focalizado de alta intensidad para tensar la piel y estimular colágeno sin cirugía. Ideal para rostro, cuello, abdomen y brazos.",
 
-  const planes = [
-    "push up", "lipo body elite", "lipo express", "lipo reductiva",
-    "lipo reductiva 12d", "lipo full body", "body fitness", "body tensor",
-    "face elite", "face smart", "face inicia", "face light", "limpieza facial"
-  ];
-  for (const plan of planes) {
-    if (text.includes(clean(plan))) return plan;
-  }
+  precios: () =>
+    "📋 Planes más solicitados:\n\n💎 Lipo Body Elite $664.000\n✨ Face Elite $358.400\n💪 Body Fitness $360.000\n🍑 Push Up $376.000\n\n¿Deseas que te recomiende el ideal según tus objetivos?",
 
-  if (/(grasa|abdomen|cintura|moldear|reducir)/.test(text)) return "lipo";
-  if (/(flacidez|celulitis|piel|reafirmar|pierna|muslo)/.test(text)) return "body_tens";
-  if (/(tonificar|gluteo|musculo|marcar|firmeza)/.test(text)) return "body_fit";
-  if (/(cara|rostro|facial|arruga|mancha)/.test(text)) return "face";
-  if (/(asesora|humano|persona|hablar)/.test(text)) return "derivar";
-
-  return "fallback";
-}
-
-// --- Asociación de planes ---
-const planesMap = {
-  "push up": "push_up",
-  "lipo body elite": "lipo",
-  "lipo express": "lipo_express",
-  "lipo reductiva": "lipo_reductiva",
-  "lipo reductiva 12d": "lipo_12d",
-  "lipo full body": "lipo_full",
-  "body fitness": "body_fit",
-  "body tensor": "body_tens",
-  "face elite": "face_elite",
-  "face smart": "face_smart",
-  "face inicia": "face_inicia",
-  "face light": "face_light",
-  "limpieza facial": "face_light"
-};
-
-// --- Respuestas ---
-const responses = {
-  saludo: () => knowledge.saludo,
-  agendar: () => knowledge.agendar,
-  precios: () => knowledge.precios,
-  promocion: () => knowledge.promocion,
-  lipo: () => knowledge.lipo,
-  body_tens: () => knowledge.body_tens,
-  body_fit: () => knowledge.body_fit,
-  face: () => knowledge.face,
-  tecnologia_detalle: (msg) => {
-    const text = clean(msg);
-    if (text.includes("hifu")) return knowledge.hifu;
-    if (text.includes("cavitacion")) return knowledge.cavitacion;
-    if (text.includes("radiofrecuencia")) return knowledge.radiofrecuencia;
-    if (text.includes("ems") || text.includes("sculptor")) return knowledge.ems;
-    if (text.includes("pink glow")) return knowledge.pink_glow;
-    return knowledge.tecnologias;
-  },
-  tecnologias: () => knowledge.tecnologias,
-  derivar: () => knowledge.derivar,
   fallback: () =>
-    knowledge.fallback ||
-    "No entendí del todo 🤔 pero puedo ayudarte con tratamientos, precios o agendamiento. ¿Qué deseas revisar?"
+    "🤔 No entendí del todo, pero puedo ayudarte con *tratamientos, precios, tecnologías o agenda*. ¿Sobre qué quieres saber?",
 };
 
-// --- Obtiene la respuesta final ---
-function obtenerRespuesta(msg) {
-  const intent = detectarIntencion(msg);
-
-  if (planesMap[intent]) return knowledge[planesMap[intent]];
-
-  if (intent === "tecnologia_detalle") return responses.tecnologia_detalle(msg);
-  if (responses[intent]) return responses[intent](msg);
-
-  return responses.fallback();
+export function obtenerRespuesta(text) {
+  if (!text) return null;
+  if (text.includes("hola") || text.includes("buenas")) return responses.saludo();
+  if (text.includes("grasa") || text.includes("bajar cintura") || text.includes("reductiva"))
+    return responses.bajar_grasa();
+  if (text.includes("celulitis")) return responses.celulitis();
+  if (text.includes("push up")) return responses.push_up();
+  if (text.includes("hifu")) return responses.hifu();
+  if (text.includes("precio") || text.includes("valor")) return responses.precios();
+  return null;
 }
-
-export default obtenerRespuesta;
