@@ -11,17 +11,20 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PORT = process.env.PORT || 10000;
 
-// === Archivo de aprendizaje local ===
+// ==== Archivos locales de memoria ====
 const aprendizajePath = "./aprendizaje.json";
-if (!fs.existsSync(aprendizajePath)) fs.writeFileSync(aprendizajePath, "[]");
+const contextoPath = "./contexto.json";
 
-// === Cargar patrones entrenados si existen ===
+if (!fs.existsSync(aprendizajePath)) fs.writeFileSync(aprendizajePath, "[]");
+if (!fs.existsSync(contextoPath)) fs.writeFileSync(contextoPath, "{}");
+
+// ==== Cargar patrones entrenados si existen ====
 if (fs.existsSync("./patrones.json")) {
   const patrones = JSON.parse(fs.readFileSync("./patrones.json", "utf8"));
   integrarPatrones(patrones);
 }
 
-// === WEBHOOK VERIFY ===
+// ==== WEBHOOK VERIFY ====
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -35,11 +38,10 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// === WEBHOOK RECEPCIÓN DE MENSAJES ===
+// ==== WEBHOOK RECEPCIÓN DE MENSAJES ====
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
-
     if (body.object === "whatsapp_business_account") {
       const entry = body.entry?.[0];
       const changes = entry?.changes?.[0];
@@ -48,26 +50,29 @@ app.post("/webhook", async (req, res) => {
       if (messages && messages.length > 0) {
         const msg = messages[0];
         const from = msg.from;
-        const text = msg.text?.body || "";
+        const text = (msg.text?.body || "").trim();
 
-        console.log(`📩 Mensaje recibido: "${text}" de ${from}`);
+        console.log(`📩 Mensaje recibido de ${from}: "${text}"`);
 
-        // === Análisis semántico ===
-        const { intencion, confianza } = analizarIntencionDetallada(text);
-        console.log(`🎯 Intención: ${intencion} (confianza ${confianza})`);
+        // Recuperar contexto previo
+        const contexto = cargarContexto(from);
+        const { intencion, confianza } = analizarIntencionDetallada(text, contexto);
 
         // Registrar aprendizaje
         registrarAprendizaje(text, intencion, confianza);
 
-        // Generar respuesta
+        // Generar respuesta con contexto
         let reply = "";
         if (responses[intencion]) {
-          reply = responses[intencion](intencion);
+          reply = responses[intencion](text, contexto);
         } else {
           reply = responses.fallback();
         }
 
-        // Enviar respuesta
+        // Actualizar contexto conversacional
+        guardarContexto(from, { ultimoTema: intencion, ultimoTexto: text });
+
+        // Enviar mensaje
         await enviarMensajeWhatsApp(from, reply);
       }
     }
@@ -79,10 +84,9 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// === FUNCIÓN DE ENVÍO A WHATSAPP ===
+// ==== FUNCIÓN DE ENVÍO A WHATSAPP ====
 async function enviarMensajeWhatsApp(to, text) {
   const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
-
   const payload = {
     messaging_product: "whatsapp",
     to,
@@ -101,12 +105,43 @@ async function enviarMensajeWhatsApp(to, text) {
 
   const res = await fetch(url, options);
   const data = await res.json();
-
   if (!res.ok) console.error("❌ Error al enviar mensaje:", data);
   else console.log("✅ Mensaje enviado correctamente");
 }
 
-// === APRENDIZAJE LOCAL CON PRECISIÓN ===
+// ==== FUNCIÓN DE INTENCIÓN + CONTEXTO ====
+function analizarIntencionDetallada(text, contexto) {
+  let intencion = interpretarIntencion(text);
+
+  // Si el mensaje es breve, intenta inferir desde el contexto
+  if (
+    (!intencion || intencion === "fallback") &&
+    contexto.ultimoTema &&
+    /cuánto|vale|precio/.test(text)
+  ) {
+    intencion = contexto.ultimoTema; // Ej: sigue hablando del mismo plan
+  }
+
+  let confianza = 0.7;
+  if (/hola|quiero|tratamiento|agenda|diagnóstico/.test(text)) confianza = 0.9;
+  if (/no entiendo|duda/.test(text)) confianza = 0.5;
+
+  return { intencion, confianza };
+}
+
+// ==== MEMORIA LOCAL ====
+function cargarContexto(id) {
+  const data = JSON.parse(fs.readFileSync(contextoPath, "utf8"));
+  return data[id] || {};
+}
+
+function guardarContexto(id, nuevoContexto) {
+  const data = JSON.parse(fs.readFileSync(contextoPath, "utf8"));
+  data[id] = nuevoContexto;
+  fs.writeFileSync(contextoPath, JSON.stringify(data, null, 2));
+}
+
+// ==== APRENDIZAJE LOCAL ====
 function registrarAprendizaje(texto, intencion, confianza) {
   const base = JSON.parse(fs.readFileSync(aprendizajePath, "utf8"));
   base.push({
@@ -116,33 +151,12 @@ function registrarAprendizaje(texto, intencion, confianza) {
     fecha: new Date().toISOString(),
   });
   fs.writeFileSync(aprendizajePath, JSON.stringify(base, null, 2));
-  console.log(`🧠 Aprendizaje registrado: ${texto} (${intencion}, ${confianza})`);
 }
 
-// === EXTENSIÓN PARA GUARDAR DETALLE SEMÁNTICO ===
-function analizarIntencionDetallada(text) {
-  try {
-    // Reutiliza la función de responses.js
-    const intencion = interpretarIntencion(text);
-
-    // Evaluar confianza semántica (estimada por similitud interna)
-    const palabras = text.split(/\s+/);
-    let confianza = 0.6;
-
-    if (palabras.length < 3) confianza = 0.7;
-    if (/hola|precio|lipo|push|face|hifu|fitness/.test(text)) confianza = 0.9;
-    if (/no entiendo|duda|explica/.test(text)) confianza = 0.5;
-
-    return { intencion, confianza };
-  } catch {
-    return { intencion: "fallback", confianza: 0.0 };
-  }
-}
-
-// === SERVIDOR ACTIVO ===
+// ==== SERVIDOR ====
 app.listen(PORT, () => {
   console.log("//////////////////////////////////////////////////////////");
   console.log(`✅ Zara IA Body Elite activa en puerto ${PORT}`);
-  console.log(`🌐 Servicio en Render con comprensión semántica`);
+  console.log("🧠 Nivel 3: comprensión contextual habilitada");
   console.log("//////////////////////////////////////////////////////////");
 });
