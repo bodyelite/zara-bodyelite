@@ -44,11 +44,9 @@ app.post("/webhook", async (req, res) => {
 
     console.log("📩 Mensaje recibido:", text);
 
-    // obtener contexto previo
     const prev = context.get(from) || {};
     const { reply, intent } = await getResponse(text, prev);
 
-    // guardar nuevo contexto
     context.set(from, { lastIntent: intent, lastMsg: text });
 
     await enviarMensaje(from, reply);
@@ -85,5 +83,5 @@ async function enviarMensaje(to, body) {
 
 app.listen(PORT, () => {
   console.log(`🚀 Zara IA Body Elite activa en puerto ${PORT}`);
-  console.log("🧠 Versión 4.6 — comprensión + memoria contextual");
+  console.log("🧠 Versión 4.7 — conocimiento técnico + memoria contextual");
 });
