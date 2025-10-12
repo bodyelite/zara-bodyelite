@@ -17,26 +17,15 @@ function clean(text) {
     .trim();
 }
 
-// Clasificador de intención con prioridad por contexto
 function detectarIntencion(msg) {
   const text = clean(msg);
 
-  // 1. saludos
   if (/(hola|buenas|saludo|hey)/.test(text)) return "saludo";
-
-  // 2. agendamiento o diagnóstico
   if (/(agenda|hora|reserva|diagnostico)/.test(text)) return "agendar";
-
-  // 3. precios o costos
   if (/(precio|cuesta|valor)/.test(text)) return "precios";
-
-  // 4. palabras de promoción
   if (/(gratis|promocion|descuento|oferta|promo)/.test(text)) return "promocion";
-
-  // 5. tecnologías o dudas explicativas
   if (/(hifu|cavitacion|radiofrecuencia|ems|sculptor|pink glow)/.test(text)) return "tecnologia_detalle";
 
-  // 6. planes mencionados directamente (modo campaña)
   const planes = [
     "push up", "lipo body elite", "lipo express", "lipo reductiva", "lipo reductiva 12d",
     "lipo full body", "body fitness", "body tensor",
@@ -46,7 +35,6 @@ function detectarIntencion(msg) {
     if (text.includes(clean(plan))) return plan;
   }
 
-  // 7. objetivos generales
   if (/(grasa|abdomen|cintura|moldear|reducir)/.test(text)) return "lipo";
   if (/(flacidez|celulitis|piel|reafirmar|pierna|muslo)/.test(text)) return "body_tens";
   if (/(tonificar|gluteo|musculo|marcar|firmeza)/.test(text)) return "body_fit";
@@ -56,7 +44,6 @@ function detectarIntencion(msg) {
   return "fallback";
 }
 
-// Mapa de respuestas de planes y tecnologías
 const planesMap = {
   "push up": "push_up",
   "lipo body elite": "lipo",
@@ -93,16 +80,21 @@ const responses = {
   },
   tecnologias: () => knowledge.tecnologias,
   derivar: () => knowledge.derivar,
-  fallback: () => knowledge.fallback
+  fallback: () => knowledge.fallback || "No entendí del todo, pero puedo ayudarte con tratamientos o precios."
 };
 
-// Controlador principal
 function obtenerRespuesta(msg) {
   const intent = detectarIntencion(msg);
+
+  // Prioridad de respuestas definidas
   if (planesMap[intent]) return knowledge[planesMap[intent]];
+
+  // Manejo seguro de intenciones sin función
   if (intent === "tecnologia_detalle") return responses.tecnologia_detalle(msg);
-  const respuesta = responses[intent] || responses.fallback;
-  return respuesta();
+  if (responses[intent]) return responses[intent](msg);
+
+  // fallback garantizado
+  return responses.fallback();
 }
 
 export default obtenerRespuesta;
