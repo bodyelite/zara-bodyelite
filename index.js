@@ -1,46 +1,33 @@
 import express from "express";
 import bodyParser from "body-parser";
-import dotenv from "dotenv";
+import fetch from "node-fetch";
 import fs from "fs";
 import { responses, interpretarIntencion, integrarPatrones } from "./responses.js";
-import { entrenar, cargarPatrones } from "./entrenador.js";
 
-dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
-const AI_KEY = process.env.AI_KEY || null;
 
-// === memoria de conversación (por usuario) ===
-const memoria = new Map();
-const logFile = "./aprendizaje.json";
+// === Archivo de aprendizaje local ===
+const aprendizajePath = "./aprendizaje.json";
+if (!fs.existsSync(aprendizajePath)) fs.writeFileSync(aprendizajePath, "[]");
 
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+// === Cargar patrones entrenados si existen ===
+if (fs.existsSync("./patrones.json")) {
+  const patrones = JSON.parse(fs.readFileSync("./patrones.json", "utf8"));
+  integrarPatrones(patrones);
+}
 
-console.log("🚀 Zara IA Body Elite activa en puerto", PORT);
-
-// === cargar patrones aprendidos y entrenar ===
-const patrones = cargarPatrones();
-integrarPatrones(patrones);
-entrenar();
-
-// === ROOT ===
-app.get("/", (req, res) => {
-  res.status(200).send("Zara IA Body Elite en línea ✅");
-});
-
-// === VERIFY META ===
+// === WEBHOOK VERIFY ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("✅ Webhook verificado correctamente con Meta");
     res.status(200).send(challenge);
   } else {
@@ -48,71 +35,43 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// === MAIN HANDLER ===
+// === WEBHOOK RECEPCIÓN DE MENSAJES ===
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
-    if (!body.object) return res.sendStatus(404);
 
-    const msg = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-    if (!msg?.text?.body) return res.sendStatus(200);
+    if (body.object === "whatsapp_business_account") {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const messages = changes?.value?.messages;
 
-    const from = msg.from;
-    const text = msg.text.body.trim().toLowerCase();
-    console.log("💬 Mensaje recibido:", text);
+      if (messages && messages.length > 0) {
+        const msg = messages[0];
+        const from = msg.from;
+        const text = msg.text?.body || "";
 
-    const previo = memoria.get(from);
-    const ahora = Date.now();
-    let intent, topic;
+        console.log(`📩 Mensaje recibido: "${text}" de ${from}`);
 
-    // === reglas contextuales ===
-    const afirmativo = /^(sí|ok|dale|perfecto|claro|ya|me interesa|quiero|sí quiero|si quiero|de una)/i;
-    const precio = /(cu[aá]nto|vale|precio|cuesta|oferta)/i;
-    const agenda = /(agenda|reserv|hora|cita|evaluaci)/i;
-    const queincluye = /(qué incluye|que incluye|en qué consiste|cómo funciona|como es)/i;
+        // === Análisis semántico ===
+        const { intencion, confianza } = analizarIntencionDetallada(text);
+        console.log(`🎯 Intención: ${intencion} (confianza ${confianza})`);
 
-    if (previo && ahora - previo.lastTime < 5 * 60 * 1000) {
-      if (afirmativo.test(text)) {
-        intent = previo.lastIntent;
-        topic = previo.lastTopic;
-      } else if (precio.test(text)) {
-        intent = "precioEspecifico";
-        topic = previo?.lastTopic;
-      } else if (agenda.test(text)) {
-        intent = "agenda";
-      } else if (queincluye.test(text)) {
-        intent = "descripcion";
-        topic = previo?.lastTopic;
+        // Registrar aprendizaje
+        registrarAprendizaje(text, intencion, confianza);
+
+        // Generar respuesta
+        let reply = "";
+        if (responses[intencion]) {
+          reply = responses[intencion](intencion);
+        } else {
+          reply = responses.fallback();
+        }
+
+        // Enviar respuesta
+        await enviarMensajeWhatsApp(from, reply);
       }
     }
 
-    // === interpretación general ===
-    if (!intent) {
-      if (AI_KEY) intent = await interpretarIA(text);
-      else intent = interpretarIntencion(text);
-    }
-
-    // === detectar tema específico ===
-    if (/push ?up/.test(text)) topic = "pushup";
-    else if (/lipo/.test(text)) topic = "lipo";
-    else if (/fitness/.test(text)) topic = "fitness";
-    else if (/face/.test(text)) topic = "face";
-    else if (/celulit/.test(text)) topic = "celulitis";
-    else if (/hifu/.test(text)) topic = "hifu";
-
-    memoria.set(from, { lastIntent: intent, lastTopic: topic, lastTime: ahora });
-
-    // === generar respuesta ===
-    let respuesta;
-    if (intent === "precioEspecifico" && topic) respuesta = responses.precioEspecifico(topic);
-    else if (intent === "descripcion" && topic) respuesta = responses.descripcion(topic);
-    else if (responses[intent]) respuesta = responses[intent](topic);
-    else {
-      respuesta = responses.fallback();
-      registrarAprendizaje(text, previo?.lastIntent, previo?.lastTopic);
-    }
-
-    await enviarMensaje(from, respuesta);
     res.sendStatus(200);
   } catch (error) {
     console.error("❌ Error procesando webhook:", error);
@@ -120,85 +79,70 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// === IA OPCIONAL ===
-async function interpretarIA(text) {
-  try {
-    const prompt = `
-Clasifica el texto del usuario en una categoría:
-[celulitis, flacidez, grasa, pushup, fitness, face, hifu, precios, agenda, evaluacion, descripcion, saludo, otro].
-Texto: "${text}"`;
+// === FUNCIÓN DE ENVÍO A WHATSAPP ===
+async function enviarMensajeWhatsApp(to, text) {
+  const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
 
-    const url = "https://api.openai.com/v1/chat/completions";
-    const headers = {
+  const payload = {
+    messaging_product: "whatsapp",
+    to,
+    type: "text",
+    text: { body: text },
+  };
+
+  const options = {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${WHATSAPP_TOKEN}`,
       "Content-Type": "application/json",
-      Authorization: `Bearer ${AI_KEY}`,
-    };
-    const body = JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0,
-    });
+    },
+    body: JSON.stringify(payload),
+  };
 
-    const response = await fetch(url, { method: "POST", headers, body });
-    const data = await response.json();
-    const intent =
-      data?.choices?.[0]?.message?.content?.toLowerCase()?.trim() || "otro";
-    return intent;
-  } catch (err) {
-    console.error("⚠️ Error IA, fallback local:", err);
-    return interpretarIntencion(text);
-  }
+  const res = await fetch(url, options);
+  const data = await res.json();
+
+  if (!res.ok) console.error("❌ Error al enviar mensaje:", data);
+  else console.log("✅ Mensaje enviado correctamente");
 }
 
-// === ENVÍO DE MENSAJES ===
-async function enviarMensaje(to, message) {
+// === APRENDIZAJE LOCAL CON PRECISIÓN ===
+function registrarAprendizaje(texto, intencion, confianza) {
+  const base = JSON.parse(fs.readFileSync(aprendizajePath, "utf8"));
+  base.push({
+    texto,
+    intencion,
+    confianza,
+    fecha: new Date().toISOString(),
+  });
+  fs.writeFileSync(aprendizajePath, JSON.stringify(base, null, 2));
+  console.log(`🧠 Aprendizaje registrado: ${texto} (${intencion}, ${confianza})`);
+}
+
+// === EXTENSIÓN PARA GUARDAR DETALLE SEMÁNTICO ===
+function analizarIntencionDetallada(text) {
   try {
-    const url = `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`;
-    const payload = {
-      messaging_product: "whatsapp",
-      to,
-      text: { body: message },
-    };
+    // Reutiliza la función de responses.js
+    const intencion = interpretarIntencion(text);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    // Evaluar confianza semántica (estimada por similitud interna)
+    const palabras = text.split(/\s+/);
+    let confianza = 0.6;
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error("❌ Error enviando mensaje:", err);
-    } else console.log("✅ Mensaje enviado:", message);
-  } catch (err) {
-    console.error("❌ Error general en enviarMensaje:", err);
+    if (palabras.length < 3) confianza = 0.7;
+    if (/hola|precio|lipo|push|face|hifu|fitness/.test(text)) confianza = 0.9;
+    if (/no entiendo|duda|explica/.test(text)) confianza = 0.5;
+
+    return { intencion, confianza };
+  } catch {
+    return { intencion: "fallback", confianza: 0.0 };
   }
 }
 
-// === APRENDIZAJE LEVE ===
-function registrarAprendizaje(texto, contexto, tema) {
-  try {
-    const registro = {
-      texto,
-      contexto: contexto || "sin_contexto",
-      tema: tema || "desconocido",
-      fecha: new Date().toISOString(),
-    };
-    let data = [];
-    if (fs.existsSync(logFile))
-      data = JSON.parse(fs.readFileSync(logFile, "utf8"));
-    data.push(registro);
-    fs.writeFileSync(logFile, JSON.stringify(data, null, 2));
-    console.log("🧠 Aprendizaje registrado:", texto);
-  } catch (err) {
-    console.error("⚠️ No se pudo guardar aprendizaje:", err);
-  }
-}
-
+// === SERVIDOR ACTIVO ===
 app.listen(PORT, () => {
-  console.log("✅ Your service is live 🎉");
-  console.log("🌐 Disponible en: https://zara-bodyelite1.onrender.com");
+  console.log("//////////////////////////////////////////////////////////");
+  console.log(`✅ Zara IA Body Elite activa en puerto ${PORT}`);
+  console.log(`🌐 Servicio en Render con comprensión semántica`);
+  console.log("//////////////////////////////////////////////////////////");
 });

@@ -1,13 +1,13 @@
 import fs from "fs";
+import stringSimilarity from "string-similarity";
 
-// === Carga de patrones aprendidos ===
 let patrones = {};
+
 export function integrarPatrones(nuevos) {
   patrones = nuevos;
   console.log("🧩 Patrones integrados:", Object.keys(patrones));
 }
 
-// === RESPUESTAS ===
 export const responses = {
   fallback: () =>
     "🤔 No logré entenderte bien. ¿Buscas información sobre tratamientos, precios o agendar tu evaluación gratuita?",
@@ -24,7 +24,6 @@ export const responses = {
   evaluacion: () =>
     "🧬 La evaluación incluye diagnóstico corporal con FitDays, análisis de grasa y músculo y asesoría profesional. Sin costo ni compromiso.",
 
-  // === PLANES ===
   pushup: () =>
     "🍑 *Push Up Body Elite* levanta y tonifica glúteos con *ProSculpt EMS + Radiofrecuencia Focalizada*. Resultados visibles desde la 2ª sesión. ¿Quieres saber su valor o agendar tu cita?",
 
@@ -43,7 +42,6 @@ export const responses = {
   celulitis: () =>
     "💫 Tratamiento anticelulitis con *Lipo Reductiva 12D* + *Body Fitness Pro*. Reafirma, mejora textura y circulación.",
 
-  // === PRECIOS ESPECÍFICOS ===
   precioEspecifico: (topic) => {
     const mapa = {
       pushup:
@@ -78,28 +76,57 @@ export const responses = {
       "🧠 Es un tratamiento estético no invasivo con tecnología avanzada."
     );
   },
+
+  sensacion: () =>
+    "😊 No duele. Son tratamientos no invasivos, sin agujas ni bisturí. Puedes retomar tus actividades de inmediato después de cada sesión.",
 };
 
-// === INTERPRETACIÓN LOCAL DINÁMICA ===
+// === INTENCIÓN SEMÁNTICA ===
 export function interpretarIntencion(text) {
-  text = text.toLowerCase();
+  text = text.toLowerCase().trim();
 
-  // Priorizar patrones aprendidos
-  for (const [tema, lista] of Object.entries(patrones)) {
-    if (lista.some((f) => text.includes(f))) return tema;
+  const ejemplos = {
+    saludo: ["hola", "buenas", "hey", "qué tal"],
+    pushup: [
+      "push up",
+      "levantar glúteos",
+      "subir gluteos",
+      "aumentar cola",
+      "gluteos firmes",
+    ],
+    lipo: ["lipo", "reducción de grasa", "cintura", "abdomen", "bajar grasa"],
+    fitness: [
+      "fitness",
+      "tonificar cuerpo",
+      "fortalecer",
+      "aumentar músculo",
+    ],
+    face: ["cara", "face", "facial", "arrugas", "lifting", "rejuvenecer"],
+    hifu: ["hifu", "ultrasonido", "colágeno", "piel firme"],
+    celulitis: ["celulitis", "piel de naranja", "piernas", "reafirmar piel"],
+    precios: ["precio", "vale", "cuánto", "valor", "cuesta"],
+    agenda: ["agenda", "reservar", "hora", "cita", "agendar"],
+    evaluacion: ["evaluación", "diagnóstico", "fitdays", "gratis"],
+    sensacion: ["duele", "dolor", "molesta", "seguro", "riesgo"],
+  };
+
+  // Coincidencia exacta
+  for (const [int, frases] of Object.entries(ejemplos)) {
+    if (frases.some((p) => text.includes(p))) return int;
   }
 
-  // Reglas fijas
-  if (/hola|buenas|hey/.test(text)) return "saludo";
-  if (/push ?up/.test(text)) return "pushup";
-  if (/lipo/.test(text)) return "lipo";
-  if (/fitness/.test(text)) return "fitness";
-  if (/face/.test(text)) return "face";
-  if (/hifu/.test(text)) return "hifu";
-  if (/celulit/.test(text)) return "celulitis";
-  if (/precio|vale|cu[aá]nto/.test(text)) return "precios";
-  if (/agenda|reserv|hora|cita/.test(text)) return "agenda";
-  if (/evaluaci/.test(text)) return "evaluacion";
+  // Coincidencia semántica (similaridad)
+  const todas = Object.entries(ejemplos).flatMap(([int, frases]) =>
+    frases.map((f) => ({ int, frase: f }))
+  );
 
+  const mejor = stringSimilarity.findBestMatch(
+    text,
+    todas.map((t) => t.frase)
+  );
+  const idx = mejor.bestMatchIndex;
+  const intencion = todas[idx]?.int;
+
+  if (mejor.bestMatch.rating > 0.45) return intencion || "fallback";
   return "fallback";
 }
