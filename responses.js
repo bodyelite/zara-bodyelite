@@ -1,45 +1,75 @@
-// === RESPUESTAS ESTÁNDAR DE ZARA BODY ELITE ===
+import fs from "fs";
 
+// === CARGA DE BASES ===
+let baseConocimiento = {};
+try {
+  baseConocimiento = JSON.parse(
+    fs.readFileSync("./base_conocimiento.json", "utf8")
+  );
+} catch {
+  console.log("⚠️ No se encontró base_conocimiento.json, usando fallback local");
+}
+
+// === RESPUESTAS ===
 export const responses = {
   saludo: () =>
-    "👋 ¡Hola! Soy *Zara*, asistente virtual de *Body Elite Estética Avanzada*. Puedo ayudarte con tratamientos, precios o agendar una cita. ¿Qué te gustaría revisar hoy?",
+    "👋 ¡Hola! Soy *Zara*, asistente IA de *Body Elite Estética Avanzada*. Puedo ayudarte con tratamientos, precios o agendar tu evaluación gratuita. ¿Qué te gustaría revisar hoy?",
 
-  bajar_grasa: () =>
-    "💎 El plan *Lipo Body Elite* combina HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor. Moldea abdomen, cintura y muslos con resultados visibles desde la segunda sesión.",
+  grasa: () =>
+    "💎 *Lipo Body Elite* combina HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor para moldear abdomen, cintura y muslos. Los resultados se notan desde la 2ª sesión. ¿Quieres que te recomiende el plan ideal según tus objetivos?",
 
   celulitis: () =>
-    "✨ Para la *celulitis*, recomendamos *Body Tensor* o *Lipo Reductiva*. Combinan Cavitación, Radiofrecuencia y drenaje, mejorando firmeza y textura de la piel.",
+    "✨ Para celulitis trabajamos con *Lipo Reductiva 12D* y *Body Fitness Pro*, que mejoran la textura de la piel y tonifican con EMS + Radiofrecuencia. ¿Prefieres saber precios o agendar evaluación gratuita?",
 
   flacidez: () =>
-    "💠 Para *flacidez o tonificación*, sugerimos *Body Tensor* o *Body Fitness*. Reafirman tejidos con EMS y Radiofrecuencia, logrando un efecto tensor visible.",
+    "💠 Para flacidez recomendamos *Body Tensor* o *ProSculpt RF*, que estimulan colágeno y firmeza muscular sin bisturí. ¿Quieres que te explique cómo funcionan o sus valores?",
 
   push_up: () =>
-    "🍑 El *Push Up Body Elite* trabaja glúteos con *ProSculpt EMS + Radiofrecuencia Focalizada*. Tonifica y eleva sin dolor ni bisturí, con resultados desde la segunda sesión.",
+    "🍑 *Push Up Body Elite* trabaja glúteos con *ProSculpt EMS + Radiofrecuencia Focalizada*. Tonifica y eleva sin dolor ni bisturí, con resultados visibles desde la 2ª sesión. ¿Te gustaría agendar una evaluación gratuita?",
 
   hifu: () =>
-    "⚡️El *HIFU 12D* utiliza ultrasonido focalizado para tensar la piel y estimular colágeno. Ideal para rostro, cuello, abdomen o brazos, sin cirugía ni tiempo de recuperación.",
+    "🔹 *HIFU 12D* es una tecnología de ultrasonido focalizado que actúa sobre las capas profundas de la piel y grasa localizada. Se usa para rostro o cuerpo y ayuda a tensar y redefinir contornos. ¿Quieres que te recomiende dónde aplicarlo según tu caso?",
 
   precios: () =>
-    "📋 Planes más solicitados:\n\n💎 *Lipo Body Elite* $664.000\n✨ *Face Elite* $358.400\n💪 *Body Fitness* $360.000\n🍑 *Push Up* $376.000\n\n¿Deseas que te recomiende el ideal según tus objetivos?",
+    "📋 *Planes más solicitados:*\n" +
+    "💎 Lipo Body Elite $664.000\n" +
+    "🌸 Face Elite $358.400\n" +
+    "💪 Body Fitness $360.000\n" +
+    "🍑 Push Up $376.000\n" +
+    "¿Deseas que te recomiende el ideal según tus objetivos?",
 
   agenda: () =>
-    "📅 Puedes agendar tu evaluación gratuita aquí:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\nHorarios: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.",
+    "📅 Puedes agendar tu evaluación gratuita aquí:\n" +
+    "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n" +
+    "🕒 Horarios: Lun–Vie 9:30–20:00 | Sáb 9:30–13:00\n" +
+    "¿Quieres que te deje un cupo esta semana?",
+
+  evaluacion: () =>
+    "🧬 La evaluación incluye diagnóstico corporal con análisis FitDays y asesoría personalizada para definir tu plan ideal. Es sin costo ni compromiso. ¿Quieres agendarla ahora?",
+
+  tratamiento: () =>
+    "💆‍♀️ Contamos con tratamientos corporales y faciales no invasivos: Lipo, Body Fitness, Push Up, HIFU, y más. Todos combinan tecnología avanzada y protocolos personalizados. ¿Qué zona te gustaría tratar?",
+
+  otro: () =>
+    "🤔 No estoy segura de lo que quisiste decir, pero puedo ayudarte con *tratamientos, precios, tecnologías* o *agendamiento*. ¿Qué te gustaría saber?",
 
   fallback: () =>
-    "🤔 No estoy segura de lo que quisiste decir, pero puedo ayudarte con *tratamientos, precios, tecnologías o agendamiento*. ¿Sobre qué quieres saber?",
+    "❓ No logré entenderte bien. ¿Podrías decirme si buscas información sobre tratamientos, precios o agendar tu evaluación gratuita?",
 };
 
-// === INTERPRETADOR DE INTENCIONES ===
+// === MOTOR LOCAL DE INTENCIONES ===
 export function interpretarIntencion(text) {
-  const t = text.toLowerCase();
+  text = text.toLowerCase();
 
-  if (/hola|buenas|qué tal|ola/.test(t)) return "saludo";
-  if (/grasa|reducir|bajar|cintura|abdomen|moldear|panza/.test(t)) return "bajar_grasa";
-  if (/celulitis|piel de naranja|poros|retención/.test(t)) return "celulitis";
-  if (/flacidez|firmeza|tonificar|fortalecer|reafirmar/.test(t)) return "flacidez";
-  if (/gluteo|glúteo|push|pompa|cola|trasero/.test(t)) return "push_up";
-  if (/hifu|ultrasonido|colágeno|tensar/.test(t)) return "hifu";
-  if (/precio|vale|valor|cuánto|coste|costo|tarifa/.test(t)) return "precios";
-  if (/agenda|hora|reserva|agendar|cita|diagnóstico/.test(t)) return "agenda";
+  if (/hola|buenas|hi|holi/.test(text)) return "saludo";
+  if (/grasa|abdomen|bajar|reducir|vientre|cintura/.test(text)) return "grasa";
+  if (/celulitis|piel de naranja/.test(text)) return "celulitis";
+  if (/flacidez|firmeza|colageno/.test(text)) return "flacidez";
+  if (/push ?up|gluteo|trasero/.test(text)) return "push_up";
+  if (/hifu/.test(text)) return "hifu";
+  if (/precio|vale|cuesta|valor|oferta/.test(text)) return "precios";
+  if (/agenda|reservar|hora|cita|agendar/.test(text)) return "agenda";
+  if (/evaluaci|diagnostico/.test(text)) return "evaluacion";
+  if (/tratamiento|sesion|tecnolog/.test(text)) return "tratamiento";
   return "fallback";
 }
