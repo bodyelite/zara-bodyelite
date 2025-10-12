@@ -1,27 +1,27 @@
-const express = require("express");
-const axios = require("axios");
-const bodyParser = require("body-parser");
-require("dotenv").config();
+import express from "express";
+import axios from "axios";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
 const VERIFY_TOKEN = "zara_bodyelite_verify";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_NUMBER_ID = "840360109156943"; // Tu número verificado en Meta
+const PHONE_NUMBER_ID = "840360109156943";
 
-// Servidor activo
 const PORT = process.env.PORT || 10000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Servidor activo en puerto ${PORT}`);
   console.log("🤖 Zara IA Body Elite lista para responder 💬");
 });
 
 // =============================
-//  WEBHOOK PARA META
+//  WEBHOOK META
 // =============================
-
-// ✅ Verificación inicial del webhook
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -35,7 +35,9 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// 📩 Recepción de mensajes de WhatsApp
+// =============================
+//  RECEPCIÓN DE MENSAJES
+// =============================
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
@@ -57,21 +59,18 @@ app.post("/webhook", async (req, res) => {
 });
 
 // =============================
-//  ZARA BODY ELITE IA
+//  LÓGICA PRINCIPAL DE ZARA
 // =============================
-
 async function responderZara(to, texto) {
   const t = texto.toLowerCase();
   let respuesta = "";
 
-  // SALUDO BASE
   if (t.includes("hola") || t.includes("buenas") || t.includes("zara")) {
-    respuesta = `¡Hola! 💙 Soy *Zara*, asistente virtual de *Body Elite Estética Avanzada*.
-Puedo ayudarte a conocer tratamientos, planes corporales o faciales, y agendar tu diagnóstico gratuito.`;
+    respuesta = `💙 ¡Hola! Soy *Zara*, asistente virtual de *Body Elite Estética Avanzada*. 
+Puedo ayudarte a conocer tratamientos, planes corporales o faciales y agendar tu diagnóstico gratuito.`;
 
-  // PLANES CORPORALES
   } else if (t.includes("lipo") || t.includes("plan corporal") || t.includes("cuerpo")) {
-    respuesta = `💪 *Planes corporales más solicitados*:
+    respuesta = `💪 *Planes corporales más solicitados:*
 
 • *Lipo Focalizada Reductiva* — $348.800  
 • *Lipo Express* — $432.000  
@@ -80,11 +79,9 @@ Puedo ayudarte a conocer tratamientos, planes corporales o faciales, y agendar t
 • *Body Fitness* — $360.000  
 • *Push Up* — $376.000  
 
-Cada uno combina *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor*.  
-¿Deseas que te recomiende el más adecuado según tus medidas o tipo de grasa?`;
+¿Deseas que te recomiende el más adecuado según tu tipo de grasa?`;
 
-  // PLANES FACIALES
-  } else if (t.includes("face") || t.includes("facial") || t.includes("piel") || t.includes("cara")) {
+  } else if (t.includes("face") || t.includes("facial") || t.includes("piel")) {
     respuesta = `💆‍♀️ *Planes faciales disponibles:*
 
 • *Face Light* — $128.800  
@@ -93,41 +90,32 @@ Cada uno combina *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor*.
 • *Face Elite* — $358.400  
 • *Full Face* — $584.000  
 
-✨ Todos los tratamientos incluyen diagnóstico facial avanzado.  
-¿Quieres que te recomiende uno según tu tipo de piel o edad?`;
+✨ Todos incluyen diagnóstico facial avanzado.`;
 
-  // AGENDA
   } else if (t.includes("agenda") || t.includes("reservar") || t.includes("diagnóstico")) {
-    respuesta = `📅 Perfecto. Puedes agendar directamente tu diagnóstico gratuito aquí:
+    respuesta = `📅 Agenda tu diagnóstico gratuito aquí 👇  
 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9  
-📍 *Body Elite Estética Avanzada*  
-Av. Las Perdices Nº2990, Local 23, Peñalolén.`;
+📍 *Av. Las Perdices Nº2990, Local 23, Peñalolén*`;
 
-  // HUMANO / CONTACTO DIRECTO
   } else if (t.includes("humano") || t.includes("ayuda") || t.includes("hablar")) {
-    respuesta = `Te conecto con una de nuestras especialistas 👩‍⚕️💬  
+    respuesta = `👩‍⚕️ Te conecto con una especialista.  
 Escríbenos al WhatsApp principal 👉 https://wa.me/56983304436`;
 
-  // FITDAYS / DIAGNÓSTICO PERSONALIZADO
-  } else if (t.includes("fitdays") || t.includes("diagnóstico corporal") || t.includes("medidas")) {
+  } else if (t.includes("fitdays") || t.includes("diagnóstico corporal")) {
     respuesta = `📊 El diagnóstico FitDays analiza peso, grasa visceral, masa muscular y edad corporal.  
-Con esos datos puedo recomendarte el *plan más efectivo* según tu composición corporal.  
-¿Quieres enviarme tus resultados o foto del escáner FitDays?`;
+¿Quieres enviarme tus resultados para recomendarte el plan más efectivo?`;
 
-  // OTROS CASOS / RESPUESTA GENERAL
   } else {
     respuesta = `No estoy segura de entender 😅.  
-Puedo ayudarte con *planes corporales, faciales, diagnóstico FitDays o agendar tu hora.*  
-¿Qué deseas hacer ahora?`;
+Puedo ayudarte con *planes corporales, faciales o agendar tu diagnóstico gratuito*.`;
   }
 
   await enviarMensajeWhatsApp(to, respuesta);
 }
 
 // =============================
-//  API DE META - ENVÍO DE RESPUESTAS
+//  ENVÍO DE RESPUESTAS A META
 // =============================
-
 async function enviarMensajeWhatsApp(to, body) {
   try {
     await axios.post(
