@@ -1,6 +1,5 @@
 import express from "express";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
 import { obtenerRespuesta, responses } from "./responses.js";
 
@@ -13,15 +12,14 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 
-// --- LOG DE INICIO ---
 console.log("🚀 Zara IA Body Elite activa en puerto", PORT);
 
-// --- RUTA PRINCIPAL ---
+// --- Ruta raíz ---
 app.get("/", (req, res) => {
   res.status(200).send("Zara IA Body Elite en línea ✅");
 });
 
-// --- VERIFICACIÓN DE WEBHOOK ---
+// --- Webhook de verificación ---
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -36,11 +34,10 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// --- RECEPCIÓN DE MENSAJES ---
+// --- Recepción de mensajes ---
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
-
     if (body.object) {
       const entry = body.entry?.[0];
       const changes = entry?.changes?.[0];
@@ -48,7 +45,7 @@ app.post("/webhook", async (req, res) => {
 
       if (messages && messages[0]) {
         const msg = messages[0];
-        const from = msg.from; // número del cliente
+        const from = msg.from;
         const text = msg.text?.body;
 
         console.log("💬 Mensaje recibido de", from + ":", text);
@@ -73,7 +70,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// --- FUNCIÓN: ENVIAR MENSAJE ---
+// --- Función para enviar mensajes ---
 async function enviarMensaje(to, message) {
   try {
     const url = `https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`;
@@ -103,7 +100,7 @@ async function enviarMensaje(to, message) {
   }
 }
 
-// --- SERVIDOR ---
+// --- Servidor ---
 app.listen(PORT, () => {
   console.log(`✅ Your service is live 🎉`);
   console.log(`🌐 Available at: https://zara-bodyelite1.onrender.com`);
