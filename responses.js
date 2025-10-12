@@ -1,37 +1,23 @@
-// index.js — versión estable (mantiene compatibilidad con Meta)
+export async function getResponse(msg) {
+  msg = msg.toLowerCase();
 
-import express from "express";
-import bodyParser from "body-parser";
-import { getResponse } from "./responses.js";
+  if (/hola|buenas/.test(msg))
+    return "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. Cuéntame si quieres mejorar rostro, glúteos, guatita o papada y te orientaré con el plan ideal según nuestro sistema inteligente.";
 
-const app = express();
-app.use(bodyParser.json());
+  if (/glute|glúteo/.test(msg))
+    return "🍑 Tonifica y eleva glúteos con ProSculpt EMS + Radiofrecuencia Focalizada. Resultados visibles desde la 2ª sesión.\n💡 Nuestra IA ajusta parámetros según tu zona para resultados más rápidos y seguros.";
 
-// Webhook principal
-app.post("/webhook", (req, res) => {
-  try {
-    let msg = req.body.message;
-    if (msg && typeof msg === "object" && msg.text) msg = msg.text;
-    if (typeof msg !== "string") msg = String(msg || "");
+  if (/guata|abdomen|barriga|panz/.test(msg))
+    return "🔥 Para la guatita o abdomen recomendamos Lipo Reductiva 12D o Body Fitness. Reducen grasa y reafirman el área.\n📊 Incluye evaluación y seguimiento con IA para ajustar cada sesión a tus medidas.";
 
-    msg = msg.toLowerCase();
+  if (/papada/.test(msg))
+    return "💎 Para papada o contorno facial te recomiendo Face Smart o Face Elite, ambos con HIFU y radiofrecuencia.\n💬 Incluye diagnóstico facial IA sin costo para ver resultados previos.";
 
-    const intent = "default";
-    const reply = getResponse(intent, msg);
+  if (/agend|hora|cita/.test(msg))
+    return "📅 Puedes agendar tu evaluación sin costo en Peñalolén aquí:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-    res.json({ reply });
-  } catch (err) {
-    console.error("Error webhook:", err);
-    res.status(500).send("Error interno del servidor");
-  }
-});
+  if (/precio|vale|cuánto/.test(msg))
+    return "💰 Planes destacados:\n• Lipo Body Elite $664.000\n• Face Elite $358.400\n• Body Fitness $360.000\n• Push Up $376.000\n• PinkGlow $128.800";
 
-// Ruta base
-app.get("/", (req, res) => {
-  res.send("🤖 Zara Body Elite conectado y escuchando");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Servidor activo en puerto ${PORT}`);
-});
+  return "🤔 No logré entenderte bien. Cuéntame si quieres trabajar papada, guatita, potito o rostro, y te recomendaré el plan ideal ✨";
+}
