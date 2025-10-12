@@ -1,74 +1,99 @@
-// responses.js — versión mejorada con lógica de IA, Body Elite y agendamiento
+// responses.js — versión completa con manejo seguro de msg + IA + agendamiento
 
 export function getResponse(intent, msg) {
-  msg = msg.toLowerCase();
+  msg = (msg && msg.toString().toLowerCase()) || "";
 
   // --- PLANES FACIALES ---
-  if (/face elite|arrugas|rejuvenecer|rostro|cara|facial|toxina|radiofrecuencia/.test(msg)) {
-    return `✨ Face Elite combina HIFU focal, Radiofrecuencia y Toxina cosmética para rejuvenecer rostro sin cirugía. 
-Efecto lifting visible desde la primera sesión. 
-💰 Valor: $358.400 CLP (plan completo 6 sesiones).
-🤖 Incluye evaluación y seguimiento con IA que ajusta parámetros según tu evolución.`;
+  if (/face elite/.test(msg) || /facial/.test(msg) || /rostro/.test(msg)) {
+    return `✨ Face Elite combina HIFU focal, Radiofrecuencia y toxina cosmética para rejuvenecer sin cirugía. 
+💰 Valor: $358.400 CLP (6 sesiones)
+📊 Incluye evaluación y seguimiento con IA para ajustar cada sesión según tus resultados. 
+¿Quieres agendar tu diagnóstico facial gratuito con nuestro sistema IA?`;
+  }
+
+  if (/pinkglow|glow/.test(msg)) {
+    return `🌸 PinkGlow ilumina, hidrata y mejora el tono de la piel. 
+Puede usarse solo o junto a Face Elite para potenciar resultados. 
+💰 Valor: $128.800 CLP (plan facial completo, 6 sesiones)
+📊 Incluye diagnóstico facial con IA para adaptar la hidratación y resultados. 
+¿Quieres agendar tu evaluación sin costo?`;
   }
 
   // --- PLANES CORPORALES ---
-  if (/gluteo|glúteo|gluteos|push up|levantar|tonificar/.test(msg)) {
-    return `🍑 El plan Push Up Body Elite trabaja glúteos con ProSculpt EMS + Radiofrecuencia Focalizada. 
+  if (/abdomen|guatita|panz|barriga|estómago/.test(msg)) {
+    return `🔥 Para la guatita o abdomen recomiendo Lipo Reductiva 12D o Body Fitness. 
+Ayudan a reducir grasa y reafirmar el área. 
+💰 Lipo Reductiva 12D: $480.000 CLP
+💰 Body Fitness: $360.000 CLP
+📊 Incluyen evaluación corporal con IA para ajustar parámetros y lograr resultados más rápidos.`;
+  }
+
+  if (/gluteo|glúteo|gluteos|glúteos|cola|pompa/.test(msg)) {
+    return `🍑 Tonifica y eleva glúteos con ProSculpt EMS + Radiofrecuencia Focalizada. 
 Resultados visibles desde la 2ª sesión. 
-💰 Valor: $376.000 CLP (plan completo 6 sesiones). 
-🤖 Nuestra IA evalúa tus progresos y ajusta intensidad para resultados más rápidos y seguros.`;
+💰 $376.000 CLP (6 sesiones)
+📊 Nuestra IA analiza tu progreso y ajusta intensidad en cada sesión.`;
   }
 
-  if (/abdomen|guatita|panza|barriga|reducir|grasa|cintura|lipo/.test(msg)) {
-    return `🔥 Para abdomen o guatita recomendamos Lipo Reductiva 12D o Lipo Body Elite. 
-Ayudan a disolver grasa localizada y reafirmar el área con Cavitación, HIFU y Radiofrecuencia.
-💰 Lipo Reductiva 12D: $480.000 CLP / Lipo Body Elite: $664.000 CLP.
-🤖 Incluyen diagnóstico y seguimiento IA para personalizar cada sesión.`;
+  if (/papada/.test(msg)) {
+    return `💎 Para la papada recomendamos Lipo Focalizada o HIFU facial. 
+Disuelve grasa localizada y redefine contorno facial. 
+💰 Desde $348.800 CLP
+📊 Incluye control IA para asegurar simetría y firmeza.`;
   }
 
-  if (/papada|cuello/.test(msg)) {
-    return `💎 Para papada o cuello usamos HIFU 12D y principios lipolíticos focalizados. 
-Redefine contorno facial y estimula colágeno desde la 1ª sesión. 
-🤖 Nuestra IA analiza tus características y ajusta energía y profundidad en cada sesión.`;
+  // --- COMPONENTES TECNOLÓGICOS ---
+  if (/exosoma|exosomas/.test(msg)) {
+    return `🧬 Los Exosomas son nanopartículas regeneradoras que reparan tejidos y estimulan colágeno. 
+En Body Elite se aplican con Dermapen para bioestimulación avanzada y rejuvenecimiento visible.`;
   }
 
-  // --- TRATAMIENTOS ESPECÍFICOS ---
-  if (/pink ?glow|luminosidad|hidratación|hidratacion/.test(msg)) {
-    return `🌸 PinkGlow ilumina, hidrata y mejora el tono de la piel. 
-Puede aplicarse solo o combinarse con Face Elite para potenciar resultados. 
-💰 Valor: $128.800 CLP (plan facial completo de 6 sesiones).`;
+  if (/lipolitico|lipolítico|lipoliticos|lipolíticos/.test(msg)) {
+    return `🔥 Los Lipolíticos son principios activos que disuelven grasa localizada. 
+Se aplican en zonas específicas (abdomen, brazos, muslos o papada) y potencian tratamientos como Cavitación o HIFU.`;
   }
 
-  if (/exosomas/.test(msg)) {
-    return `🧬 Los Exosomas son nanopartículas regeneradoras que estimulan colágeno y reparan tejidos. 
-Se aplican con Dermapen para bioestimulación avanzada y rejuvenecimiento visible desde las primeras sesiones.`;
+  if (/radiofrecuencia|rf/.test(msg)) {
+    return `🌐 La Radiofrecuencia estimula colágeno y elastina mediante calor controlado. 
+Mejora la firmeza, reduce flacidez y complementa tratamientos como Face Elite o Body Fitness.`;
   }
 
-  if (/lipolitic|lipolítico|lipoliticos|lipolitico/.test(msg)) {
-    return `🔥 Los Lipolíticos son principios activos que ayudan a disolver grasa localizada. 
-Se aplican en zonas específicas (papada, abdomen, brazos o muslos) y potencian tratamientos reductivos como Cavitación o HIFU.`;
+  // --- AGENDAMIENTO / CONTACTO ---
+  if (/agenda|reservar|cita|hora|evaluacion|evaluación|diagnostico|diagnóstico/.test(msg)) {
+    return `📅 Puedes agendar tu evaluación gratuita con IA en el siguiente enlace:
+https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9
+O si prefieres hablar con un profesional, escribe al WhatsApp directo: +56 9 8330 0262.`;
   }
 
-  // --- AGENDAMIENTO / EVALUACIÓN IA ---
-  if (/agendar|reserva|hora|cita|agenda|evaluaci|diagnóstico|diagnostico|agenda gratis|quiero agendar|como agendo/.test(msg)) {
-    return `📅 Puedes **agendar tu evaluación gratuita con IA** aquí:  
-🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9  
-🕒 Horarios: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00  
-
-🤖 Nuestra evaluación con Inteligencia Artificial analiza tus medidas y parámetros estéticos en segundos.  
-Detecta grasa, firmeza y nivel de tonicidad para crear un plan personalizado que evoluciona contigo.  
-
-💡 A diferencia de otras clínicas, **Body Elite** integra IA y tecnología estética avanzada para asegurar resultados reales, sin adivinar.`;
+  if (/hablar|humano|asesor|persona/.test(msg)) {
+    return `👩‍💼 Te puedo derivar con una profesional. 
+Envía tu nombre, zona que deseas trabajar y te contacto enseguida al WhatsApp: +56 9 8330 0262.`;
   }
 
-  // --- SALUDOS / INTRODUCCIÓN ---
-  if (/hola|buenas|hi|holi|cómo estás|como estas|qué tal|que tal/.test(msg)) {
-    return `✨ ¡Hola! Estoy muy feliz de acompañarte. 
-En **Body Elite Estética Avanzada** usamos Inteligencia Artificial para diseñar tu plan ideal. 
-¿Te gustaría conocer tratamientos, precios o agendar tu diagnóstico gratuito?`;
+  // --- CONSULTAS GENERALES ---
+  if (/como estas|hola|buenas|hi|saludo/.test(msg)) {
+    return `✨ ¡Hola! Estoy muy bien y feliz de acompañarte. 
+En Body Elite creemos que cada paso que das para cuidarte te acerca a tu mejor versión. 
+¿Quieres que te guíe con una evaluación gratuita asistida por IA?`;
   }
 
-  // --- FALLBACK GENERAL ---
-  return `🤔 No estoy segura de lo que quisiste decir, pero puedo ayudarte con tratamientos, precios, tecnologías o agendamiento. 
-¿Sobre qué quieres saber?`;
+  if (/gracias|ok|dale|perfecto|super|bacan|bien/.test(msg)) {
+    return `💫 Me alegra mucho. 
+¿Quieres que te ayude a agendar tu diagnóstico gratuito con IA para personalizar tu plan?`;
+  }
+
+  if (/cuanto vale|valor|precio|cuesta|vale/.test(msg)) {
+    return `💰 Los valores varían según el plan: 
+- Lipo Body Elite $664.000  
+- Face Elite $358.400  
+- Body Fitness $360.000  
+- Push Up $376.000  
+- PinkGlow $128.800  
+📊 Incluyen diagnóstico y seguimiento con inteligencia artificial. 
+¿Quieres que te recomiende el ideal según tus objetivos?`;
+  }
+
+  // --- FALLBACK ---
+  return `🤔 No logré entenderte bien. 
+Cuéntame si quieres trabajar papada, guatita, potito o rostro y te recomendaré el plan ideal ✨`;
 }
