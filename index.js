@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import { obtenerRespuesta, responses } from "./responses.js";
+import { responses, interpretarIntencion } from "./responses.js";
 
 dotenv.config();
 const app = express();
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
   res.status(200).send("Zara IA Body Elite en línea ✅");
 });
 
-// === VERIFICACIÓN DEL WEBHOOK ===
+// === VERIFICACIÓN DE META ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -34,7 +34,7 @@ app.get("/webhook", (req, res) => {
     console.log("✅ Webhook verificado correctamente con Meta");
     res.status(200).send(challenge);
   } else {
-    console.warn("❌ Error en la verificación del webhook");
+    console.warn("❌ Error de verificación de webhook");
     res.sendStatus(403);
   }
 });
@@ -56,14 +56,15 @@ app.post("/webhook", async (req, res) => {
 
         console.log("💬 Mensaje recibido:", text);
 
-        const respuesta = obtenerRespuesta(text);
+        // interpretar intención y seleccionar respuesta
+        const intent = interpretarIntencion(text);
+        const respuesta = responses[intent]
+          ? responses[intent]()
+          : responses.fallback();
 
-        if (!respuesta) {
-          await enviarMensaje(from, responses.fallback());
-        } else {
-          await enviarMensaje(from, respuesta);
-        }
+        await enviarMensaje(from, respuesta);
       }
+
       res.sendStatus(200);
     } else {
       res.sendStatus(404);
@@ -97,7 +98,7 @@ async function enviarMensaje(to, message) {
       const err = await response.text();
       console.error("❌ Error enviando mensaje:", err);
     } else {
-      console.log("✅ Mensaje enviado:", message);
+      console.log("✅ Mensaje enviado correctamente:", message);
     }
   } catch (err) {
     console.error("❌ Error general en enviarMensaje:", err);
