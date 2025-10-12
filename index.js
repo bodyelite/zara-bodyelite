@@ -12,6 +12,9 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PORT = process.env.PORT || 10000;
 
+// === MEMORIA CORTA POR NÚMERO ===
+const context = new Map();
+
 // === VERIFICACIÓN WEBHOOK ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
@@ -41,7 +44,12 @@ app.post("/webhook", async (req, res) => {
 
     console.log("📩 Mensaje recibido:", text);
 
-    const reply = await getResponse(text);
+    // obtener contexto previo
+    const prev = context.get(from) || {};
+    const { reply, intent } = await getResponse(text, prev);
+
+    // guardar nuevo contexto
+    context.set(from, { lastIntent: intent, lastMsg: text });
 
     await enviarMensaje(from, reply);
     res.sendStatus(200);
@@ -51,7 +59,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// === FUNCIÓN DE ENVÍO DE MENSAJE ===
+// === ENVÍO DE MENSAJE ===
 async function enviarMensaje(to, body) {
   const payload = {
     messaging_product: "whatsapp",
@@ -64,7 +72,7 @@ async function enviarMensaje(to, body) {
     {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
@@ -72,10 +80,10 @@ async function enviarMensaje(to, body) {
   );
 
   const data = await r.json();
-  console.log("📤 Enviado a WhatsApp:", data);
+  console.log("📤 Enviado:", data);
 }
 
 app.listen(PORT, () => {
   console.log(`🚀 Zara IA Body Elite activa en puerto ${PORT}`);
-  console.log("🧠 Versión 4.5 — comprensión contextual extendida");
+  console.log("🧠 Versión 4.6 — comprensión + memoria contextual");
 });
