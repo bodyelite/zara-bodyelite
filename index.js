@@ -1,76 +1,77 @@
 import express from "express";
 import bodyParser from "body-parser";
+import fetch from "node-fetch";
 import dotenv from "dotenv";
-import fs from "fs";
-import { getResponse } from "./responses.js";
-import { saveConversation } from "./conversations.js";
 
 dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "zara_bodyelite_verify";
-const PORT = process.env.PORT || 10000;
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-// --- Verificación Webhook ---
+// ✅ Verificación de webhook (Meta → Render)
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+  if (mode && token === VERIFY_TOKEN) {
     console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
+    console.error("❌ Falló la verificación del webhook");
     res.sendStatus(403);
   }
 });
 
-// --- Recepción de mensajes ---
+// ✅ Recepción de mensajes entrantes (Meta → Render)
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
 
-    if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const message = changes?.value?.messages?.[0];
-      const phone_number_id = changes?.value?.metadata?.phone_number_id;
+    if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages) {
+      const messages = body.entry[0].changes[0].value.messages;
+      for (const msg of messages) {
+        const from = msg.from;
+        const text = msg.text?.body?.toLowerCase() || "";
 
-      if (message && phone_number_id) {
-        const from = message.from;
-        const text = message.text?.body?.toLowerCase() || "";
+        console.log(`💬 Mensaje recibido de ${from}: ${text}`);
 
-        console.log(`💬 Mensaje recibido: "${text}" de ${from}`);
+        // 🔹 Respuesta básica
+        let reply = "Hola 👋, soy Zara, asistente IA de Body Elite. ¿En qué puedo ayudarte hoy?";
+        if (text.includes("botox")) reply = "💉 Sí, realizamos aplicación de toxina botulínica con especialistas certificados.";
+        else if (text.includes("pink")) reply = "🌸 Pink Glow es ideal para mejorar la luminosidad y textura de tu piel.";
+        else if (text.includes("agenda")) reply = "📅 Puedes agendar fácilmente tu evaluación gratuita acá: Agenda acá 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\nNuestra evaluación y seguimiento se realizan con asistencia IA para resultados óptimos.";
 
-        const reply = getResponse(text);
-        saveConversation(from, text, reply);
-
-        const url = `https://graph.facebook.com/v17.0/${phone_number_id}/messages`;
-        const data = {
-          messaging_product: "whatsapp",
-          to: from,
-          type: "text",
-          text: { body: reply },
-        };
-
-        await fetch(url, {
+        // 🔹 Enviar mensaje de respuesta a WhatsApp
+        await fetch(`https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+            "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: from,
+            text: { body: reply }
+          })
         });
+
+        console.log(`✅ Respuesta enviada a ${from}: ${reply}`);
       }
     }
+
+    // Confirmar recepción a Meta (evita reintentos)
     res.sendStatus(200);
-  } catch (error) {
-    console.error("❌ Error al procesar mensaje:", error);
+  } catch (err) {
+    console.error("❌ Error procesando el webhook:", err);
     res.sendStatus(500);
   }
 });
 
+// ✅ Inicia servidor
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`✅ Zara bot corriendo correctamente en puerto ${PORT}`);
+  console.log(`🚀 Zara bot corriendo correctamente en puerto ${PORT}`);
 });
