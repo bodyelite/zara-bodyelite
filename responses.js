@@ -1,16 +1,18 @@
 // responses.js
-// Módulo de respuestas automáticas para Zara IA
-// Compatible con Node.js 22 en Render
+// Módulo de respuestas automáticas para Zara IA (Body Elite)
+// Compatible con Node.js 22 y Render
 
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { detectarIntencion } from "./intents.js";
+import detectarIntencion from "./intents.js"; // ✅ se usa default import
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Carga del conocimiento JSON
+// ======================================================
+// Carga segura de knowledge.json
+// ======================================================
 const knowledgePath = path.join(__dirname, "knowledge.json");
 let knowledge = {};
 try {
@@ -21,7 +23,7 @@ try {
 }
 
 // ======================================================
-// GENERADOR DE RESPUESTAS
+// Generador de respuestas y avisos
 // ======================================================
 export async function generarRespuesta(texto, zaraData, contextoPrevio) {
   const intencion = detectarIntencion(texto);
@@ -53,4 +55,20 @@ export async function generarRespuesta(texto, zaraData, contextoPrevio) {
   }
 
   return respuesta;
+}
+
+// ======================================================
+// Función auxiliar para generar timestamp Chile
+// ======================================================
+export function obtenerFechaChile() {
+  const ahora = new Date();
+  return ahora.toLocaleString("es-CL", {
+    timeZone: "America/Santiago",
+    hour12: false,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
