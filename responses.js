@@ -1,10 +1,28 @@
 // responses.js
 // Módulo de respuestas automáticas para Zara IA
-// Incluye reconocimiento de intención "agendar" y texto con botón
+// Compatible con Node.js 22 en Render
 
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { detectarIntencion } from "./intents.js";
-import knowledge from "./knowledge.json" assert { type: "json" };
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Carga del conocimiento JSON
+const knowledgePath = path.join(__dirname, "knowledge.json");
+let knowledge = {};
+try {
+  const data = fs.readFileSync(knowledgePath, "utf8");
+  knowledge = JSON.parse(data);
+} catch (error) {
+  console.error("Error al cargar knowledge.json:", error.message);
+}
+
+// ======================================================
+// GENERADOR DE RESPUESTAS
+// ======================================================
 export async function generarRespuesta(texto, zaraData, contextoPrevio) {
   const intencion = detectarIntencion(texto);
   let respuesta = "";
@@ -26,7 +44,7 @@ export async function generarRespuesta(texto, zaraData, contextoPrevio) {
 
     case "promocion":
       respuesta =
-        "💎 Nuestras promociones incluyen HIFU, Cavitación, y Sculptor según el plan elegido. ¿Deseas conocer la promoción actual o agendar tu evaluación?";
+        "💎 Nuestras promociones incluyen HIFU, Cavitación y Sculptor según el plan elegido. ¿Deseas conocer la promoción actual o agendar tu evaluación?";
       break;
 
     default:
