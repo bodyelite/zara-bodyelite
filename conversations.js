@@ -1,71 +1,40 @@
 // conversations.js
-// Registro local + memoria conversacional de corto plazo para Zara IA
+// Manejo del contexto conversacional de Zara IA – Body Elite
 
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { clasificarIntencion } from "./intents.js";
+import detectarIntencion from "./intents.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const logsDir = path.join(__dirname, "logs");
-const logFile = path.join(logsDir, "conversaciones.log");
+const contextos = {}; // Memoria temporal por usuario
 
-if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir);
-
-// Memoria conversacional en RAM (por número de usuario)
-const contextoUsuarios = {};
-
-// ------------------------------
-// Actualizar y obtener contexto
-// ------------------------------
 export function actualizarContexto(usuario, texto) {
-  const intencion = clasificarIntencion(texto);
-  const fecha = new Date().toISOString();
+  if (!contextos[usuario]) {
+    contextos[usuario] = { historial: [], ultimaIntencion: null };
+  }
 
-  // Guardar contexto actual
-  contextoUsuarios[usuario] = {
-    ultimoTexto: texto,
-    ultimaIntencion: intencion,
-    ultimaCampaña: detectarCampañaLocal(texto),
-    actualizado: fecha,
-  };
+  const intencion = detectarIntencion(texto);
+  contextos[usuario].ultimaIntencion = intencion;
+  contextos[usuario].historial.push({ texto, intencion });
 
-  return contextoUsuarios[usuario];
-}
+  if (contextos[usuario].historial.length > 10) {
+    contextos[usuario].historial.shift(); // Mantiene memoria corta
+  }
 
-// Detección básica para recordar campañas en contexto
-function detectarCampañaLocal(t) {
-  const text = t.toLowerCase();
-  if (text.includes("push up") || text.includes("gluteo")) return "Push Up";
-  if (text.includes("lipo")) return "Lipo";
-  if (text.includes("hifu")) return "HIFU";
-  if (text.includes("face") || text.includes("facial")) return "Face Elite";
-  if (text.includes("acne") || text.includes("antiacne")) return "Face Antiacné";
-  if (text.includes("depilacion")) return "Depilación Láser";
-  return null;
-}
-
-// ------------------------------
-// Registrar conversación en log
-// ------------------------------
-export function registrarConversacion(usuario, texto, respuesta) {
-  const fecha = new Date().toISOString();
-  const registro = `
-[${fecha}]
-Usuario: ${usuario}
-Mensaje: ${texto}
-Respuesta: ${respuesta}
----------------------------------------------\n`;
-  fs.appendFileSync(logFile, registro, "utf8");
+  return contextos[usuario];
 }
 
 export function obtenerContexto(usuario) {
-  return contextoUsuarios[usuario] || null;
+  return contextos[usuario] || { historial: [], ultimaIntencion: null };
 }
 
-export default {
-  registrarConversacion,
-  actualizarContexto,
-  obtenerContexto,
-};
+export function registrarConversacion(usuario, entrada, respuesta) {
+  if (!contextos[usuario]) {
+    contextos[usuario] = { historial: [] };
+  }
+
+  contextos[usuario].historial.push({
+    usuario: entrada,
+    zara: respuesta,
+    timestamp: new Date().toISOString(),
+  });
+
+  console.log(`💬 Conversación registrada con ${usuario}`);
+}
