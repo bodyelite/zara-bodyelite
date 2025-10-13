@@ -1,66 +1,118 @@
 export async function getResponse(msg) {
-  msg = msg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (!msg || typeof msg !== "string") return defaultReply();
 
-  // --- SALUDO INICIAL ---
-  if (/(hola|buenas|hey|ola|buenos dias|buenas tardes|buenas noches)/.test(msg))
-    return "✨ ¡Hola! Soy Zara, asistente IA de Body Elite Estética Avanzada. Nuestro sistema combina diagnóstico corporal y facial con inteligencia artificial para personalizar tu tratamiento. ¿Qué zona quieres mejorar: rostro, guatita, glúteos o papada?";
+  const raw = msg.trim();
+  const text = raw.toLowerCase();
 
-  // --- UBICACIÓN ---
-  if (/(donde|ubicacion|direccion|peñalolen|local|sede)/.test(msg))
-    return "📍 Estamos en Av. Las Perdices Nº2990, Local 23, Peñalolén.\n🕒 Horarios: Lun–Vie 9:30–20:00 | Sáb 9:30–13:00.\n📲 Agenda tu evaluación gratuita en https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  const normalized = text
+    .replace(/\bguatita\b/g, "abdomen")
+    .replace(/\bpanza\b/g, "abdomen")
+    .replace(/\bbarriga\b/g, "abdomen")
+    .replace(/\best[oó]mago\b/g, "abdomen");
 
-  // --- EVALUACIÓN IA ---
-  if (/(evaluacion|diagnostico|fitdays|inteligencia|seguimiento|progreso)/.test(msg))
-    return "🤖 Nuestra IA analiza tus mediciones corporales (peso, grasa, músculo, edad corporal) y tu rostro para definir el protocolo ideal. Ajusta cada sesión según tus avances y genera reportes automáticos.";
+  const asks_botox = /\b(botox|toxina|toxina botul[iní]ca)\b/.test(normalized);
+  const asks_hifu = /\bhifu\b/.test(normalized);
+  const asks_pink = /\bpink\s?glow\b|pinkglow\b/.test(normalized);
+  const asks_exosoma = /\bexosoma(s)?\b/.test(normalized);
+  const asks_lipolitico = /\blipol[ií]tico(s)?\b/.test(normalized);
+  const asks_prices = /\b(cuanto vale|precio|valor|cuesta)\b/.test(normalized);
+  const asks_results = /\b(resultad|cambio|mejora|efecto)\b/.test(normalized);
+  const asks_location = /\bdonde\b|ubicaci[oó]n|direcci[oó]n/.test(normalized);
+  const greets = /\b(hola|buenas|buenos dias|buenas tardes)\b/.test(normalized);
+  const ask_appointment = /\bagendar|cita|evaluaci[oó]n\b/.test(normalized);
 
-  // --- HIFU ---
-  if (/(hifu|ultrasonido|12d|focalizado)/.test(msg))
-    return "💠 El HIFU 12D es ultrasonido focalizado que tensa piel y tejido profundo sin cirugía. Estimula colágeno, reduce flacidez y define contorno. En Body Elite se combina con IA para ajustar potencia y profundidad según tu tipo de tejido.";
+  if (greets && !ask_appointment) return softGreeting();
 
-  // --- PINK GLOW ---
-  if (/(pinkglow|pink glow|glow|iluminador|manchas|piel rosada)/.test(msg))
-    return "🌸 *Pink Glow* es un tratamiento bioestimulante que ilumina y uniforma la piel. Revitaliza, hidrata y mejora manchas gracias a activos con ácido hialurónico, vitaminas B y aminoácidos. Ideal para rostro apagado o con pigmentación irregular.";
+  if (asks_botox)
+    return (
+      "💉 La Toxina Botulínica ayuda a relajar los músculos responsables de las líneas de expresión. " +
+      "Se aplica con precisión y entrega un resultado natural, manteniendo tu expresividad. " +
+      "¿Quieres que te cuente en qué zonas se recomienda o cuándo puedes evaluarte sin costo?"
+    );
 
-  // --- RADIOFRECUENCIA / CAVITACIÓN ---
-  if (/(radiofrecuencia|rf|cavitacion|ondas|calor|celulitis|flacidez)/.test(msg))
-    return "⚡ La Radiofrecuencia Focalizada y la Cavitación trabajan flacidez y celulitis. Aumentan temperatura interna para reafirmar, activar colágeno y disolver grasa localizada. Nuestros equipos ajustan la energía automáticamente mediante IA.";
+  if (asks_hifu)
+    return (
+      "🔷 El HIFU 12D es una tecnología que reafirma la piel desde las capas más profundas sin cirugía. " +
+      "Activa colágeno y redefine contornos. Ideal si buscas un cambio visible y natural. " +
+      "¿Quieres que te explique cómo se combina con nuestra IA para personalizar tu plan?"
+    );
 
-  // --- EMS / PROSCULPT ---
-  if (/(ems|prosculpt|electro|estimulo|musculo|tonificar)/.test(msg))
-    return "💪 ProSculpt EMS es estimulación electromagnética de alta intensidad. Cada sesión equivale a +20 000 contracciones musculares. Define abdomen, glúteos y piernas sin esfuerzo físico.";
+  if (asks_pink)
+    return (
+      "🌸 Pink Glow revitaliza e ilumina la piel con ácido hialurónico, vitaminas y aminoácidos. " +
+      "Es perfecto para recuperar el brillo y la uniformidad del rostro. " +
+      "¿Deseas saber cómo integrarlo en tu tratamiento o su valor?"
+    );
 
-  // --- PLANES CORPORALES ---
-  if (/(guata|abdomen|cintura|barriga|panz|vientre|reductor|lipo|body|fitness|push up)/.test(msg))
-    return "🔥 *Planes corporales:*\n• Lipo Body Elite $664 000 (12 sesiones + IA + FitDays)\n• Lipo Reductiva 12D $480 000 (10 sesiones)\n• Body Fitness $360 000 (8 sesiones)\n• Push Up $376 000 (6 sesiones glúteos)\nCada plan incluye evaluación, seguimiento IA y ajuste semanal de parámetros.";
+  if (asks_exosoma)
+    return (
+      "🧬 Los Exosomas son partículas regeneradoras que estimulan colágeno y reparación celular. " +
+      "Ayudan a rejuvenecer y mejorar textura de piel desde el interior. " +
+      "¿Quieres conocer cómo lo usamos en Body Elite junto a IA?"
+    );
 
-  // --- PLANES FACIALES ---
-  if (/(cara|rostro|papada|menton|piel|face|facial|contorno)/.test(msg))
-    return "💎 *Planes faciales:*\n• Face Elite $358 400 (HIFU + Pink Glow + RF)\n• Face Smart $198 400\n• Face Light $128 800\n• Face Antiage $281 600\nTodos incluyen diagnóstico IA para medir elasticidad, tono y poros.";
+  if (asks_lipolitico)
+    return (
+      "🔥 Los Lipolíticos ayudan a reducir grasa localizada y mejorar el contorno corporal. " +
+      "Se aplican de forma segura y personalizada en zonas como abdomen o muslos. " +
+      "¿Te gustaría saber si es adecuado para ti o agendar una evaluación gratuita?"
+    );
 
-  // --- LIMPIEZA / TRATAMIENTOS PIEL ---
-  if (/(limpieza|piel|espinillas|poros|acne)/.test(msg))
-    return "🫧 La Limpieza Facial Full ($120 000, 6 sesiones) remueve impurezas, equilibra grasa y hidrata la piel. Se combina con Radiofrecuencia + serum Pink Glow para mejorar textura y luminosidad.";
+  if (asks_location)
+    return (
+      "📍 Estamos en *Av. Las Perdices N°2990, Local 23, Peñalolén.*\n" +
+      "🕒 Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n" +
+      "Si quieres, puedo ayudarte a reservar tu evaluación sin costo 💫"
+    );
 
-  // --- DIFERENCIADOR DE BODY ELITE ---
-  if (/(diferencia|por que|porque|mejor|distinto)/.test(msg))
-    return "🏆 Body Elite integra tecnología HIFU 12D, Cavitación, RF y EMS con diagnóstico IA. No trabajamos protocolos estándar: cada plan se ajusta a tus mediciones y resultados reales. Garantizamos un proceso seguro y personalizado.";
+  if (asks_prices)
+    return (
+      "💰 Planes más consultados:\n" +
+      "• Lipo Body Elite $664.000 (12 sesiones + IA + FitDays)\n" +
+      "• Lipo Reductiva 12D $480.000 (10 sesiones)\n" +
+      "• Body Fitness $360.000 (8 sesiones)\n" +
+      "• Push Up $376.000 (6 sesiones)\n\n" +
+      "Incluyen diagnóstico con IA y ajuste semanal de parámetros. 💎\n" +
+      "¿Quieres que te recomiende el ideal según tu zona?"
+    );
 
-  // --- PRECIOS GENERALES ---
-  if (/(precio|vale|costo|cuanto|valor)/.test(msg))
-    return "💰 Planes destacados:\n• Lipo Body Elite $664 000\n• Face Elite $358 400\n• Body Fitness $360 000\n• Push Up $376 000\n• PinkGlow $128 800\nIncluyen evaluación y seguimiento IA.";
+  if (asks_results)
+    return (
+      "📊 Los resultados suelen notarse desde las primeras sesiones. " +
+      "Nuestra IA compara tus mediciones y adapta los parámetros para acelerar los avances. " +
+      "Cada cuerpo responde distinto, pero verás cambios reales y progresivos 💫"
+    );
 
-  // --- AGENDAMIENTO ---
-  if (/(agenda|agendar|reserva|cita|hora|evaluacion|agendamiento)/.test(msg))
-    return "📅 Puedes agendar tu evaluación gratuita con IA aquí:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  if (ask_appointment)
+    return (
+      "📅 Podemos coordinar tu evaluación gratuita con IA, sin compromiso. " +
+      "Durante la visita analizamos rostro y cuerpo para definir tu plan ideal. " +
+      "¿Quieres que te ayude a reservar tu hora?"
+    );
 
-  // --- PROMOCIONES ---
-  if (/(promo|oferta|descuento|gratis|beneficio)/.test(msg))
-    return "🎁 Promoción actual: al tomar un plan corporal recibes una sesión de depilación láser gratis. Consulta vigencia al agendar tu evaluación IA.";
+  if (/\b(rostro|abdomen|papada|gluteo|glúteo|gluteos|glúteos)\b/.test(normalized)) {
+    const zone = normalized.match(/\b(rostro|abdomen|papada|gluteo|glúteo|gluteos|glúteos)\b/)[0];
+    return (
+      `✨ Para ${zone}, nuestro sistema IA recomienda una evaluación gratuita para definir tu combinación ideal de tecnologías. ` +
+      `Así podemos personalizar tratamientos como HIFU, EMS o Lipolíticos según tus objetivos. 💫\n` +
+      `¿Te gustaría que te ayude a agendarla?`
+    );
+  }
 
-  // --- REDIRECCIÓN HUMANA ---
-  if (/(humano|asesora|persona|llamar|contacto|wsp|numero)/.test(msg))
-    return "📲 Puedes hablar directamente con una especialista en +56 9 8330 0262 si quieres acelerar tu reserva o cotización.";
+  return defaultReply();
+}
 
-  // --- RESPUESTA GENERAL ---
-  return "💬 Cuéntame qué zona quieres mejorar (rostro, guatita, glúteos o papada) y te diré cómo nuestro sistema IA puede ayudarte a lograrlo.";
+function defaultReply() {
+  return (
+    "💬 Cuéntame qué zona quieres mejorar (rostro, abdomen, glúteos o papada). " +
+    "Estoy aquí para orientarte con cariño y precisión, y ayudarte a elegir el plan que realmente haga la diferencia 💖"
+  );
+}
+
+function softGreeting() {
+  return (
+    "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. " +
+    "Estoy aquí para acompañarte a encontrar tu mejor versión. " +
+    "Cuéntame si quieres mejorar rostro, abdomen, glúteos o papada y te mostraré cómo podemos hacerlo juntas 🤍"
+  );
 }
