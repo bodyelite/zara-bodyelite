@@ -1,5 +1,5 @@
 // responses.js
-// Módulo de generación de respuestas con memoria y comprensión avanzada para Zara IA
+// Respuestas contextuales y empáticas de Zara IA
 
 import fetch from "node-fetch";
 import { actualizarContexto } from "./entrenador.js";
@@ -7,8 +7,6 @@ import { normalizar } from "./comprension.js";
 
 const LINK_RESERVO = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-
-// Avisos internos
 const STAFF_NUMBERS = ["56983300262", "56937648536", "56931720760"];
 
 async function avisarStaff(mensaje) {
@@ -29,35 +27,36 @@ async function avisarStaff(mensaje) {
   }
 }
 
-// Variaciones de frases para evitar tono robótico
 const variaciones = {
   saludo: [
     "Hola 👋, soy Zara, asistente IA de Body Elite. ¿En qué puedo ayudarte hoy?",
-    "¡Hola! Soy Zara 🤖, IA de Body Elite. Puedo orientarte en tratamientos o agendamiento.",
+    "¡Bienvenida/o! Soy Zara 🤖, tu asistente IA de Body Elite. ¿Qué te gustaría saber?",
   ],
   agendar: [
-    "📅 Puedes agendar tu evaluación gratuita presionando el botón 👇",
-    "Agenda tu evaluación sin costo. Toca el botón de abajo 👇",
+    "📅 Agenda tu evaluación sin costo. Toca el botón de abajo 👇",
+    "Puedes agendar tu evaluación gratuita tocando el botón 👇",
   ],
   confirmacion: [
-    `✨ Agenda tu evaluación gratuita aquí:\n${LINK_RESERVO}\nIncluye FitDays y asesoría personalizada.`,
-    `Perfecto ✅ Aquí puedes agendar directamente:\n${LINK_RESERVO}`,
+    `✨ Aquí puedes agendar tu evaluación:\n${LINK_RESERVO}\nIncluye FitDays y asesoría personalizada.`,
+    `Perfecto ✅ Ingresa aquí para agendar:\n${LINK_RESERVO}`,
+  ],
+  empatia: [
+    "Entiendo, a veces el botón no responde correctamente. Puedes ingresar directamente con este enlace 👇",
+    "No te preocupes, te dejo el link directo para agendar sin problemas 👇",
   ],
 };
 
-function elegir(frases) {
-  return frases[Math.floor(Math.random() * frases.length)];
+function elegir(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 export default async function generarRespuesta(usuario, mensaje) {
   const ctx = actualizarContexto(usuario, mensaje);
-  const normal = normalizar(mensaje);
   const intencion = ctx.ultimaIntencion;
+  const normal = normalizar(mensaje);
 
-  // 1. Saludo
   if (intencion === "saludo") return elegir(variaciones.saludo);
 
-  // 2. Agendamiento
   if (intencion === "agendar") {
     return {
       type: "interactive",
@@ -66,34 +65,29 @@ export default async function generarRespuesta(usuario, mensaje) {
         body: { text: elegir(variaciones.agendar) },
         action: {
           buttons: [
-            { type: "reply", reply: { id: "agendar_reservo", title: "Agenda Gratis" } },
+            { type: "url", url: LINK_RESERVO, title: "Agenda Gratis" }, // botón funcional
           ],
         },
       },
     };
   }
 
-  // 3. Botón agenda
-  if (normal.includes("agendar_reservo") || normal.includes("agenda gratis")) {
-    const tipo = ctx.tipoPlan ? `(${ctx.tipoPlan})` : "";
-    const aviso = `🔔 Nuevo agendamiento ${tipo}\nCliente: ${usuario}\nMensaje: ${mensaje}\n${LINK_RESERVO}`;
-    await avisarStaff(aviso);
-    return elegir(variaciones.confirmacion);
+  if (intencion === "problema" || normal.includes("boton")) {
+    return `${elegir(variaciones.empatia)}\n${LINK_RESERVO}`;
   }
 
-  // 4. Tratamientos
-  if (intencion === "tratamientos") {
-    if (ctx.tipoPlan === "facial")
-      return "💆‍♀️ Los tratamientos faciales incluyen Face Light, Face Elite y Face Antiage. ¿Deseas saber cuál te conviene?";
-    if (ctx.tipoPlan === "corporal")
-      return "💪 Para cuerpo tenemos Lipo Body Elite, Body Fitness y Push Up. ¿Te indico cuál aplica a tus objetivos?";
-    return "Ofrecemos planes faciales y corporales con tecnología avanzada. ¿Cuál te interesa?";
-  }
-
-  // 5. Promociones
+  if (intencion === "facial")
+    return "💆‍♀️ Ofrecemos tratamientos faciales como Face Light, Face Smart y Face Elite. ¿Quieres saber cuál es mejor para ti?";
+  if (intencion === "corporal")
+    return "💪 Para cuerpo tenemos Lipo Body Elite, Push Up y Body Fitness. ¿Deseas conocer precios o beneficios?";
   if (intencion === "promocion")
-    return "🎯 Promociones activas: Lipo Body Elite con diagnóstico FitDays y depilación gratis en algunos planes. Consulta cuál aplica.";
+    return "🎯 Promoción activa: Lipo Body Elite con FitDays + depilación gratis en algunos planes. Consulta cuál aplica.";
+  if (intencion === "precio")
+    return "Nuestros precios varían según el plan. ¿Te interesa facial o corporal?";
+  if (intencion === "duda")
+    return "Claro, puedo explicarte con más detalle. ¿Sobre qué tratamiento te gustaría saber?";
+  if (intencion === "interes")
+    return "Perfecto 🙌. ¿Quieres que te ayude a agendar tu evaluación gratuita?";
 
-  // 6. Desconocido
   return "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. Escribe 'quiero agendar' o 'promoción' para comenzar.";
 }

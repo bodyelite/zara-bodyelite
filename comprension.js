@@ -1,6 +1,4 @@
 // comprension.js
-// Módulo de comprensión semántica y normalización de lenguaje para Zara IA
-
 export function limpiarTexto(texto) {
   return texto
     .toLowerCase()
