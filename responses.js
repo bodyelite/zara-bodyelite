@@ -1,118 +1,42 @@
-export async function getResponse(msg) {
-  if (!msg || typeof msg !== "string") return defaultReply();
+export function getResponse(msg) {
+  if (!msg) return "";
 
-  const raw = msg.trim();
-  const text = raw.toLowerCase();
+  const text = msg.toLowerCase();
 
-  const normalized = text
-    .replace(/\bguatita\b/g, "abdomen")
-    .replace(/\bpanza\b/g, "abdomen")
-    .replace(/\bbarriga\b/g, "abdomen")
-    .replace(/\best[oó]mago\b/g, "abdomen");
-
-  const asks_botox = /\b(botox|toxina|toxina botul[iní]ca)\b/.test(normalized);
-  const asks_hifu = /\bhifu\b/.test(normalized);
-  const asks_pink = /\bpink\s?glow\b|pinkglow\b/.test(normalized);
-  const asks_exosoma = /\bexosoma(s)?\b/.test(normalized);
-  const asks_lipolitico = /\blipol[ií]tico(s)?\b/.test(normalized);
-  const asks_prices = /\b(cuanto vale|precio|valor|cuesta)\b/.test(normalized);
-  const asks_results = /\b(resultad|cambio|mejora|efecto)\b/.test(normalized);
-  const asks_location = /\bdonde\b|ubicaci[oó]n|direcci[oó]n/.test(normalized);
-  const greets = /\b(hola|buenas|buenos dias|buenas tardes)\b/.test(normalized);
-  const ask_appointment = /\bagendar|cita|evaluaci[oó]n\b/.test(normalized);
-
-  if (greets && !ask_appointment) return softGreeting();
-
-  if (asks_botox)
-    return (
-      "💉 La Toxina Botulínica ayuda a relajar los músculos responsables de las líneas de expresión. " +
-      "Se aplica con precisión y entrega un resultado natural, manteniendo tu expresividad. " +
-      "¿Quieres que te cuente en qué zonas se recomienda o cuándo puedes evaluarte sin costo?"
-    );
-
-  if (asks_hifu)
-    return (
-      "🔷 El HIFU 12D es una tecnología que reafirma la piel desde las capas más profundas sin cirugía. " +
-      "Activa colágeno y redefine contornos. Ideal si buscas un cambio visible y natural. " +
-      "¿Quieres que te explique cómo se combina con nuestra IA para personalizar tu plan?"
-    );
-
-  if (asks_pink)
-    return (
-      "🌸 Pink Glow revitaliza e ilumina la piel con ácido hialurónico, vitaminas y aminoácidos. " +
-      "Es perfecto para recuperar el brillo y la uniformidad del rostro. " +
-      "¿Deseas saber cómo integrarlo en tu tratamiento o su valor?"
-    );
-
-  if (asks_exosoma)
-    return (
-      "🧬 Los Exosomas son partículas regeneradoras que estimulan colágeno y reparación celular. " +
-      "Ayudan a rejuvenecer y mejorar textura de piel desde el interior. " +
-      "¿Quieres conocer cómo lo usamos en Body Elite junto a IA?"
-    );
-
-  if (asks_lipolitico)
-    return (
-      "🔥 Los Lipolíticos ayudan a reducir grasa localizada y mejorar el contorno corporal. " +
-      "Se aplican de forma segura y personalizada en zonas como abdomen o muslos. " +
-      "¿Te gustaría saber si es adecuado para ti o agendar una evaluación gratuita?"
-    );
-
-  if (asks_location)
-    return (
-      "📍 Estamos en *Av. Las Perdices N°2990, Local 23, Peñalolén.*\n" +
-      "🕒 Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n" +
-      "Si quieres, puedo ayudarte a reservar tu evaluación sin costo 💫"
-    );
-
-  if (asks_prices)
-    return (
-      "💰 Planes más consultados:\n" +
-      "• Lipo Body Elite $664.000 (12 sesiones + IA + FitDays)\n" +
-      "• Lipo Reductiva 12D $480.000 (10 sesiones)\n" +
-      "• Body Fitness $360.000 (8 sesiones)\n" +
-      "• Push Up $376.000 (6 sesiones)\n\n" +
-      "Incluyen diagnóstico con IA y ajuste semanal de parámetros. 💎\n" +
-      "¿Quieres que te recomiende el ideal según tu zona?"
-    );
-
-  if (asks_results)
-    return (
-      "📊 Los resultados suelen notarse desde las primeras sesiones. " +
-      "Nuestra IA compara tus mediciones y adapta los parámetros para acelerar los avances. " +
-      "Cada cuerpo responde distinto, pero verás cambios reales y progresivos 💫"
-    );
-
-  if (ask_appointment)
-    return (
-      "📅 Podemos coordinar tu evaluación gratuita con IA, sin compromiso. " +
-      "Durante la visita analizamos rostro y cuerpo para definir tu plan ideal. " +
-      "¿Quieres que te ayude a reservar tu hora?"
-    );
-
-  if (/\b(rostro|abdomen|papada|gluteo|glúteo|gluteos|glúteos)\b/.test(normalized)) {
-    const zone = normalized.match(/\b(rostro|abdomen|papada|gluteo|glúteo|gluteos|glúteos)\b/)[0];
-    return (
-      `✨ Para ${zone}, nuestro sistema IA recomienda una evaluación gratuita para definir tu combinación ideal de tecnologías. ` +
-      `Así podemos personalizar tratamientos como HIFU, EMS o Lipolíticos según tus objetivos. 💫\n` +
-      `¿Te gustaría que te ayude a agendarla?`
-    );
+  // === SALUDO INICIAL ===
+  if (text.includes("hola") || text.includes("buenas") || text.includes("zara")) {
+    return "✨ Hola! Soy Zara, asistente IA de Body Elite Estética Avanzada. Nuestro sistema combina diagnóstico corporal y facial con inteligencia artificial para personalizar tu tratamiento. Cuéntame si deseas mejorar rostro, abdomen, glúteos o papada, y te mostraré cómo lograrlo 💫";
   }
 
-  return defaultReply();
-}
+  // === TRATAMIENTOS ===
+  if (text.includes("botox") || text.includes("toxina")) {
+    return "💉 La Toxina Botulínica ayuda a relajar los músculos responsables de las líneas de expresión. Se aplica con precisión para mantener un resultado natural y expresivo. Agenda acá tu evaluación gratuita con asistencia de IA y descubre si este tratamiento es ideal para ti. Nuestra evaluación y seguimiento se realizan con inteligencia artificial para personalizar tu plan.";
+  }
 
-function defaultReply() {
-  return (
-    "💬 Cuéntame qué zona quieres mejorar (rostro, abdomen, glúteos o papada). " +
-    "Estoy aquí para orientarte con cariño y precisión, y ayudarte a elegir el plan que realmente haga la diferencia 💖"
-  );
-}
+  if (text.includes("hifu")) {
+    return "🔷 El HIFU 12D es una tecnología de ultrasonido focalizado que tensa y reafirma la piel sin cirugía. En Body Elite lo combinamos con IA para ajustar la potencia y zonas según tu evaluación. Agenda acá tu evaluación gratuita con asistencia de IA.";
+  }
 
-function softGreeting() {
-  return (
-    "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. " +
-    "Estoy aquí para acompañarte a encontrar tu mejor versión. " +
-    "Cuéntame si quieres mejorar rostro, abdomen, glúteos o papada y te mostraré cómo podemos hacerlo juntas 🤍"
-  );
+  if (text.includes("pink glow") || text.includes("pinkglow")) {
+    return "🌸 Pink Glow es un tratamiento bioestimulante que revitaliza, hidrata y mejora manchas gracias a ácido hialurónico, vitaminas y aminoácidos. Ideal para piel apagada o con pigmentación irregular. Agenda acá tu evaluación gratuita con asistencia de IA y conoce cómo nuestra IA adapta la dosis según tu piel.";
+  }
+
+  if (text.includes("exosoma") || text.includes("exosomas")) {
+    return "🧬 Los Exosomas estimulan la regeneración celular, mejorando textura, firmeza y luminosidad. En Body Elite los usamos en protocolos avanzados faciales y capilares con seguimiento IA. Agenda acá tu evaluación gratuita con asistencia de IA.";
+  }
+
+  if (text.includes("lipo") || text.includes("body") || text.includes("fitness")) {
+    return "🔥 Planes corporales disponibles:\n• Lipo Body Elite $664.000 (12 sesiones + IA + FitDays)\n• Lipo Reductiva 12D $480.000 (10 sesiones)\n• Body Fitness $360.000 (8 sesiones)\n• Push Up $376.000 (6 sesiones)\nCada plan incluye evaluación y seguimiento IA semanal. Agenda acá tu evaluación gratuita con asistencia de IA.";
+  }
+
+  if (text.includes("agendar") || text.includes("agenda") || text.includes("reserva")) {
+    return "📅 Podemos coordinar tu evaluación gratuita con IA, sin compromiso. Durante la visita analizamos rostro y cuerpo con inteligencia artificial para definir tu plan ideal. Agenda acá tu evaluación gratuita con asistencia de IA.";
+  }
+
+  if (text.includes("donde estan") || text.includes("ubicacion") || text.includes("direccion")) {
+    return "📍 Estamos en Av. Las Perdices Nº2990, Local 23, Peñalolén. Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00. Agenda acá tu evaluación gratuita con asistencia de IA para comenzar tu experiencia Body Elite 💎";
+  }
+
+  // === MENSAJE POR DEFECTO ===
+  return "💫 Cuéntame qué zona deseas mejorar (rostro, abdomen, glúteos o papada). Estoy aquí para orientarte con cariño y precisión, y ayudarte a elegir el plan que realmente haga la diferencia. Agenda acá tu evaluación gratuita con asistencia de IA.";
 }
