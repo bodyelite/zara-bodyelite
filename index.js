@@ -1,6 +1,6 @@
 // index.js
-// Servidor principal de Zara IA – Body Elite con botón interactivo en WhatsApp
-// Mantiene conexiones Meta y Render intactas
+// Zara IA – Body Elite con botón interactivo y compatibilidad completa Meta + Render
+// No se alteran conexiones ni estructura, solo se usa el ID de número de WhatsApp real
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -17,6 +17,9 @@ app.use(bodyParser.json());
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+
+// ID REAL DEL NÚMERO DE WHATSAPP (según panel de Meta)
+const PHONE_NUMBER_ID = "840360109156943";
 
 // ======================================================
 // WEBHOOK META
@@ -73,7 +76,7 @@ app.post("/webhook", async (req, res) => {
 
         registrarConversacion(sender, textoNormalizado, respuesta);
 
-        // Enviar mensaje con botón “Agenda Gratis ✳️”
+        // Si incluye "✳️", enviar con botón interactivo
         if (respuesta.includes("✳️")) {
           await enviarBotonAgendar(sender, respuesta);
         } else {
@@ -97,7 +100,7 @@ app.post("/webhook", async (req, res) => {
 async function enviarMensaje(to, text) {
   try {
     const response = await fetch(
-      "https://graph.facebook.com/v19.0/me/messages",
+      `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
       {
         method: "POST",
         headers: {
@@ -135,7 +138,9 @@ async function enviarBotonAgendar(to, text) {
     type: "interactive",
     interactive: {
       type: "button",
-      body: { text: mensaje },
+      body: {
+        text: mensaje,
+      },
       action: {
         buttons: [
           {
@@ -150,7 +155,7 @@ async function enviarBotonAgendar(to, text) {
 
   try {
     const response = await fetch(
-      "https://graph.facebook.com/v19.0/me/messages",
+      `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
       {
         method: "POST",
         headers: {
@@ -172,6 +177,8 @@ async function enviarBotonAgendar(to, text) {
   }
 }
 
+// ======================================================
+// INICIO DEL SERVIDOR
 // ======================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
