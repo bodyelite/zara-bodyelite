@@ -1,28 +1,51 @@
 // intents.js
-// Clasificación mejorada de intenciones para Zara IA
+// Detección de intención para Zara IA (Body Elite)
 
-export function clasificarIntencion(texto) {
+export default function detectarIntencion(texto) {
   const t = texto.toLowerCase();
 
-  if (t.includes("hola") || t.includes("buenas")) return "saludo";
-  if (t.includes("gracias") || t.includes("adios")) return "despedida";
-  if (t.includes("precio") || t.includes("valor") || t.includes("cuesta")) return "precios";
-  if (t.includes("agendar") || t.includes("reserva") || t.includes("cita")) return "agenda";
-  if (t.includes("donde") || t.includes("ubicacion") || t.includes("direccion")) return "ubicacion";
-  if (t.includes("diagnostico") || t.includes("evaluacion")) return "diagnostico";
+  if (
+    t.includes("hola") ||
+    t.includes("buenas") ||
+    t.includes("zara") ||
+    t.includes("ayuda")
+  ) {
+    return "saludo";
+  }
 
-  // frases de interés o aclaración
+  if (
+    t.includes("agendar") ||
+    t.includes("evaluacion") ||
+    t.includes("agenda gratis") ||
+    t.includes("reservo") ||
+    t.includes("quiero agenda") ||
+    t.includes("agenda") ||
+    t.includes("cita")
+  ) {
+    return "agendar";
+  }
+
+  if (
+    t.includes("lipo") ||
+    t.includes("cavitacion") ||
+    t.includes("hifu") ||
+    t.includes("toxina") ||
+    t.includes("sculptor") ||
+    t.includes("radiofrecuencia") ||
+    t.includes("tratamiento")
+  ) {
+    return "tratamientos";
+  }
+
   if (
     t.includes("promo") ||
-    t.includes("promocion") ||
-    t.includes("en que consiste") ||
-    t.includes("esa") ||
-    t.includes("quiero esa") ||
-    t.includes("quiero la")
-  )
-    return "interes_promo";
+    t.includes("descuento") ||
+    t.includes("oferta") ||
+    t.includes("valor") ||
+    t.includes("precio")
+  ) {
+    return "promocion";
+  }
 
-  return "general";
+  return "desconocido";
 }
-
-export default { clasificarIntencion };
