@@ -1,74 +1,99 @@
 // responses.js
-// Módulo de respuestas automáticas para Zara IA (Body Elite)
-// Compatible con Node.js 22 y Render
+// Módulo de generación de respuestas con memoria y comprensión avanzada para Zara IA
 
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import detectarIntencion from "./intents.js"; // ✅ se usa default import
+import fetch from "node-fetch";
+import { actualizarContexto } from "./entrenador.js";
+import { normalizar } from "./comprension.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const LINK_RESERVO = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 
-// ======================================================
-// Carga segura de knowledge.json
-// ======================================================
-const knowledgePath = path.join(__dirname, "knowledge.json");
-let knowledge = {};
-try {
-  const data = fs.readFileSync(knowledgePath, "utf8");
-  knowledge = JSON.parse(data);
-} catch (error) {
-  console.error("Error al cargar knowledge.json:", error.message);
+// Avisos internos
+const STAFF_NUMBERS = ["56983300262", "56937648536", "56931720760"];
+
+async function avisarStaff(mensaje) {
+  for (const numero of STAFF_NUMBERS) {
+    await fetch(`https://graph.facebook.com/v18.0/840360109156943/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: numero,
+        type: "text",
+        text: { body: mensaje },
+      }),
+    });
+  }
 }
 
-// ======================================================
-// Generador de respuestas y avisos
-// ======================================================
-export async function generarRespuesta(texto, zaraData, contextoPrevio) {
-  const intencion = detectarIntencion(texto);
-  let respuesta = "";
+// Variaciones de frases para evitar tono robótico
+const variaciones = {
+  saludo: [
+    "Hola 👋, soy Zara, asistente IA de Body Elite. ¿En qué puedo ayudarte hoy?",
+    "¡Hola! Soy Zara 🤖, IA de Body Elite. Puedo orientarte en tratamientos o agendamiento.",
+  ],
+  agendar: [
+    "📅 Puedes agendar tu evaluación gratuita presionando el botón 👇",
+    "Agenda tu evaluación sin costo. Toca el botón de abajo 👇",
+  ],
+  confirmacion: [
+    `✨ Agenda tu evaluación gratuita aquí:\n${LINK_RESERVO}\nIncluye FitDays y asesoría personalizada.`,
+    `Perfecto ✅ Aquí puedes agendar directamente:\n${LINK_RESERVO}`,
+  ],
+};
 
-  switch (intencion) {
-    case "saludo":
-      respuesta = "Hola 👋, soy Zara, asistente IA de Body Elite. ¿En qué puedo ayudarte hoy?";
-      break;
+function elegir(frases) {
+  return frases[Math.floor(Math.random() * frases.length)];
+}
 
-    case "agendar":
-      respuesta =
-        "✳️ Puedes agendar fácilmente tu evaluación gratuita con nuestros especialistas.\nIncluye diagnóstico con tecnología FitDays y asesoría personalizada.";
-      break;
+export default async function generarRespuesta(usuario, mensaje) {
+  const ctx = actualizarContexto(usuario, mensaje);
+  const normal = normalizar(mensaje);
+  const intencion = ctx.ultimaIntencion;
 
-    case "tratamientos":
-      respuesta =
-        "Ofrecemos tratamientos corporales y faciales con tecnología avanzada. ¿Te interesa moldear el cuerpo o mejorar la piel del rostro?";
-      break;
+  // 1. Saludo
+  if (intencion === "saludo") return elegir(variaciones.saludo);
 
-    case "promocion":
-      respuesta =
-        "💎 Nuestras promociones incluyen HIFU, Cavitación y Sculptor según el plan elegido. ¿Deseas conocer la promoción actual o agendar tu evaluación?";
-      break;
-
-    default:
-      respuesta =
-        "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. Escribe 'quiero agendar' o 'promoción' para comenzar.";
+  // 2. Agendamiento
+  if (intencion === "agendar") {
+    return {
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: elegir(variaciones.agendar) },
+        action: {
+          buttons: [
+            { type: "reply", reply: { id: "agendar_reservo", title: "Agenda Gratis" } },
+          ],
+        },
+      },
+    };
   }
 
-  return respuesta;
-}
+  // 3. Botón agenda
+  if (normal.includes("agendar_reservo") || normal.includes("agenda gratis")) {
+    const tipo = ctx.tipoPlan ? `(${ctx.tipoPlan})` : "";
+    const aviso = `🔔 Nuevo agendamiento ${tipo}\nCliente: ${usuario}\nMensaje: ${mensaje}\n${LINK_RESERVO}`;
+    await avisarStaff(aviso);
+    return elegir(variaciones.confirmacion);
+  }
 
-// ======================================================
-// Función auxiliar para generar timestamp Chile
-// ======================================================
-export function obtenerFechaChile() {
-  const ahora = new Date();
-  return ahora.toLocaleString("es-CL", {
-    timeZone: "America/Santiago",
-    hour12: false,
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // 4. Tratamientos
+  if (intencion === "tratamientos") {
+    if (ctx.tipoPlan === "facial")
+      return "💆‍♀️ Los tratamientos faciales incluyen Face Light, Face Elite y Face Antiage. ¿Deseas saber cuál te conviene?";
+    if (ctx.tipoPlan === "corporal")
+      return "💪 Para cuerpo tenemos Lipo Body Elite, Body Fitness y Push Up. ¿Te indico cuál aplica a tus objetivos?";
+    return "Ofrecemos planes faciales y corporales con tecnología avanzada. ¿Cuál te interesa?";
+  }
+
+  // 5. Promociones
+  if (intencion === "promocion")
+    return "🎯 Promociones activas: Lipo Body Elite con diagnóstico FitDays y depilación gratis en algunos planes. Consulta cuál aplica.";
+
+  // 6. Desconocido
+  return "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. Escribe 'quiero agendar' o 'promoción' para comenzar.";
 }
