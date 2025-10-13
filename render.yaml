@@ -1,12 +1,18 @@
+# render.yaml
+# Configuración de despliegue en Render para Zara IA
+
 services:
   - type: web
-    name: zara-bodyelite
+    name: zara-ia-body-elite
     env: node
+    region: oregon
+    plan: free
     buildCommand: "npm install"
     startCommand: "npm start"
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-    plan: free
+      - key: PAGE_ACCESS_TOKEN
+        sync: false
+      - key: VERIFY_TOKEN
+        sync: false
+      - key: APP_SECRET
+        sync: false

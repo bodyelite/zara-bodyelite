@@ -1,16 +1,26 @@
+// index.js
+// Servidor principal de Zara IA – Body Elite con botón interactivo en WhatsApp
+// Mantiene conexiones Meta y Render intactas
+
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
+import { getKnowledge, normalizarTexto } from "./entrenador.js";
+import { generarRespuesta } from "./responses.js";
+import { registrarConversacion, actualizarContexto } from "./conversations.js";
 
 dotenv.config();
+
 const app = express();
 app.use(bodyParser.json());
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-// ✅ Verificación de webhook (Meta → Render)
+// ======================================================
+// WEBHOOK META
+// ======================================================
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -20,58 +30,152 @@ app.get("/webhook", (req, res) => {
     console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
-    console.error("❌ Falló la verificación del webhook");
+    console.log("❌ Fallo en la verificación del webhook");
     res.sendStatus(403);
   }
 });
 
-// ✅ Recepción de mensajes entrantes (Meta → Render)
+// ======================================================
+// RECEPCIÓN DE MENSAJES
+// ======================================================
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
 
-    if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages) {
-      const messages = body.entry[0].changes[0].value.messages;
-      for (const msg of messages) {
-        const from = msg.from;
-        const text = msg.text?.body?.toLowerCase() || "";
+    if (body.object === "whatsapp_business_account") {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const message = changes?.value?.messages?.[0];
 
-        console.log(`💬 Mensaje recibido de ${from}: ${text}`);
+      if (message) {
+        const sender = message.from;
+        let texto = "";
 
-        // 🔹 Respuesta básica
-        let reply = "Hola 👋, soy Zara, asistente IA de Body Elite. ¿En qué puedo ayudarte hoy?";
-        if (text.includes("botox")) reply = "💉 Sí, realizamos aplicación de toxina botulínica con especialistas certificados.";
-        else if (text.includes("pink")) reply = "🌸 Pink Glow es ideal para mejorar la luminosidad y textura de tu piel.";
-        else if (text.includes("agenda")) reply = "📅 Puedes agendar fácilmente tu evaluación gratuita acá: Agenda acá 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\nNuestra evaluación y seguimiento se realizan con asistencia IA para resultados óptimos.";
+        if (message.type === "text") {
+          texto = message.text.body;
+        } else if (message.type === "image") {
+          texto = message.image.caption || "imagen promocional";
+        } else if (message.type === "button" || message.type === "interactive") {
+          texto =
+            message.button?.text ||
+            message.interactive?.button_reply?.title ||
+            "interacción anuncio";
+        }
 
-        // 🔹 Enviar mensaje de respuesta a WhatsApp
-        await fetch(`https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: from,
-            text: { body: reply }
-          })
-        });
+        const textoNormalizado = normalizarTexto(texto);
+        const zaraData = getKnowledge();
+        const contextoPrevio = actualizarContexto(sender, textoNormalizado);
+        const respuesta = await generarRespuesta(
+          textoNormalizado,
+          zaraData,
+          contextoPrevio
+        );
 
-        console.log(`✅ Respuesta enviada a ${from}: ${reply}`);
+        registrarConversacion(sender, textoNormalizado, respuesta);
+
+        // Enviar mensaje con botón “Agenda Gratis ✳️”
+        if (respuesta.includes("✳️")) {
+          await enviarBotonAgendar(sender, respuesta);
+        } else {
+          await enviarMensaje(sender, respuesta);
+        }
       }
-    }
 
-    // Confirmar recepción a Meta (evita reintentos)
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("❌ Error procesando el webhook:", err);
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (error) {
+    console.error("Error procesando mensaje:", error.message);
     res.sendStatus(500);
   }
 });
 
-// ✅ Inicia servidor
-const PORT = process.env.PORT || 10000;
+// ======================================================
+// ENVÍO DE MENSAJES NORMALES
+// ======================================================
+async function enviarMensaje(to, text) {
+  try {
+    const response = await fetch(
+      "https://graph.facebook.com/v19.0/me/messages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to,
+          text: { body: text },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Error al enviar mensaje:", errorData);
+    } else {
+      console.log(`✅ Mensaje enviado a ${to}`);
+    }
+  } catch (error) {
+    console.error("Error al contactar API Meta:", error.message);
+  }
+}
+
+// ======================================================
+// ENVÍO DE BOTÓN INTERACTIVO
+// ======================================================
+async function enviarBotonAgendar(to, text) {
+  const mensaje = text.replace("✳️", "").trim();
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: mensaje },
+      action: {
+        buttons: [
+          {
+            type: "url",
+            url: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+            title: "Agenda Gratis ✳️",
+          },
+        ],
+      },
+    },
+  };
+
+  try {
+    const response = await fetch(
+      "https://graph.facebook.com/v19.0/me/messages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Error al enviar botón:", errorData);
+    } else {
+      console.log(`✅ Botón interactivo enviado a ${to}`);
+    }
+  } catch (error) {
+    console.error("Error al enviar botón interactivo:", error.message);
+  }
+}
+
+// ======================================================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Zara bot corriendo correctamente en puerto ${PORT}`);
+  console.log(`🚀 Zara IA ejecutándose en puerto ${PORT}`);
 });
+
+export default app;

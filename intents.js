@@ -1,34 +1,28 @@
-import responses from "./responses.js";
+// intents.js
+// Clasificación mejorada de intenciones para Zara IA
 
-export default function detectIntent(text) {
-  const msg = text.toLowerCase();
+export function clasificarIntencion(texto) {
+  const t = texto.toLowerCase();
 
-  if (msg.includes("hola") || msg.includes("buenas"))
-    return responses.saludo();
-  if (msg.includes("agendar") || msg.includes("reserva"))
-    return responses.agendar();
-  if (msg.includes("precio") || msg.includes("$") || msg.includes("valor"))
-    return responses.precios();
+  if (t.includes("hola") || t.includes("buenas")) return "saludo";
+  if (t.includes("gracias") || t.includes("adios")) return "despedida";
+  if (t.includes("precio") || t.includes("valor") || t.includes("cuesta")) return "precios";
+  if (t.includes("agendar") || t.includes("reserva") || t.includes("cita")) return "agenda";
+  if (t.includes("donde") || t.includes("ubicacion") || t.includes("direccion")) return "ubicacion";
+  if (t.includes("diagnostico") || t.includes("evaluacion")) return "diagnostico";
+
+  // frases de interés o aclaración
   if (
-    msg.includes("tratamiento") ||
-    msg.includes("lipo") ||
-    msg.includes("face") ||
-    msg.includes("grasa") ||
-    msg.includes("abdomen")
+    t.includes("promo") ||
+    t.includes("promocion") ||
+    t.includes("en que consiste") ||
+    t.includes("esa") ||
+    t.includes("quiero esa") ||
+    t.includes("quiero la")
   )
-    return responses.tratamientos(msg);
-  if (
-    msg.includes("humano") ||
-    msg.includes("especialista") ||
-    msg.includes("ayuda")
-  )
-    return responses.derivar();
-  if (
-    msg.includes("tecnologia") ||
-    msg.includes("hifu") ||
-    msg.includes("sculptor") ||
-    msg.includes("cavitacion")
-  )
-    return responses.tecnologias();
-  return responses.fallback();
+    return "interes_promo";
+
+  return "general";
 }
+
+export default { clasificarIntencion };
