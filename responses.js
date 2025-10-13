@@ -1,42 +1,38 @@
-export function getResponse(msg) {
-  if (!msg) return "";
+export function getResponse(text) {
+  const lower = text.toLowerCase();
 
-  const text = msg.toLowerCase();
+  // --- SALUDOS ---
+  if (["hola", "buenas", "holaa", "hey"].some(w => lower.includes(w)))
+    return "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. Estoy aquí para ayudarte a encontrar tu mejor versión. Cuéntame qué zona quieres mejorar: rostro, abdomen, glúteos o papada 💎";
 
-  // === SALUDO INICIAL ===
-  if (text.includes("hola") || text.includes("buenas") || text.includes("zara")) {
-    return "✨ Hola! Soy Zara, asistente IA de Body Elite Estética Avanzada. Nuestro sistema combina diagnóstico corporal y facial con inteligencia artificial para personalizar tu tratamiento. Cuéntame si deseas mejorar rostro, abdomen, glúteos o papada, y te mostraré cómo lograrlo 💫";
-  }
+  // --- UBICACIÓN ---
+  if (lower.includes("dónde") || lower.includes("direccion"))
+    return "📍 Estamos en Av. Las Perdices Nº2990, Local 23, Peñalolén. Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00.";
 
-  // === TRATAMIENTOS ===
-  if (text.includes("botox") || text.includes("toxina")) {
-    return "💉 La Toxina Botulínica ayuda a relajar los músculos responsables de las líneas de expresión. Se aplica con precisión para mantener un resultado natural y expresivo. Agenda acá tu evaluación gratuita con asistencia de IA y descubre si este tratamiento es ideal para ti. Nuestra evaluación y seguimiento se realizan con inteligencia artificial para personalizar tu plan.";
-  }
+  // --- BOTOX / TOXINA ---
+  if (lower.includes("botox") || lower.includes("toxina"))
+    return "💉 La Toxina Botulínica ayuda a relajar los músculos responsables de las líneas de expresión. Se aplica con precisión y entrega un resultado natural, manteniendo tu expresividad. ¿Quieres que te cuente en qué zonas se recomienda o cuándo podrías evaluarte sin costo?";
 
-  if (text.includes("hifu")) {
-    return "🔷 El HIFU 12D es una tecnología de ultrasonido focalizado que tensa y reafirma la piel sin cirugía. En Body Elite lo combinamos con IA para ajustar la potencia y zonas según tu evaluación. Agenda acá tu evaluación gratuita con asistencia de IA.";
-  }
+  // --- PINK GLOW ---
+  if (lower.includes("pink") || lower.includes("glow"))
+    return "🌸 Pink Glow es un tratamiento bioestimulante que ilumina y uniforma la piel. Revitaliza, hidrata y mejora manchas gracias a ácido hialurónico, vitaminas y aminoácidos. Ideal para piel apagada o con pigmentación irregular.";
 
-  if (text.includes("pink glow") || text.includes("pinkglow")) {
-    return "🌸 Pink Glow es un tratamiento bioestimulante que revitaliza, hidrata y mejora manchas gracias a ácido hialurónico, vitaminas y aminoácidos. Ideal para piel apagada o con pigmentación irregular. Agenda acá tu evaluación gratuita con asistencia de IA y conoce cómo nuestra IA adapta la dosis según tu piel.";
-  }
+  // --- HIFU ---
+  if (lower.includes("hifu"))
+    return "💠 El HIFU 12D es ultrasonido focalizado que tensa y reafirma piel y tejido profundo sin cirugía. Estimula colágeno y define contorno. En Body Elite lo combinamos con IA para ajustar potencia y zonas según tu evaluación.";
 
-  if (text.includes("exosoma") || text.includes("exosomas")) {
-    return "🧬 Los Exosomas estimulan la regeneración celular, mejorando textura, firmeza y luminosidad. En Body Elite los usamos en protocolos avanzados faciales y capilares con seguimiento IA. Agenda acá tu evaluación gratuita con asistencia de IA.";
-  }
+  // --- AGENDA / RESERVA ---
+  if (["agenda", "reservar", "agendar", "hora"].some(w => lower.includes(w)))
+    return "🗓️ Podemos coordinar tu evaluación gratuita con IA, sin compromiso. Durante la visita analizamos rostro y cuerpo para definir tu plan ideal. Nuestra inteligencia artificial también acompaña el seguimiento de tus tratamientos. Agenda acá 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-  if (text.includes("lipo") || text.includes("body") || text.includes("fitness")) {
-    return "🔥 Planes corporales disponibles:\n• Lipo Body Elite $664.000 (12 sesiones + IA + FitDays)\n• Lipo Reductiva 12D $480.000 (10 sesiones)\n• Body Fitness $360.000 (8 sesiones)\n• Push Up $376.000 (6 sesiones)\nCada plan incluye evaluación y seguimiento IA semanal. Agenda acá tu evaluación gratuita con asistencia de IA.";
-  }
+  // --- PLANES CORPORAL / FACIAL ---
+  if (lower.includes("plan") || lower.includes("precio"))
+    return "🔥 Planes corporales: Lipo Body Elite $664.000 (12 sesiones + IA + FitDays), Lipo Reductiva $480.000 (10 sesiones), Body Fitness $360.000 (8 sesiones), Push Up $376.000 (6 sesiones). Todos incluyen evaluación y seguimiento IA.";
 
-  if (text.includes("agendar") || text.includes("agenda") || text.includes("reserva")) {
-    return "📅 Podemos coordinar tu evaluación gratuita con IA, sin compromiso. Durante la visita analizamos rostro y cuerpo con inteligencia artificial para definir tu plan ideal. Agenda acá tu evaluación gratuita con asistencia de IA.";
-  }
+  // --- DESPEDIDA ---
+  if (["gracias", "ok", "perfecto"].some(w => lower.includes(w)))
+    return "💖 Gracias a ti. Recuerda que cada sesión en Body Elite se adapta con asistencia de IA para potenciar tus resultados. ¿Quieres que te ayude a reservar tu evaluación sin costo?";
 
-  if (text.includes("donde estan") || text.includes("ubicacion") || text.includes("direccion")) {
-    return "📍 Estamos en Av. Las Perdices Nº2990, Local 23, Peñalolén. Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00. Agenda acá tu evaluación gratuita con asistencia de IA para comenzar tu experiencia Body Elite 💎";
-  }
-
-  // === MENSAJE POR DEFECTO ===
-  return "💫 Cuéntame qué zona deseas mejorar (rostro, abdomen, glúteos o papada). Estoy aquí para orientarte con cariño y precisión, y ayudarte a elegir el plan que realmente haga la diferencia. Agenda acá tu evaluación gratuita con asistencia de IA.";
+  // --- RESPUESTA GENÉRICA ---
+  return "💬 Cuéntame qué zona quieres mejorar (rostro, abdomen, glúteos o papada). Estoy aquí para orientarte con precisión y ayudarte a elegir el plan ideal 💕";
 }
