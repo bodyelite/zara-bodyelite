@@ -1,6 +1,6 @@
 // index.js
-// Zara IA – Body Elite con botón interactivo y compatibilidad completa Meta + Render
-// No se alteran conexiones ni estructura, solo se usa el ID de número de WhatsApp real
+// Zara IA – Body Elite con aviso interno al agendar y compatibilidad Meta + Render
+// No se alteran conexiones ni tokens, solo se agrega envío interno
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -18,8 +18,11 @@ app.use(bodyParser.json());
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-// ID REAL DEL NÚMERO DE WHATSAPP (según panel de Meta)
+// ID real del número de WhatsApp Business
 const PHONE_NUMBER_ID = "840360109156943";
+
+// Números internos de Body Elite (sin + ni espacios para Meta)
+const NUMEROS_INTERNOS = ["56983300262", "56937648536"];
 
 // ======================================================
 // WEBHOOK META
@@ -76,9 +79,10 @@ app.post("/webhook", async (req, res) => {
 
         registrarConversacion(sender, textoNormalizado, respuesta);
 
-        // Si incluye "✳️", enviar con botón interactivo
+        // Si incluye botón de agendar
         if (respuesta.includes("✳️")) {
           await enviarBotonAgendar(sender, respuesta);
+          await enviarAvisoInterno(sender, textoNormalizado);
         } else {
           await enviarMensaje(sender, respuesta);
         }
@@ -127,6 +131,17 @@ async function enviarMensaje(to, text) {
 }
 
 // ======================================================
+// ENVÍO DE AVISO INTERNO
+// ======================================================
+async function enviarAvisoInterno(usuario, mensajeUsuario) {
+  const aviso = `📩 Nuevo interesado en agendar evaluación.\nNúmero: +${usuario}\nMensaje: "${mensajeUsuario}"`;
+  for (const interno of NUMEROS_INTERNOS) {
+    await enviarMensaje(interno, aviso);
+  }
+  console.log("📤 Aviso interno enviado a recepción Body Elite");
+}
+
+// ======================================================
 // ENVÍO DE BOTÓN INTERACTIVO
 // ======================================================
 async function enviarBotonAgendar(to, text) {
@@ -144,9 +159,11 @@ async function enviarBotonAgendar(to, text) {
       action: {
         buttons: [
           {
-            type: "url",
-            url: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-            title: "Agenda Gratis ✳️",
+            type: "reply",
+            reply: {
+              id: "btn_agendar",
+              title: "Agenda Gratis ✳️",
+            },
           },
         ],
       },
