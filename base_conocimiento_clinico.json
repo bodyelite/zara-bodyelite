@@ -1,0 +1,76 @@
+{
+  "tratamientos": {
+    "HIFU 12D": {
+      "descripcion": "Tecnología ultrasónica que tensa la piel, redefine contornos y estimula colágeno en capas profundas. Ideal para flacidez facial o corporal sin cirugía.",
+      "precio": 664000,
+      "sesiones": 6,
+      "duracion": "60 minutos por zona",
+      "aparatologia": "HIFU 12D + RF + Cavitación según área tratada",
+      "experiencia": "El paciente siente un calor profundo controlado. Se perciben resultados iniciales desde la primera sesión, con efecto tensor progresivo por semanas.",
+      "enfoque": "reafirmante"
+    },
+    "Pink Glow": {
+      "descripcion": "Tratamiento facial bioestimulante con micropunción y activos despigmentantes que revitalizan y homogeneizan el tono del rostro.",
+      "precio": 198400,
+      "sesiones": 4,
+      "duracion": "50 minutos",
+      "aparatologia": "Microneedling + cóctel de vitaminas y péptidos",
+      "experiencia": "Sensación de frescor y ligera tensión, piel más luminosa al día siguiente.",
+      "enfoque": "luminosidad y regeneración"
+    },
+    "EMS Sculptor": {
+      "descripcion": "Aparato electromagnético que induce contracciones musculares profundas equivalentes a 20.000 abdominales o glúteos. Moldea y tonifica sin esfuerzo.",
+      "precio": 360000,
+      "sesiones": 6,
+      "duracion": "30 minutos por zona",
+      "aparatologia": "EMS Sculptor Pro de alta frecuencia",
+      "experiencia": "Contracciones intensas sin dolor. Se siente como un entrenamiento guiado. Resultados visibles en tono y firmeza.",
+      "enfoque": "tonificación"
+    },
+    "Toxina Botulínica": {
+      "descripcion": "Aplicación profesional con especialistas certificados. Relaja los músculos faciales responsables de líneas de expresión, logrando un rostro descansado y natural.",
+      "precio": 180000,
+      "sesiones": 1,
+      "duracion": "20 minutos",
+      "aparatologia": "Toxina aprobada por ISP",
+      "experiencia": "Microinyecciones precisas. Resultados desde el tercer día, con efecto de 4 a 6 meses.",
+      "enfoque": "rejuvenecimiento"
+    },
+    "Limpieza Facial Full": {
+      "descripcion": "Limpieza profunda con extracción, vapor, alta frecuencia y mascarilla calmante. Reequilibra la piel y elimina impurezas.",
+      "precio": 120000,
+      "sesiones": 6,
+      "duracion": "60 minutos",
+      "aparatologia": "Vaporozono + Alta Frecuencia + Ultrasonido",
+      "experiencia": "Sensación de limpieza y frescor inmediato. Piel visiblemente más clara y suave.",
+      "enfoque": "purificación"
+    },
+    "Lipo Body Elite": {
+      "descripcion": "Protocolo corporal intensivo que combina cavitación, radiofrecuencia y EMS Sculptor. Reduce grasa localizada y tonifica simultáneamente.",
+      "precio": 664000,
+      "sesiones": 8,
+      "duracion": "70 minutos por sesión",
+      "aparatologia": "Cavitación + RF + EMS Sculptor + FitDays diagnóstico inicial",
+      "experiencia": "Siente calor y contracciones musculares leves. Resultados visibles desde la tercera sesión.",
+      "enfoque": "reducción y tonificación"
+    },
+    "Body Fitness": {
+      "descripcion": "Tratamiento corporal orientado a definir musculatura, tonificar glúteos y abdomen. Ideal para quienes buscan efecto ‘fit’ visible sin gimnasio.",
+      "precio": 360000,
+      "sesiones": 6,
+      "duracion": "45 minutos",
+      "aparatologia": "EMS Sculptor + RF Térmica + FitDays",
+      "experiencia": "Contracciones y calor moderado, sensación post entrenamiento.",
+      "enfoque": "tonificación avanzada"
+    },
+    "Push Up": {
+      "descripcion": "Protocolo exclusivo para glúteos. Levanta, tonifica y mejora textura con radiofrecuencia y ondas electromagnéticas.",
+      "precio": 376000,
+      "sesiones": 6,
+      "duracion": "50 minutos",
+      "aparatologia": "RF + EMS Sculptor",
+      "experiencia": "Sensación de firmeza inmediata. Mejora progresiva en contorno y textura.",
+      "enfoque": "lifting glúteo"
+    }
+  }
+}
