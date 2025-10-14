@@ -18,9 +18,7 @@ export const responses = {
   ],
 
   location: [
-    "📍 Estamos en *Av. Las Perdices 2990, Local 23, Peñalolén.*  
-Atendemos *Lun–Vie 9:30–20:00 y Sáb 9:30–13:00.*  
-Puedes agendar desde el enlace oficial 👉 [Reservar en línea](https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9)"
+    "📍 Estamos en Av. Las Perdices 2990, Local 23, Penalolen. \nAtendemos Lun–Vie 9:30–20:00 y Sab 9:30–13:00. \nPuedes agendar desde el enlace oficial 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   ],
 
   followup: [
