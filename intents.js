@@ -1,50 +1,47 @@
 export const intents = [
   {
     tag: "saludo",
-    patterns: [
-      "hola", "buenas", "buenas tardes", "buen día",
-      "consulta", "quisiera información", "me interesa"
-    ],
+    patterns: ["hola", "buenas", "consulta", "información", "quisiera saber", "necesito ayuda"],
     responses: ["greeting"]
   },
   {
     tag: "agendamiento",
-    patterns: [
-      "quiero agendar", "puedo reservar", "hora disponible",
-      "agenda", "quiero cita", "quiero evaluación", "cómo reservo"
-    ],
+    patterns: ["quiero agendar", "agendar cita", "evaluación", "reserva", "hora disponible", "quiero diagnóstico"],
     responses: ["booking"]
   },
   {
-    tag: "tratamientos",
-    patterns: [
-      "qué es hifu", "pink glow", "radiofrecuencia", "cavitación",
-      "lipo", "sculptor", "body elite", "antiage", "facial", "corporal"
-    ],
-    responses: ["treatments"]
+    tag: "tratamientos_corporales",
+    patterns: ["lipo", "abdomen", "cintura", "celulitis", "flacidez corporal", "muslos", "glúteos", "brazos", "piernas", "reductivo"],
+    responses: ["body_treatments"]
   },
   {
-    tag: "precios",
-    patterns: [
-      "cuánto cuesta", "precio", "valor", "cuánto sale", "promociones",
-      "descuento", "oferta", "planes"
-    ],
+    tag: "tratamientos_faciales",
+    patterns: ["facial", "cara", "rostro", "arrugas", "papada", "manchas", "acné", "lifting", "antiage", "radiofrecuencia facial"],
+    responses: ["face_treatments"]
+  },
+  {
+    tag: "sintomas",
+    patterns: ["flacidez", "grasa localizada", "papada", "celulitis", "abdomen bajo", "firmeza", "retención de líquidos"],
+    responses: ["symptoms"]
+  },
+  {
+    tag: "precios_promociones",
+    patterns: ["cuánto cuesta", "valor", "precio", "promociones", "oferta", "depilación gratis", "planes"],
     responses: ["pricing"]
   },
   {
+    tag: "tecnologias",
+    patterns: ["hifu", "sculptor", "radiofrecuencia", "pink glow", "toxina", "cavitacion", "tecnologia", "rf tripolar"],
+    responses: ["technologies"]
+  },
+  {
     tag: "ubicacion",
-    patterns: [
-      "dónde están", "dirección", "cómo llegar", "horarios",
-      "atienden sábado", "peñalolén"
-    ],
+    patterns: ["donde estan", "direccion", "como llegar", "horarios", "peñalolen", "mapa", "telefono"],
     responses: ["location"]
   },
   {
     tag: "seguimiento",
-    patterns: [
-      "gracias", "ok", "confirmo", "perfecto", "me atendí ayer",
-      "cómo sigo", "quiero repetir", "post tratamiento"
-    ],
+    patterns: ["gracias", "me atendí", "post tratamiento", "quiero repetir", "control", "seguimiento", "segunda sesión"],
     responses: ["followup"]
   },
   {
