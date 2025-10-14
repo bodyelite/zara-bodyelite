@@ -7,9 +7,9 @@ export async function generarRespuesta(mensaje, numero) {
   try {
     const analisis = interpretarMensaje(mensaje);
 
-    // --- si existe aviso de agenda, enviarlo al equipo interno ---
-    if (analisis.aviso) {
-      await enviarAvisoInterno(analisis.aviso, numero);
+    // Si la intención es agendar, genera aviso
+    if (analisis.intencion === "agenda" || mensaje.toLowerCase().includes("agendar")) {
+      await enviarAvisoInterno("🗓️ Nuevo interesado en agendar evaluación gratuita", numero);
     }
 
     return analisis.respuesta;
@@ -20,30 +20,26 @@ export async function generarRespuesta(mensaje, numero) {
 }
 
 // ---------------------------------------------------------------------------
-// --- ENVÍO DE AVISOS INTERNOS POR WHATSAPP ---
+// ENVÍO DE AVISOS INTERNOS
 // ---------------------------------------------------------------------------
-
-// Estos son los números que recibirán alertas cuando alguien agenda o muestra interés
 const numerosInternos = [
-  "56983300262", // recepción principal Body Elite
-  "56937648536", // teléfono actual del bot
-  "56931720760"  // nuevo número de respaldo
+  "56983300262", // Recepción
+  "56937648536", // Bot
+  "56931720760"  // Dirección técnica
 ];
 
-// Usa el mismo PAGE_ACCESS_TOKEN del .env
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 
 async function enviarAvisoInterno(texto, cliente) {
-  const mensaje = `📩 ${texto}\nCliente: +${cliente}`;
+  const aviso = `${texto}\n📞 Cliente: +${cliente}`;
   for (const destino of numerosInternos) {
-    await enviarMensaje(destino, mensaje);
+    await enviarMensaje(destino, aviso);
   }
 }
 
 // ---------------------------------------------------------------------------
-// --- ENVÍO DE MENSAJES POR API DE META ---
+// ENVÍO DE MENSAJES POR API META
 // ---------------------------------------------------------------------------
-
 export async function enviarMensaje(destino, texto) {
   try {
     const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
@@ -62,16 +58,17 @@ export async function enviarMensaje(destino, texto) {
     if (!res.ok) {
       const err = await res.text();
       console.error("Error al enviar mensaje:", err);
+    } else {
+      console.log(`✅ Aviso interno enviado a ${destino}`);
     }
   } catch (error) {
-    console.error("Fallo en enviarMensaje:", error);
+    console.error("Error enviando mensaje:", error);
   }
 }
 
 // ---------------------------------------------------------------------------
-// --- MENSAJE DE PRESENTACIÓN Y REINTRODUCCIÓN ---
+// SALUDO Y RESPUESTA GENÉRICA
 // ---------------------------------------------------------------------------
-
 export function saludoInicial() {
   return knowledge.mensajes.bienvenida;
 }
