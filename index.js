@@ -1,9 +1,8 @@
-// index.js
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-import { generarRespuesta, saludoInicial } from "./responses.js";
+import generarRespuesta from "./responses.js";
 
 dotenv.config();
 const app = express();
@@ -12,97 +11,102 @@ app.use(bodyParser.json());
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-// ---------------------------------------------------------------------------
-// WEBHOOK GET (verificación)
-// ---------------------------------------------------------------------------
+// -------------------------
+// Función para enviar mensaje
+// -------------------------
+async function enviarMensaje(texto, numero) {
+  const url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
+  const body = {
+    messaging_product: "whatsapp",
+    to: numero,
+    text: { body: texto },
+  };
+
+  try {
+    const respuesta = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!respuesta.ok) {
+      console.error("Error al enviar mensaje:", await respuesta.text());
+    } else {
+      console.log(`✅ Mensaje enviado correctamente a ${numero}`);
+    }
+  } catch (error) {
+    console.error("❌ Error en enviarMensaje:", error);
+  }
+}
+
+// -------------------------
+// Webhook de verificación
+// -------------------------
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente");
+  if (mode && token === VERIFY_TOKEN) {
+    console.log("Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
-    console.warn("❌ Verificación del webhook fallida");
     res.sendStatus(403);
   }
 });
 
-// ---------------------------------------------------------------------------
-// WEBHOOK POST (recepción de mensajes desde Meta)
-// ---------------------------------------------------------------------------
+// -------------------------
+// Webhook de mensajes
+// -------------------------
 app.post("/webhook", async (req, res) => {
-  try {
-    const body = req.body;
+  const body = req.body;
 
-    if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const message = changes?.value?.messages?.[0];
+  if (body.object) {
+    const entry = body.entry?.[0];
+    const change = entry?.changes?.[0]?.value?.messages?.[0];
+    if (change && change.from && change.text?.body) {
+      const from = change.from;
+      const mensaje = change.text.body.toLowerCase().trim();
+      console.log(`💬 Mensaje recibido de ${from}: ${mensaje}`);
 
-      if (message && message.text && message.from) {
-        const numeroCliente = message.from.replace(/\D/g, "");
-        const texto = message.text.body;
-        console.log(`📩 Mensaje recibido de ${numeroCliente}: ${texto}`);
+      // -------------------------
+      // Lógica de respuesta de Zara
+      // -------------------------
+      let respuesta = generarRespuesta(mensaje);
 
-        const respuesta = await generarRespuesta(texto, numeroCliente);
-        await enviarMensaje(numeroCliente, respuesta);
+      // Si el mensaje contiene "quiero agendar"
+      if (mensaje.includes("quiero agendar")) {
+        respuesta =
+          "📅 Puedes agendar fácilmente tu evaluación gratuita con nuestros especialistas. Incluye diagnóstico FitDays y asesoría personalizada.\n\n📍 Agenda aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9\n\n✨ Al agendar, uno de nuestros especialistas te confirmará por WhatsApp.";
+
+        await enviarMensaje(respuesta, from);
+
+        // Aviso interno simultáneo a los tres números
+        const aviso = `🔔 Nuevo interesado en agendar evaluación gratuita.\n📱 Número: ${from}\n🕒 ${new Date().toLocaleString("es-CL")}`;
+        const recepcion = ["56983300262", "56931720760", "56937648536"];
+        for (const numero of recepcion) {
+          await enviarMensaje(aviso, numero);
+        }
+
+        console.log("📨 Avisos internos enviados correctamente.");
+      } else {
+        // Respuesta general según conocimiento clínico
+        await enviarMensaje(respuesta, from);
       }
-
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
     }
-  } catch (error) {
-    console.error("Error en webhook POST:", error);
-    res.sendStatus(500);
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(404);
   }
 });
 
-// ---------------------------------------------------------------------------
-// ENVÍO DE MENSAJES (usado tanto por Zara como por avisos internos)
-// ---------------------------------------------------------------------------
-async function enviarMensaje(destino, texto) {
-  try {
-    const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
-    const body = {
-      messaging_product: "whatsapp",
-      to: destino,
-      text: { body: texto }
-    };
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("❌ Error al enviar mensaje:", err);
-    } else {
-      console.log(`✅ Mensaje enviado a ${destino}`);
-    }
-  } catch (error) {
-    console.error("⚠️ Fallo en enviarMensaje:", error);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// ENDPOINT RAÍZ
-// ---------------------------------------------------------------------------
-app.get("/", (req, res) => {
-  res.send("Zara IA ejecutándose correctamente para Body Elite 🚀");
-});
-
-// ---------------------------------------------------------------------------
-// PUERTO DE EJECUCIÓN
-// ---------------------------------------------------------------------------
+// -------------------------
+// Servidor
+// -------------------------
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log("////////////////////////////////////////////////////////");
-  console.log(`⚡ Zara IA ejecutándose en puerto ${PORT}`);
-  console.log(`🌐 Disponible en Render: ${process.env.RENDER_EXTERNAL_URL || "URL no definida"}`);
-  console.log("////////////////////////////////////////////////////////");
+  console.log(`🚀 Zara IA ejecutándose en puerto ${PORT}`);
 });
