@@ -1,109 +1,81 @@
 // index.js
-// Servidor principal de Zara IA (Body Elite) - versión estable
+// Servidor principal de Zara IA (Body Elite)
+// No se modifican conexiones ni variables de entorno
 
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-import generarRespuesta from "./responses.js"; // <-- Importación corregida
-import fs from "fs";
+import { generarRespuesta } from "./responses.js"; // <--- corrección aquí
 
 dotenv.config();
-
 const app = express();
 app.use(bodyParser.json());
 
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-// ---------------------------------------------------
-// Verificación Webhook
-// ---------------------------------------------------
+// Webhook de verificación
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode && token) {
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      console.log("✅ Webhook verificado correctamente");
-      res.status(200).send(challenge);
-    } else {
-      res.sendStatus(403);
-    }
+  if (mode && token === VERIFY_TOKEN) {
+    console.log("✅ Webhook verificado correctamente.");
+    res.status(200).send(challenge);
+  } else {
+    console.log("❌ Verificación fallida.");
+    res.sendStatus(403);
   }
 });
 
-// ---------------------------------------------------
-// Recepción de mensajes
-// ---------------------------------------------------
+// Recepción de mensajes de WhatsApp
 app.post("/webhook", async (req, res) => {
-  try {
-    const body = req.body;
+  const body = req.body;
 
-    if (body.object) {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const value = changes?.value;
-      const message = value?.messages?.[0];
+  if (body.object && body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages) {
+    const message = body.entry[0].changes[0].value.messages[0];
+    const phoneNumberId = body.entry[0].changes[0].value.metadata.phone_number_id;
+    const from = message.from;
+    const msgBody = message.text?.body || "";
 
-      if (message && message.type === "text") {
-        const from = message.from;
-        const text = message.text.body;
-        console.log(`📩 Mensaje recibido de ${from}: ${text}`);
+    console.log("📩 Mensaje recibido de:", from, "→", msgBody);
 
-        const respuesta = await generarRespuesta(from, text);
+    try {
+      // Generar respuesta con comprensión avanzada
+      const respuesta = await generarRespuesta(msgBody, PAGE_ACCESS_TOKEN, from);
 
-        if (!respuesta) {
-          console.log("⚠️ No se generó respuesta para el mensaje recibido.");
-          return res.sendStatus(200);
-        }
-
-        // Diferenciar entre respuestas de texto e interactivas
-        let payload;
-        if (typeof respuesta === "string") {
-          payload = {
+      if (respuesta && respuesta.trim() !== "") {
+        await fetch(`https://graph.facebook.com/v17.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
             messaging_product: "whatsapp",
             to: from,
             type: "text",
-            text: { body: respuesta },
-          };
-        } else {
-          payload = {
-            messaging_product: "whatsapp",
-            to: from,
-            type: respuesta.type,
-            interactive: respuesta.interactive,
-          };
-        }
-
-        await fetch(`https://graph.facebook.com/v18.0/840360109156943/messages`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+            text: { body: respuesta }
+          })
         });
-
         console.log("✅ Respuesta enviada correctamente a", from);
+      } else {
+        console.log("⚠️ No se generó respuesta para:", msgBody);
       }
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
+    } catch (error) {
+      console.error("❌ Error procesando mensaje:", error);
     }
-  } catch (error) {
-    console.error("❌ Error procesando mensaje:", error);
-    res.sendStatus(500);
+
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(404);
   }
 });
 
-// ---------------------------------------------------
-// Inicio del servidor
-// ---------------------------------------------------
+// Puerto dinámico (Render usa process.env.PORT)
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`🚀 Zara IA ejecutándose en puerto ${PORT}`);
 });
-
-export default app;
