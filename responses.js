@@ -1,81 +1,70 @@
 // responses.js
-import { interpretarMensaje } from "./comprension.js";
-import { knowledge } from "./knowledge.js";
+// Genera respuestas automáticas y avisos internos
+
 import fetch from "node-fetch";
+import { generarExplicacion } from "./knowledge.js";
 
-export async function generarRespuesta(mensaje, numero) {
-  try {
-    const analisis = interpretarMensaje(mensaje);
-
-    // Si la intención es agendar, genera aviso
-    if (analisis.intencion === "agenda" || mensaje.toLowerCase().includes("agendar")) {
-      await enviarAvisoInterno("🗓️ Nuevo interesado en agendar evaluación gratuita", numero);
-    }
-
-    return analisis.respuesta;
-  } catch (error) {
-    console.error("Error generando respuesta:", error);
-    return "Hubo un problema al procesar tu mensaje. Intenta nuevamente o agenda directamente en nuestro enlace.";
-  }
-}
-
-// ---------------------------------------------------------------------------
-// ENVÍO DE AVISOS INTERNOS
-// ---------------------------------------------------------------------------
-const numerosInternos = [
-  "56983300262", // Recepción
-  "56937648536", // Bot
-  "56931720760"  // Dirección técnica
+const NUMEROS_AVISO = [
+  "56931720760",
+  "56937648536",
+  "56956482924"
 ];
-
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 
-async function enviarAvisoInterno(texto, cliente) {
-  const aviso = `${texto}\n📞 Cliente: +${cliente}`;
-  for (const destino of numerosInternos) {
-    await enviarMensaje(destino, aviso);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// ENVÍO DE MENSAJES POR API META
-// ---------------------------------------------------------------------------
-export async function enviarMensaje(destino, texto) {
-  try {
-    const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
-    const body = {
-      messaging_product: "whatsapp",
-      to: destino,
-      text: { body: texto }
-    };
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("Error al enviar mensaje:", err);
-    } else {
-      console.log(`✅ Aviso interno enviado a ${destino}`);
+// Enviar aviso interno a los números definidos
+async function enviarAvisoInterno(mensaje) {
+  for (const numero of NUMEROS_AVISO) {
+    try {
+      await fetch(`https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: numero,
+          text: { body: mensaje }
+        })
+      });
+    } catch (err) {
+      console.error("Error al enviar aviso interno:", err.message);
     }
-  } catch (error) {
-    console.error("Error enviando mensaje:", error);
   }
 }
 
-// ---------------------------------------------------------------------------
-// SALUDO Y RESPUESTA GENÉRICA
-// ---------------------------------------------------------------------------
-export function saludoInicial() {
-  return knowledge.mensajes.bienvenida;
-}
+// Generar respuesta al cliente
+export async function generarRespuesta(intencion, textoUsuario) {
+  switch (intencion) {
+    case "saludo":
+      return "Hola 👋, soy Zara, asistente de Body Elite. Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. ¿Qué zona te gustaría mejorar?";
 
-export function respuestaGenerica() {
-  return (
-    "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. " +
-    "Escribe por ejemplo: 'quiero agendar' o el nombre del tratamiento que te interese."
-  );
+    case "interes_corporal":
+      return generarExplicacion("lipo");
+
+    case "interes_facial":
+      return generarExplicacion("facial");
+
+    case "pregunta_dolor":
+      return "Nuestros tratamientos son totalmente no invasivos y sin dolor. Solo se percibe una leve sensación térmica o contracción leve según el equipo utilizado.";
+
+    case "pregunta_duracion":
+      return "Cada sesión dura entre 45 y 60 minutos según la zona tratada.";
+
+    case "pregunta_resultados":
+      return "Los resultados comienzan a ser visibles desde la 2ª o 3ª sesión con reducción de centímetros, mejora de firmeza y tono muscular.";
+
+    case "pregunta_maquinas":
+      return "Usamos Cavitación, Radiofrecuencia, HIFU 12D y EMS Sculptor, equipos de última generación aprobados clínicamente.";
+
+    case "pregunta_precio":
+      return "Los valores dependen del plan. Por ejemplo, *Lipo Focalizada Reductiva* tiene un valor de $480.000 CLP (6 sesiones). Puedo ayudarte a agendar una evaluación gratuita para definir el más adecuado.";
+
+    case "intencion_agendar":
+      await enviarAvisoInterno(`📩 Nuevo interesado en agendar desde Zara: "${textoUsuario}"`);
+      return "📅 Puedes agendar fácilmente tu evaluación gratuita con nuestros especialistas.\nIncluye diagnóstico FitDays y asesoría personalizada.\n👉 Agenda aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9\n✨ Te esperamos en Av. Las Perdices Nº2990, Local 23, Peñalolén.";
+
+    default:
+      return "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. Escribe por ejemplo: 'quiero agendar' o el nombre del tratamiento que te interesa.";
+  }
 }
