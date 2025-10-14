@@ -1,15 +1,16 @@
 // responses.js
-// Lógica de respuestas clínicas y comerciales de Zara IA para Body Elite
+// Lógica de respuestas clínicas con explicación avanzada y aviso interno
+
 import fetch from "node-fetch";
 import { detectarIntencion } from "./comprension.js";
 
 const LINK_RESERVO = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 
-// Números internos que reciben notificación
+// Números internos que reciben aviso
 const NUMEROS_INTERNOS = ["56983300262", "56937648536", "56931720760"];
 
-// Envío de notificación interna
+// Aviso interno por WhatsApp
 async function avisarInternamente(token, telefono) {
   const fecha = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" });
   const texto = `🧭 Nuevo interesado en agendar evaluación.\n📅 ${fecha}\n📱 ${telefono}`;
@@ -29,62 +30,66 @@ async function avisarInternamente(token, telefono) {
         })
       });
     } catch (err) {
-      console.error("Error enviando aviso interno:", err);
+      console.error("Error aviso interno:", err);
     }
   }
+}
+
+// Respuesta clínica extendida
+function descripcionTratamiento(intencion) {
+  const info = {
+    lipo: "La *Lipo Focalizada Reductiva* combina Cavitación, Radiofrecuencia y EMS Sculptor para eliminar grasa localizada, reafirmar y reducir contornos. Resultados visibles desde la 3ª sesión. 💰 *$480.000 CLP* | 6 sesiones.",
+    haifu: "El *HIFU 12D* estimula colágeno con ultrasonido focalizado, mejorando firmeza y reduciendo flacidez facial o corporal sin cirugía. 💰 *$664.000 CLP* | 6 sesiones.",
+    sculptor: "El *Body Fitness Sculptor* tonifica y define músculos con contracciones profundas equivalentes a 20.000 abdominales por sesión. Ideal para abdomen, glúteos y piernas. 💰 *$360.000 CLP* | 6 sesiones.",
+    "pink glow": "*Pink Glow Facial* aplica péptidos y vitaminas para iluminar, hidratar y revitalizar la piel. Resultados en textura y brillo desde la 2ª sesión. 💰 *$198.400 CLP* | 4 sesiones.",
+    toxina: "*Toxina Botulínica Profesional* relaja músculos faciales, suaviza líneas de expresión y brinda un aspecto descansado y natural. 💰 *$180.000 CLP* | 1 sesión.",
+    antiage: "*Face Antiage Premium* combina HIFU, RF y Toxina para rejuvenecer y mejorar textura y firmeza facial. 💰 *$281.600 CLP* | 6 sesiones."
+  };
+  return info[intencion] || "";
 }
 
 // Generar respuesta principal
 export async function generarRespuesta(mensaje, token, telefono) {
   const intencion = detectarIntencion(mensaje);
-  const encabezado = "✨ Agenda tu evaluación gratuita ✨";
-
+  const encabezado = "✨ Agenda tu evaluación gratuita con nuestros especialistas ✨";
   let respuesta = "";
 
   switch (intencion) {
     case "lipo":
-      respuesta = `🔥 *Lipo Focalizada Reductiva*\nReduce grasa localizada y mejora firmeza con Cavitación, RF y Sculptor.\n💰 *$480.000 CLP* | 6 sesiones.\nIncluye diagnóstico FitDays y asesoría corporal.\n\nParte desde acá 👉 ${LINK_RESERVO}\n\n${encabezado}`;
-      break;
-
     case "haifu":
-      respuesta = `💠 *HIFU 12D Body Elite*\nTecnología ultrasónica que estimula colágeno, redefine contornos y tensa la piel sin cirugía.\n💰 *$664.000 CLP* | 6 sesiones.\nIdeal para rostro o zonas corporales con flacidez.\n\n${encabezado}\n${LINK_RESERVO}`;
-      break;
-
     case "sculptor":
-      respuesta = `💪 *Body Fitness Sculptor Pro*\nTratamiento para tonificar y definir musculatura con contracciones electromagnéticas profundas.\n💰 *$360.000 CLP* | 6 sesiones.\nEquivale a 20.000 abdominales por sesión.\n\n${encabezado}\n${LINK_RESERVO}`;
-      break;
-
     case "pink glow":
-      respuesta = `🌸 *Pink Glow Facial Revitalizante*\nBioestimulación dérmica con vitaminas y péptidos para una piel más luminosa.\n💰 *$198.400 CLP* | 4 sesiones.\nIdeal para piel apagada o con manchas.\n\n${encabezado}\n${LINK_RESERVO}`;
-      break;
-
     case "toxina":
-      respuesta = `✨ *Toxina Botulínica Profesional*\nRelaja los músculos faciales responsables de líneas de expresión, logrando un aspecto natural y descansado.\n💰 *$180.000 CLP* | 1 sesión.\nResultados desde el tercer día.\n\n${encabezado}\n${LINK_RESERVO}`;
+    case "antiage":
+      respuesta = `${descripcionTratamiento(intencion)}\n\n📍 Agenda desde acá: ${LINK_RESERVO}\n${encabezado}`;
+      await avisarInternamente(token, telefono);
       break;
 
-    case "antiage":
-      respuesta = `💫 *Face Antiage Premium*\nCombina HIFU, Radiofrecuencia y Toxina Botulínica para rejuvenecer y mejorar la firmeza.\n💰 *$281.600 CLP* | 6 sesiones.\n\n${encabezado}\n${LINK_RESERVO}`;
+    case "funciona":
+      respuesta = "Cada tratamiento funciona mediante aparatología estética avanzada que estimula colágeno, quema grasa o tonifica músculo según el caso. Los resultados dependen de la constancia y diagnóstico inicial FitDays. ¿Deseas que te detalle el funcionamiento de alguno en particular?";
       break;
 
     case "facial":
-      respuesta = `💆‍♀️ *Tratamientos Faciales Body Elite*\nTenemos opciones desde *$120.000 CLP* (Limpieza Facial Full) hasta *$584.000 CLP* (Full Face).\nCada plan incluye diagnóstico personalizado y aparatología avanzada.\n\n${encabezado}\n${LINK_RESERVO}`;
+      respuesta = "💆‍♀️ *Tratamientos Faciales Body Elite*\nDesde *$120.000 CLP* (Limpieza Facial Full) hasta *$584.000 CLP* (Full Face). Incluyen diagnóstico y aparatología avanzada.\n\n📍 Reserva acá: " + LINK_RESERVO;
+      await avisarInternamente(token, telefono);
       break;
 
     case "body":
-      respuesta = `💎 *Planes Corporales Body Elite*\nDesde *$232.000 CLP* (Body Tensor) hasta *$664.000 CLP* (Lipo Body Elite).\nTodos incluyen diagnóstico FitDays y asesoría profesional.\n\n${encabezado}\n${LINK_RESERVO}`;
+      respuesta = "💎 *Tratamientos Corporales Body Elite*\nDesde *$232.000 CLP* (Body Tensor) hasta *$664.000 CLP* (Lipo Body Elite). Incluyen diagnóstico FitDays y asesoría profesional.\n\n📍 Reserva acá: " + LINK_RESERVO;
+      await avisarInternamente(token, telefono);
       break;
 
     case "agenda":
-      respuesta = `📅 *Agenda tu diagnóstico gratuito con nuestros especialistas.*\nIncluye análisis FitDays y asesoría personalizada.\n\n${LINK_RESERVO}`;
+      respuesta = "📅 Puedes agendar tu diagnóstico gratuito con tecnología FitDays. Incluye evaluación corporal y facial completa.\n\nReserva directamente aquí:\n" + LINK_RESERVO;
       await avisarInternamente(token, telefono);
       break;
 
     default:
-      respuesta = `Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito.\nEscribe *"quiero agendar"* o menciona el tratamiento que te interesa.`;
+      respuesta = "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito.\nEscribe *“quiero agendar”* o menciona el tratamiento que te interesa.";
   }
 
-  // Si la respuesta incluye el link de agendamiento, notifica internamente
-  if (respuesta.includes(LINK_RESERVO) && intencion !== "agenda") {
+  // refuerzo: aviso si se incluye link
+  if (respuesta.includes(LINK_RESERVO)) {
     await avisarInternamente(token, telefono);
   }
 
