@@ -1,52 +1,84 @@
 // responses.js
-// Respuestas clínicas, memoria, avisos internos y aprendizaje
-import fetch from "node-fetch";
 import { interpretarMensaje } from "./comprension.js";
-import { actualizarMemoria, obtenerContexto, registrarAprendizaje } from "./memoria.js";
+import { knowledge } from "./knowledge.js";
+import fetch from "node-fetch";
 
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const LINK_RESERVO = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-const NUMEROS_INTERNOS = ["56983300262", "56937648536", "56931720760"];
+export async function generarRespuesta(mensaje, numero) {
+  try {
+    const analisis = interpretarMensaje(mensaje);
 
-// --- Aviso interno simultáneo ---
-async function avisarInternamente(token, telefono, textoAviso) {
-  const fecha = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" });
-  const texto = `${textoAviso || "🧭 Nuevo interesado en agendar evaluación."}\n📅 ${fecha}\n📱 ${telefono}`;
+    // --- si existe aviso de agenda, enviarlo al equipo interno ---
+    if (analisis.aviso) {
+      await enviarAvisoInterno(analisis.aviso, numero);
+    }
 
-  const tareas = NUMEROS_INTERNOS.map(numero =>
-    fetch("https://graph.facebook.com/v17.0/105596959260801/messages", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: numero,
-        type: "text",
-        text: { body: texto }
-      })
-    }).catch(err => console.error("Error enviando aviso interno:", err))
-  );
-  await Promise.all(tareas);
+    return analisis.respuesta;
+  } catch (error) {
+    console.error("Error generando respuesta:", error);
+    return "Hubo un problema al procesar tu mensaje. Intenta nuevamente o agenda directamente en nuestro enlace.";
+  }
 }
 
-// --- Generar respuesta principal ---
-export async function generarRespuesta(mensaje, token, telefono) {
-  const contexto = obtenerContexto(telefono);
-  const interpretacion = interpretarMensaje(`${contexto} ${mensaje}`);
-  const respuesta = interpretacion.respuesta;
+// ---------------------------------------------------------------------------
+// --- ENVÍO DE AVISOS INTERNOS POR WHATSAPP ---
+// ---------------------------------------------------------------------------
 
-  // memoria
-  actualizarMemoria(telefono, mensaje, respuesta);
+// Estos son los números que recibirán alertas cuando alguien agenda o muestra interés
+const numerosInternos = [
+  "56983300262", // recepción principal Body Elite
+  "56937648536", // teléfono actual del bot
+  "56931720760"  // nuevo número de respaldo
+];
 
-  // aprendizaje automático
-  registrarAprendizaje(mensaje, respuesta);
+// Usa el mismo PAGE_ACCESS_TOKEN del .env
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 
-  // avisos internos
-  if (interpretacion.aviso) await avisarInternamente(token, telefono, interpretacion.aviso);
-  if (respuesta.includes(LINK_RESERVO))
-    await avisarInternamente(token, telefono, "🧭 Nuevo interesado en agendar (link detectado)");
+async function enviarAvisoInterno(texto, cliente) {
+  const mensaje = `📩 ${texto}\nCliente: +${cliente}`;
+  for (const destino of numerosInternos) {
+    await enviarMensaje(destino, mensaje);
+  }
+}
 
-  return respuesta;
+// ---------------------------------------------------------------------------
+// --- ENVÍO DE MENSAJES POR API DE META ---
+// ---------------------------------------------------------------------------
+
+export async function enviarMensaje(destino, texto) {
+  try {
+    const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
+    const body = {
+      messaging_product: "whatsapp",
+      to: destino,
+      text: { body: texto }
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Error al enviar mensaje:", err);
+    }
+  } catch (error) {
+    console.error("Fallo en enviarMensaje:", error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// --- MENSAJE DE PRESENTACIÓN Y REINTRODUCCIÓN ---
+// ---------------------------------------------------------------------------
+
+export function saludoInicial() {
+  return knowledge.mensajes.bienvenida;
+}
+
+export function respuestaGenerica() {
+  return (
+    "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. " +
+    "Escribe por ejemplo: 'quiero agendar' o el nombre del tratamiento que te interese."
+  );
 }
