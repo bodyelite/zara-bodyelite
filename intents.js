@@ -1,17 +1,55 @@
-import { analizarTexto } from "./comprension.js";
-
-export function detectarIntencion(texto) {
-  const msg = analizarTexto(texto);
-
-  if (/(hola|buenas|ola)/.test(msg)) return "saludo";
-  if (/(precio|valor|costo|cuanto sale|vale)/.test(msg)) return "precio";
-  if (/(duel|molesta|dolor)/.test(msg)) return "dolor";
-  if (/(tiempo|duracion|minutos)/.test(msg)) return "duracion";
-  if (/(resultado|efecto|cuanto demora|cuantas sesiones)/.test(msg)) return "resultados";
-  if (/(promo|promocion|oferta|descuento|gratis)/.test(msg)) return "promocion";
-  if (/(facial|rostro|cara|hifu|toxina|radiofrecuencia)/.test(msg)) return "facial";
-  if (/(lipo|abdomen|cintura|celulitis|sculptor|body)/.test(msg)) return "corporal";
-  if (/(agenda|agendar|reserva|diagnostico)/.test(msg)) return "agendar";
-
-  return "general";
-}
+export const intents = [
+  {
+    tag: "saludo",
+    patterns: [
+      "hola", "buenas", "buenas tardes", "buen día",
+      "consulta", "quisiera información", "me interesa"
+    ],
+    responses: ["greeting"]
+  },
+  {
+    tag: "agendamiento",
+    patterns: [
+      "quiero agendar", "puedo reservar", "hora disponible",
+      "agenda", "quiero cita", "quiero evaluación", "cómo reservo"
+    ],
+    responses: ["booking"]
+  },
+  {
+    tag: "tratamientos",
+    patterns: [
+      "qué es hifu", "pink glow", "radiofrecuencia", "cavitación",
+      "lipo", "sculptor", "body elite", "antiage", "facial", "corporal"
+    ],
+    responses: ["treatments"]
+  },
+  {
+    tag: "precios",
+    patterns: [
+      "cuánto cuesta", "precio", "valor", "cuánto sale", "promociones",
+      "descuento", "oferta", "planes"
+    ],
+    responses: ["pricing"]
+  },
+  {
+    tag: "ubicacion",
+    patterns: [
+      "dónde están", "dirección", "cómo llegar", "horarios",
+      "atienden sábado", "peñalolén"
+    ],
+    responses: ["location"]
+  },
+  {
+    tag: "seguimiento",
+    patterns: [
+      "gracias", "ok", "confirmo", "perfecto", "me atendí ayer",
+      "cómo sigo", "quiero repetir", "post tratamiento"
+    ],
+    responses: ["followup"]
+  },
+  {
+    tag: "default",
+    patterns: [],
+    responses: ["fallback"]
+  }
+];

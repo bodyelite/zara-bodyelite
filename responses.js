@@ -1,35 +1,34 @@
-import { generarDescripcion } from "./knowledge.js";
+export const responses = {
+  greeting: [
+    "💙 ¡Hola! Soy Zara, asistente IA de Body Elite. Realizamos evaluaciones corporales y faciales con análisis inteligente para personalizar tu tratamiento. ¿Te gustaría agendar tu diagnóstico sin costo?"
+  ],
 
-export async function generarRespuesta(intencion, texto) {
-  switch (intencion) {
-    case "saludo":
-      return "Hola 👋 soy *Zara*, asistente de Body Elite. ¿Te interesa un tratamiento corporal o facial? Puedo ayudarte a agendar tu evaluación gratuita.";
+  booking: [
+    "✨ Perfecto. Para agendar necesito tu nombre completo y teléfono 📲. Nuestro equipo confirmará la cita. ¿Prefieres evaluación facial, corporal o ambas?",
+    "💙 Genial. Contamos con agenda activa esta semana. ¿Qué día te acomoda mejor para tu diagnóstico asistido por IA?"
+  ],
 
-    case "precio":
-      return "Nuestros valores varían según el plan. Por ejemplo, *Lipo Focalizada Reductiva* tiene un valor de $480.000 (6 sesiones). ¿Quieres que veamos cuál te conviene más?";
+  treatments: [
+    "🌸 En Body Elite trabajamos con tecnologías clínicas avanzadas como HIFU 12D, Pink Glow, RF Tripolar y Sculptor EMS. Todos los planes se definen tras tu evaluación personalizada. ¿Deseas agendarla para que nuestra IA te recomiende el más adecuado?",
+    "💫 Nuestros tratamientos no invasivos combinan diagnóstico inteligente y seguimiento médico-estético. ¿Quieres que te reserve una evaluación sin costo?"
+  ],
 
-    case "dolor":
-      return "Todos nuestros tratamientos son no invasivos y sin dolor. Solo puedes sentir calor o leves contracciones, pero nada molesto.";
+  pricing: [
+    "💰 Nuestros planes se adaptan según el diagnóstico. Ejemplo: Lipo Body Elite $664.000, Face Elite $358.400, Push Up $376.000. La primera evaluación es gratuita y ahí definimos el plan ideal. ¿Quieres que te agende?"
+  ],
 
-    case "duracion":
-      return "Cada sesión dura entre 45 y 60 minutos aproximadamente, dependiendo de la zona tratada.";
+  location: [
+    "📍 Estamos en *Av. Las Perdices 2990, Local 23, Peñalolén.*  
+Atendemos *Lun–Vie 9:30–20:00 y Sáb 9:30–13:00.*  
+Puedes agendar desde el enlace oficial 👉 [Reservar en línea](https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9)"
+  ],
 
-    case "resultados":
-      return "Los resultados se comienzan a notar desde la segunda o tercera sesión, con reducción de centímetros, reafirmación y mejora del tono muscular.";
+  followup: [
+    "💙 Encantado de acompañarte. Nuestro equipo monitorea tu evolución mediante IA y protocolos clínicos. Si deseas renovar o ajustar tu plan, puedo agendarte una nueva evaluación.",
+    "Gracias por tu confianza ✨ ¿Quieres que programe tu control o una sesión de seguimiento?"
+  ],
 
-    case "promocion":
-      return "Actualmente tenemos promociones como *depilación gratis* al contratar tratamientos corporales. Podemos revisar juntos qué incluye 😉.";
-
-    case "facial":
-      return generarDescripcion("facial");
-
-    case "corporal":
-      return generarDescripcion("corporal");
-
-    case "agendar":
-      return "Podemos agendar tu evaluación gratuita 💆‍♀️.\nIncluye diagnóstico FitDays y asesoría personalizada.\n📅 Agenda aquí:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9";
-
-    default:
-      return "Puedo ayudarte con precios, promociones o agendar tu evaluación gratuita. Solo dime qué tratamiento te interesa o escribe 'quiero agendar'.";
-  }
-}
+  fallback: [
+    "🤖 No logré identificar tu consulta con precisión. Puedo ayudarte con tratamientos, precios, ubicación o agendar tu evaluación gratuita. ¿Sobre qué te gustaría saber?"
+  ]
+};
