@@ -1,16 +1,25 @@
 {
-  "name": "zara-ia-body-elite",
+  "name": "zara-bodyelite",
   "version": "1.0.0",
-  "description": "Asistente virtual Zara para Body Elite Estética Avanzada",
+  "description": "Asistente IA avanzada para Body Elite con comprensión mejorada, avisos internos y registro JSON.",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "render": "git add . && git commit -m 'deploy automático' && git push render main"
   },
   "dependencies": {
+    "axios": "^1.6.8",
     "body-parser": "^1.20.2",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "node-fetch": "^3.3.2"
-  }
+    "node-fetch": "^3.3.2",
+    "tesseract.js": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Body Elite · IA Zara",
+  "license": "ISC"
 }
