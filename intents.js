@@ -1,64 +1,154 @@
 export const intents = [
-  // SALUDO
   {
-    tag: "saludo",
-    patterns: ["hola", "buenas", "buenos días", "buenas tardes", "hey", "holi"],
+    tag: "greeting",
+    patterns: [
+      "hola",
+      "buenas",
+      "qué tal",
+      "buen día",
+      "buenas tardes",
+      "buenas noches",
+      "hola zara",
+      "hola body elite"
+    ],
     responses: ["greeting"]
   },
 
-  // DESPEDIDA
   {
-    tag: "despedida",
-    patterns: ["adios", "gracias", "nos vemos", "chau"],
-    responses: ["goodbye"]
-  },
-
-  // FACIALES
-  {
-    tag: "facial_general",
-    patterns: ["facial", "cara", "rostro", "piel", "manchas", "arrugas", "acné", "papada", "antiage", "rejuvenecimiento", "lifting", "radiofrecuencia facial", "toxina", "botox"],
+    tag: "facial_treatment",
+    patterns: [
+      "facial",
+      "cara",
+      "piel",
+      "arrugas",
+      "antiage",
+      "anti edad",
+      "flacidez facial",
+      "limpieza facial",
+      "pink glow",
+      "radiofrecuencia facial",
+      "hifu facial",
+      "tratamiento facial",
+      "manchas",
+      "acné",
+      "botox",
+      "toxina",
+      "toxina botulínica",
+      "patas de gallo",
+      "frente",
+      "líneas de expresión",
+      "relleno facial",
+      "antiarrugas",
+      "lifting",
+      "rejuvenecimiento"
+    ],
     responses: ["facial_treatment"]
   },
 
-  // CORPORALES
   {
-    tag: "corporal_general",
-    patterns: ["abdomen", "grasa", "celulitis", "flacidez", "piernas", "glúteos", "bajar abdomen", "tonificar", "cintura", "reducir medidas"],
-    responses: ["body_treatment"]
+    tag: "corporal_treatment",
+    patterns: [
+      "cuerpo",
+      "abdomen",
+      "piernas",
+      "glúteos",
+      "bajar abdomen",
+      "reductivo",
+      "lipo",
+      "cavitacion",
+      "radiofrecuencia corporal",
+      "sculptor",
+      "hifu corporal",
+      "tonificar",
+      "celulitis",
+      "bajar grasa",
+      "moldear cuerpo",
+      "tonificar piernas"
+    ],
+    responses: ["corporal_treatment"]
   },
 
-  // TECNOLOGÍAS
   {
-    tag: "tecnologia",
-    patterns: ["hifu", "cavitación", "radiofrecuencia", "ems", "sculptor", "pink glow"],
-    responses: ["tech_explained"]
+    tag: "technologies",
+    patterns: [
+      "hifu",
+      "cavitacion",
+      "radiofrecuencia",
+      "sculptor",
+      "pink glow",
+      "tecnologia",
+      "equipos",
+      "maquinas",
+      "fitdays",
+      "diagnóstico inteligente"
+    ],
+    responses: ["technologies"]
   },
 
-  // UBICACIÓN
   {
-    tag: "ubicacion",
-    patterns: ["donde están", "ubicación", "dirección", "cómo llegar", "en qué comuna", "donde queda"],
-    responses: ["location"]
-  },
-
-  // PRECIOS Y PROMOS
-  {
-    tag: "precio",
-    patterns: ["precio", "cuánto cuesta", "valor", "promocion", "oferta"],
-    responses: ["pricing"]
-  },
-
-  // CITA / AGENDAMIENTO
-  {
-    tag: "agendar",
-    patterns: ["quiero agendar", "agenda", "reservar", "diagnóstico", "evaluación"],
+    tag: "booking",
+    patterns: [
+      "agendar",
+      "agenda",
+      "evaluacion",
+      "reserva",
+      "quiero agendar",
+      "diagnostico",
+      "cita",
+      "evaluación gratuita"
+    ],
     responses: ["booking"]
   },
 
-  // FALLBACK
+  {
+    tag: "location",
+    patterns: [
+      "direccion",
+      "ubicacion",
+      "donde estan",
+      "como llegar",
+      "peñalolen",
+      "local",
+      "horario",
+      "donde queda",
+      "av las perdices"
+    ],
+    responses: ["location"]
+  },
+
+  {
+    tag: "promo",
+    patterns: [
+      "promo",
+      "promocion",
+      "oferta",
+      "descuento",
+      "gratis",
+      "beneficio",
+      "regalo",
+      "depilacion gratis",
+      "promociones"
+    ],
+    responses: ["promo"]
+  },
+
+  {
+    tag: "farewell",
+    patterns: [
+      "gracias",
+      "chau",
+      "adios",
+      "nos vemos",
+      "hasta luego",
+      "ok gracias",
+      "perfecto gracias"
+    ],
+    responses: ["farewell"]
+  },
+
   {
     tag: "fallback",
-    patterns: [""],
+    patterns: [],
     responses: ["fallback"]
   }
 ];
