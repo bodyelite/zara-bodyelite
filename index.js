@@ -58,35 +58,44 @@ app.get("/webhook", (req, res) => {
 // --- Webhook de mensajes (WhatsApp Cloud API) ---
 app.post("/webhook", async (req, res) => {
   const body = req.body;
-  console.log("📩 Mensaje recibido:", JSON.stringify(body, null, 2));
+  console.log("📩 Entrada recibida:", JSON.stringify(body, null, 2));
 
   try {
-    if (body.entry?.[0]?.changes?.[0]?.value?.messages) {
-      const messages = body.entry[0].changes[0].value.messages;
-
-      for (const msg of messages) {
-        const sender = msg.from;
-        const message = msg.text?.body;
-
-        if (sender && message) {
-          saveIncomingMessage({
-            from: sender,
-            text: { body: message },
-            id: msg.id,
-            profile: {},
-          });
-
-          const intentKey = detectIntent(message);
-          const replyOptions = responses[intentKey];
-          const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
-
-          await sendMessage(sender, reply);
-        }
-      }
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
+    const changes = body.entry?.[0]?.changes;
+    if (!changes || !changes.length) {
+      console.log("⚠️ No hay cambios válidos en el cuerpo recibido.");
+      return res.sendStatus(200);
     }
+
+    const value = changes[0].value;
+    const messages = value?.messages;
+
+    if (!messages || !messages.length) {
+      console.log("ℹ️ Evento recibido sin mensajes (puede ser ack o status).");
+      return res.sendStatus(200);
+    }
+
+    for (const msg of messages) {
+      const sender = msg.from;
+      const message = msg.text?.body;
+
+      if (sender && message) {
+        saveIncomingMessage({
+          from: sender,
+          text: { body: message },
+          id: msg.id,
+          profile: {},
+        });
+
+        const intentKey = detectIntent(message);
+        const replyOptions = responses[intentKey];
+        const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
+
+        await sendMessage(sender, reply);
+      }
+    }
+
+    res.sendStatus(200);
   } catch (error) {
     console.error("❌ Error procesando mensaje:", error);
     res.sendStatus(500);
