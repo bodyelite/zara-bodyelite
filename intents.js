@@ -1,48 +1,48 @@
 export const intents = [
   {
     tag: "greeting",
-    patterns: ["hola", "buenas", "qué tal", "saludos", "hay alguien"],
+    patterns: ["hola", "buenas", "qué tal", "hay alguien", "saludos"],
     responses: ["greeting"]
   },
   {
     tag: "facial_treatment",
     patterns: [
-      "facial", "rostro", "arrugas", "botox", "toxina", "antiage", "piel", "hifu", "pink glow",
-      "radiofrecuencia", "face light", "face elite", "face smart", "limpieza facial", "acné", "manchas", "flacidez facial"
+      "facial", "rostro", "cara", "arrugas", "flacidez facial", "antiage", "acné",
+      "pink glow", "radiofrecuencia", "hifu", "limpieza facial", "face elite",
+      "face smart", "face light", "toxina", "botox", "relleno", "vitaminas"
     ],
-    responses: ["facial_treatment"]
-  },
-  {
-    tag: "botox",
-    patterns: ["botox", "toxina botulinica", "relleno", "antiarrugas", "expresion", "frente", "patas de gallo"],
-    responses: ["facial_treatment"]
-  },
-  {
-    tag: "pink_glow",
-    patterns: ["pink glow", "brillo facial", "biorevitalizacion", "vitaminas faciales", "piel luminosa"],
     responses: ["facial_treatment"]
   },
   {
     tag: "corporal_treatment",
     patterns: [
-      "cuerpo", "abdomen", "piernas", "gluteos", "flacidez", "lipo", "cavitacion", "sculptor", "hifu corporal",
-      "bajar abdomen", "reafirmar", "celulitis", "tonificar", "bajar grasa", "moldear cuerpo"
+      "corporal", "abdomen", "piernas", "glúteos", "lipo", "cavitación",
+      "sculptor", "flacidez", "celulitis", "reducir", "bajar grasa", "tonificar",
+      "reafirmar", "body", "lipo body elite", "body fitness", "push up"
     ],
     responses: ["corporal_treatment"]
   },
   {
+    tag: "knowledge",
+    patterns: [
+      "botox", "pink glow", "hifu", "cavitación", "sculptor", "radiofrecuencia",
+      "exosomas", "limpieza", "acné", "flacidez", "lipo", "ubicación"
+    ],
+    responses: ["knowledge"]
+  },
+  {
     tag: "promo",
-    patterns: ["promoción", "descuento", "oferta", "gratis", "evaluación gratuita", "regalo"],
+    patterns: ["promoción", "descuento", "oferta", "gratis", "evaluación gratuita"],
     responses: ["promo"]
   },
   {
     tag: "booking",
-    patterns: ["agendar", "reservar", "diagnóstico", "evaluación", "agenda", "cita", "hora", "quiero agendar"],
+    patterns: ["agendar", "reservar", "diagnóstico", "evaluación", "cita", "hora", "quiero agendar"],
     responses: ["booking"]
   },
   {
     tag: "location",
-    patterns: ["ubicación", "direccion", "donde estan", "como llegar", "horarios", "mapa"],
+    patterns: ["ubicación", "direccion", "donde estan", "como llegar", "mapa", "horarios"],
     responses: ["location"]
   },
   {
