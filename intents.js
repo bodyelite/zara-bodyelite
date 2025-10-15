@@ -1,53 +1,26 @@
 export const intents = [
   {
-    tag: "greeting",
-    patterns: ["hola", "buenas", "qué tal", "hay alguien", "saludos"],
-    responses: ["greeting"]
+    tag: "saludo",
+    patterns: ["hola", "buenas", "qué tal", "hay alguien", "hola body elite", "buenos días", "buenas tardes"],
+    responses: ["saludo"]
   },
   {
-    tag: "facial_treatment",
+    tag: "despedida",
+    patterns: ["gracias", "nos vemos", "chao", "adiós"],
+    responses: ["despedida"]
+  },
+  {
+    tag: "requerimiento_clinico",
     patterns: [
-      "facial", "rostro", "cara", "arrugas", "flacidez facial", "antiage", "acné",
-      "pink glow", "radiofrecuencia", "hifu", "limpieza facial", "face elite",
-      "face smart", "face light", "toxina", "botox", "relleno", "vitaminas"
+      "bajar abdomen", "reducir grasa", "piel seca", "flacidez", "arrugas", "manchas", "acné", "celulitis",
+      "glúteos", "reafirmar", "tonificar", "cansancio facial", "mantener resultados", "piel sensible",
+      "recuperar piel", "papada", "contorno caído", "antiage", "sin luz"
     ],
-    responses: ["facial_treatment"]
+    responses: ["search_knowledge"]
   },
   {
-    tag: "corporal_treatment",
-    patterns: [
-      "corporal", "abdomen", "piernas", "glúteos", "lipo", "cavitación",
-      "sculptor", "flacidez", "celulitis", "reducir", "bajar grasa", "tonificar",
-      "reafirmar", "body", "lipo body elite", "body fitness", "push up"
-    ],
-    responses: ["corporal_treatment"]
-  },
-  {
-    tag: "knowledge",
-    patterns: [
-      "botox", "pink glow", "hifu", "cavitación", "sculptor", "radiofrecuencia",
-      "exosomas", "limpieza", "acné", "flacidez", "lipo", "ubicación"
-    ],
-    responses: ["knowledge"]
-  },
-  {
-    tag: "promo",
-    patterns: ["promoción", "descuento", "oferta", "gratis", "evaluación gratuita"],
-    responses: ["promo"]
-  },
-  {
-    tag: "booking",
-    patterns: ["agendar", "reservar", "diagnóstico", "evaluación", "cita", "hora", "quiero agendar"],
-    responses: ["booking"]
-  },
-  {
-    tag: "location",
-    patterns: ["ubicación", "direccion", "donde estan", "como llegar", "mapa", "horarios"],
-    responses: ["location"]
-  },
-  {
-    tag: "fallback",
-    patterns: [""],
-    responses: ["fallback"]
+    tag: "ubicacion",
+    patterns: ["dónde están", "dirección", "ubicación", "cómo llegar", "horarios"],
+    responses: ["ubicacion"]
   }
 ];
