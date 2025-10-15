@@ -39,15 +39,19 @@ function searchKnowledge(text) {
 
 // --- Enviar mensaje ---
 async function sendMessage(recipientId, text) {
-  await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      recipient: { id: recipientId },
-      messaging_type: "RESPONSE",
-      message: { text }
-    })
-  });
+  try {
+    await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipient: { id: recipientId },
+        messaging_type: "RESPONSE",
+        message: { text }
+      })
+    });
+  } catch (err) {
+    console.error("❌ Error al enviar mensaje:", err);
+  }
 }
 
 // --- Webhook de verificación ---
@@ -56,18 +60,25 @@ app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode && token === VERIFY_TOKEN) res.status(200).send(challenge);
-  else res.sendStatus(403);
+  if (mode && token === VERIFY_TOKEN) {
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
+  }
 });
 
 // --- Webhook de mensajes ---
 app.post("/webhook", async (req, res) => {
   const body = req.body;
+
   if (body.object === "page" && body.entry?.[0]?.messaging) {
     for (const event of body.entry[0].messaging) {
       const sender = event.sender?.id;
       const message = event.message?.text;
+
       if (message && sender) {
+        console.log("📩 Mensaje recibido:", message);
+
         saveIncomingMessage({
           from: sender,
           text: { body: message },
@@ -86,18 +97,25 @@ app.post("/webhook", async (req, res) => {
             reply =
               `🔹 ${data.descripcion}\n\n💆‍♀️ *Tratamientos sugeridos:*\n- ${data.tratamientos.join("\n- ")}\n\n💎 *Planes recomendados:* ${data.planes.join(", ")}\n\n🕐 ${data.sesiones}\n✨ ${data.resultados}\n\n🤍 ${data.experiencia}`;
           } else {
-            reply = "Puedo ayudarte con diagnóstico facial o corporal. Cuéntame qué te gustaría mejorar: grasa, flacidez, arrugas o piel.";
+            reply = "💬 Puedo ayudarte con diagnóstico facial o corporal. Cuéntame qué te gustaría mejorar: grasa, flacidez, arrugas o piel.";
           }
         } else {
           const replyOptions = responses[intentKey];
           reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
         }
 
+        // --- Fallback seguro ---
+        if (!reply || reply.trim() === "") {
+          reply = "💆‍♀️ Puedo ayudarte con diagnóstico facial o corporal. Cuéntame qué zona o problema te gustaría tratar.";
+        }
+
         await sendMessage(sender, reply);
       }
     }
     res.status(200).send("EVENT_RECEIVED");
-  } else res.sendStatus(404);
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 // --- Servidor ---
