@@ -1,52 +1,64 @@
 export const intents = [
+  // SALUDO
   {
     tag: "saludo",
-    patterns: ["hola", "buenas", "consulta", "información", "quisiera saber", "necesito ayuda"],
+    patterns: ["hola", "buenas", "buenos días", "buenas tardes", "hey", "holi"],
     responses: ["greeting"]
   },
+
+  // DESPEDIDA
   {
-    tag: "agendamiento",
-    patterns: ["quiero agendar", "agendar cita", "evaluación", "reserva", "hora disponible", "quiero diagnóstico"],
-    responses: ["booking"]
+    tag: "despedida",
+    patterns: ["adios", "gracias", "nos vemos", "chau"],
+    responses: ["goodbye"]
   },
+
+  // FACIALES
   {
-    tag: "tratamientos_corporales",
-    patterns: ["lipo", "abdomen", "cintura", "celulitis", "flacidez corporal", "muslos", "glúteos", "brazos", "piernas", "reductivo"],
-    responses: ["body_treatments"]
+    tag: "facial_general",
+    patterns: ["facial", "cara", "rostro", "piel", "manchas", "arrugas", "acné", "papada", "antiage", "rejuvenecimiento", "lifting", "radiofrecuencia facial", "toxina", "botox"],
+    responses: ["facial_treatment"]
   },
+
+  // CORPORALES
   {
-    tag: "tratamientos_faciales",
-    patterns: ["facial", "cara", "rostro", "arrugas", "papada", "manchas", "acné", "lifting", "antiage", "radiofrecuencia facial"],
-    responses: ["face_treatments"]
+    tag: "corporal_general",
+    patterns: ["abdomen", "grasa", "celulitis", "flacidez", "piernas", "glúteos", "bajar abdomen", "tonificar", "cintura", "reducir medidas"],
+    responses: ["body_treatment"]
   },
+
+  // TECNOLOGÍAS
   {
-    tag: "sintomas",
-    patterns: ["flacidez", "grasa localizada", "papada", "celulitis", "abdomen bajo", "firmeza", "retención de líquidos"],
-    responses: ["symptoms"]
+    tag: "tecnologia",
+    patterns: ["hifu", "cavitación", "radiofrecuencia", "ems", "sculptor", "pink glow"],
+    responses: ["tech_explained"]
   },
-  {
-    tag: "precios_promociones",
-    patterns: ["cuánto cuesta", "valor", "precio", "promociones", "oferta", "depilación gratis", "planes"],
-    responses: ["pricing"]
-  },
-  {
-    tag: "tecnologias",
-    patterns: ["hifu", "sculptor", "radiofrecuencia", "pink glow", "toxina", "cavitacion", "tecnologia", "rf tripolar"],
-    responses: ["technologies"]
-  },
+
+  // UBICACIÓN
   {
     tag: "ubicacion",
-    patterns: ["donde estan", "direccion", "como llegar", "horarios", "peñalolen", "mapa", "telefono"],
+    patterns: ["donde están", "ubicación", "dirección", "cómo llegar", "en qué comuna", "donde queda"],
     responses: ["location"]
   },
+
+  // PRECIOS Y PROMOS
   {
-    tag: "seguimiento",
-    patterns: ["gracias", "me atendí", "post tratamiento", "quiero repetir", "control", "seguimiento", "segunda sesión"],
-    responses: ["followup"]
+    tag: "precio",
+    patterns: ["precio", "cuánto cuesta", "valor", "promocion", "oferta"],
+    responses: ["pricing"]
   },
+
+  // CITA / AGENDAMIENTO
   {
-    tag: "default",
-    patterns: [],
+    tag: "agendar",
+    patterns: ["quiero agendar", "agenda", "reservar", "diagnóstico", "evaluación"],
+    responses: ["booking"]
+  },
+
+  // FALLBACK
+  {
+    tag: "fallback",
+    patterns: [""],
     responses: ["fallback"]
   }
 ];
