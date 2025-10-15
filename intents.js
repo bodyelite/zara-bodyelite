@@ -1,154 +1,53 @@
 export const intents = [
   {
     tag: "greeting",
-    patterns: [
-      "hola",
-      "buenas",
-      "qué tal",
-      "buen día",
-      "buenas tardes",
-      "buenas noches",
-      "hola zara",
-      "hola body elite"
-    ],
+    patterns: ["hola", "buenas", "qué tal", "saludos", "hay alguien"],
     responses: ["greeting"]
   },
-
   {
     tag: "facial_treatment",
     patterns: [
-      "facial",
-      "cara",
-      "piel",
-      "arrugas",
-      "antiage",
-      "anti edad",
-      "flacidez facial",
-      "limpieza facial",
-      "pink glow",
-      "radiofrecuencia facial",
-      "hifu facial",
-      "tratamiento facial",
-      "manchas",
-      "acné",
-      "botox",
-      "toxina",
-      "toxina botulínica",
-      "patas de gallo",
-      "frente",
-      "líneas de expresión",
-      "relleno facial",
-      "antiarrugas",
-      "lifting",
-      "rejuvenecimiento"
+      "facial", "rostro", "arrugas", "botox", "toxina", "antiage", "piel", "hifu", "pink glow",
+      "radiofrecuencia", "face light", "face elite", "face smart", "limpieza facial", "acné", "manchas", "flacidez facial"
     ],
     responses: ["facial_treatment"]
   },
-
+  {
+    tag: "botox",
+    patterns: ["botox", "toxina botulinica", "relleno", "antiarrugas", "expresion", "frente", "patas de gallo"],
+    responses: ["facial_treatment"]
+  },
+  {
+    tag: "pink_glow",
+    patterns: ["pink glow", "brillo facial", "biorevitalizacion", "vitaminas faciales", "piel luminosa"],
+    responses: ["facial_treatment"]
+  },
   {
     tag: "corporal_treatment",
     patterns: [
-      "cuerpo",
-      "abdomen",
-      "piernas",
-      "glúteos",
-      "bajar abdomen",
-      "reductivo",
-      "lipo",
-      "cavitacion",
-      "radiofrecuencia corporal",
-      "sculptor",
-      "hifu corporal",
-      "tonificar",
-      "celulitis",
-      "bajar grasa",
-      "moldear cuerpo",
-      "tonificar piernas"
+      "cuerpo", "abdomen", "piernas", "gluteos", "flacidez", "lipo", "cavitacion", "sculptor", "hifu corporal",
+      "bajar abdomen", "reafirmar", "celulitis", "tonificar", "bajar grasa", "moldear cuerpo"
     ],
     responses: ["corporal_treatment"]
   },
-
-  {
-    tag: "technologies",
-    patterns: [
-      "hifu",
-      "cavitacion",
-      "radiofrecuencia",
-      "sculptor",
-      "pink glow",
-      "tecnologia",
-      "equipos",
-      "maquinas",
-      "fitdays",
-      "diagnóstico inteligente"
-    ],
-    responses: ["technologies"]
-  },
-
-  {
-    tag: "booking",
-    patterns: [
-      "agendar",
-      "agenda",
-      "evaluacion",
-      "reserva",
-      "quiero agendar",
-      "diagnostico",
-      "cita",
-      "evaluación gratuita"
-    ],
-    responses: ["booking"]
-  },
-
-  {
-    tag: "location",
-    patterns: [
-      "direccion",
-      "ubicacion",
-      "donde estan",
-      "como llegar",
-      "peñalolen",
-      "local",
-      "horario",
-      "donde queda",
-      "av las perdices"
-    ],
-    responses: ["location"]
-  },
-
   {
     tag: "promo",
-    patterns: [
-      "promo",
-      "promocion",
-      "oferta",
-      "descuento",
-      "gratis",
-      "beneficio",
-      "regalo",
-      "depilacion gratis",
-      "promociones"
-    ],
+    patterns: ["promoción", "descuento", "oferta", "gratis", "evaluación gratuita", "regalo"],
     responses: ["promo"]
   },
-
   {
-    tag: "farewell",
-    patterns: [
-      "gracias",
-      "chau",
-      "adios",
-      "nos vemos",
-      "hasta luego",
-      "ok gracias",
-      "perfecto gracias"
-    ],
-    responses: ["farewell"]
+    tag: "booking",
+    patterns: ["agendar", "reservar", "diagnóstico", "evaluación", "agenda", "cita", "hora", "quiero agendar"],
+    responses: ["booking"]
   },
-
+  {
+    tag: "location",
+    patterns: ["ubicación", "direccion", "donde estan", "como llegar", "horarios", "mapa"],
+    responses: ["location"]
+  },
   {
     tag: "fallback",
-    patterns: [],
+    patterns: [""],
     responses: ["fallback"]
   }
 ];
