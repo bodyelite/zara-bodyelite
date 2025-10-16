@@ -72,15 +72,16 @@ app.post("/webhook", async (req, res) => {
 });
 
 // Envío de mensajes
+  console.log(`🚀 Zara corriendo en puerto ${PORT}`);
+});
 async function enviarMensaje(senderId, mensaje) {
   try {
-    const textoFinal = String(mensaje || "").trim() || " ";
+    const texto = String(mensaje || "").trim() || " ";
     const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
     const payload = {
       messaging_product: "whatsapp",
       to: senderId,
-      type: "text",
-      text: { body: textoFinal }
+      text: { body: texto }
     };
 
     const response = await fetch(url, {
@@ -93,13 +94,9 @@ async function enviarMensaje(senderId, mensaje) {
     });
 
     const data = await response.json();
-    console.log("Mensaje enviado:", JSON.stringify(data, null, 2));
+    console.log("Mensaje enviado con cuerpo:", texto);
+    console.log("Respuesta API:", JSON.stringify(data, null, 2));
   } catch (error) {
     console.error("Error al enviar mensaje:", error);
   }
 }
-
-// Inicialización del servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Zara corriendo en puerto ${PORT}`);
-});
