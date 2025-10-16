@@ -398,3 +398,27 @@ app.get("/panel", (req, res) => {
     res.status(500).send("Error al cargar conversaciones");
   }
 });
+
+import fs from "fs";
+app.get("/panel", (req, res) => {
+  try {
+    const filePath = "./conversaciones.json";
+    if (!fs.existsSync(filePath)) return res.send("<h3>No hay conversaciones registradas</h3>");
+    const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    let html = `
+    <html><head><title>Panel Zara</title>
+    <style>
+      body{font-family:Arial;background:#fafafa;padding:20px;}
+      .msg{background:#fff;margin-bottom:12px;padding:12px;border-radius:8px;box-shadow:0 0 4px #ccc;}
+      .numero{font-weight:bold;color:#333;}
+      .fecha{color:#777;font-size:12px;}
+    </style></head>
+    <body><h2>Conversaciones Zara Body Elite</h2>
+    ${data.map(m=>`<div class="msg"><div class="numero">${m.numero}</div><div>${m.mensaje}</div><div class="fecha">${m.fecha}</div></div>`).join("")}
+    </body></html>`;
+    res.send(html);
+  } catch(e) {
+    res.status(500).send("Error al cargar conversaciones: " + e.message);
+  }
+});
+
