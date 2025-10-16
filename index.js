@@ -77,7 +77,7 @@ async function enviarMensaje(senderId, mensaje) {
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
