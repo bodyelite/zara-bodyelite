@@ -126,3 +126,64 @@ app.get("/panel", (req, res) => {
   </html>`;
   res.send(html);
 });
+
+// === Registro y panel de conversaciones ===
+import fs from "fs";
+const LOG_PATH = "./conversaciones.json";
+
+// Guarda cada mensaje recibido
+function registrarConversacion(from, mensajeTexto) {
+  const registro = {
+    numero: from,
+    mensaje: mensajeTexto,
+    fecha: new Date().toLocaleString("es-CL")
+  };
+  let data = [];
+  if (fs.existsSync(LOG_PATH)) {
+    try {
+      data = JSON.parse(fs.readFileSync(LOG_PATH, "utf-8"));
+    } catch {
+      data = [];
+    }
+  }
+  data.push(registro);
+  fs.writeFileSync(LOG_PATH, JSON.stringify(data, null, 2));
+  console.log(`📩 ${from} → ${mensajeTexto}`);
+}
+
+// Inserta registro dentro del webhook
+app.post("/webhook", (req, res) => {
+  const body = req.body;
+  if (body.object) {
+    const entry = body.entry?.[0]?.changes?.[0]?.value;
+    const mensajeTexto = entry?.messages?.[0]?.text?.body;
+    const from = entry?.messages?.[0]?.from;
+    if (mensajeTexto && from) registrarConversacion(from, mensajeTexto);
+  }
+  res.sendStatus(200);
+});
+
+// Endpoint /panel para ver los registros
+app.get("/panel", (req, res) => {
+  if (!fs.existsSync(LOG_PATH)) return res.send("Sin registros aún.");
+  const data = JSON.parse(fs.readFileSync(LOG_PATH, "utf-8"));
+  const html = `
+  <html>
+  <head><title>Conversaciones Zara Body Elite</title>
+  <style>
+    body { font-family: Arial; background:#f6f8fa; padding:20px; }
+    h1 { color:#003366; }
+    .msg { background:white; margin:10px 0; padding:10px; border-radius:8px; box-shadow:0 0 3px rgba(0,0,0,0.1); }
+    .numero { font-weight:bold; color:#0056b3; }
+    .fecha { color:#666; font-size:12px; }
+    button { margin-bottom:15px; background:#0056b3; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
+  </style>
+  </head>
+  <body>
+  <h1>📊 Conversaciones Zara Body Elite</h1>
+  <button onclick="location.reload()">Actualizar</button>
+  ${data.map(m => `<div class='msg'><div class='numero'>${m.numero}</div><div>${m.mensaje}</div><div class='fecha'>${m.fecha}</div></div>`).join("")}
+  </body>
+  </html>`;
+  res.send(html);
+});
