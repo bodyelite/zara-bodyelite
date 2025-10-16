@@ -18,57 +18,57 @@ export function obtenerRespuesta(texto) {
 
   const coincide = cat => grupos[cat].some(p => t.includes(p));
 
-  // --- Respuestas principales ---
+  // --- Respuestas clínicas + emocionales ---
   if (coincide("celulitis")) {
     ultimoTema = "celulitis";
-    return "💧 Para celulitis te recomiendo *Lipo Reductiva* o *Lipo Body Elite*. Combinan cavitación y radiofrecuencia para romper grasa y mejorar firmeza. Es ideal si notas piel con textura o retención. 💰 Desde $480.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "💧 Para celulitis te recomiendo *Lipo Reductiva* o *Lipo Body Elite*. Combinan cavitación y radiofrecuencia para romper grasa y mejorar firmeza. Muchas pacientes dicen que su piel se siente más lisa y liviana desde las primeras sesiones. 💰 Desde $480.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
   if (coincide("flacidez")) {
     ultimoTema = "flacidez";
-    return "💧 Para flacidez sugerimos *Body Tensor* o *Body Elite*. Reafirman la piel con radiofrecuencia fraccionada y HIFU superficial. Ayudan a que la piel se sienta más firme, tensa y tonificada. 💰 Desde $232.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "🩵 Para flacidez sugerimos *Body Tensor* o *Body Elite*. Reafirman con radiofrecuencia fraccionada y HIFU superficial. La sensación es cálida y relajante, ideal si sientes que tu piel perdió firmeza. 💰 Desde $232.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
   if (coincide("grasa")) {
     ultimoTema = "grasa";
-    return "🔥 Para grasa localizada recomendamos *Lipo Express* o *Lipo Focalizada Reductiva*. Usan HIFU 12D y Cavitación para reducir grasa sin cirugía. Ideal si buscas contorno más definido y sentirte más liviana. 💰 Desde $348.800. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "🔥 Para grasa localizada recomendamos *Lipo Express* o *Lipo Focalizada Reductiva*. Usan HIFU 12D y Cavitación para reducir grasa sin cirugía. Ayudan a marcar cintura, reducir volumen y sentirte más liviana y segura frente al espejo. 💰 Desde $348.800. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
   if (coincide("tonificacion")) {
     ultimoTema = "tonificacion";
-    return "🍑 Para tonificar y levantar recomendamos *Body Fitness* o *Push Up*. Usan EMS Sculptor y radiofrecuencia para fortalecer glúteos y piernas, logrando una forma más compacta y firme. 💰 Desde $360.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "🍑 Para tonificar y levantar recomendamos *Body Fitness* o *Push Up*. Trabajan con EMS Sculptor y radiofrecuencia para fortalecer glúteos y piernas. Se siente como un entrenamiento intenso sin esfuerzo, dejando la zona más firme y compacta. 💰 Desde $360.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
   if (coincide("arrugas")) {
     ultimoTema = "arrugas";
-    return "✨ Para arrugas y líneas recomendamos *Face Antiage* o *Face Elite*. Combinan HIFU 12D, RF y Pink Glow para tensar y regenerar la piel. 💰 Desde $281.600. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "✨ Para arrugas y líneas de expresión recomendamos *Face Antiage* o *Face Elite*. Combinan HIFU 12D, RF y Pink Glow para regenerar la piel desde dentro. Ideal si buscas una piel más firme, natural y luminosa. 💰 Desde $281.600. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
   if (coincide("limpieza")) {
     ultimoTema = "limpieza";
-    return "🫧 Para limpieza facial profunda y control de acné, el plan ideal es *Limpieza Facial Full*. Desobstruye poros y deja la piel suave, luminosa y equilibrada. 💰 $120.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "🫧 Para una piel limpia y equilibrada, el plan ideal es *Limpieza Facial Full*. Elimina impurezas, oxigena la piel y deja una sensación de frescura inmediata. 💰 $120.000. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
   if (coincide("precio")) {
-    return "💰 Nuestros planes van desde $60.000 hasta $664.000 según el tipo de tratamiento. Todos incluyen diagnóstico gratuito y seguimiento personalizado. 📅 Agenda tu evaluación 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "💰 Nuestros planes van desde $60.000 hasta $664.000 según el tratamiento. Todos incluyen diagnóstico gratuito y acompañamiento personalizado. 📅 Agenda tu evaluación 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  // --- Explicaciones empático-clínicas ---
+  // --- Explicaciones profundas y empáticas ---
   if (coincide("curiosidad")) {
     if (ultimoTema === "flacidez") {
-      return "🩵 *Body Tensor* trabaja con radiofrecuencia fraccionada y HIFU superficial. Desde las primeras sesiones la piel se nota más firme y suave. No duele, se siente cálido y relajante. Son 6 sesiones en promedio. Ayuda a recuperar confianza y gusto por verte al espejo. 📅 Agenda tu diagnóstico 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💆‍♀️ *Body Tensor* y *Body Elite* estimulan el colágeno con radiofrecuencia fraccionada y HIFU superficial. No duele, se siente tibio y relajante, como un masaje firme. Desde las primeras sesiones notas más tensión y elasticidad. Es ideal si quieres volver a sentirte cómoda con tu piel. 📅 Agenda tu diagnóstico 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
     if (ultimoTema === "grasa" || ultimoTema === "celulitis") {
-      return "🔥 *Lipo Reductiva* y *Lipo Express* disuelven grasa sin cirugía con Cavitación e HIFU 12D. Cada sesión dura 60 min. Se siente calor controlado, sin dolor. En 2 a 3 semanas ya se nota menor volumen y firmeza. Más allá de lo estético, ayuda a sentirse más liviana y segura con el cuerpo. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "🔥 *Lipo Reductiva* y *Lipo Express* disuelven grasa sin cirugía con Cavitación e HIFU 12D. Cada sesión dura 60 min y se siente calor suave, sin molestias. En 2 a 3 semanas ya se nota menor volumen. Muchas pacientes cuentan que se sienten más livianas, con la ropa más suelta y más confianza en su cuerpo. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
     if (ultimoTema === "tonificacion") {
-      return "💪 *Body Fitness* y *Push Up* activan los músculos con EMS Sculptor (20.000 contracciones en 30 min). No duele, solo sientes energía y contracción profunda. Es ideal para quienes quieren levantar y compactar glúteos, mejorando fuerza y autoestima. 6 sesiones recomendadas. 📅 Agenda tu cita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💪 *Body Fitness* y *Push Up* activan la musculatura profunda con EMS Sculptor (20.000 contracciones en 30 min). No duele, pero sientes cómo trabaja cada zona. Es ideal si buscas levantar glúteos, tonificar muslos o mejorar la forma general del cuerpo. Los resultados se notan visualmente y también en la postura y energía. 📅 Agenda tu cita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
     if (ultimoTema === "arrugas") {
-      return "🌸 *Face Antiage* regenera desde las capas profundas con HIFU y Pink Glow. No genera dolor, solo una sensación de calor suave. Mejora textura, luminosidad y expresión facial. Es el paso perfecto si buscas verte natural pero más firme. Resultados desde la primera sesión. 📅 Agenda tu facial 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "🌸 *Face Antiage* regenera desde el interior con HIFU y Pink Glow. No hay dolor, solo una sensación tibia y confortable. Mejora textura, luminosidad y firmeza. Es perfecto si buscas verte más descansada y natural, sin perder tu expresión. 📅 Agenda tu facial 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
     if (ultimoTema === "limpieza") {
-      return "🫧 *Limpieza Facial Full* deja la piel libre de impurezas y más oxigenada. Dura 45 min y no duele. Sentirás la piel fresca y ligera desde el primer momento. Ideal para mantenerla sana y luminosa. 📅 Reserva tu limpieza 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "🫧 *Limpieza Facial Full* elimina impurezas y deja la piel fresca, suave y luminosa. No duele, al contrario: muchas pacientes dicen que es una experiencia relajante y revitalizante. Dura 45 minutos. 📅 Reserva tu limpieza 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
     return "💬 Cada tratamiento tiene su propio número de sesiones y beneficios. Cuéntame si buscas un cambio corporal o facial y te explico cómo podríamos ayudarte. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
