@@ -1,31 +1,24 @@
 import fs from "fs";
 
-const RUTA_MEMORIA = "./contexto_memoria.json";
+const archivoMemoria = "./contexto_memoria.json";
 
-function cargarMemoria() {
+export function buscarRespuesta(texto) {
   try {
-    const data = fs.readFileSync(RUTA_MEMORIA, "utf8");
-    return JSON.parse(data);
+    const memoria = JSON.parse(fs.readFileSync(archivoMemoria, "utf8"));
+    const entrada = memoria.ejemplos.find(e => texto.includes(e.palabra));
+    return entrada ? entrada.respuesta : null;
   } catch {
-    return { ejemplos: [] };
+    return null;
   }
 }
 
-function guardarMemoria(memoria) {
-  fs.writeFileSync(RUTA_MEMORIA, JSON.stringify(memoria, null, 2), "utf8");
+export function aprender(palabra, respuesta) {
+  try {
+    const memoria = JSON.parse(fs.readFileSync(archivoMemoria, "utf8"));
+    memoria.ejemplos.push({ palabra, respuesta });
+    fs.writeFileSync(archivoMemoria, JSON.stringify(memoria, null, 2));
+  } catch {
+    fs.writeFileSync(archivoMemoria, JSON.stringify({ ejemplos: [{ palabra, respuesta }] }, null, 2));
+  }
 }
 
-export function aprender(texto, respuesta) {
-  const memoria = cargarMemoria();
-  memoria.ejemplos.push({ texto, respuesta });
-  guardarMemoria(memoria);
-  return "Gracias por tu mensaje. Estoy aprendiendo de tus consultas para mejorar mis respuestas.";
-}
-
-export function buscarRespuesta(texto) {
-  const memoria = cargarMemoria();
-  const coincidencia = memoria.ejemplos.find(e =>
-    texto.toLowerCase().includes(e.texto.toLowerCase())
-  );
-  return coincidencia ? coincidencia.respuesta : null;
-}
