@@ -6,7 +6,7 @@ const RECEPCION = "569XXXXXXXX";     // BE Recepción
 const PATRICK = "569YYYYYYYY";       // Patricksss
 const JC = "569ZZZZZZZZ";            // Juan Carlos Contreras
 
-async function notificarInterno(numero, mensaje, tipo) {
+async function notificarInterno(numero, mensaje, tipo, textoPaciente) {
   try {
     const url = `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
     const body = {
@@ -23,7 +23,7 @@ async function notificarInterno(numero, mensaje, tipo) {
       },
       body: JSON.stringify(body)
     });
-    console.log(`📤 Notificación ${tipo} enviada a ${numero}`);
+    console.log(`✅ ${tipo.toUpperCase()} → Mensaje paciente: "${textoPaciente}" → Enviado a ${numero}`);
   } catch (error) {
     console.error(`❌ Error al enviar notificación ${tipo}:`, error);
   }
@@ -51,11 +51,12 @@ export async function obtenerRespuesta(texto, numero) {
 
   // --- Derivación directa ---
   if (coincide("contacto")) {
-    const mensaje = `📞 Derivación directa: paciente solicita contacto (${numero})`;
+    const msg = `📞 Derivación directa: paciente solicita contacto (${numero})`;
+    console.log(`📞 Derivación: Paciente dijo "${texto}" → Notificando a Recepción, Patrick y JC.`);
     await Promise.all([
-      notificarInterno(RECEPCION, mensaje, "derivación"),
-      notificarInterno(PATRICK, mensaje, "derivación"),
-      notificarInterno(JC, mensaje, "derivación")
+      notificarInterno(RECEPCION, msg, "derivación", texto),
+      notificarInterno(PATRICK, msg, "derivación", texto),
+      notificarInterno(JC, msg, "derivación", texto)
     ]);
     return "📞 Te derivaré con nuestra recepción para continuar tu atención y ayudarte a coordinar tu hora. Te escribirán en breve para seguir tu caso.";
   }
@@ -63,12 +64,12 @@ export async function obtenerRespuesta(texto, numero) {
   // --- Notificación silenciosa de agendamiento ---
   if (coincide("agendamiento")) {
     const aviso = `📅 Nueva solicitud de agendamiento detectada (${numero})`;
+    console.log(`📩 Agendamiento: Paciente dijo "${texto}" → Notificando a Recepción, Patrick y JC.`);
     await Promise.all([
-      notificarInterno(RECEPCION, aviso, "agendamiento"),
-      notificarInterno(PATRICK, aviso, "agendamiento"),
-      notificarInterno(JC, aviso, "agendamiento")
+      notificarInterno(RECEPCION, aviso, "agendamiento", texto),
+      notificarInterno(PATRICK, aviso, "agendamiento", texto),
+      notificarInterno(JC, aviso, "agendamiento", texto)
     ]);
-    console.log("📩 Notificación de agendamiento enviada a recepción, Patrick y JC.");
     return "📆 Perfecto. Puedes agendar tu diagnóstico gratuito directamente aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
