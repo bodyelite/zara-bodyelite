@@ -12,7 +12,7 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PORT = process.env.PORT || 10000;
 
-// Verificación de webhook
+// Webhook de verificación
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -24,7 +24,7 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// Recepción de mensajes
+// Webhook principal
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
@@ -47,11 +47,11 @@ app.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // Respuestas base
+    // Respuesta base
     let respuesta = "";
     if (texto.includes("hola") || texto.includes("buenas")) {
       respuesta = "👋 ¡Hola! Soy Zara IA de Body Elite. ¿Deseas una evaluación facial o corporal sin costo?";
-    } else if (texto.includes("muslo") || texto.includes("abdomen") || texto.includes("flacidez")) {
+    } else if (texto.includes("muslo") || texto.includes("abdomen") || texto.includes("flacidez") || texto.includes("celulitis")) {
       respuesta = "💧 Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. ¿Sobre qué te gustaría saber?";
     } else if (texto.startsWith("aprender ")) {
       const partes = texto.split(" ");
@@ -72,8 +72,6 @@ app.post("/webhook", async (req, res) => {
 });
 
 // Envío de mensajes
-  console.log(`🚀 Zara corriendo en puerto ${PORT}`);
-});
 async function enviarMensaje(senderId, mensaje) {
   try {
     const texto = String(mensaje || "").trim() || " ";
@@ -94,9 +92,14 @@ async function enviarMensaje(senderId, mensaje) {
     });
 
     const data = await response.json();
-    console.log("Mensaje enviado con cuerpo:", texto);
-    console.log("Respuesta API:", JSON.stringify(data, null, 2));
+    console.log("Mensaje enviado:", JSON.stringify(data, null, 2));
   } catch (error) {
     console.error("Error al enviar mensaje:", error);
   }
 }
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`🚀 Zara corriendo en puerto ${PORT}`);
+});
+
