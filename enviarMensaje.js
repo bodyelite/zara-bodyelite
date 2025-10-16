@@ -5,21 +5,25 @@ async function enviarMensaje(senderId, mensaje) {
     const payload = {
       messaging_product: "whatsapp",
       to: senderId,
-      text: { body: texto }
+      type: "text",
+      text: {
+        preview_url: false,
+        body: texto
+      }
     };
 
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`
+        "Authorization": `Bearer ${PAGE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
     });
 
     const data = await response.json();
-    console.log("Mensaje enviado con cuerpo:", texto);
-    console.log("Respuesta API:", JSON.stringify(data, null, 2));
+    console.log("Mensaje enviado con texto:", texto);
+    console.log("Respuesta de Meta:", JSON.stringify(data, null, 2));
   } catch (error) {
     console.error("Error al enviar mensaje:", error);
   }
