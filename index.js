@@ -256,3 +256,39 @@ app.get('/panel', (req, res) => {
   </body></html>`;
   res.send(html);
 });
+
+// === Panel de conversaciones (corrección de ruta) ===
+import fs from "fs";
+const LOG_FILE = "./conversaciones.json";
+
+app.get("/panel", (req, res) => {
+  if (!fs.existsSync(LOG_FILE)) {
+    return res.send("<h2>📭 Aún no hay registros de conversaciones.</h2>");
+  }
+
+  const data = JSON.parse(fs.readFileSync(LOG_FILE, "utf8"));
+  const html = `
+  <html>
+  <head>
+    <title>Panel Zara Body Elite</title>
+    <style>
+      body { font-family: Arial; background: #f9fafc; padding: 20px; }
+      h1 { color: #003366; }
+      .msg { margin: 10px 0; padding: 10px; border-radius: 8px; }
+      .usuario { background: #fff; border-left: 4px solid #007bff; }
+      .zara { background: #e6fff3; border-left: 4px solid #28a745; }
+      .fecha { font-size: 12px; color: #666; }
+    </style>
+  </head>
+  <body>
+    <h1>📊 Conversaciones Zara Body Elite</h1>
+    <button onclick="location.reload()">Actualizar</button>
+    ${data.map(m => `
+      <div class='msg ${m.tipo}'>
+        <b>${m.tipo === 'zara' ? 'Zara' : m.origen}</b><br>${m.contenido}<br>
+        <div class='fecha'>${m.fecha}</div>
+      </div>`).join('')}
+  </body>
+  </html>`;
+  res.send(html);
+});
