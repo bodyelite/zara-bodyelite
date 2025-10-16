@@ -99,3 +99,12 @@ app.post("/webhook", async (req, res) => {
 // ======================= PUERTO ===========================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Zara corriendo en puerto ${PORT}`));
+import { aprender, buscarRespuesta } from "./memoria.js";
+
+// Inserta dentro del flujo de mensajes:
+const respuestaMemoria = buscarRespuesta(texto);
+if (respuestaMemoria) {
+  await enviarMensaje(senderId, respuestaMemoria);
+  return res.sendStatus(200);
+}
+
