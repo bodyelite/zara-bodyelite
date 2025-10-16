@@ -1,13 +1,12 @@
 async function enviarMensaje(senderId, mensaje) {
   try {
+    const textoFinal = String(mensaje || "").trim() || " ";
     const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
     const payload = {
       messaging_product: "whatsapp",
       to: senderId,
       type: "text",
-      text: {
-        body: mensaje || " "
-      }
+      text: { body: textoFinal }
     };
 
     const response = await fetch(url, {
