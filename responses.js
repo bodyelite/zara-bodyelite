@@ -1,6 +1,35 @@
+import fetch from "node-fetch";
 let ultimoTema = null;
 
-export function obtenerRespuesta(texto) {
+// Números internos (sin +)
+const RECEPCION = "569XXXXXXXX";     // BE Recepción
+const PATRICK = "569YYYYYYYY";       // Patricksss
+const JC = "569ZZZZZZZZ";            // Juan Carlos Contreras
+
+async function notificarInterno(numero, mensaje, tipo) {
+  try {
+    const url = `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
+    const body = {
+      messaging_product: "whatsapp",
+      to: numero,
+      type: "text",
+      text: { body: mensaje }
+    };
+    await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    console.log(`📤 Notificación ${tipo} enviada a ${numero}`);
+  } catch (error) {
+    console.error(`❌ Error al enviar notificación ${tipo}:`, error);
+  }
+}
+
+export async function obtenerRespuesta(texto, numero) {
   if (!texto) return mensajeBase();
 
   const t = texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -13,10 +42,35 @@ export function obtenerRespuesta(texto) {
     arrugas: ["arruga", "lineas", "antiage", "expresion", "rejuvenecer"],
     limpieza: ["limpieza", "poros", "acne", "facial", "granitos", "peeling"],
     precio: ["precio", "vale", "cuesta", "valor"],
-    curiosidad: ["como funciona", "como es", "cuantas sesiones", "duele", "resultados", "en que consiste", "efecto"]
+    curiosidad: ["como funciona", "como es", "cuantas sesiones", "duele", "resultados", "en que consiste", "efecto"],
+    contacto: ["quiero hablar", "hablar con alguien", "recepcion", "persona", "llamar", "me contacten", "ayuda"],
+    agendamiento: ["agendar", "agenda", "reserva", "hora", "diagnostico", "confirmar hora"]
   };
 
   const coincide = cat => grupos[cat].some(p => t.includes(p));
+
+  // --- Derivación directa ---
+  if (coincide("contacto")) {
+    const mensaje = `📞 Derivación directa: paciente solicita contacto (${numero})`;
+    await Promise.all([
+      notificarInterno(RECEPCION, mensaje, "derivación"),
+      notificarInterno(PATRICK, mensaje, "derivación"),
+      notificarInterno(JC, mensaje, "derivación")
+    ]);
+    return "📞 Te derivaré con nuestra recepción para continuar tu atención y ayudarte a coordinar tu hora. Te escribirán en breve para seguir tu caso.";
+  }
+
+  // --- Notificación silenciosa de agendamiento ---
+  if (coincide("agendamiento")) {
+    const aviso = `📅 Nueva solicitud de agendamiento detectada (${numero})`;
+    await Promise.all([
+      notificarInterno(RECEPCION, aviso, "agendamiento"),
+      notificarInterno(PATRICK, aviso, "agendamiento"),
+      notificarInterno(JC, aviso, "agendamiento")
+    ]);
+    console.log("📩 Notificación de agendamiento enviada a recepción, Patrick y JC.");
+    return "📆 Perfecto. Puedes agendar tu diagnóstico gratuito directamente aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  }
 
   // --- Tratamientos principales ---
   if (coincide("celulitis")) {
@@ -53,28 +107,23 @@ export function obtenerRespuesta(texto) {
     return "💰 Nuestros tratamientos van desde $60.000 a $664.000 según el protocolo. Incluyen diagnóstico gratuito y acompañamiento personalizado. 📅 Agenda tu evaluación 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  // --- Explicaciones con continuidad ---
+  // --- Explicaciones extendidas ---
   if (coincide("curiosidad")) {
     if (ultimoTema === "celulitis" || ultimoTema === "grasa") {
       return "🔥 *Lipo Reductiva* y *Lipo Express* disuelven grasa sin cirugía mediante HIFU 12D y Cavitación. Cada sesión dura 60 minutos, se siente calor moderado y relajante, sin dolor. Normalmente se recomiendan entre 6 y 10 sesiones según diagnóstico. Los cambios se notan desde la segunda semana: menos volumen, piel más firme y contorno más definido. 📅 Agenda tu cita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
-
     if (ultimoTema === "flacidez") {
-      return "🩵 *Body Tensor* y *Body Elite* trabajan con radiofrecuencia fraccionada y HIFU superficial para activar colágeno y elastina. No duele, se siente tibio y relajante, ideal si tu piel perdió firmeza. Generalmente se recomiendan 6 a 8 sesiones, y los resultados aparecen en pocas semanas con textura más tensa y uniforme. 📅 Agenda tu diagnóstico 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "🩵 *Body Tensor* y *Body Elite* trabajan con radiofrecuencia fraccionada y HIFU superficial para activar colágeno y elastina. No duele, se siente tibio y relajante. Generalmente se recomiendan 6 a 8 sesiones, y los resultados aparecen en pocas semanas con textura más tensa y uniforme. 📅 Agenda tu diagnóstico 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
-
     if (ultimoTema === "tonificacion") {
       return "💪 *Body Fitness* y *Push Up* usan EMS Sculptor para generar contracciones musculares intensas (20.000 en 30 min) junto con radiofrecuencia. No duele, se siente como un entrenamiento guiado. Es ideal para levantar glúteos, tonificar y mejorar la forma corporal. Resultados visibles desde la tercera sesión. 📅 Agenda tu evaluación 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
-
     if (ultimoTema === "arrugas") {
       return "🌸 *Face Antiage* y *Face Elite* regeneran la piel desde el interior con HIFU 12D, radiofrecuencia y Pink Glow. No genera dolor, solo una sensación cálida. La piel luce más luminosa, firme y con menos líneas desde la primera sesión. 📅 Agenda tu facial 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
-
     if (ultimoTema === "limpieza") {
-      return "🫧 *Limpieza Facial Full* dura 45 minutos e incluye peeling ultrasónico, extracción suave y máscara LED. No duele, al contrario: muchas pacientes dicen que es relajante y dejan la piel fresca y luminosa al instante. 📅 Reserva aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "🫧 *Limpieza Facial Full* dura 45 minutos e incluye peeling ultrasónico, extracción suave y máscara LED. No duele, al contrario: muchas pacientes dicen que es relajante y deja la piel fresca y luminosa al instante. 📅 Reserva aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
     }
-
     return "💬 Cada tratamiento tiene su propio número de sesiones y beneficios. Cuéntame si buscas un cambio corporal o facial, y te explico cómo podemos ayudarte. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
