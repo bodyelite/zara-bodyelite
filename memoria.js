@@ -1,62 +1,31 @@
-// memoria.js
-// Memoria conversacional + almacenamiento de aprendizajes locales
+import fs from "fs";
 
-const memoriaConversaciones = new Map();
-const aprendizajesLocales = new Map();
+const RUTA_MEMORIA = "./contexto_memoria.json";
 
-/**
- * Guarda historial reciente por número.
- */
-export function actualizarMemoria(telefono, mensaje, respuesta) {
-  const historial = memoriaConversaciones.get(telefono) || [];
-  historial.push({ usuario: mensaje, zara: respuesta, fecha: Date.now() });
-
-  if (historial.length > 10) historial.shift();
-  memoriaConversaciones.set(telefono, historial);
-}
-
-/**
- * Devuelve contexto breve de los últimos mensajes.
- */
-export function obtenerContexto(telefono) {
-  const historial = memoriaConversaciones.get(telefono);
-  if (!historial) return "";
-  const ultimos = historial.slice(-3).map(h => h.usuario).join(" | ");
-  return ultimos ? `Contexto previo: ${ultimos}` : "";
-}
-
-/**
- * Borra memoria de un usuario.
- */
-export function limpiarMemoria(telefono) {
-  memoriaConversaciones.delete(telefono);
-}
-
-/**
- * Registra nuevas palabras/frases detectadas en conversaciones reales.
- */
-export function registrarAprendizaje(frase, respuesta) {
-  const f = frase.toLowerCase().trim();
-  if (!f || f.length < 3) return;
-  if (!aprendizajesLocales.has(f)) {
-    aprendizajesLocales.set(f, respuesta);
+function cargarMemoria() {
+  try {
+    const data = fs.readFileSync(RUTA_MEMORIA, "utf8");
+    return JSON.parse(data);
+  } catch {
+    return { ejemplos: [] };
   }
 }
 
-/**
- * Busca si hay una respuesta aprendida.
- */
-export function buscarAprendizaje(frase) {
-  const f = frase.toLowerCase().trim();
-  for (const [clave, valor] of aprendizajesLocales.entries()) {
-    if (f.includes(clave)) return valor;
-  }
-  return null;
+function guardarMemoria(memoria) {
+  fs.writeFileSync(RUTA_MEMORIA, JSON.stringify(memoria, null, 2), "utf8");
 }
 
-/**
- * Devuelve una vista resumida de aprendizajes (solo para depuración local).
- */
-export function verAprendizajes() {
-  return Array.from(aprendizajesLocales.entries());
+export function aprender(texto, respuesta) {
+  const memoria = cargarMemoria();
+  memoria.ejemplos.push({ texto, respuesta });
+  guardarMemoria(memoria);
+  return "Gracias por tu mensaje. Estoy aprendiendo de tus consultas para mejorar mis respuestas.";
+}
+
+export function buscarRespuesta(texto) {
+  const memoria = cargarMemoria();
+  const coincidencia = memoria.ejemplos.find(e =>
+    texto.toLowerCase().includes(e.texto.toLowerCase())
+  );
+  return coincidencia ? coincidencia.respuesta : null;
 }
