@@ -328,3 +328,30 @@ app.get("/panel", (req, res) => {
   </html>`;
   res.send(html);
 });
+app.get("/panel", (req, res) => {
+  import fs from "fs";
+  const data = JSON.parse(fs.readFileSync("conversaciones.json", "utf8"));
+  let html = `
+  <html>
+  <head>
+    <title>Panel de conversaciones Zara</title>
+    <style>
+      body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+      h1 { color: #003366; }
+      .msg { background: white; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+      .numero { color: #666; font-size: 14px; }
+      .fecha { color: #999; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Conversaciones Zara Body Elite</h1>
+    ${data.map(m => `
+      <div class="msg">
+        <div class="numero"><b>${m.numero}</b></div>
+        <div>${m.mensaje}</div>
+        <div class="fecha">${m.fecha}</div>
+      </div>`).join("")}
+  </body>
+  </html>`;
+  res.send(html);
+});
