@@ -187,3 +187,72 @@ app.get("/panel", (req, res) => {
   </html>`;
   res.send(html);
 });
+
+// === Registro extendido de conversaciones ===
+import fs from 'fs';
+const LOG_PATH = './conversaciones.json';
+
+// Función para guardar entradas de chat (usuario o Zara)
+function registrarConversacion(origen, contenido, tipo) {
+  const registro = {
+    tipo, // "usuario" o "zara"
+    origen,
+    contenido,
+    fecha: new Date().toLocaleString('es-CL')
+  };
+  let data = [];
+  if (fs.existsSync(LOG_PATH)) {
+    try {
+      data = JSON.parse(fs.readFileSync(LOG_PATH, 'utf-8'));
+    } catch {
+      data = [];
+    }
+  }
+  data.push(registro);
+  fs.writeFileSync(LOG_PATH, JSON.stringify(data, null, 2));
+  console.log(`💬 ${tipo.toUpperCase()} (${origen}): ${contenido}`);
+}
+
+// Intercepta mensajes entrantes del webhook
+app.post('/webhook', (req, res) => {
+  const body = req.body;
+  if (body.object) {
+    const entry = body.entry?.[0]?.changes?.[0]?.value;
+    const msg = entry?.messages?.[0]?.text?.body;
+    const from = entry?.messages?.[0]?.from;
+    if (msg && from) registrarConversacion(from, msg, 'usuario');
+  }
+  res.sendStatus(200);
+});
+
+// Intercepta respuestas de Zara (enviarMensaje)
+const originalSend = globalThis.sendMessage;
+globalThis.sendMessage = async function (numero, texto) {
+  registrarConversacion(numero, texto, 'zara');
+  if (originalSend) return originalSend(numero, texto);
+};
+
+// Panel visual
+app.get('/panel', (req, res) => {
+  if (!fs.existsSync(LOG_PATH)) return res.send('Sin registros aún.');
+  const data = JSON.parse(fs.readFileSync(LOG_PATH, 'utf-8'));
+  const html = `
+  <html><head><title>Panel Zara Body Elite</title>
+  <style>
+    body{font-family:Arial;background:#f6f8fa;padding:20px;}
+    h1{color:#003366;}
+    .msg{margin:10px 0;padding:10px;border-radius:8px;}
+    .usuario{background:#fff;border-left:4px solid #0066cc;}
+    .zara{background:#e9f5ff;border-left:4px solid #00a36f;}
+    .fecha{font-size:12px;color:#666;}
+  </style></head><body>
+  <h1>📊 Conversaciones Zara Body Elite</h1>
+  <button onclick="location.reload()">Actualizar</button>
+  ${data.map(m => `
+    <div class='msg ${m.tipo}'>
+      <b>${m.tipo === 'zara' ? 'Zara' : m.origen}</b><br>${m.contenido}<br>
+      <div class='fecha'>${m.fecha}</div>
+    </div>`).join('')}
+  </body></html>`;
+  res.send(html);
+});
