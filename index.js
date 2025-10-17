@@ -54,3 +54,23 @@ app.get("/panel", (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Zara corriendo en puerto ${PORT}`);
 });
+
+// ===== PANEL DE CONTROL DE CONVERSACIONES =====
+app.get("/panel", (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>Zara Body Elite - Panel</title>
+        <style>
+          body { font-family: Arial, sans-serif; background-color: #f7f9fc; color: #222; padding: 40px; }
+          h1 { color: #004aad; }
+          p { font-size: 15px; margin-top: 10px; }
+        </style>
+      </head>
+      <body>
+        <h1>Zara Body Elite activa y funcionando ✅</h1>
+        <p>El panel de control se conectó correctamente al servidor.</p>
+      </body>
+    </html>
+  `);
+});
