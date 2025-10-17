@@ -38,3 +38,4 @@ app.listen(PORT, () => {
   console.log(`✅ Panel disponible en /panel`);
 });
 
+console.log('=== INDEX ACTIVO DE ZARA ===');
