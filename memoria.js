@@ -1,120 +1,17 @@
 import fs from "fs";
 
-// Carga dataset existente (si hay)
-let memoria = [];
-try {
-  memoria = JSON.parse(fs.readFileSync("contexto_memoria.json", "utf8"));
-} catch {
-  memoria = [];
+export function guardarContexto(contexto) {
+  fs.writeFileSync("./contexto_memoria.json", JSON.stringify(contexto, null, 2));
+  console.log("🧠 Contexto guardado en memoria local");
 }
 
-// === NUEVAS FRASES ===
-const nuevasFrases = [
-  // Corporales (250)
-  "precio tratamiento corporal","ofrecen sculpt corporal","reducción grasa localizada","criolipólisis","sesiones cavitación",
-  "radiofrecuencia corporal","tratamiento corporal duele","cuánto dura sesión corporal","resultados contorno corporal","paquetes corporales descuento",
-  "mantenimiento corporal","efectos secundarios corporal","zona mínima corporal","antes y después corporal","pago cuotas corporal",
-  "evaluación previa corporal","zonas aplican corporal","combina con dieta","preparación previa corporal","resultados visibles corporal",
-  "seguro tratamiento corporal","embarazo corporal","precio reafirmamiento corporal","máquinas última tecnología corporal","invasivo o no invasivo corporal",
-  "usa frío o calor corporal","duración resultados corporal","contraindicaciones corporal","deporte post corporal","seguimiento corporal",
-  "precio por zona corporal","apto tipo de piel corporal","cuántas sesiones corporal","promociones temporada corporal","reservar whatsapp corporal",
-  "evaluación presencial corporal","usar faja corporal","retomar actividades corporal","reposo corporal","edad mínima corporal",
-  "combinar tratamientos estéticos corporales","resultados primera sesión corporal","pago transferencia corporal","planes cuotas sin interés corporal","diferencia paquete premium corporal",
-  "mejora celulitis flacidez grasa","dolor zonas sensibles corporal","ver forma más marcada corporal","permanente o mantenimiento corporal","embarazo tardío corporal",
-  "moldeado corporal","cuidados post corporal","afecta la piel corporal","financiamiento corporal","mejor temporada corporal",
-  "análisis médicos corporal","costo zona pequeña corporal","costo zona grande corporal","dividir sesiones corporal","bonos corporales",
-  "hospitalización corporal","a domicilio corporal","testimonios corporal","opiniones clientes corporal","perfil corporal ideal",
-  "preparar piel corporal","combinar con mesoterapia corporal","elimina grasa subcutánea","ayuda estrías corporal","promoción 2x1 corporal",
-  "sesiones alternas corporal","mantenimiento mensual corporal","ambulatorio corporal","salto sesión corporal","adelanto sesiones corporal",
-  "tratamiento corporal hombres","precio corporal hombres","horario extendido corporal","tarjeta crédito corporal","split de zonas corporal",
-  "usa vacuum corporal","ayuno corporal","presión alta corporal","medicamentos corporal","piel bronceada corporal",
-  "promociones corporales","edad recomendada corporal","sucursales corporal","tratamiento corporal y facial mismo día","capacitación certificada corporal",
-  "anestesia corporal","estimula colágeno corporal","mejora textura corporal","servicio domicilio corporal","seguimiento digital corporal",
-  "descuento referidos corporal","post dieta corporal","tiempos reproductivos corporal","recuperación cirugía corporal","tarifa full corporal",
-  "eficaz grasa resistente corporal","tecnologías tratamiento corporal","video procedimiento corporal","equipo médico corporal","reconocido médicamente corporal",
-  "certificados corporal","clínicas asociadas corporal","evaluación salud corporal","varices corporal","recuperación enfermedad corporal",
-  "protocolos post corporal","dolor leve corporal","zonas delicadas corporal","drenaje linfático corporal","sesión adicional corporal",
-  "flacidez corporal","resultados largo plazo corporal","moretones corporal","tatuajes corporal","evitar sol corporal",
-  "evaluación online corporal","escoliosis corporal","personal calificado corporal","dolor abdominal corporal","paquete 5 sesiones corporal",
-  "calor intenso corporal","mezcla tecnologías corporal","piel floja corporal","mejora circulación corporal","resultados comprobados corporal",
-  "compatible otros tratamientos corporal","médicos o técnicos corporal","reconocido internacional corporal","programas integrales corporal","por zonas corporal",
-  "varias etapas corporal","seguimiento fotográfico corporal","hernia corporal","reduce volumen celulitis corporal","mejora tonicidad corporal",
-  "garantía corporal","hidratación corporal","piel delgada corporal","estimula elastina corporal","disponibilidad inmediata corporal",
-  "rápido corporal","sesiones breves corporal","modelado corporal","rollitos laterales corporal","exprés corporal",
-  "enfermedades crónicas corporal","recomendaciones post corporal","fin de semana corporal","tratamiento médico corporal","cancelar sesiones corporal",
-  "estrías recientes corporal","hormonas corporal","descuento estudiantes corporal","alimentación corporal","resultados naturales corporal",
-  "protocolo higiene corporal","ambulatorio sin ingreso corporal","volver gimnasio corporal","uso cremas corporal","flacidez post embarazo corporal",
-  "financiamiento sin interés corporal","transferencia bancaria corporal","límite por zona corporal","suspender medicamentos corporal","diabetes corporal",
-  "sobrepeso corporal","clínica afiliada corporal","certificaciones corporal","fotos progreso corporal","asesoría previa corporal",
-  "alergias cutáneas corporal","tras dieta corporal","piel rugosa corporal","demostraciones corporal","cierra vasos corporal",
-  "reduce cintura corporal","recomendaciones alimentarias corporal","tonicidad muscular corporal","compatible suplementos corporal","post operación corporal",
-  "clínicas satélite corporal","planes familiares corporal","brazos flácidos corporal","inicio inmediato corporal","personas sedentarias corporal",
-  "hinchazón corporal","instructivos post corporal","masajes corporal","problemas hormonales corporal","calor tolerable corporal",
-  "paquetes familiares corporal","marcas piel corporal","reduce glúteos corporal","tarifas sucursal corporal","muslos internos corporal",
-  "perfil lateral corporal","descuento por sesiones corporal","brazos posterior corporal","forma global corporal","personas mayores corporal",
-  "métodos pago digital corporal","aplicadores especiales corporal","marcapasos corporal","30 minutos corporal","ropa deportiva corporal",
-  "rollos cintura corporal","retención líquidos corporal","10 sesiones corporal","zona lumbar corporal","múltiples zonas corporal",
-  "turno flexible corporal","exceso grasa localizada corporal","vascularización corporal","atención telefónica corporal","sesiones express corporal",
-  "firmeza brazos muslos corporal","clientes recurrentes corporal","efecto detox corporal","obesidad leve corporal","seguimiento digital corporal",
-  "drenaje linfático combinado corporal","incomodidades temporales corporal","aplicación móvil corporal","limitaciones alimentarias corporal","todas las edades corporal",
-  "garantías resultados corporal","varias veces año corporal","flacidez post dieta corporal","clínica comuna corporal","textura piel corporal",
-  "tatuajes zona corporal","descuento lanzamiento corporal","efectos inmediatos corporal","perfil caderas cintura corporal","canal whatsapp corporal",
-  "precio competitivo corporal","ejercicio frecuente corporal","protocolos seguridad corporal","cambios pocas sesiones corporal","silueta general corporal",
-  "plan pago flexible corporal","respaldo médico corporal","zonas pequeñas corporal","buen retorno estético corporal",
-  // Faciales (250)
-  "precio tratamiento facial","limpieza facial profunda","manchas rostro","peeling químico facial","microdermoabrasión facial",
-  "radiofrecuencia facial","duele facial","dura sesión facial","resultados facial","paquetes faciales",
-  "cuántas sesiones facial","efectos secundarios facial","zona mínima facial","antes y después facial","pago cuotas facial",
-  "evaluación facial","zonas faciales","facial con corporal","preparación previa facial","resultados faciales",
-  "seguro tratamiento facial","embarazo facial","precio por zona facial","consulta gratuita facial","apto tipo de piel facial",
-  "mantenimiento facial","piel sensible facial","clientes faciales","transferencia facial","promociones faciales",
-  "invasivo o no invasivo facial","contraindicaciones facial","básico o avanzado facial","aclara manchas facial","luminosidad facial",
-  "seguimiento facial","cuidados post facial","reposo facial","maquillaje mismo día facial","cosméticos activos facial",
-  "piel grasa facial","efecto facial","acné leve facial","paquete facial mensual","láser facial",
-  "arrugas finas facial","líneas expresión facial","otros tratamientos de piel facial","reservar whatsapp facial","suspender productos facial",
-  "facial rejuvenecedor","tipo peeling facial","descamación facial","resultados una sesión facial","estimula colágeno facial",
-  "financiamiento facial","temporada facial","examen dermatológico facial","costo zona pequeña facial","facial completo costo",
-  "tecnología avanzada facial","mezcla tecnologías facial","rosácea leve facial","disminuye marcas acné facial","descuento estudiantes facial",
-  "mejora textura facial","testimonios faciales","melasma facial","piel delgada facial","plan exprés facial",
-  "facial hombres","precio facial hombres","horario extendido facial","dividir sesiones facial","anestesia facial",
-  "ejercicio intenso facial","testimonios video facial","suspensión sol facial","zona ojos facial","bolsas ojos facial",
-  "firmeza cuello facial","mascarillas post facial","efectos inmediatos facial","tratamiento médico facial","posponer sesiones facial",
-  "textura irregular facial","protocolos higiene facial","tratamientos dermatológicos facial","rojez temporal facial","alergias cutáneas facial",
-  "opciones 30 min facial","maquillaje ligero facial","microagujas facial","descuento lanzamiento facial","resultados naturales facial",
-  "garantía facial","led facial","manchas solares facial","tono desigual facial","seguimiento online facial",
-  "lunares facial","textura gruesa facial","paquete 5 sesiones facial","rosácea moderada facial","productos médicos facial",
-  "programa facial completo","mensual facial","firmeza pómulos facial","activa elastina facial","video procedimiento facial",
-  "sensibilidad temporal facial","acné moderado facial","consulta gratis facial","retinoides facial","cierra poros facial",
-  "adolescentes facial","pago digital facial","maquillaje permanente facial","luminosidad sin daño facial","prevenir arrugas facial",
-  "horarios sábado facial","partes rostro facial","ambulatorio facial","ácido hialurónico facial","elasticidad piel facial",
-  "referidos faciales","manchas post acné facial","cosmética médica facial","textura cuello facial","hidratación post facial",
-  "facial y corporal juntos","rosácea severa facial","limitar sol facial","dermatología facial","surcos nasolabiales facial",
-  "piel madura facial","piel seca facial","óvalo facial","segunda papada facial","protocolos fotográficos facial",
-  "arrugas profundas facial","labios facial","calor leve facial","financiamiento sin interés facial","piel mixta facial",
-  "tono uniforme facial","acné quístico facial","dolor tolerable facial","demostraciones facial","marcas expresión facial",
-  "clínica cercana facial","retomar rutinas facial","varias veces año facial","garantía resultados facial","grosor piel facial",
-  "post atención facial","botox facial","evitar maquillaje facial","descuento clientes nuevos facial","manchas sol facial",
-  "siderosis facial","rejuvenecimiento facial","clínica faciales","piel reactiva facial","problemas hormonales facial",
-  "consulta virtual facial","seguimiento fotos facial","maquillaje mineral facial","rosácea leve facial","poros dilatados facial",
-  "exprés 20 min facial","labios contorno facial","piel madura facial","demostraciones gratuitas facial","marcas acné antiguas facial",
-  "brillo natural facial","tarifas estudiantes facial","rosácea moderada facial","cosméticos especiales facial","firmeza mandíbula facial",
-  "pago qr facial","líneas finas facial","manchas post inflamatorias facial","pigmentación desigual facial","sueros post facial",
-  "piel grasa acné facial","promoción 2x1 facial","microagujas suaves facial","piel sensible facial","programa integral facial",
-  "cosméticos médicos facial","edad recomendada facial","modalidad premium facial","flacidez leve cuello facial","maquillaje ligero facial",
-  "certificaciones médicas facial","acné leve facial","consulta virtual gratuita facial","bolsas ojos facial","tarifa por zona facial",
-  "melasma facial","tono piel facial","seguimiento whatsapp facial","protector solar facial","semanas seguidas facial",
-  "paquetes múltiples facial","firmeza rostro facial","preventivo facial","horarios flexibles facial","lunares facial",
-  "flacidez leve facial","instructivo post facial","tecnología no invasiva facial","piel alérgica facial","fidelidad facial",
-  "aspecto general piel facial","cosmética activa facial","reservas online facial","fotos progreso facial","tono apagado facial",
-  "paquete facial corporal","labios ojos facial","evitar descamación facial","rosácea leve facial","piel contaminada facial",
-  "domicilio facial","prevención envejecimiento facial","capas tratamiento facial","higiene facial","piel seca facial",
-  "tonos irregulares facial","frecuencia facial","firmeza general facial","asesoría gratuita facial","acné quístico controlado facial",
-  "reservas whatsapp facial","respaldo médico facial","textura gruesa facial","medicamentos tópicos facial","paquete 3 sesiones facial",
-  "tratamiento estético previo facial","marcas expresión facial","seguimiento facial","uso retinol facial","luminosidad sostenida facial",
-  "deporte diario facial","bono facial regalo","firmeza pómulos mandíbula facial","marcas recientes acné facial","resultados naturales visibles facial"
-];
-
-// === UNIÓN SIN DUPLICAR ===
-const conjunto = new Set([...memoria, ...nuevasFrases]);
-fs.writeFileSync("contexto_memoria.json", JSON.stringify([...conjunto], null, 2));
-console.log(`✅ Se añadieron ${nuevasFrases.length} frases nuevas. Total actual: ${conjunto.size}`);
+export function cargarContexto() {
+  try {
+    const data = fs.readFileSync("./contexto_memoria.json", "utf8");
+    console.log("🧩 Contexto cargado en memoria local");
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("⚠️ No se pudo cargar el contexto, iniciando vacío");
+    return {};
+  }
+}
