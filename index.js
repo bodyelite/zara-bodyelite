@@ -6,6 +6,7 @@ import { procesarMensaje } from "./intents.js";
 import { generarRespuesta } from "./responses.js";
 import { sendMessage } from "./sendMessage.js";
 import { guardarContexto, cargarContexto, aprenderNuevaFrase } from "./memoria.js";
+import { entrenarIA } from "./entrenador.js";
 
 dotenv.config();
 const app = express();
@@ -17,6 +18,7 @@ const LOG_PATH = "./logs/conversaciones.json";
 if (!fs.existsSync("./logs")) fs.mkdirSync("./logs");
 if (!fs.existsSync(LOG_PATH)) fs.writeFileSync(LOG_PATH, "[]");
 
+// ======= VERIFICACIÓN WEBHOOK =======
 app.get("/webhook", (req, res) => {
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query["hub.mode"];
@@ -26,17 +28,20 @@ app.get("/webhook", (req, res) => {
   else res.sendStatus(403);
 });
 
+// ======= PROCESAMIENTO DE MENSAJES =======
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
     if (message?.text) {
       const from = message.from;
       const texto = message.text.body.toLowerCase().trim();
-      console.log(`📩 ${from}: ${texto}`);
+
+      console.log(`📩 Mensaje recibido: ${texto}`);
 
       const tipo = procesarMensaje(texto, contexto);
       const respuesta = generarRespuesta(tipo, texto, contexto);
 
+      // Guardar conversación
       const logs = JSON.parse(fs.readFileSync(LOG_PATH, "utf8"));
       const ahora = new Date().toLocaleString("es-CL");
       logs.push({ rol: "user", texto, hora: ahora });
@@ -44,7 +49,7 @@ app.post("/webhook", async (req, res) => {
       fs.writeFileSync(LOG_PATH, JSON.stringify(logs, null, 2));
 
       await sendMessage(from, respuesta);
-      console.log(`✅ ${from} ← ${respuesta.slice(0, 60)}...`);
+      console.log(`✅ Respuesta enviada a ${from}`);
 
       contexto[from] = { ultimo: texto, tipo };
       guardarContexto(contexto);
@@ -57,23 +62,33 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+// ======= MONITOR DE CONVERSACIONES =======
 app.get("/monitor", (req, res) => {
   try {
     const conversaciones = JSON.parse(fs.readFileSync(LOG_PATH, "utf8"));
     const html = `
-    <html><head><title>Monitor Zara</title></head>
-    <body style="font-family:sans-serif;">
-      <h2>💬 Monitor de Conversaciones - Zara</h2>
+    <html><head><title>Zara Monitor</title></head>
+    <body style="font-family:sans-serif;background:#fafafa;">
+      <h2>💬 Conversaciones - Zara IA</h2>
       ${conversaciones.map(c => `
-        <div style="margin:10px;padding:10px;background:${c.rol==="user"?"#eee":"#cce0ff"};border-radius:8px;">
+        <div style="margin:6px;padding:10px;border-radius:8px;background:${c.rol==="user"?"#eee":"#cce0ff"};">
           <b>${c.rol==="user"?"Usuario":"Zara"}:</b> ${c.texto}
-          <div style="font-size:11px;color:#555;">${c.hora}</div>
+          <div style="font-size:11px;color:#666;">${c.hora}</div>
         </div>`).join("")}
     </body></html>`;
     res.send(html);
   } catch {
-    res.send("Sin conversaciones.");
+    res.send("Sin conversaciones registradas.");
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Zara IA activa y aprendiendo en puerto ${PORT}`));
+// ======= EVENTO DE CLIC EN ENLACE RESERVO =======
+app.get("/reservado", async (req, res) => {
+  const cliente = req.query.user || "usuario";
+  const mensaje = `✅ Gracias ${cliente}! Tu reserva fue registrada con éxito en Body Elite. Te recordaremos 12 horas antes de tu cita.`;
+  await sendMessage(process.env.PHONE_NUMBER_ID, mensaje);
+  res.send("Confirmación enviada.");
+});
+
+// ======= INICIO =======
+app.listen(PORT, () => console.log(`✅ Zara IA contextual activa en puerto ${PORT}`));
