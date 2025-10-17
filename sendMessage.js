@@ -1,34 +1,29 @@
 import fetch from "node-fetch";
+import dotenv from "dotenv";
+dotenv.config();
 
-export async function sendMessage(to, body) {
-  const token = process.env.WHATSAPP_TOKEN; // corregido
-  const phone_number_id = process.env.PHONE_NUMBER_ID;
-
-  const url = `https://graph.facebook.com/v17.0/${phone_number_id}/messages`;
-
-  const payload = {
-    messaging_product: "whatsapp",
-    to,
-    text: { body },
-  };
-
+export async function sendMessage(to, text) {
   try {
-    const res = await fetch(url, {
+    const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
+    const payload = {
+      messaging_product: "whatsapp",
+      to,
+      type: "text",
+      text: { body: text.replace(/\s+/g, " ").trim() }
+    };
+
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      console.error("❌ Error al enviar mensaje:", data);
-    } else {
-      console.log(`✅ Mensaje enviado a ${to}: ${body.slice(0, 50)}...`);
-    }
-  } catch (err) {
-    console.error("❌ Error de conexión con API WhatsApp:", err);
+    const data = await response.json();
+    console.log("📤 Enviado a WhatsApp:", JSON.stringify(data));
+  } catch (error) {
+    console.error("❌ Error enviando mensaje:", error.message);
   }
 }
