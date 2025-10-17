@@ -24,97 +24,65 @@ async function sendMessage(to, text) {
   }
 }
 
-// === BASE DE RESPUESTAS ===
-const responses = {
-  saludo: "👋 ¡Hola! Soy Zara, asistente de Body Elite. Entiendo lo importante que es sentirte bien contigo. Puedo ayudarte a conocer tratamientos, precios o agendar tu diagnóstico gratuito. 🌸 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+// === RESPUESTAS BASE ===
+const respuestas = {
+  saludo: "👋 ¡Hola! Soy Zara, asistente de Body Elite. Entiendo lo importante que es sentirte bien contigo. Puedo orientarte con tratamientos, tecnologías o agendar tu diagnóstico gratuito. 🌸 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  agendar: "📅 Agenda tu diagnóstico gratuito con nuestro sistema IA aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+  agendar: "📅 Agenda tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
   no_entendido: "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  // === TRATAMIENTOS (más cercanos, con beneficios IA) ===
-  face_elite: "👑 *Face Élite* ($358.400). Un tratamiento facial de precisión con IA que combina HIFU 12D, radiofrecuencia y Pink Glow. Trabaja en capas profundas (SMAS) para redefinir contornos y mejorar firmeza. 💆‍♀️ No duele, solo sientes calor leve. 4 a 6 sesiones según diagnóstico. Nuestra IA analiza tu piel para ajustar intensidad y profundidad. ✨ Ideal si buscas levantar, tonificar y rejuvenecer sin cirugía.",
+  // === PLANES SEGÚN ZONA ===
+  abdomen: "💬 Para la zona abdominal existen varias opciones según el tipo de grasa o flacidez que presente la piel. Los tratamientos más indicados son *Lipo Body Elite*, *Lipo Reductiva* y *Lipo Express*. \n\n🔹 *Lipo Body Elite* combina HIFU 12D, cavitación, radiofrecuencia y EMS Sculptor. Trabaja grasa y músculo simultáneamente, moldeando cintura y tensando piel. \n🔹 *Lipo Reductiva* utiliza HIFU 12D y radiofrecuencia para reducir grasa y celulitis sin cirugía. \n🔹 *Lipo Express* integra cavitación, radiofrecuencia y estimulación muscular rápida para definir la zona.\n\nNo duelen, se sienten cálidos o con leves contracciones. Normalmente se realizan entre 8 y 12 sesiones, 1 a 2 veces por semana. 🌿 Lo ideal es realizar una evaluación gratuita para analizar tu tipo de tejido y definir el protocolo más efectivo para ti. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  face_antiage: "💫 *Face Antiage* ($281.600). Combina HIFU 12D, radiofrecuencia y Pink Glow regenerativo. Rejuvenece la piel desde el interior, mejora textura y elasticidad. Nuestra IA ajusta la energía según tu tipo de piel, logrando resultados naturales. 🌷 Sin dolor, sin tiempo de recuperación. 4 a 6 sesiones recomendadas.",
+  muslos: "🍃 Para muslos y piernas podemos aplicar *Lipo Focalizada Reductiva* o *Body Tensor*, según el diagnóstico. \n\n🔹 *Lipo Focalizada Reductiva*: cavitación y radiofrecuencia controladas por IA que disuelven grasa localizada y mejoran la textura de la piel. \n🔹 *Body Tensor*: radiofrecuencia con luz LED ámbar que reafirma y mejora elasticidad. \n\nSon indoloros, se sienten cálidos, y se recomiendan entre 6 y 8 sesiones con frecuencia semanal. 🌸 Lo mejor es agendar una evaluación gratuita para determinar qué combinación es ideal para ti. 🗓️ 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  face_light: "🌸 *Face Light* ($128.800). Limpieza facial con luz LED inteligente roja y amarilla, que estimula colágeno y uniforma tono. Ideal para piel joven o primeros signos de fatiga. 💆‍♀️ Relajante e indoloro, 3 a 4 sesiones.",
+  gluteos: "🍑 Para glúteos te recomiendo el plan *Push Up* o *Body Fitness*. \n\n🔹 *Push Up*: combina radiofrecuencia y EMS Sculptor para levantar y tonificar. \n🔹 *Body Fitness*: sesiones de contracción muscular profunda (20 000 en 30 min). \n\nAmbos tratamientos son indoloros, con sensación de contracción intensa y segura. Frecuencia: 2 sesiones semanales. 🌷 Agenda una evaluación gratuita para medir firmeza y definir tu plan personalizado 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  face_smart: "🌿 *Face Smart* ($198.400). Combina limpieza profunda, radiofrecuencia y Pink Glow. Aumenta hidratación y firmeza. Nuestra IA regula temperatura y energía para mayor seguridad. 🔹 Indoloro, se recomienda en piel cansada o deshidratada. 4 sesiones promedio.",
+  brazos: "💪 En brazos recomendamos *Body Tensor* o *Lipo Focalizada Reductiva*. \n\n🔹 *Body Tensor*: radiofrecuencia y LED ámbar para flacidez y firmeza. \n🔹 *Lipo Focalizada*: cavitación y radiofrecuencia para reducir grasa localizada en la parte posterior. \n\nNo duele, solo se percibe calor suave. Se realizan 4 a 6 sesiones semanales. 🌼 Lo ideal es agendar una evaluación gratuita para analizar tu tono muscular y tipo de piel 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  full_face: "🌟 *Full Face* ($584.000). Protocolo integral rostro–cuello–escote con HIFU 12D, radiofrecuencia y Pink Glow. La IA adapta parámetros según tu diagnóstico facial digital, maximizando resultados. 💫 6 sesiones, resultados desde la primera.",
-
-  lipo_focalizada: "🔥 *Lipo Focalizada Reductiva* ($348.800). Cavitación y radiofrecuencia guiadas por IA. Rompe grasa localizada y reafirma piel. 💪 No invasiva, sin dolor. 6 a 8 sesiones. La IA ajusta profundidad y energía según densidad grasa detectada.",
-
-  lipo_express: "⚡ *Lipo Express* ($432.000). Cavitación + radiofrecuencia + EMS Sculptor. La IA mide progresos y ajusta intensidad muscular. Reduce grasa, tonifica y mejora flacidez. 💥 Ideal si hay más de 6 kg de exceso o post parto. 8 sesiones promedio.",
-
-  lipo_reductiva: "💥 *Lipo Reductiva* ($480.000). HIFU 12D + cavitación + radiofrecuencia. Reestructura tejido adiposo y mejora celulitis. La IA controla temperatura para máxima seguridad. 💫 Sin cirugía, sin dolor, visible desde la 2ª sesión.",
-
-  lipo_body_elite: "🏆 *Lipo Body Elite* ($664.000). Nuestro tratamiento estrella integral con IA. Combina HIFU 12D, cavitación, radiofrecuencia y EMS Sculptor. Reduce grasa, tonifica músculo y mejora textura de piel. 🔥 12 sesiones, resultados clínicos visibles. Nuestra IA analiza tu progreso para ajustar cada fase.",
-
-  body_tensor: "💪 *Body Tensor* ($232.000). Radiofrecuencia + LED ámbar inteligente. Reafirma y mejora elasticidad cutánea en brazos, abdomen o piernas. 🌼 IA regula calor según la zona tratada. Indoloro. 4 a 6 sesiones.",
-
-  body_fitness: "🏋️ *Body Fitness* ($360.000). EMS Sculptor con control IA. Simula 20.000 contracciones musculares en 30 minutos. Mejora fuerza y tono en abdomen, glúteos y piernas. 💥 Sin dolor, sensación de contracción intensa pero segura. 6 sesiones promedio.",
-
-  push_up: "🍑 *Push Up* ($376.000). Reafirma y eleva glúteos con EMS Sculptor y radiofrecuencia. La IA adapta la potencia al tipo muscular. Resultados naturales y progresivos. 💫 Indoloro, visible desde la 3ª sesión.",
-
-  diferencias: {
-    face_elite_vs_antiage: "💡 *Face Élite* actúa más profundo (SMAS) y trata cuello/papada. *Face Antiage* regenera superficie y firmeza media. Ambos usan IA para ajustar energía y profundidad.",
-    lipo_body_elite_vs_reductiva: "💡 *Lipo Body Elite* trabaja grasa y músculo con EMS Sculptor e IA. *Lipo Reductiva* se enfoca solo en grasa y contorno."
-  }
+  rostro: "🌸 Para rostro y papada los tratamientos más efectivos son *Face Élite*, *Face Antiage* y *Full Face*. \n\n🔹 *Face Élite*: combina HIFU 12D, radiofrecuencia y Pink Glow, actuando en profundidad para levantar y reafirmar contornos. \n🔹 *Face Antiage*: radiofrecuencia + HIFU 12D + Pink Glow regenerativo para suavizar arrugas. \n🔹 *Full Face*: trabajo integral rostro–cuello–escote con IA que ajusta energía según diagnóstico. \n\nSon relajantes, sin dolor. Entre 4 y 6 sesiones según objetivo. 💆‍♀️ Te recomiendo agendar una evaluación gratuita para revisar firmeza y textura de tu piel 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
 };
 
-// === DETECTOR DE EMOCIONES ===
+// === DETECCIÓN DE EMOCIÓN ===
 function detectarEmocion(text) {
-  const tristeza = ["triste", "pena", "mal", "bajón", "insegura", "vergüenza"];
-  const frustracion = ["no puedo", "me cuesta", "no logro", "cansada", "frustrada"];
-  const esperanza = ["quiero mejorar", "me gustaría", "necesito cambiar", "quiero sentirme mejor"];
-  if (tristeza.some(p => text.includes(p))) return "💛 Entiendo cómo te sientes. Muchas personas llegan con esa misma sensación y logran cambiarla. En Body Elite te acompañamos paso a paso, con tecnología y contención humana. 💫 Cuéntame, ¿te gustaría que te recomiende algo suave para comenzar?";
-  if (frustracion.some(p => text.includes(p))) return "🤍 No te preocupes, estás en el lugar correcto. Todo lo que hacemos en Body Elite es sin dolor y con resultados reales. Nuestra IA ajusta la intensidad para tu cuerpo y comodidad. ¿Quieres que te diga cuál sería el mejor punto de partida?";
-  if (esperanza.some(p => text.includes(p))) return "✨ Me alegra escucharte con esa motivación. Con nuestros tratamientos guiados por IA podemos crear un plan a tu medida. Cuéntame qué zona quieres trabajar y te explico la mejor opción.";
+  const tristeza = ["triste", "pena", "mal", "insegura", "vergüenza", "bajón"];
+  const frustracion = ["no puedo", "me cuesta", "frustrada", "agotada", "rendida"];
+  const esperanza = ["quiero mejorar", "necesito cambiar", "me gustaría", "quiero sentirme mejor"];
+  if (tristeza.some(p => text.includes(p))) return "💛 Entiendo cómo te sientes. En Body Elite muchas personas comenzaron igual y hoy se sienten más seguras. Estoy para acompañarte y guiarte paso a paso. ¿Quieres que te recomiende algo para comenzar?";
+  if (frustracion.some(p => text.includes(p))) return "🤍 No te preocupes, estás en el lugar correcto. Nuestros tratamientos son sin dolor y con resultados reales. Usamos IA que adapta cada sesión a tu cuerpo. ¿Te gustaría que te explique cuál sería el mejor punto de inicio?";
+  if (esperanza.some(p => text.includes(p))) return "✨ Me alegra escuchar eso. Con tecnología avanzada e inteligencia artificial, personalizamos cada plan según tu cuerpo. Cuéntame qué zona te gustaría trabajar y te explico cómo lo hacemos.";
   return null;
 }
 
-// === DETECTOR PRINCIPAL ===
+// === DETECCIÓN DE INTENCIÓN ===
 function detectarIntencion(text) {
   text = text.toLowerCase();
 
   const emocion = detectarEmocion(text);
   if (emocion) return emocion;
 
-  if (text.includes("hola") || text.includes("buenas")) return responses.saludo;
-  if (text.includes("agenda") || text.includes("agendar")) return responses.agendar;
+  if (text.includes("hola") || text.includes("buenas")) return respuestas.saludo;
+  if (text.includes("agenda") || text.includes("agendar")) return respuestas.agendar;
 
-  // Faciales
-  if (text.includes("arrugas") || text.includes("papada") || text.includes("flacidez cara")) return responses.face_antiage;
-  if (text.includes("contorno") || text.includes("rejuvenecer")) return responses.face_elite;
-  if (text.includes("limpieza")) return responses.face_light;
+  // ZONAS CORPORALES / FACIALES
+  if (text.includes("abdomen") || text.includes("barriga") || text.includes("vientre")) return respuestas.abdomen;
+  if (text.includes("muslo") || text.includes("pierna")) return respuestas.muslos;
+  if (text.includes("gluteo") || text.includes("trasero") || text.includes("cola")) return respuestas.gluteos;
+  if (text.includes("brazo") || text.includes("brazos")) return respuestas.brazos;
+  if (text.includes("cara") || text.includes("rostro") || text.includes("papada") || text.includes("cuello")) return respuestas.rostro;
 
-  // Corporales
-  if (text.includes("muslo") || text.includes("pierna")) return responses.lipo_focalizada;
-  if (text.includes("abdomen") || text.includes("barriga") || text.includes("estómago")) return responses.lipo_body_elite;
-  if (text.includes("cintura") || text.includes("flanco")) return responses.lipo_reductiva;
-  if (text.includes("glúteo") || text.includes("trasero")) return responses.push_up;
-  if (text.includes("brazos") || text.includes("brazo")) return responses.body_tensor;
-  if (text.includes("celulitis")) return responses.lipo_reductiva;
-  if (text.includes("flacidez")) return responses.body_tensor;
-  if (text.includes("tonificar") || text.includes("músculo")) return responses.body_fitness;
-  if (text.includes("grasa localizada") || text.includes("grasa")) return responses.lipo_express;
-
-  // Diferencias
-  if (text.includes("diferencia") || text.includes("distinto")) {
-    if (text.includes("face elite") && text.includes("antiage")) return responses.diferencias.face_elite_vs_antiage;
-    if (text.includes("lipo body elite") && text.includes("reductiva")) return responses.diferencias.lipo_body_elite_vs_reductiva;
+  // Solicitud de precios
+  if (text.includes("precio") || text.includes("valor") || text.includes("cuánto")) {
+    return "💰 Los precios varían según el diagnóstico y la zona a tratar, pero los planes comienzan *desde $232.000 CLP*. Lo más importante es evaluar primero tu caso para personalizar la energía y duración. 🌿 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  // Consultas generales
-  if (text.includes("consiste") || text.includes("duel") || text.includes("sesion") || text.includes("cómo funciona") || text.includes("tecnolog")) {
-    return "💬 Todos nuestros tratamientos combinan tecnologías como HIFU 12D, radiofrecuencia, cavitación, EMS Sculptor y Pink Glow, controladas por inteligencia artificial para máxima precisión y seguridad. 🌿 Son indoloros, personalizados y con resultados visibles desde la primera sesión. 🗓️ Puedes agendar tu diagnóstico aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  // Explicaciones técnicas
+  if (text.includes("tecnolog") || text.includes("cómo funciona") || text.includes("duel") || text.includes("sesion") || text.includes("frecuencia")) {
+    return "🤖 En Body Elite usamos tecnologías no invasivas: HIFU 12D (ultrasonido focalizado para grasa profunda), Cavitación (rompe adipocitos), Radiofrecuencia (estimula colágeno y firmeza), EMS Sculptor (contracciones musculares), y Pink Glow (péptidos regenerativos). 💆‍♀️ Todos los tratamientos son sin dolor y se personalizan mediante inteligencia artificial que calibra energía y frecuencia según tu diagnóstico. 🗓️ Puedes agendar tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  if (text.includes("precio") || text.includes("valor"))
-    return "💰 Los precios dependen del plan elegido. Puedo explicarte el tratamiento que te interese o agendar tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-
-  return responses.no_entendido;
+  return respuestas.no_entendido;
 }
 
 // === WEBHOOK META ===
@@ -126,7 +94,7 @@ app.get("/webhook", (req, res) => {
   else res.sendStatus(403);
 });
 
-// === RECEPCIÓN MENSAJES ===
+// === RECEPCIÓN DE MENSAJES ===
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
@@ -135,17 +103,14 @@ app.post("/webhook", async (req, res) => {
 
     const from = message.from?.trim();
     const text = message.text?.body?.toLowerCase().trim() || "";
-
     if (!from) return res.sendStatus(200);
 
     if (text.includes("https://agendamiento.reservo.cl")) {
-      for (const numero of AVISOS) {
-        await sendMessage(numero, `📢 Aviso: ${from} hizo clic en el enlace de agenda.`);
-      }
+      for (const n of AVISOS) await sendMessage(n, `📢 Aviso: ${from} hizo clic en el enlace de agenda.`);
     }
 
     const respuesta = detectarIntencion(text);
-    await sendMessage(from, respuesta || responses.no_entendido);
+    await sendMessage(from, respuesta || respuestas.no_entendido);
     res.sendStatus(200);
   } catch (err) {
     console.error("❌ Error al procesar mensaje:", err.message);
@@ -154,4 +119,4 @@ app.post("/webhook", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("✅ Zara operativa con IA emocional en puerto", PORT));
+app.listen(PORT, () => console.log("✅ Zara operativa con comprensión por zona y empatía en puerto", PORT));
