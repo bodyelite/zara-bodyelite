@@ -9,102 +9,88 @@ app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.ZARA_TOKEN;
 const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN;
-const AVISOS = ["+56912345678", "+56987654321"]; // números de aviso interno
+const AVISOS = ["+56912345678", "+56987654321"]; // números internos de aviso
 
-// --- FUNCIONES ---
+// === FUNCIÓN ENVÍO DE MENSAJES ===
 async function sendMessage(to, text) {
   const url = "https://graph.facebook.com/v17.0/" + process.env.PHONE_NUMBER_ID + "/messages";
   const data = { messaging_product: "whatsapp", to, text: { body: text } };
   try {
     await axios.post(url, data, {
-      headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, "Content-Type": "application/json" }
     });
   } catch (err) {
     console.error("Error al enviar mensaje:", err.response?.data || err.message);
   }
 }
 
-// --- RESPUESTAS ---
+// === RESPUESTAS ===
 const responses = {
-  saludo: "👋 ¡Hola! Soy Zara, asistente de Body Elite. Puedo ayudarte a conocer nuestros tratamientos, precios o agendar tu diagnóstico gratuito. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+  saludo: "👋 ¡Hola! Soy Zara, asistente de Body Elite. Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
   agendar: "📅 Agenda tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
   no_entendido: "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  // === FACIALES ===
-  limpieza_facial_full: "💧 *Limpieza Facial Full* ($120.000 / 6 sesiones). Elimina impurezas, células muertas y puntos negros. Mejora textura, luminosidad y absorción de productos. Usa ultrasonido, vapor ozono, extracción y mascarilla hidratante. Ideal para piel grasa, mixta o con tendencia acneica. Zonas: rostro completo.",
-  rf_facial: "⚡ *Radiofrecuencia Facial* ($60.000 / 3 sesiones). Estimula colágeno I y III mediante calor profundo. Reafirma la piel, reduce líneas finas y mejora elasticidad sin cirugía. Tecnología: radiofrecuencia multipolar. Zonas: rostro, cuello, papada.",
-  face_light: "✨ *Face Light* ($128.800). Limpieza, radiofrecuencia y LED rojo. Mejora textura, luminosidad y tono. Ideal para piel joven o primeros signos de envejecimiento.",
-  face_smart: "🌸 *Face Smart* ($198.400). Limpieza profunda, radiofrecuencia y Pink Glow. Hidrata, reafirma y uniforma el tono. Ideal para pieles deshidratadas o con fatiga.",
-  face_inicia: "🌿 *Face Inicia* ($270.400). Combina HIFU 12D + radiofrecuencia + Pink Glow. Activa colágeno y mejora firmeza. Ideal para arrugas incipientes o flacidez leve.",
-  face_antiage: "💫 *Face Antiage* ($281.600). HIFU 12D + radiofrecuencia + Pink Glow. Rejuvenece rostro, reduce arrugas y redefine contornos. Ideal desde los 35 años.",
-  face_elite: "👑 *Face Élite* ($358.400). Plan premium con HIFU 12D intensivo, radiofrecuencia y Pink Glow avanzado. Corrige flacidez, redefine contornos y mejora textura global.",
-  full_face: "🌟 *Full Face* ($584.000). Integral rostro-cuello-escote. HIFU 12D, radiofrecuencia, Pink Glow y LED. Rejuvenecimiento total sin cirugía.",
+  // === PLANES FACIALES ===
+  face_elite: "👑 *Face Élite* ($358.400). HIFU 12D intensivo + radiofrecuencia + Pink Glow. Rejuvenece rostro, cuello y papada. Corrige flacidez, redefine contornos y mejora textura global.",
+  face_antiage: "💫 *Face Antiage* ($281.600). HIFU 12D + radiofrecuencia + Pink Glow. Rejuvenece rostro y reduce arrugas sin cirugía.",
+  face_smart: "🌸 *Face Smart* ($198.400). Limpieza, radiofrecuencia y Pink Glow. Hidrata, reafirma y mejora tono.",
+  face_light: "✨ *Face Light* ($128.800). Limpieza + LED rojo. Ideal para piel joven o primeros signos de envejecimiento.",
+  full_face: "🌟 *Full Face* ($584.000). HIFU 12D + radiofrecuencia + Pink Glow + LED. Rejuvenecimiento total rostro, cuello y escote.",
 
-  // === CORPORALES ===
-  lipo_focalizada_reductiva: "🔥 *Lipo Focalizada Reductiva* ($348.800). Cavitación + radiofrecuencia. Disminuye grasa localizada y moldea abdomen, cintura o muslos.",
-  lipo_express: "⚡ *Lipo Express* ($432.000). Cavitación + radiofrecuencia + EMS Sculptor. Reduce volumen y tonifica músculo. Ideal para exceso >6 kg o flacidez post dieta.",
-  lipo_reductiva: "💥 *Lipo Reductiva* ($480.000). HIFU 12D + cavitación + radiofrecuencia. Reduce grasa, mejora celulitis y define contornos.",
-  lipo_body_elite: "🏆 *Lipo Body Elite* ($664.000). HIFU 12D + cavitación + radiofrecuencia + EMS Sculptor. Reducción grasa + tonificación muscular en 12 semanas.",
-  body_tensor: "💪 *Body Tensor* ($232.000). Radiofrecuencia + LED ámbar. Reafirma y mejora elasticidad en brazos, abdomen o muslos.",
-  body_fitness: "🏋️ *Body Fitness* ($360.000). EMS Sculptor: 20.000 contracciones/30 min. Fortalece abdomen, glúteos o piernas. Mejora tono muscular.",
+  // === PLANES CORPORALES ===
+  lipo_focalizada: "🔥 *Lipo Focalizada Reductiva* ($348.800). Cavitación + radiofrecuencia. Reduce grasa localizada en abdomen, cintura o muslos.",
+  lipo_express: "⚡ *Lipo Express* ($432.000). Cavitación + radiofrecuencia + EMS Sculptor. Reduce volumen y tonifica músculos. Ideal si hay más de 6 kg extra.",
+  lipo_reductiva: "💥 *Lipo Reductiva* ($480.000). HIFU 12D + cavitación + radiofrecuencia. Reduce grasa, celulitis y mejora contorno corporal.",
+  lipo_body_elite: "🏆 *Lipo Body Elite* ($664.000). HIFU 12D + cavitación + radiofrecuencia + EMS Sculptor. Reduce grasa y tonifica músculos en abdomen, flancos y glúteos.",
+  body_tensor: "💪 *Body Tensor* ($232.000). Radiofrecuencia + LED ámbar. Reafirma piel flácida en brazos, abdomen o piernas.",
+  body_fitness: "🏋️ *Body Fitness* ($360.000). EMS Sculptor: contracciones musculares profundas. Fortalece abdomen, glúteos o piernas.",
   push_up: "🍑 *Push Up* ($376.000). EMS Sculptor + radiofrecuencia. Eleva y tonifica glúteos sin cirugía. Efecto lifting natural.",
 
   // === DIFERENCIAS ===
   diferencias: {
-    face_elite_vs_antiage: "💡 *Face Élite* trabaja más profundo (HIFU 12D intensivo, rostro y cuello). *Face Antiage* se enfoca en firmeza y regeneración celular superficial.",
-    lipo_body_elite_vs_reductiva: "💡 *Lipo Body Elite* incluye EMS Sculptor, actúa sobre grasa y músculo. *Lipo Reductiva* solo trabaja reducción grasa y contorno."
+    face_elite_vs_antiage: "💡 *Face Élite* actúa más profundo y trata cuello/papada. *Face Antiage* se centra en firmeza y regeneración superficial.",
+    lipo_body_elite_vs_reductiva: "💡 *Lipo Body Elite* trabaja grasa y músculo con EMS Sculptor. *Lipo Reductiva* solo grasa y contorno."
   }
 };
 
-// --- INTENTS ---
+// === DETECTOR DE INTENCIÓN ===
 function detectarIntencion(text) {
   text = text.toLowerCase();
 
+  // saludos y agendamiento
   if (text.includes("hola") || text.includes("buenas")) return responses.saludo;
   if (text.includes("agenda") || text.includes("agendar")) return responses.agendar;
 
-  const mapa = {
-    "limpieza facial": responses.limpieza_facial_full,
-    "radiofrecuencia": responses.rf_facial,
-    "face light": responses.face_light,
-    "face smart": responses.face_smart,
-    "face inicia": responses.face_inicia,
-    "face antiage": responses.face_antiage,
-    "face elite": responses.face_elite,
-    "full face": responses.full_face,
-    "lipo focalizada": responses.lipo_focalizada_reductiva,
-    "lipo express": responses.lipo_express,
-    "lipo reductiva": responses.lipo_reductiva,
-    "lipo body elite": responses.lipo_body_elite,
-    "body tensor": responses.body_tensor,
-    "body fitness": responses.body_fitness,
-    "push up": responses.push_up
-  };
+  // --- FACIALES
+  if (text.includes("arrugas") || text.includes("flacidez cara") || text.includes("papada")) return responses.face_antiage;
+  if (text.includes("contorno") || text.includes("rejuvenecer")) return responses.face_elite;
+  if (text.includes("limpieza")) return responses.face_light;
 
-  for (const clave in mapa) {
-    if (text.includes(clave)) return mapa[clave];
-  }
+  // --- CORPORALES SEGÚN ZONA
+  if (text.includes("muslo") || text.includes("pierna")) return responses.lipo_focalizada;
+  if (text.includes("abdomen") || text.includes("barriga") || text.includes("estómago")) return responses.lipo_body_elite;
+  if (text.includes("cintura") || text.includes("flanco")) return responses.lipo_reductiva;
+  if (text.includes("glúteo") || text.includes("trasero")) return responses.push_up;
+  if (text.includes("brazos") || text.includes("brazo")) return responses.body_tensor;
+  if (text.includes("celulitis")) return responses.lipo_reductiva;
+  if (text.includes("flacidez")) return responses.body_tensor;
+  if (text.includes("tonificar") || text.includes("músculo")) return responses.body_fitness;
+  if (text.includes("grasa localizada") || text.includes("grasa") || text.includes("reducir")) return responses.lipo_express;
 
-  if ((text.includes("qué es") || text.includes("que es"))) {
-    for (const clave in mapa) {
-      if (text.includes(clave)) return mapa[clave];
-    }
-  }
-
+  // diferencias
   if (text.includes("diferencia") || text.includes("distinto")) {
-    if (text.includes("face elite") && text.includes("antiage"))
-      return responses.diferencias.face_elite_vs_antiage;
-    if (text.includes("lipo body elite") && text.includes("reductiva"))
-      return responses.diferencias.lipo_body_elite_vs_reductiva;
+    if (text.includes("face elite") && text.includes("antiage")) return responses.diferencias.face_elite_vs_antiage;
+    if (text.includes("lipo body elite") && text.includes("reductiva")) return responses.diferencias.lipo_body_elite_vs_reductiva;
   }
 
+  // precios
   if (text.includes("precio") || text.includes("valor"))
-    return "💰 Los precios dependen del plan. Puedo explicarte el tratamiento que te interese o agendar tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "💰 Los precios dependen del plan elegido. Puedo explicarte el tratamiento o agendar tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
   return responses.no_entendido;
 }
 
-// --- WEBHOOK META ---
+// === VERIFICACIÓN META ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -113,23 +99,35 @@ app.get("/webhook", (req, res) => {
   else res.sendStatus(403);
 });
 
-// --- RECEPCIÓN MENSAJES ---
+// === RECEPCIÓN MENSAJES ===
 app.post("/webhook", async (req, res) => {
-  const entry = req.body.entry?.[0];
-  const message = entry?.changes?.[0]?.value?.messages?.[0];
-  const from = message?.from;
-  const text = message?.text?.body?.toLowerCase() || "";
+  try {
+    const entry = req.body.entry?.[0];
+    const message = entry?.changes?.[0]?.value?.messages?.[0];
+    if (!message) return res.sendStatus(200);
 
-  // Aviso al detectar clic de agenda
-  if (text.includes("https://agendamiento.reservo.cl")) {
-    for (const numero of AVISOS) {
-      await sendMessage(numero, `📢 Aviso: ${from} hizo clic en el enlace de agenda.`);
+    const from = message.from?.trim();
+    const text = message.text?.body?.toLowerCase().trim() || "";
+
+    if (!from) {
+      console.error("⚠️ No se recibió número del remitente.");
+      return res.sendStatus(200);
     }
-  }
 
-  const respuesta = detectarIntencion(text);
-  await sendMessage(from, respuesta);
-  res.sendStatus(200);
+    // Aviso cuando clickea agenda
+    if (text.includes("https://agendamiento.reservo.cl")) {
+      for (const numero of AVISOS) {
+        await sendMessage(numero, `📢 Aviso: ${from} hizo clic en el enlace de agenda.`);
+      }
+    }
+
+    const respuesta = detectarIntencion(text);
+    await sendMessage(from, respuesta || responses.no_entendido);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Error al procesar mensaje:", err.message);
+    res.sendStatus(500);
+  }
 });
 
 const PORT = process.env.PORT || 10000;
