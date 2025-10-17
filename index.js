@@ -9,9 +9,9 @@ app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.ZARA_TOKEN;
 const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN;
-const AVISOS = ["+56912345678", "+56987654321"]; // números internos de aviso
+const AVISOS = ["+56912345678", "+56987654321"];
 
-// === FUNCIÓN ENVÍO DE MENSAJES ===
+// === ENVÍO DE MENSAJES ===
 async function sendMessage(to, text) {
   const url = "https://graph.facebook.com/v17.0/" + process.env.PHONE_NUMBER_ID + "/messages";
   const data = { messaging_product: "whatsapp", to, text: { body: text } };
@@ -24,45 +24,55 @@ async function sendMessage(to, text) {
   }
 }
 
-// === RESPUESTAS ===
+// === BASE DE RESPUESTAS ===
 const responses = {
-  saludo: "👋 ¡Hola! Soy Zara, asistente de Body Elite. Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+  saludo: "👋 ¡Hola! Soy Zara, asistente de Body Elite. Entiendo lo importante que es sentirte bien con tu cuerpo. Puedo ayudarte a conocer tratamientos, precios o agendar tu diagnóstico gratuito. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+
   agendar: "📅 Agenda tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+
   no_entendido: "Puedo ayudarte con tratamientos, precios o agendar tu diagnóstico gratuito. 🗓️ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
 
-  // === PLANES FACIALES ===
-  face_elite: "👑 *Face Élite* ($358.400). HIFU 12D intensivo + radiofrecuencia + Pink Glow. Rejuvenece rostro, cuello y papada. Corrige flacidez, redefine contornos y mejora textura global.",
-  face_antiage: "💫 *Face Antiage* ($281.600). HIFU 12D + radiofrecuencia + Pink Glow. Rejuvenece rostro y reduce arrugas sin cirugía.",
-  face_smart: "🌸 *Face Smart* ($198.400). Limpieza, radiofrecuencia y Pink Glow. Hidrata, reafirma y mejora tono.",
-  face_light: "✨ *Face Light* ($128.800). Limpieza + LED rojo. Ideal para piel joven o primeros signos de envejecimiento.",
-  full_face: "🌟 *Full Face* ($584.000). HIFU 12D + radiofrecuencia + Pink Glow + LED. Rejuvenecimiento total rostro, cuello y escote.",
+  // === TRATAMIENTOS CON DETALLES ===
+  face_elite: "👑 *Face Élite* ($358.400). Es un tratamiento facial avanzado que combina HIFU 12D, radiofrecuencia y Pink Glow. Actúa en capas profundas (SMAS) para tensar y rejuvenecer rostro, cuello y papada. 💆‍♀️ No duele, solo se siente un calor suave. Requiere entre 3 y 6 sesiones, con resultados visibles desde la primera. Ideal para flacidez, papada y contorno facial.",
 
-  // === PLANES CORPORALES ===
-  lipo_focalizada: "🔥 *Lipo Focalizada Reductiva* ($348.800). Cavitación + radiofrecuencia. Reduce grasa localizada en abdomen, cintura o muslos.",
-  lipo_express: "⚡ *Lipo Express* ($432.000). Cavitación + radiofrecuencia + EMS Sculptor. Reduce volumen y tonifica músculos. Ideal si hay más de 6 kg extra.",
-  lipo_reductiva: "💥 *Lipo Reductiva* ($480.000). HIFU 12D + cavitación + radiofrecuencia. Reduce grasa, celulitis y mejora contorno corporal.",
-  lipo_body_elite: "🏆 *Lipo Body Elite* ($664.000). HIFU 12D + cavitación + radiofrecuencia + EMS Sculptor. Reduce grasa y tonifica músculos en abdomen, flancos y glúteos.",
-  body_tensor: "💪 *Body Tensor* ($232.000). Radiofrecuencia + LED ámbar. Reafirma piel flácida en brazos, abdomen o piernas.",
-  body_fitness: "🏋️ *Body Fitness* ($360.000). EMS Sculptor: contracciones musculares profundas. Fortalece abdomen, glúteos o piernas.",
-  push_up: "🍑 *Push Up* ($376.000). EMS Sculptor + radiofrecuencia. Eleva y tonifica glúteos sin cirugía. Efecto lifting natural.",
+  face_antiage: "💫 *Face Antiage* ($281.600). Trabaja firmeza y arrugas finas combinando HIFU 12D, radiofrecuencia y Pink Glow regenerativo. Estimula colágeno y mejora textura sin agujas ni dolor. ✨ Se realizan entre 4 y 6 sesiones, con efecto lifting progresivo.",
 
-  // === DIFERENCIAS ===
+  face_smart: "🌸 *Face Smart* ($198.400). Limpieza profunda, radiofrecuencia y Pink Glow. Mejora hidratación, firmeza y luminosidad. Ideal para piel cansada o con fatiga. 🔹 Es totalmente indoloro, se siente tibio y relajante. 4 sesiones promedio.",
+
+  face_light: "✨ *Face Light* ($128.800). Limpieza facial y luz LED roja regeneradora. Aporta brillo y uniformidad. 💆 Ideal para piel joven o primeras líneas. 3 a 4 sesiones, sin molestias.",
+
+  full_face: "🌟 *Full Face* ($584.000). Tratamiento integral rostro–cuello–escote con HIFU 12D, radiofrecuencia, Pink Glow y LED terapia. Corrige flacidez, textura y tono. Resultados visibles desde la primera sesión. 🔸 Recomendado una vez al mes.",
+
+  lipo_focalizada: "🔥 *Lipo Focalizada Reductiva* ($348.800). Cavitación y radiofrecuencia que rompen grasa localizada y mejoran firmeza. Ideal para abdomen, cintura o muslos. 💥 No duele, se siente calor moderado. 6 a 8 sesiones según zona.",
+
+  lipo_express: "⚡ *Lipo Express* ($432.000). Cavitación, radiofrecuencia y EMS Sculptor. Reduce grasa, define y tonifica músculos. Perfecto si hay más de 6 kg de exceso o flacidez post dieta. 💪 No invasivo, sensación de calor y contracciones musculares controladas. 8 sesiones promedio.",
+
+  lipo_reductiva: "💥 *Lipo Reductiva* ($480.000). HIFU 12D + cavitación + radiofrecuencia. Disminuye grasa, mejora celulitis y contorno corporal. 💫 Sin cirugía, sin dolor, sin recuperación. 6 sesiones promedio con resultados medibles.",
+
+  lipo_body_elite: "🏆 *Lipo Body Elite* ($664.000). Es nuestro protocolo más completo: HIFU 12D + Cavitación + Radiofrecuencia + EMS Sculptor. Reduce grasa, reafirma piel y tonifica músculo en abdomen, flancos y glúteos. 🔥 12 sesiones programadas. Sensación tibia y contracciones musculares leves. Resultados visibles desde la 2ª sesión.",
+
+  body_tensor: "💪 *Body Tensor* ($232.000). Radiofrecuencia + LED ámbar. Reafirma y mejora elasticidad en brazos, abdomen o piernas. 🌼 No duele y se realiza en 4 a 6 sesiones. Ideal post baja de peso o flacidez leve.",
+
+  body_fitness: "🏋️ *Body Fitness* ($360.000). EMS Sculptor de alta potencia. Estimula 20.000 contracciones musculares por sesión, fortaleciendo y tonificando. Perfecto para abdomen, glúteos o piernas. 🔹 Se siente contracción intensa pero controlada. 6 sesiones promedio.",
+
+  push_up: "🍑 *Push Up* ($376.000). Eleva y tonifica glúteos sin cirugía. Usa EMS Sculptor y radiofrecuencia para firmeza y volumen natural. 💫 Indoloro y seguro. Resultados visibles en 4 a 6 sesiones.",
+
   diferencias: {
-    face_elite_vs_antiage: "💡 *Face Élite* actúa más profundo y trata cuello/papada. *Face Antiage* se centra en firmeza y regeneración superficial.",
+    face_elite_vs_antiage: "💡 *Face Élite* actúa en capas más profundas y trata cuello/papada. *Face Antiage* se centra en regenerar y tensar superficie facial.",
     lipo_body_elite_vs_reductiva: "💡 *Lipo Body Elite* trabaja grasa y músculo con EMS Sculptor. *Lipo Reductiva* solo grasa y contorno."
   }
 };
 
-// === DETECTOR DE INTENCIÓN ===
+// === DETECCIÓN DE INTENCIÓN ===
 function detectarIntencion(text) {
   text = text.toLowerCase();
 
-  // saludos y agendamiento
+  // saludos
   if (text.includes("hola") || text.includes("buenas")) return responses.saludo;
   if (text.includes("agenda") || text.includes("agendar")) return responses.agendar;
 
   // --- FACIALES
-  if (text.includes("arrugas") || text.includes("flacidez cara") || text.includes("papada")) return responses.face_antiage;
+  if (text.includes("arrugas") || text.includes("papada") || text.includes("flacidez cara")) return responses.face_antiage;
   if (text.includes("contorno") || text.includes("rejuvenecer")) return responses.face_elite;
   if (text.includes("limpieza")) return responses.face_light;
 
@@ -75,12 +85,17 @@ function detectarIntencion(text) {
   if (text.includes("celulitis")) return responses.lipo_reductiva;
   if (text.includes("flacidez")) return responses.body_tensor;
   if (text.includes("tonificar") || text.includes("músculo")) return responses.body_fitness;
-  if (text.includes("grasa localizada") || text.includes("grasa") || text.includes("reducir")) return responses.lipo_express;
+  if (text.includes("grasa localizada") || text.includes("grasa")) return responses.lipo_express;
 
-  // diferencias
+  // --- DIFERENCIAS
   if (text.includes("diferencia") || text.includes("distinto")) {
     if (text.includes("face elite") && text.includes("antiage")) return responses.diferencias.face_elite_vs_antiage;
     if (text.includes("lipo body elite") && text.includes("reductiva")) return responses.diferencias.lipo_body_elite_vs_reductiva;
+  }
+
+  // --- CONSULTAS DE EXPLICACIÓN
+  if (text.includes("consiste") || text.includes("duel") || text.includes("sesion") || text.includes("cómo funciona")) {
+    return "💬 Todos nuestros tratamientos son no invasivos y sin dolor. Combinan aparatología avanzada (HIFU 12D, radiofrecuencia, cavitación, EMS Sculptor y Pink Glow) para reducir grasa, reafirmar y regenerar la piel. Los resultados son progresivos desde la primera sesión y personalizados según diagnóstico. 🗓️ Puedes agendar una evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
   // precios
