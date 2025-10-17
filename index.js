@@ -6,6 +6,17 @@ import { obtenerRespuesta } from './responses.js';
 
 dotenv.config();
 const app = express();
+
+import fs from "fs";
+app.get("/panel", async (req, res) => {
+  try {
+    const data = JSON.parse(fs.readFileSync("./conversaciones.json", "utf8"));
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Panel Zara</title><style>body{font-family:Arial;background:#fafafa;padding:20px;}h2{color:#003366;} .msg{background:#fff;margin-bottom:12px;padding:12px;border-radius:8px;box-shadow:0 0 4px #ccc;} .numero{font-weight:bold;color:#333;} .fecha{color:#777;font-size:12px;}</style></head><body><h2>Conversaciones Zara Body Elite</h2>${data.map(m=>`<div class=msg><div class=numero>${m.numero}</div><div>${m.mensaje}</div><div class=fecha>${m.fecha}</div></div>`).join("")}</body></html>`;
+    res.send(html);
+  } catch (e) {
+    res.status(500).send("Error al leer conversaciones: " + e.message);
+  }
+});
 app.use(bodyParser.json());
 const VERIFY_TOKEN = process.env.ZARA_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
