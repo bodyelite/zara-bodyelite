@@ -1,13 +1,17 @@
-import fs from "fs";
 import express from "express";
+import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
 const app = express();
+const PORT = process.env.PORT || 10000;
 
 app.get("/panel", (req, res) => {
   try {
     const data = JSON.parse(fs.readFileSync("./conversaciones.json", "utf8"));
     const html = `
-    <!DOCTYPE html>
-    <html lang="es">
+      <!DOCTYPE html>
+      <html lang="es">
       <head>
         <meta charset="utf-8">
         <title>Panel Zara Body Elite</title>
@@ -29,11 +33,13 @@ app.get("/panel", (req, res) => {
           </div>
         `).join("")}
       </body>
-    </html>`;
+      </html>`;
     res.send(html);
   } catch (error) {
     res.status(500).send("Error leyendo conversaciones: " + error.message);
   }
 });
 
-app.listen(10000, () => console.log("Panel corriendo en puerto 10000"));
+app.get("/", (req, res) => res.send("Zara activa ✅"));
+
+app.listen(PORT, () => console.log(`🚀 Zara corriendo en puerto ${PORT}`));
