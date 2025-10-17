@@ -1,60 +1,81 @@
 import fetch from "node-fetch";
 
-// ------------------- COMPRENSIÓN SEMÁNTICA Y RESPUESTAS -------------------
-const sinonimos = {
-  abdomen: ["guatita", "barriga", "vientre", "panza", "rollitos", "abdomen"],
-  gluteos: ["trasero", "colita", "pompis", "glúteos", "push up", "levantar trasero"],
-  piernas: ["piernas", "muslos", "flacidez piernas", "celulitis"],
-  brazos: ["brazos", "flacidez brazos"],
-  rostro: ["cara", "piel", "rostro", "arrugas", "papada", "líneas", "flacidez facial", "me veo cansada"],
-  grasa: ["grasa", "reducir grasa", "localizada", "rollos", "grasa corporal"],
-  general: ["hola", "consulta", "tratamientos", "precio", "agendar", "agenda"]
+// ------------------------------------------------------------
+// SISTEMA AVANZADO DE COMPRENSIÓN EMOCIONAL + FLUJO CONVERSACIONAL
+// ------------------------------------------------------------
+const categorias = {
+  saludo: ["hola", "buenas", "buenos dias", "buenas tardes", "consulta", "quisiera saber", "pregunta"],
+  abdomen: ["abdomen", "barriga", "rollitos", "cintura", "grasa", "vientre", "panza"],
+  gluteos: ["gluteos", "glúteos", "trasero", "cola", "pompis", "push up", "levantar"],
+  piernas: ["piernas", "muslos", "celulitis", "flacidez", "retencion", "retención", "drenaje"],
+  brazos: ["brazos", "flacidez brazos", "tonificar"],
+  rostro: ["rostro", "cara", "piel", "arrugas", "papada", "líneas", "ojeras", "seca", "manchas", "flacidez facial"],
+  emociones: ["me siento", "no me gusta", "me veo", "me noto", "insegura", "fea", "cansada", "vieja", "triste"],
+  agendar: ["agendar", "evaluacion", "evaluación", "agenda", "reserva", "diagnostico", "diagnóstico", "quiero", "si"]
 };
 
-// Limpia texto
-function limpiar(texto) {
+function limpiarTexto(texto) {
   return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-// Detecta intención
-function detectarIntencion(texto) {
-  texto = limpiar(texto);
-  for (const [intencion, lista] of Object.entries(sinonimos)) {
-    if (lista.some(palabra => texto.includes(limpiar(palabra)))) return intencion;
+function detectarCategoria(texto) {
+  texto = limpiarTexto(texto);
+  for (const [cat, lista] of Object.entries(categorias)) {
+    if (lista.some(p => texto.includes(limpiarTexto(p)))) return cat;
   }
   return "general";
 }
 
-// Genera respuesta
-function generarRespuesta(texto) {
-  const intencion = detectarIntencion(texto);
+// ------------------------------------------------------------
+// RESPUESTAS EMPÁTICAS Y FLUIDAS CON ENFOQUE CLÍNICO
+// ------------------------------------------------------------
+function generarRespuesta(texto, historial = []) {
+  const cat = detectarCategoria(texto);
+  const saludoPrevio = historial.some(m => /hola|buenas/i.test(m));
 
-  switch (intencion) {
+  // Evitar repetir saludo
+  if (cat === "saludo" && !saludoPrevio) {
+    return "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. Me alegra saludarte 💬. Cuéntame, ¿qué parte de tu cuerpo o rostro te gustaría potenciar o mejorar?";
+  }
+
+  switch (cat) {
     case "abdomen":
-      return "💡 Entiendo perfectamente. En Body Elite tratamos abdomen con Cavitación, Radiofrecuencia y HIFU 12D, tecnologías que reducen grasa y mejoran firmeza. Nuestro diagnóstico IA te ayuda a definir el plan ideal. ¿Quieres agendar tu evaluación gratuita? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💡 Entiendo, el abdomen es una de las zonas más consultadas. En Body Elite tratamos esa área con Cavitación, Radiofrecuencia y HIFU 12D. Reducen grasa localizada, mejoran textura y firmeza. Si quieres, puedo dejarte el acceso directo para agendar tu diagnóstico gratuito 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
     case "gluteos":
-      return "🍑 El tratamiento Push Up combina EMS Sculptor y Radiofrecuencia para levantar y reafirmar glúteos sin cirugía. Logramos un efecto tonificado y natural. ¿Deseas agendar tu diagnóstico gratuito asistido por IA? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "🍑 Perfecto, trabajamos glúteos con EMS Sculptor y Radiofrecuencia, que tonifican, levantan y mejoran la forma. ¿Te gustaría reservar una evaluación gratuita con IA para revisar tu caso? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
     case "piernas":
-      return "💫 Tratamos la celulitis y flacidez en piernas con Cavitación, Radiofrecuencia y HIFU 12D. Mejoramos textura, drenaje y firmeza. ¿Quieres que te recomiende el plan más adecuado según tu diagnóstico IA? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💫 Tratamos celulitis y flacidez en piernas con Cavitación y HIFU 12D. Favorecen drenaje, textura y firmeza. Si deseas, puedo ayudarte a agendar tu diagnóstico corporal gratuito 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
     case "brazos":
-      return "💪 La flacidez de brazos se trabaja con HIFU 12D y Radiofrecuencia, estimulando colágeno y tensando la piel. El diagnóstico gratuito IA define la mejor combinación para ti. ¿Agendamos tu evaluación? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💪 La flacidez en brazos se mejora con Radiofrecuencia y HIFU 12D, estimulando colágeno y tensando la piel. ¿Te gustaría que te deje el link para agendar tu evaluación sin costo? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
     case "rostro":
-      return "✨ En tratamientos faciales usamos HIFU 12D, LED Therapy y Pink Glow para reafirmar, regenerar y rejuvenecer la piel. Si notas arrugas o flacidez, te recomendamos un diagnóstico facial IA sin costo. ¿Quieres agendarlo ahora? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-    case "grasa":
-      return "🔥 Para grasa localizada aplicamos Cavitación, Radiofrecuencia y HIFU 12D, sin cirugía ni dolor. Nuestro diagnóstico corporal IA identifica el plan más efectivo. ¿Agendamos tu evaluación gratuita? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "✨ Entiendo, cuando notamos la piel seca, arrugas o flacidez facial, es buen momento para regenerar. Usamos HIFU 12D, LED Therapy y Pink Glow para rejuvenecer y reafirmar sin cirugía. Puedes reservar tu diagnóstico facial gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
+    case "emociones":
+      return "💬 Te entiendo completamente. A veces no sentirnos bien con nuestro cuerpo afecta cómo nos vemos. En Body Elite abordamos esto con tecnología segura y personalizada. ¿Te gustaría conocer qué tratamiento podría ayudarte?";
+
+    case "agendar":
+      return "Perfecto 🩵. Puedes agendar tu diagnóstico gratuito asistido por IA con nuestro sistema oficial 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
     default:
-      return "👋 ¡Hola! Soy Zara, asistente IA de Body Elite. Puedo orientarte sobre tratamientos corporales y faciales, resolver tus dudas o ayudarte a agendar tu diagnóstico gratuito asistido por IA. ¿Qué zona te gustaría mejorar? 🩵 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💎 En Body Elite contamos con protocolos clínicos personalizados con HIFU 12D, Cavitación, EMS Sculptor y Radiofrecuencia. Cuéntame más sobre lo que quieres mejorar para orientarte con el plan adecuado.";
   }
 }
 
-// ------------------- WEBHOOK DE RESERVAS -------------------
-export async function manejarReserva(req, res) {
-  try {
-    const { nombre, telefono, fecha, hora, tratamiento } = req.body;
-    const mensaje = `📢 Nueva cita registrada en Reservo:\n👤 ${nombre}\n📞 ${telefono}\n🗓 ${fecha} a las ${hora}\n💆 ${tratamiento}`;
-    const destinatarios = ["+56976992187", "+56976578774", "+56977007819"];
+// ------------------------------------------------------------
+// AVISOS INTERNOS AUTOMÁTICOS
+// ------------------------------------------------------------
 
-    for (const numero of destinatarios) {
+// 1️⃣ Aviso cuando el usuario PRESIONA el link de reserva
+export async function notificarClickReserva(numeroUsuario, nombre = "Cliente") {
+  try {
+    const msg = `🔔 ${nombre} ha presionado el enlace de reserva de Body Elite.`;
+    const destinos = ["+56976992187", "+56976578774", "+56977007819"];
+
+    for (const num of destinos) {
       await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
         method: "POST",
         headers: {
@@ -63,22 +84,52 @@ export async function manejarReserva(req, res) {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: numero,
+          to: num,
           type: "text",
-          text: { body: mensaje }
+          text: { body: msg }
+        })
+      });
+    }
+    console.log("✅ Aviso interno: clic en enlace de reserva");
+  } catch (err) {
+    console.error("❌ Error al notificar clic de reserva:", err);
+  }
+}
+
+// 2️⃣ Aviso cuando Reservo registra una reserva
+export async function manejarReserva(req, res) {
+  try {
+    const { nombre, telefono, fecha, hora, tratamiento } = req.body;
+    const msg = `📢 Nueva cita registrada:\n👤 ${nombre}\n📞 ${telefono}\n🗓 ${fecha} ${hora}\n💆 ${tratamiento}`;
+    const destinos = ["+56976992187", "+56976578774", "+56977007819"];
+
+    for (const num of destinos) {
+      await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: num,
+          type: "text",
+          text: { body: msg }
         })
       });
     }
 
-    console.log("✅ Avisos internos enviados");
+    console.log("✅ Avisos internos: nueva cita registrada");
     return res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Error al manejar la reserva:", err);
+    console.error("❌ Error en aviso de nueva cita:", err);
     return res.sendStatus(500);
   }
 }
 
-// ------------------- EXPORTACIÓN PRINCIPAL -------------------
-export function obtenerRespuesta(mensaje) {
-  return generarRespuesta(mensaje);
+// ------------------------------------------------------------
+// EXPORTACIÓN PRINCIPAL
+// ------------------------------------------------------------
+export function obtenerRespuesta(texto, historial = []) {
+  return generarRespuesta(texto, historial);
 }
