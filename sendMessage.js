@@ -1,23 +1,34 @@
 import fetch from "node-fetch";
-const TOKEN = process.env.ZARA_TOKEN;
 
 export async function sendMessage(to, body) {
+  const token = process.env.WHATSAPP_TOKEN; // corregido
+  const phone_number_id = process.env.PHONE_NUMBER_ID;
+
+  const url = `https://graph.facebook.com/v17.0/${phone_number_id}/messages`;
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to,
+    text: { body },
+  };
+
   try {
-    await fetch("https://graph.facebook.com/v19.0/311816848671292/messages", {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${TOKEN}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to,
-        type: "text",
-        text: { body }
-      })
+      body: JSON.stringify(payload),
     });
-    console.log(`📤 Mensaje enviado a ${to}: ${body.slice(0, 50)}...`);
+
+    const data = await res.json();
+    if (!res.ok) {
+      console.error("❌ Error al enviar mensaje:", data);
+    } else {
+      console.log(`✅ Mensaje enviado a ${to}: ${body.slice(0, 50)}...`);
+    }
   } catch (err) {
-    console.error("❌ Error al enviar mensaje:", err);
+    console.error("❌ Error de conexión con API WhatsApp:", err);
   }
 }
