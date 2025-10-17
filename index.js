@@ -62,7 +62,6 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(200);
     res.sendStatus(404);
 const PORT = process.env.PORT || 10000;
-app.get("/panel", (req, res) => {
   import fs from "fs";
   const data = JSON.parse(fs.readFileSync("conversaciones.json", "utf8"));
   let html = `
@@ -128,7 +127,6 @@ app.post("/webhook", (req, res) => {
   console.log(`📩 ${from} → ${mensajeTexto}`);
 // Inserta registro dentro del webhook
     if (mensajeTexto && from) registrarConversacion(from, mensajeTexto);
-// Endpoint /panel para ver los registros
   <head><title>Conversaciones Zara Body Elite</title>
     button { margin-bottom:15px; background:#0056b3; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
   <button onclick="location.reload()">Actualizar</button>
@@ -238,7 +236,6 @@ const LOG_FILE = "./conversaciones.json";
 
 // === PANEL FUNCIONAL UNICO ===
 import fs from "fs";
-app.get("/panel", (req, res) => {
   try {
     const data = JSON.parse(fs.readFileSync("conversaciones.json", "utf8"));
     let html = `
