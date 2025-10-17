@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 const PORT = process.env.PORT || 10000;
 
-// -------- WHATSAPP VERIFY --------
+// -------- VERIFICACIÓN DE META --------
 app.get("/webhook", (req, res) => {
   const verify = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
@@ -31,7 +31,8 @@ app.post("/webhook", async (req, res) => {
         Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
         "Content-Type": "application/json",
       };
-      await fetch(url, {
+
+      const resp = await fetch(url, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -42,16 +43,17 @@ app.post("/webhook", async (req, res) => {
         }),
       });
 
-      console.log("✅ Respuesta enviada:", respuesta);
+      const data = await resp.json();
+      console.log("✅ Respuesta enviada:", data);
     }
     res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Error en webhook:", err);
+    console.error("❌ Error general en webhook:", err);
     res.sendStatus(500);
   }
 });
 
-// -------- CLICK TRACKING --------
+// -------- TRACKING CLICK AGENDA --------
 app.get("/agenda", registrarClickAgenda);
 
 // -------- CONFIRMACIÓN RESERVA --------
