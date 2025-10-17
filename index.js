@@ -17,6 +17,7 @@ const LOG_PATH = "./logs/conversaciones.json";
 if (!fs.existsSync("./logs")) fs.mkdirSync("./logs");
 if (!fs.existsSync(LOG_PATH)) fs.writeFileSync(LOG_PATH, "[]");
 
+// === Webhook de verificación ===
 app.get("/webhook", (req, res) => {
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query["hub.mode"];
@@ -31,40 +32,38 @@ app.get("/webhook", (req, res) => {
   }
 });
 
+// === Procesamiento de mensajes ===
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
     if (message?.text) {
       const from = message.from;
-      const texto = message.text.body.toLowerCase();
+      const texto = message.text.body.toLowerCase().trim();
       console.log(`📩 Mensaje recibido: ${texto}`);
 
-      // Procesamiento de intención
-      const tipo = procesarMensaje(texto);
+      const tipo = procesarMensaje(texto, contexto);
       const respuesta = generarRespuesta(tipo, texto, contexto);
 
-      // Registro de conversación
       const logs = JSON.parse(fs.readFileSync(LOG_PATH, "utf8"));
       const ahora = new Date().toLocaleString("es-CL");
       logs.push({ rol: "user", texto, hora: ahora });
       logs.push({ rol: "zara", texto: respuesta, hora: ahora });
       fs.writeFileSync(LOG_PATH, JSON.stringify(logs, null, 2));
 
-      // Envío de mensaje
       await sendMessage(from, respuesta);
-      console.log(`✅ Respuesta enviada a ${from}: ${respuesta.slice(0, 60)}...`);
+      console.log(`✅ Respuesta enviada: ${respuesta.slice(0, 60)}...`);
 
-      // Actualiza memoria contextual
-      contexto[from] = { ultimo: texto };
+      contexto[from] = { ultimo: texto, tipo };
       guardarContexto(contexto);
     }
     res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Error en procesamiento:", err);
+    console.error("❌ Error procesando mensaje:", err);
     res.sendStatus(500);
   }
 });
 
+// === Monitor de conversaciones ===
 app.get("/monitor", (req, res) => {
   try {
     const conversaciones = JSON.parse(fs.readFileSync(LOG_PATH, "utf8"));
@@ -85,5 +84,5 @@ app.get("/monitor", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Zara operativa con razonamiento, empatía, avisos y monitor activo en puerto ${PORT}`);
+  console.log(`✅ Zara activa con razonamiento, aprendizaje local y monitor web en puerto ${PORT}`);
 });

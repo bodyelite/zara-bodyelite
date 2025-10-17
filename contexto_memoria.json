@@ -1,1 +1,10 @@
-{"ejemplos":[{"palabra":"flacidez","respuesta":"💧 El tratamiento ideal para flacidez es Body Tensor o Body Elite."},{"palabra":"celulitis","respuesta":"💧 Para celulitis recomendamos Lipo Reductiva o Body Elite con cavitación y radiofrecuencia."},{"palabra":"arrugas","respuesta":"✨ Para arrugas se recomienda Face Elite o HIFU facial."}]}
+{
+  "celulitis": ["celulitis", "piel de naranja", "piernas con hoyitos", "grasa localizada", "adiposidad", "muslos", "rollitos", "nódulos grasos", "celulitiss", "celulitisss"],
+  "flacidez": ["flacidez", "piel suelta", "cuerpo suelto", "me cuelga la piel", "tonificar", "reafirmar", "tensar", "levantar glúteos", "tensar abdomen", "piel floja"],
+  "botox": ["botox", "toxina", "expresión", "frente", "patas de gallo", "entrecejo", "relleno", "líneas de expresión"],
+  "lipo": ["lipo", "liposucción", "grasa", "bajar abdomen", "reductivo", "cintura", "vientre", "bajar panza", "sin cirugía"],
+  "facial": ["facial", "cara", "rostro", "piel", "poros", "manchas", "limpieza", "rejuvenecer", "antiage", "face"],
+  "ubicacion": ["ubicados", "donde estan", "direccion", "como llegar", "peñalolen", "lugar", "mapa", "avenida las perdices"],
+  "horario": ["horario", "abren", "cierran", "hora", "sabado", "domingo", "atencion"],
+  "planes": ["planes", "promociones", "precios", "valores", "ofertas", "cuanto cuesta", "valen", "promos"]
+}
