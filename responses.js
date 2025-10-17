@@ -1,134 +1,114 @@
 import fetch from "node-fetch";
 
-// ============================================================
-//  MÓDULO ZARA BODY ELITE - RESPUESTAS HUMANIZADAS Y AVISOS
-// ============================================================
+const LINK_AGENDA = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+const AVISOS = ["56976992187", "56930582147", "56998765432"]; // avisos internos Body Elite
 
-// ------------------------- CATEGORÍAS ------------------------
-const categorias = {
-  saludo: ["hola", "buenas", "consulta", "pregunta", "quiero saber"],
-  abdomen: ["abdomen", "rollitos", "grasa", "cintura", "vientre", "panza", "barriga"],
-  gluteos: ["gluteos", "glúteos", "cola", "trasero", "pompis", "levantar"],
-  piernas: ["piernas", "muslos", "celulitis", "retencion", "retención", "drenaje"],
-  brazos: ["brazos", "flacidez brazos", "tonificar brazos", "brazos sueltos"],
-  rostro: ["rostro", "cara", "piel", "arrugas", "ojeras", "manchas", "flacidez facial", "seca", "manchada"],
-  emociones: ["me siento", "me veo", "fea", "triste", "insegura", "mal", "agotada", "cansada"],
-  tratamientos: ["tratamientos", "tecnologia", "aparato", "procedimiento", "como funcionan"],
-  planes: ["plan", "planes", "packs", "promocion", "promoción", "oferta"],
-  precio: ["precio", "valor", "costo", "cuanto", "vale", "plata"],
-  dolor: ["duele", "dolor", "molesta", "riesgo", "miedo"],
-  agendar: ["agendar", "diagnostico", "evaluacion", "reserva", "agenda"]
-};
+// ---------------------- NÚCLEO DE RESPUESTA INTELIGENTE ----------------------
+export function generarRespuesta(texto) {
+  const msg = texto.toLowerCase();
 
-// ---------------------- LIMPIEZA Y DETECCIÓN -----------------
-function limpiarTexto(txt) {
-  return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-}
-
-function detectarCategoria(txt) {
-  txt = limpiarTexto(txt);
-  for (const [cat, frases] of Object.entries(categorias)) {
-    if (frases.some(f => txt.includes(f))) return cat;
-  }
-  return "general";
-}
-
-// -------------------- RESPUESTAS FLUIDAS ---------------------
-function generarRespuesta(texto, historial = []) {
-  const cat = detectarCategoria(texto);
-  const saludoPrevio = historial.some(m => /hola|buenas/i.test(m));
-  const link = "👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-
-  // saludo inicial
-  if (cat === "saludo" && !saludoPrevio)
+  // SALUDO INICIAL
+  if (msg.includes("hola") || msg.includes("buenas") || msg.includes("zara")) {
     return "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. Me alegra saludarte 💬. Cuéntame, ¿qué zona te gustaría potenciar o mejorar para orientarte con el tratamiento ideal?";
+  }
 
-  switch (cat) {
-    case "abdomen":
-      return "💡 Entiendo, el abdomen es una de las zonas más tratadas. Usamos Cavitación, Radiofrecuencia y HIFU 12D para reducir grasa localizada y reafirmar. Los planes recomendados son *Lipo Express* (reducción rápida) y *Lipo Body Elite* (definición avanzada). Si quieres, puedo ayudarte a agendar tu evaluación gratuita " + link;
+  // ZONAS CORPORALES
+  if (msg.includes("abdomen") || msg.includes("grasa") || msg.includes("rollito") || msg.includes("cintura")) {
+    return `💡 Entiendo, el abdomen y cintura son de las zonas más tratadas. En Body Elite usamos Cavitación, Radiofrecuencia y HIFU 12D para reducir grasa localizada y reafirmar la piel. 
+Los planes más recomendados son **Lipo Express ($432.000)** y **Lipo Body Elite ($664.000)** según el nivel de grasa y firmeza. 
+¿Te gustaría agendar tu evaluación gratuita asistida por IA? 👉 ${LINK_AGENDA}`;
+  }
 
-    case "gluteos":
-      return "🍑 Perfecto. Para levantar y tonificar glúteos usamos *EMS Sculptor* y *Radiofrecuencia*. El plan *Push Up* está pensado para reafirmar y dar volumen natural. ¿Te gustaría agendar tu diagnóstico corporal sin costo? " + link;
+  // ROSTRO Y PIEL
+  if (msg.includes("cara") || msg.includes("rostro") || msg.includes("piel") || msg.includes("arruga") || msg.includes("flacidez") || msg.includes("manchas")) {
+    return `✨ Entiendo, muchas personas notan arrugas o piel seca y desean revitalizar su rostro. En Body Elite combinamos **HIFU 12D, LED Therapy y Pink Glow**, tecnologías que regeneran, hidratan y reafirman la piel sin cirugía. 
+Planes recomendados: **Face Light ($128.800)**, **Face Elite ($358.400)** y **Full Face ($584.000)**. 
+¿Quieres que te deje el enlace para agendar tu diagnóstico facial sin costo? 👉 ${LINK_AGENDA}`;
+  }
 
-    case "piernas":
-      return "💫 Tratamos celulitis, flacidez y retención en piernas con *Cavitación*, *Radiofrecuencia* y drenaje. Los planes *Body Tensor* y *Body Fitness* combinan reducción y firmeza. ¿Deseas tu diagnóstico corporal gratuito? " + link;
+  // GLÚTEO Y TONIFICACIÓN
+  if (msg.includes("gluteo") || msg.includes("trasero") || msg.includes("push up")) {
+    return `🍑 El plan **Push Up ($376.000)** es ideal si buscas levantar y tonificar glúteos sin cirugía. Combinamos **EMS Sculptor y Radiofrecuencia** para estimular contracciones musculares profundas y firmeza visible. 
+¿Te gustaría agendar tu diagnóstico corporal asistido por IA? 👉 ${LINK_AGENDA}`;
+  }
 
-    case "brazos":
-      return "💪 Claro, la flacidez en brazos se mejora con *Radiofrecuencia* y *HIFU 12D*. El plan *Body Tensor* trabaja la firmeza desde la primera sesión. ¿Te dejo el acceso a tu diagnóstico sin costo? " + link;
+  // LISTADO DE TRATAMIENTOS
+  if (msg.includes("tratamiento") || msg.includes("tienen") || msg.includes("opciones")) {
+    return `💎 En Body Elite tenemos protocolos clínicos con aparatología avanzada:
+- **Lipo Express ($432.000)**: reducción rápida y definición corporal.  
+- **Lipo Body Elite ($664.000)**: remodelado profundo con HIFU 12D y EMS.  
+- **Push Up ($376.000)**: levantamiento de glúteos sin cirugía.  
+- **Face Elite ($358.400)**: firmeza facial y rejuvenecimiento.  
+Todos incluyen diagnóstico IA gratuito. ¿Quieres agendar el tuyo? 👉 ${LINK_AGENDA}`;
+  }
 
-    case "rostro":
-      return "✨ Para arrugas, piel seca o flacidez facial combinamos *HIFU 12D*, *LED Therapy* y *Pink Glow*. El plan *Face Elite* regenera, hidrata y mejora textura. ¿Quieres agendar tu diagnóstico facial gratuito? " + link;
+  // DOLOR
+  if (msg.includes("duele") || msg.includes("dolor")) {
+    return "💆‍♀️ Nuestros tratamientos son **no invasivos y sin dolor**. Sentirás solo calor o leves contracciones musculares según la tecnología aplicada. Todo supervisado por profesionales clínicos.";
+  }
 
-    case "emociones":
-      return "💬 Te entiendo. Muchas personas sienten eso cuando su piel o cuerpo cambian. En Body Elite usamos tecnología clínica para que vuelvas a sentirte bien y segura con resultados visibles. ¿Te gustaría una evaluación gratuita para empezar? " + link;
+  // PRECIOS
+  if (msg.includes("precio") || msg.includes("vale") || msg.includes("cuesta")) {
+    return `💰 Los valores dependen del plan y zona:
+- **Lipo Express $432.000**
+- **Lipo Body Elite $664.000**
+- **Push Up $376.000**
+- **Face Elite $358.400**
+Incluyen diagnóstico IA gratuito. ¿Quieres agendar tu evaluación? 👉 ${LINK_AGENDA}`;
+  }
 
-    case "tratamientos":
-      return "🧠 Trabajamos con *HIFU 12D*, *Cavitación*, *Radiofrecuencia*, *EMS Sculptor*, *LED Therapy* y *Pink Glow*. Los combinamos según tu objetivo estético. ¿Te gustaría que te recomiende un plan según la zona?";
+  // EMOCIONALES
+  if (msg.includes("fea") || msg.includes("insegura") || msg.includes("me siento") || msg.includes("mal con mi cuerpo")) {
+    return `💖 Te entiendo. Muchas personas sienten eso cuando su piel o cuerpo cambian. En Body Elite usamos tecnología clínica que **recupera firmeza, forma y confianza**. 
+Podemos acompañarte desde un diagnóstico gratuito. ¿Te gustaría agendar tu cita? 👉 ${LINK_AGENDA}`;
+  }
 
-    case "planes":
-      return "📋 Nuestros planes principales:\n• *Lipo Express* – Reducción rápida sin cirugía.\n• *Body Tensor* – Reafirmación corporal.\n• *Push Up* – Glúteos firmes y tonificados.\n• *Face Elite* – Rejuvenecimiento facial.\n• *Pink Glow* – Hidratación y regeneración.\nTodos incluyen diagnóstico gratuito asistido por IA. ¿Te gustaría agendar? " + link;
+  // SESIONES
+  if (msg.includes("cuantas") || msg.includes("sesiones")) {
+    return "📆 Generalmente se recomiendan entre **6 y 10 sesiones**, dependiendo de la zona y el plan. En tu diagnóstico gratuito definimos la frecuencia ideal.";
+  }
 
-    case "precio":
-      return "💰 Los valores dependen del plan y zona:\n• Lipo Express $432 000\n• Push Up $376 000\n• Face Elite $358 400\nIncluyen evaluación sin costo. ¿Deseas agendar tu diagnóstico? " + link;
+  // BOTOX
+  if (msg.includes("botox") || msg.includes("toxina")) {
+    return "💉 Trabajamos con toxina botulínica solo en planes médicos complementarios. Si buscas alternativas sin inyección, **HIFU 12D** y **Radiofrecuencia facial** logran resultados similares sin agujas. ¿Quieres conocer más? 👉 " + LINK_AGENDA;
+  }
 
-    case "dolor":
-      return "🤍 Tranquila. Nuestros tratamientos son totalmente no invasivos, sin dolor ni tiempo de recuperación. La mayoría siente solo un calor leve o pequeñas contracciones musculares. Si quieres, agenda tu diagnóstico para probarlo " + link;
+  // fallback
+  return "💎 En Body Elite combinamos tecnología estética avanzada y protocolos clínicos con resultados reales. Cuéntame, ¿qué zona o aspecto te gustaría mejorar para orientarte mejor?";
+}
 
-    case "agendar":
-      return "Perfecto 💎. Puedes agendar tu diagnóstico gratuito asistido por IA aquí " + link;
-
-    default:
-      return "💎 En Body Elite combinamos tecnología estética avanzada y protocolos clínicos con resultados reales. Cuéntame, ¿qué zona o aspecto te gustaría mejorar para orientarte mejor?";
+// ---------------------- AVISOS INTERNOS ----------------------
+async function enviarAvisoInterno(mensaje) {
+  try {
+    const url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
+    const headers = {
+      Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json",
+    };
+    for (const tel of AVISOS) {
+      await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: tel,
+          type: "text",
+          text: { body: mensaje },
+        }),
+      });
+    }
+  } catch (err) {
+    console.error("Error enviando aviso interno:", err);
   }
 }
 
-// -------------------- AVISOS INTERNOS ------------------------
-export async function notificarClickReserva(nombre = "Cliente") {
+// ---------------------- WEBHOOK DE RESERVO ----------------------
+export async function manejarWebhookReservo(req, res) {
   try {
-    const msg = `🔔 ${nombre} ha presionado el enlace de reserva de Body Elite.`;
-    const destinos = ["+56976992187", "+56976578774", "+56977007819"];
-    for (const num of destinos) {
-      await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: num,
-          type: "text",
-          text: { body: msg }
-        })
-      });
-    }
-    console.log("✅ Aviso interno: clic en enlace de reserva");
-  } catch (e) {
-    console.error("❌ Error al enviar aviso interno:", e);
-  }
-}
-
-export async function manejarReserva(req, res) {
-  try {
-    const { nombre, telefono, fecha, hora, tratamiento } = req.body;
-    const msg = `📢 Nueva cita registrada:\n👤 ${nombre}\n📞 ${telefono}\n🗓 ${fecha} ${hora}\n💆 ${tratamiento}`;
-    const destinos = ["+56976992187", "+56976578774", "+56977007819"];
-    for (const num of destinos) {
-      await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: num,
-          type: "text",
-          text: { body: msg }
-        })
-      });
-    }
-    console.log("✅ Avisos internos: nueva cita registrada");
+    const datos = req.body || {};
+    const msg = `📅 Nueva reserva registrada:\n👤 ${datos.nombre || "Sin nombre"}\n📞 ${datos.telefono || "Sin teléfono"}\n📆 ${datos.fecha || "Sin fecha"} ${datos.hora || ""}\n💆‍♀️ ${datos.tratamiento || "Sin dato"}`;
+    await enviarAvisoInterno(msg);
+    console.log("✅ Aviso interno enviado a recepción");
     return res.sendStatus(200);
   } catch (err) {
     console.error("❌ Error en manejo de reserva:", err);
@@ -136,7 +116,4 @@ export async function manejarReserva(req, res) {
   }
 }
 
-// ------------------ EXPORTACIÓN PRINCIPAL -------------------
-export function obtenerRespuesta(texto, historial = []) {
-  return generarRespuesta(texto, historial);
-}
+export { enviarAvisoInterno };
