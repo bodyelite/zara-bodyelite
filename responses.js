@@ -1,89 +1,89 @@
 import fetch from "node-fetch";
 
-// ------------------------------------------------------------
-// SISTEMA AVANZADO DE COMPRENSIÓN, PLANES Y AVISOS INTERNOS
-// ------------------------------------------------------------
+// ============================================================
+//  MÓDULO ZARA BODY ELITE - RESPUESTAS HUMANIZADAS Y AVISOS
+// ============================================================
 
-// Diccionario ampliado con 500 frases comunes agrupadas por categoría
+// ------------------------- CATEGORÍAS ------------------------
 const categorias = {
-  saludo: ["hola", "buenas", "consulta", "pregunta", "quiero saber", "necesito información"],
-  abdomen: ["abdomen", "rollitos", "grasa", "cintura", "barriga", "vientre", "panza", "llantitas", "flacidez abdominal"],
-  gluteos: ["gluteos", "glúteos", "cola", "trasero", "pompis", "levantar", "push up", "tonificar glúteos"],
-  piernas: ["piernas", "muslos", "celulitis", "retencion", "retención", "drenaje", "piernas pesadas"],
-  brazos: ["brazos", "flacidez brazos", "tonificar brazos", "brazos sueltos", "reafirmar brazos"],
-  rostro: ["rostro", "cara", "piel", "arrugas", "líneas", "papada", "manchas", "ojeras", "seca", "flacidez facial", "deshidratada", "manchada"],
-  emociones: ["me siento", "me veo", "no me gusta", "insegura", "fea", "triste", "cansada", "vieja", "agotada", "baja autoestima"],
-  tratamientos: ["tratamiento", "que hacen", "que ofrecen", "en que consiste", "tecnologia", "aparato", "procedimiento"],
+  saludo: ["hola", "buenas", "consulta", "pregunta", "quiero saber"],
+  abdomen: ["abdomen", "rollitos", "grasa", "cintura", "vientre", "panza", "barriga"],
+  gluteos: ["gluteos", "glúteos", "cola", "trasero", "pompis", "levantar"],
+  piernas: ["piernas", "muslos", "celulitis", "retencion", "retención", "drenaje"],
+  brazos: ["brazos", "flacidez brazos", "tonificar brazos", "brazos sueltos"],
+  rostro: ["rostro", "cara", "piel", "arrugas", "ojeras", "manchas", "flacidez facial", "seca", "manchada"],
+  emociones: ["me siento", "me veo", "fea", "triste", "insegura", "mal", "agotada", "cansada"],
+  tratamientos: ["tratamientos", "tecnologia", "aparato", "procedimiento", "como funcionan"],
   planes: ["plan", "planes", "packs", "promocion", "promoción", "oferta"],
-  precio: ["precio", "valor", "cuanto", "costo", "vale", "sale", "plata"],
-  agendar: ["agendar", "evaluacion", "evaluación", "diagnóstico", "reserva", "quiero ir", "quiero agenda", "quiero cita"]
+  precio: ["precio", "valor", "costo", "cuanto", "vale", "plata"],
+  dolor: ["duele", "dolor", "molesta", "riesgo", "miedo"],
+  agendar: ["agendar", "diagnostico", "evaluacion", "reserva", "agenda"]
 };
 
-function limpiarTexto(texto) {
-  return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+// ---------------------- LIMPIEZA Y DETECCIÓN -----------------
+function limpiarTexto(txt) {
+  return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-function detectarCategoria(texto) {
-  texto = limpiarTexto(texto);
-  for (const [cat, lista] of Object.entries(categorias)) {
-    if (lista.some(p => texto.includes(limpiarTexto(p)))) return cat;
+function detectarCategoria(txt) {
+  txt = limpiarTexto(txt);
+  for (const [cat, frases] of Object.entries(categorias)) {
+    if (frases.some(f => txt.includes(f))) return cat;
   }
   return "general";
 }
 
-// ------------------------------------------------------------
-// RESPUESTAS FLUIDAS Y CLÍNICAS
-// ------------------------------------------------------------
+// -------------------- RESPUESTAS FLUIDAS ---------------------
 function generarRespuesta(texto, historial = []) {
   const cat = detectarCategoria(texto);
   const saludoPrevio = historial.some(m => /hola|buenas/i.test(m));
+  const link = "👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-  if (cat === "saludo" && !saludoPrevio) {
-    return "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. Me alegra saludarte 💬. Cuéntame, ¿qué zona te gustaría potenciar o mejorar para orientarte con el tratamiento adecuado?";
-  }
+  // saludo inicial
+  if (cat === "saludo" && !saludoPrevio)
+    return "✨ ¡Hola! Soy Zara, asistente IA de Body Elite. Me alegra saludarte 💬. Cuéntame, ¿qué zona te gustaría potenciar o mejorar para orientarte con el tratamiento ideal?";
 
   switch (cat) {
     case "abdomen":
-      return "💡 Entiendo, el abdomen es una de las zonas más tratadas. En Body Elite utilizamos Cavitación, Radiofrecuencia y HIFU 12D para reducir grasa localizada, mejorar textura y reafirmar la piel. Los planes más recomendados son *Lipo Express* y *Lipo Body Elite*, ideales si buscas resultados visibles sin cirugía. ¿Deseas que te deje el enlace para agendar tu evaluación gratuita asistida por IA? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💡 Entiendo, el abdomen es una de las zonas más tratadas. Usamos Cavitación, Radiofrecuencia y HIFU 12D para reducir grasa localizada y reafirmar. Los planes recomendados son *Lipo Express* (reducción rápida) y *Lipo Body Elite* (definición avanzada). Si quieres, puedo ayudarte a agendar tu evaluación gratuita " + link;
 
     case "gluteos":
-      return "🍑 Perfecto, para levantar y tonificar glúteos usamos EMS Sculptor y Radiofrecuencia. Nuestro plan *Push Up* está diseñado para reafirmar y dar volumen natural. Si quieres, puedo agendar tu diagnóstico corporal gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "🍑 Perfecto. Para levantar y tonificar glúteos usamos *EMS Sculptor* y *Radiofrecuencia*. El plan *Push Up* está pensado para reafirmar y dar volumen natural. ¿Te gustaría agendar tu diagnóstico corporal sin costo? " + link;
 
     case "piernas":
-      return "💫 Tratamos celulitis, retención de líquidos y flacidez en piernas con Cavitación, Radiofrecuencia y drenaje avanzado. Los planes *Body Tensor* y *Body Fitness* combinan reducción y tonificación. ¿Te gustaría que te ayude a agendar una evaluación gratuita con nuestra IA? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💫 Tratamos celulitis, flacidez y retención en piernas con *Cavitación*, *Radiofrecuencia* y drenaje. Los planes *Body Tensor* y *Body Fitness* combinan reducción y firmeza. ¿Deseas tu diagnóstico corporal gratuito? " + link;
 
     case "brazos":
-      return "💪 Claro, la flacidez en brazos se trabaja con Radiofrecuencia y HIFU 12D. Nuestros protocolos *Body Tensor* y *Body Fitness* son ideales para reafirmar y mejorar textura. ¿Quieres que te deje el acceso directo para tu evaluación sin costo? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💪 Claro, la flacidez en brazos se mejora con *Radiofrecuencia* y *HIFU 12D*. El plan *Body Tensor* trabaja la firmeza desde la primera sesión. ¿Te dejo el acceso a tu diagnóstico sin costo? " + link;
 
     case "rostro":
-      return "✨ Entiendo, cuando hay arrugas, piel seca o flacidez facial, nuestros tratamientos faciales combinan HIFU 12D, LED Therapy y *Pink Glow* para regenerar e hidratar profundamente. Puedes agendar tu diagnóstico facial gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "✨ Para arrugas, piel seca o flacidez facial combinamos *HIFU 12D*, *LED Therapy* y *Pink Glow*. El plan *Face Elite* regenera, hidrata y mejora textura. ¿Quieres agendar tu diagnóstico facial gratuito? " + link;
 
     case "emociones":
-      return "💬 Te entiendo perfectamente. Sentirnos inseguros con nuestro cuerpo o piel es más común de lo que crees. En Body Elite utilizamos tecnología avanzada y diagnósticos personalizados para ayudarte a recuperar confianza y bienestar. ¿Te gustaría que preparemos tu evaluación gratuita para comenzar el cambio?";
+      return "💬 Te entiendo. Muchas personas sienten eso cuando su piel o cuerpo cambian. En Body Elite usamos tecnología clínica para que vuelvas a sentirte bien y segura con resultados visibles. ¿Te gustaría una evaluación gratuita para empezar? " + link;
 
     case "tratamientos":
-      return "🧠 Trabajamos con tecnología clínica avanzada: *HIFU 12D*, *Cavitación*, *Radiofrecuencia*, *EMS Sculptor*, *LED Therapy* y *Pink Glow*. Todos se combinan en protocolos personalizados según tus objetivos. ¿Quieres que te recomiende un plan según la zona que te interesa?";
+      return "🧠 Trabajamos con *HIFU 12D*, *Cavitación*, *Radiofrecuencia*, *EMS Sculptor*, *LED Therapy* y *Pink Glow*. Los combinamos según tu objetivo estético. ¿Te gustaría que te recomiende un plan según la zona?";
 
     case "planes":
-      return "📋 Nuestros planes combinan diferentes tecnologías según el objetivo: *Lipo Express* para reducción rápida, *Body Tensor* para firmeza, *Push Up* para glúteos, *Face Elite* para rejuvenecimiento facial y *Pink Glow* para hidratación profunda. ¿Te gustaría saber cuál se adapta mejor a ti?";
+      return "📋 Nuestros planes principales:\n• *Lipo Express* – Reducción rápida sin cirugía.\n• *Body Tensor* – Reafirmación corporal.\n• *Push Up* – Glúteos firmes y tonificados.\n• *Face Elite* – Rejuvenecimiento facial.\n• *Pink Glow* – Hidratación y regeneración.\nTodos incluyen diagnóstico gratuito asistido por IA. ¿Te gustaría agendar? " + link;
 
     case "precio":
-      return "💰 Los valores varían según el plan y zona tratada. Por ejemplo: *Lipo Express* desde $432.000, *Push Up* $376.000 y *Face Elite* $358.400. Todos incluyen diagnóstico gratuito asistido por IA. ¿Deseas que te deje el link para agendar tu evaluación sin costo? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "💰 Los valores dependen del plan y zona:\n• Lipo Express $432 000\n• Push Up $376 000\n• Face Elite $358 400\nIncluyen evaluación sin costo. ¿Deseas agendar tu diagnóstico? " + link;
+
+    case "dolor":
+      return "🤍 Tranquila. Nuestros tratamientos son totalmente no invasivos, sin dolor ni tiempo de recuperación. La mayoría siente solo un calor leve o pequeñas contracciones musculares. Si quieres, agenda tu diagnóstico para probarlo " + link;
 
     case "agendar":
-      return "Perfecto 🩵. Puedes agendar tu diagnóstico gratuito asistido por IA aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+      return "Perfecto 💎. Puedes agendar tu diagnóstico gratuito asistido por IA aquí " + link;
 
     default:
-      return "💎 En Body Elite combinamos tecnología estética avanzada y protocolos clínicos con resultados visibles desde la primera sesión. Cuéntame, ¿qué zona o aspecto te gustaría mejorar para orientarte mejor?";
+      return "💎 En Body Elite combinamos tecnología estética avanzada y protocolos clínicos con resultados reales. Cuéntame, ¿qué zona o aspecto te gustaría mejorar para orientarte mejor?";
   }
 }
 
-// ------------------------------------------------------------
-// AVISOS INTERNOS AUTOMÁTICOS
-// ------------------------------------------------------------
-
-// 1️⃣ Aviso cuando el usuario presiona el link
-export async function notificarClickReserva(numeroUsuario, nombre = "Cliente") {
+// -------------------- AVISOS INTERNOS ------------------------
+export async function notificarClickReserva(nombre = "Cliente") {
   try {
     const msg = `🔔 ${nombre} ha presionado el enlace de reserva de Body Elite.`;
     const destinos = ["+56976992187", "+56976578774", "+56977007819"];
@@ -103,12 +103,11 @@ export async function notificarClickReserva(numeroUsuario, nombre = "Cliente") {
       });
     }
     console.log("✅ Aviso interno: clic en enlace de reserva");
-  } catch (err) {
-    console.error("❌ Error al notificar clic de reserva:", err);
+  } catch (e) {
+    console.error("❌ Error al enviar aviso interno:", e);
   }
 }
 
-// 2️⃣ Aviso cuando Reservo registra una reserva
 export async function manejarReserva(req, res) {
   try {
     const { nombre, telefono, fecha, hora, tratamiento } = req.body;
@@ -129,17 +128,15 @@ export async function manejarReserva(req, res) {
         })
       });
     }
-    console.log("✅ Aviso interno: nueva cita registrada");
+    console.log("✅ Avisos internos: nueva cita registrada");
     return res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Error en aviso de cita:", err);
+    console.error("❌ Error en manejo de reserva:", err);
     return res.sendStatus(500);
   }
 }
 
-// ------------------------------------------------------------
-// EXPORTACIÓN PRINCIPAL
-// ------------------------------------------------------------
+// ------------------ EXPORTACIÓN PRINCIPAL -------------------
 export function obtenerRespuesta(texto, historial = []) {
   return generarRespuesta(texto, historial);
 }
