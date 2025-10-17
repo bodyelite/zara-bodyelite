@@ -1,13 +1,13 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import { generarRespuesta, manejarWebhookReservo } from "./responses.js";
+import { generarRespuesta, manejarWebhookReservo, registrarClickAgenda } from "./responses.js";
 
 const app = express();
 app.use(bodyParser.json());
 const PORT = process.env.PORT || 10000;
 
-// ----------- WHATSAPP WEBHOOK VERIFICACIÓN -----------
+// -------- WHATSAPP VERIFY --------
 app.get("/webhook", (req, res) => {
   const verify = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
@@ -15,7 +15,7 @@ app.get("/webhook", (req, res) => {
   else res.sendStatus(403);
 });
 
-// ----------- WHATSAPP MENSAJES -----------
+// -------- MENSAJES DE WHATSAPP --------
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
@@ -51,10 +51,13 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// ----------- WEBHOOK DESDE RESERVO -----------
+// -------- CLICK TRACKING --------
+app.get("/agenda", registrarClickAgenda);
+
+// -------- CONFIRMACIÓN RESERVA --------
 app.post("/reservowebhook", manejarWebhookReservo);
 
-// ----------- SERVIDOR ACTIVO -----------
+// -------- SERVIDOR --------
 app.listen(PORT, () => {
   console.log(`✅ Zara Body Elite activa en puerto ${PORT}`);
 });
