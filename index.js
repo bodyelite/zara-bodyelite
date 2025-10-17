@@ -15,7 +15,7 @@ let contexto = cargarContexto();
 
 // Verificación webhook Meta
 app.get("/webhook", (req, res) => {
-  const VERIFY_TOKEN = process.env.ZARA_TOKEN;
+  const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // corregido
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
@@ -29,13 +29,11 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// Recepción mensajes WhatsApp
+// Recepción de mensajes WhatsApp
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const message = changes?.value?.messages?.[0];
-
+    const message = entry?.changes?.[0]?.value?.messages?.[0];
     if (message && message.text) {
       const from = message.from;
       const texto = message.text.body;
@@ -48,7 +46,7 @@ app.post("/webhook", async (req, res) => {
       contexto[from] = { ultimo: texto };
       guardarContexto(contexto);
 
-      console.log(`✅ Respuesta enviada a ${from}: ${respuesta.slice(0, 50)}...`);
+      console.log(`✅ Respuesta enviada a ${from}: ${respuesta.slice(0, 60)}...`);
     }
     res.sendStatus(200);
   } catch (err) {
@@ -80,5 +78,5 @@ app.get("/monitor", (req, res) => {
 });
 
 app.listen(PORT, () =>
-  console.log(`✅ Zara operativa con razonamiento, empatía y monitor en puerto ${PORT}`)
+  console.log(`✅ Zara operativa con razonamiento, empatía, avisos y monitor en puerto ${PORT}`)
 );
