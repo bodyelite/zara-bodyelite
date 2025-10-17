@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import { procesarMensaje } from "./intents.js";
 import { generarRespuesta } from "./responses.js";
-import { enviarMensaje } from "./sendMessage.js";
+import { sendMessage } from "./sendMessage.js";  // corregido aquí
 import { guardarContexto, cargarContexto } from "./memoria.js";
 
 dotenv.config();
@@ -15,7 +15,7 @@ let contexto = cargarContexto();
 
 // Verificación webhook Meta
 app.get("/webhook", (req, res) => {
-  const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // corregido
+  const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
@@ -42,7 +42,7 @@ app.post("/webhook", async (req, res) => {
       const tipo = procesarMensaje(texto);
       const respuesta = generarRespuesta(tipo, texto, contexto);
 
-      await enviarMensaje(from, respuesta);
+      await sendMessage(from, respuesta);
       contexto[from] = { ultimo: texto };
       guardarContexto(contexto);
 
