@@ -37,3 +37,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Zara corriendo en puerto ${PORT}`);
   console.log(`✅ Panel disponible en /panel`);
 });
+
