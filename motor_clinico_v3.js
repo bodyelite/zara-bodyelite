@@ -17,7 +17,7 @@ const clasificarPlan = (mensaje) => {
     exosomas: "Los exosomas regeneran tejido y mejoran textura, ideales en protocolos faciales avanzados.",
     led: "LED Therapy usa luz azul, roja y ámbar para reparar, desinflamar y revitalizar la piel.",
     botox: "El botox forma parte de protocolos como Face Elite o Full Face, donde se combina con HIFU y RF para resultados más naturales y duraderos."
-  };
+  }
 
   const planes = {
     facial: {
@@ -42,7 +42,7 @@ const clasificarPlan = (mensaje) => {
       tonificar: "Body Fitness",
       default: "Lipo Body Elite"
     }
-  };
+  }
 
   let tipo = faciales.some(t => msg.includes(t)) ? "facial" :
              corporales.some(t => msg.includes(t)) ? "corporal" : "indefinido";
@@ -82,6 +82,6 @@ Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makere
   }
 
   return respuesta;
-};
+}
 
-module.exports = { clasificarPlan };
+export {  clasificarPlan }
