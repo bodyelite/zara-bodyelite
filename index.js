@@ -270,3 +270,8 @@ app.post("/webhook", async (req, res) => {
 
 app.get("/", (req, res) => res.send("✅ Zara Body Elite v4 activa con comprensión avanzada y Reservo."));
 app.listen(PORT, () => console.log(`✅ Zara Body Elite activa en puerto ${PORT}`));
+
+// === Integración del módulo clínico ===
+import { generarRespuestaClinica } from './motor_clinico.js';
+console.log("✅ motor_clinico.js activo e integrado correctamente");
+// ======================================
