@@ -18,11 +18,11 @@ function generarRecomendacionFacial(intencion) {
   switch (intencion) {
     case "botox":
     case "flacidez":
-      return \`Para estos casos recomendamos nuestro *FACE ELITE* o *FULL FACE*, que integran HIFU 12D + Radiofrecuencia + Pink Glow + Toxina botulínica. 
+      return \"Para estos casos recomendamos nuestro *FACE ELITE* o *FULL FACE*, que integran HIFU 12D + Radiofrecuencia + Pink Glow + Toxina botulínica. Actúan sobre la fascia y líneas de expresión, mejorando firmeza, textura y luminosidad de la piel. Durante tu evaluación gratuita IA definiremos el protocolo ideal. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 Actúan sobre la fascia y líneas de expresión, mejorando firmeza, textura y luminosidad de la piel. 
 Durante tu evaluación gratuita IA definiremos el protocolo ideal. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\`;
     case "manchas":
-      return \`La opción ideal es *FACE LIGHT* o *FACE SMART*, que incluyen LED Therapy + Pink Glow + peeling regenerativo para manchas y tono desigual. 
+      return \"La opción ideal es *FACE LIGHT* o *FACE SMART*, que incluyen LED Therapy + Pink Glow + peeling regenerativo para manchas y tono desigual. Corrigen textura y devuelven luminosidad a tu piel. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 Corrigen textura y devuelven luminosidad a tu piel. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\`;
     case "limpieza":
       return \`Podemos iniciar con *LIMPIEZA FACIAL FULL*, que elimina impurezas y equilibra tu piel. 
