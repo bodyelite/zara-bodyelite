@@ -65,7 +65,7 @@ Planes:
   }
 
   // PIERNAS Y MUSLOS
-  if (msg.includes("pierna") || msg.includes("muslo"))) {
+  if (msg.includes("pierna") || msg.includes("muslo")) {
     return "🏃‍♀️ Para piernas y muslos usamos **Cavitación**, **RF corporal** y **HIFU 12D**. Mejora celulitis, firmeza y contorno. Recomendamos **Lipo Express o Body Tensor ($232.000)**. 👉 https://zara-bodyelite1.onrender.com/agenda";
   }
 
