@@ -7,7 +7,9 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-const VERIFY_TOKEN = process.env.ZARA_TOKEN;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // coincide con Render
+const ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN; // coincide con Render
+const PHONE_ID = process.env.PHONE_NUMBER_ID; // coincide con Render
 const PORT = process.env.PORT || 10000;
 
 app.get("/webhook", (req, res) => {
@@ -21,8 +23,7 @@ app.get("/webhook", (req, res) => {
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const message = changes?.value?.messages?.[0];
+    const message = entry?.changes?.[0]?.value?.messages?.[0];
     if (!message) return res.sendStatus(200);
 
     const from = message.from;
@@ -38,23 +39,25 @@ app.post("/webhook", async (req, res) => {
     else if (msg.includes("agenda") || msg.includes("reserva"))
       respuesta = "Puedes agendar directamente aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
+    const url = `https://graph.facebook.com/v17.0/${PHONE_ID}/messages`;
+
     await axios.post(
-      "https://graph.facebook.com/v17.0/${process.env.PHONE_ID}/messages",
+      url,
       {
         messaging_product: "whatsapp",
         to: from,
         type: "text",
         text: { body: respuesta },
       },
-      { headers: { Authorization: "Bearer ${process.env.ACCESS_TOKEN}" } }
+      { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } }
     );
 
+    console.log("✅ Mensaje enviado a:", from);
     res.sendStatus(200);
   } catch (err) {
-    console.error("Error en webhook:", err.message);
+    console.error("❌ Error en webhook:", err.response?.data || err.message);
     res.sendStatus(500);
   }
 });
 
 app.listen(PORT, () => console.log(`✅ Zara Body Elite activa en puerto ${PORT}`));
-
