@@ -75,7 +75,7 @@ Planes:
   }
 
   // DUDAS SOBRE PRECIO
-  if (msg.includes("precio") || msg.includes("vale") || msg.includes("cuesta"))) {
+  if (msg.includes("precio") || msg.includes("vale") || msg.includes("cuesta")) {
     return "💰 Los valores dependen del plan y zona tratada: desde $128.800 (faciales) a $664.000 (corporales). Incluyen diagnóstico IA gratuito. 👉 https://zara-bodyelite1.onrender.com/agenda";
   }
 
