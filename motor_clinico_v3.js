@@ -3,7 +3,7 @@
 // Reconoce síntomas, zonas, tecnologías y activos. Explica, recomienda y educa.
 
 const clasificarPlan = (mensaje) => {
-  const msg = mensaje.toLowerCase();
+  const msg = defaultInput(mensaje).toLowerCase();
 
   const faciales = ["rostro", "cara", "arrugas", "manchas", "ojeras", "papada", "flacidez facial", "rejuvenecer", "botox", "toxina", "limpieza", "hidratación", "poros", "cuello"];
   const corporales = ["abdomen", "cintura", "piernas", "brazos", "glúteos", "espalda", "flacidez corporal", "celulitis", "grasa", "adiposidad", "tonificar", "reafirmar", "modelar"];
