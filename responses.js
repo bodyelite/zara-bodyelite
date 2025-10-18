@@ -80,8 +80,7 @@ Planes:
   }
 
   // SESIONES
-  if (msg.includes("sesion") || msg.includes("cuantas"))) {
-    return "📆 Recomendamos entre **6 y 10 sesiones**, dependiendo del tipo de piel y objetivo. La evaluación IA define el protocolo ideal. 👉 https://zara-bodyelite1.onrender.com/agenda";
+if (msg.includes("sesion") || msg.includes("cuantas")) {    return "📆 Recomendamos entre **6 y 10 sesiones**, dependiendo del tipo de piel y objetivo. La evaluación IA define el protocolo ideal. 👉 https://zara-bodyelite1.onrender.com/agenda";
   }
 
   // BOTOX / ALTERNATIVAS
