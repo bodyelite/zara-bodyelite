@@ -64,8 +64,8 @@ app.listen(PORT, () => {
   console.log(`✅ Zara Body Elite activa en puerto ${PORT}`);
 });
 // ===== INTEGRACIÓN FINAL BODY ELITE (AMPLIACIÓN ZARA) =====
-import { generarRespuesta } from "./responses.js";
 // Activa módulo de integración clínica + emocional + avisos internos + webhook Reservo
 integrarAmpliacionZara(app);
 
 console.log("✅ Integración final de Zara IA activa (clínica, emocional y Reservo)");
+import { generarRespuesta } from "./responses.js";
