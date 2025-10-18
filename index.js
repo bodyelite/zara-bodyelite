@@ -15,16 +15,14 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 const MEMORIA_FILE = "./contexto_memoria.json";
+const LINK_RESERVO = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
 // ==================== MEMORIA ==================== //
 let memoria = {};
 try {
-  if (fs.existsSync(MEMORIA_FILE)) {
-    memoria = JSON.parse(fs.readFileSync(MEMORIA_FILE, "utf8"));
-  } else {
-    memoria = { ejemplos: [] };
-    fs.writeFileSync(MEMORIA_FILE, JSON.stringify(memoria, null, 2));
-  }
+  memoria = fs.existsSync(MEMORIA_FILE)
+    ? JSON.parse(fs.readFileSync(MEMORIA_FILE, "utf8"))
+    : { ejemplos: [] };
 } catch {
   memoria = { ejemplos: [] };
   fs.writeFileSync(MEMORIA_FILE, JSON.stringify(memoria, null, 2));
@@ -34,85 +32,121 @@ try {
 const base = {
   saludos: ["hola", "buenas", "holaa", "ola", "hey", "buen día", "buenas tardes"],
   zonas: ["abdomen", "glúteos", "piernas", "rostro", "cara", "papada", "cintura", "espalda", "brazos", "muslos"],
+  maquinas: {
+    "hifu 12d": "Ultrasonido focalizado que actúa en la grasa subcutánea y la fascia SMAS, reafirma y reduce volumen.",
+    cavitacion: "Ondas ultrasónicas que rompen adipocitos, facilitando la eliminación de grasa localizada.",
+    radiofrecuencia: "Calor interno que estimula colágeno y elastina, mejora firmeza y textura.",
+    "ems sculptor": "Contracciones musculares intensas (20.000 en 30 minutos) para tonificar y aumentar masa muscular.",
+    "pink glow": "Coctel de péptidos y antioxidantes inyectables que regeneran, iluminan y revitalizan la piel.",
+    "led therapy": "Luz azul antibacteriana, roja regeneradora y ámbar estimulante; mejora textura y recuperación."
+  },
   tratamientos: {
     corporales: {
       "lipo focalizada reductiva": {
         precio: 348800,
-        descripcion: "Reduce grasa localizada mediante Cavitación, Radiofrecuencia y HIFU 12D."
+        sesiones: 6,
+        descripcion: "Reduce grasa localizada en zonas pequeñas como abdomen bajo o flancos. Combina Cavitación, Radiofrecuencia y drenaje.",
+        objetivo: "Modelar contorno corporal, disminuir centímetros y mejorar aspecto de la piel."
       },
       "lipo express": {
         precio: 432000,
-        descripcion: "Tratamiento rápido y potente con Cavitación + HIFU + EMS Sculptor para resultados visibles en menos tiempo."
+        sesiones: 8,
+        descripcion: "Protocolo acelerado reductor para grasa moderada. Incluye HIFU 12D + Cavitación + EMS Sculptor.",
+        objetivo: "Resultados rápidos en cintura, abdomen o muslos en pocas sesiones."
       },
       "lipo reductiva": {
         precio: 480000,
-        descripcion: "Plan integral reductor y tonificador para abdomen, cintura y espalda."
+        sesiones: 10,
+        descripcion: "Plan integral para reducción y tonificación corporal. Usa Cavitación, Radiofrecuencia y EMS Sculptor.",
+        objetivo: "Mejorar textura, reducir grasa y reafirmar simultáneamente."
       },
       "lipo body elite": {
         precio: 664000,
-        descripcion: "Protocolo avanzado con HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor. Ideal para modelar abdomen completo."
+        sesiones: 12,
+        descripcion: "Nuestro protocolo más avanzado. HIFU 12D + Cavitación + Radiofrecuencia + EMS Sculptor.",
+        objetivo: "Remodelar abdomen completo, reducir grasa y tonificar en profundidad. Ideal tras cambios de peso o post parto."
       },
       "body tensor": {
         precio: 232000,
-        descripcion: "Enfocado en reafirmar piel con flacidez leve. Radiofrecuencia + LED Therapy."
+        sesiones: 6,
+        descripcion: "Tratamiento reafirmante para flacidez leve. Usa Radiofrecuencia y LED Therapy.",
+        objetivo: "Mejorar firmeza de brazos, abdomen o muslos sin aumentar volumen."
       },
       "body fitness": {
         precio: 360000,
-        descripcion: "Aumenta tono y masa muscular con EMS Sculptor y radiofrecuencia tensora."
+        sesiones: 8,
+        descripcion: "Tonificación avanzada con EMS Sculptor + Radiofrecuencia.",
+        objetivo: "Aumentar tono muscular y mejorar apariencia firme del cuerpo."
       },
       "push up": {
         precio: 376000,
-        descripcion: "Levanta y moldea glúteos con contracciones musculares intensas (EMS Sculptor)."
+        sesiones: 8,
+        descripcion: "Moldea y eleva glúteos con contracciones musculares intensas mediante EMS Sculptor.",
+        objetivo: "Lograr mayor firmeza y volumen natural sin inyecciones."
       }
     },
     faciales: {
       "limpieza facial full": {
         precio: 120000,
-        descripcion: "Limpieza profunda con extracción, vapor ozono, mascarilla LED y activos regeneradores."
+        sesiones: 6,
+        descripcion: "Limpieza profunda con extracción, vapor ozono, LED y activos antioxidantes.",
+        objetivo: "Purificar, equilibrar y mejorar luminosidad de la piel."
       },
       "rf facial": {
         precio: 60000,
-        descripcion: "Radiofrecuencia facial que mejora textura, firmeza y estimula colágeno."
+        sesiones: 3,
+        descripcion: "Radiofrecuencia facial para mejorar textura y firmeza.",
+        objetivo: "Reafirmar contorno facial y suavizar líneas de expresión."
       },
       "face light": {
         precio: 128800,
-        descripcion: "Ilumina y revitaliza piel cansada con LED Therapy y activos antioxidantes."
+        sesiones: 6,
+        descripcion: "Tratamiento iluminador con LED Therapy y antioxidantes.",
+        objetivo: "Dar brillo, hidratación y aspecto saludable a la piel."
       },
       "face smart": {
         precio: 198400,
-        descripcion: "Combina limpieza, radiofrecuencia y LED Therapy para piel saludable y firme."
+        sesiones: 8,
+        descripcion: "Combinación de limpieza, radiofrecuencia y LED Therapy.",
+        objetivo: "Renovar textura, mejorar tono y firmeza."
       },
       "face inicia": {
         precio: 270400,
-        descripcion: "Rejuvenecimiento facial con protocolos personalizados según diagnóstico."
+        sesiones: 8,
+        descripcion: "Rejuvenecimiento facial personalizado con HIFU focal y activos reafirmantes.",
+        objetivo: "Estimular colágeno y prevenir signos de envejecimiento."
       },
       "face antiage": {
         precio: 281600,
-        descripcion: "Disminuye arrugas y flacidez con HIFU focal y activos reafirmantes."
+        sesiones: 8,
+        descripcion: "Tratamiento lifting sin cirugía con HIFU y Radiofrecuencia avanzada.",
+        objetivo: "Reducir arrugas, flacidez y redefinir contorno facial."
       },
       "face elite": {
         precio: 358400,
-        descripcion: "Protocolo facial premium: HIFU + Pink Glow + LED Therapy + RF avanzada."
+        sesiones: 10,
+        descripcion: "Protocolo premium con HIFU, Pink Glow, Radiofrecuencia y LED Therapy.",
+        objetivo: "Rejuvenecer rostro y cuello, mejorar textura y elasticidad."
       },
       "full face": {
         precio: 584000,
-        descripcion: "Tratamiento facial integral para lifting completo sin cirugía."
+        sesiones: 12,
+        descripcion: "Lifting facial completo sin cirugía, actúa en todas las capas de la piel.",
+        objetivo: "Resultados visibles desde la primera sesión."
       }
     }
-  },
-  fallback: "¿Podrías contarme qué zona deseas tratar?"
+  }
 };
 
 // ==================== FUNCIONES ==================== //
 async function enviarMensaje(numero, texto) {
   const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
-  const data = {
-    messaging_product: "whatsapp",
-    to: numero,
-    text: { body: texto }
-  };
   try {
-    await axios.post(url, data, {
+    await axios.post(url, {
+      messaging_product: "whatsapp",
+      to: numero,
+      text: { body: texto }
+    }, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`
@@ -137,67 +171,65 @@ function detectarIntent(texto) {
   for (const nombre in base.tratamientos.faciales)
     if (t.includes(nombre)) return nombre;
 
-  const similitud = memoria.ejemplos.find(e => t.includes(e.texto.toLowerCase()));
-  if (similitud) return similitud.intent;
+  for (const maquina in base.maquinas)
+    if (t.includes(maquina)) return maquina;
 
   return "fallback";
 }
 
 function generarRespuesta(intent) {
   if (intent === "saludo") {
-    return "Hola 👋 Soy Zara de Body Elite. ¿Podrías contarme qué zona deseas tratar?";
+    return `Hola 👋 Soy *Zara* de Body Elite.  
+Estoy aquí para ayudarte a elegir el tratamiento ideal según tu objetivo.  
+¿Podrías contarme qué zona deseas mejorar?`;
   }
 
   if (base.tratamientos.corporales[intent]) {
     const t = base.tratamientos.corporales[intent];
-    return `💠 *${intent.toUpperCase()}*\n${t.descripcion}\n\n💰 Precio: $${t.precio.toLocaleString("es-CL")} CLP\n\n¿Deseas que te cuente cuántas sesiones incluye y cómo agendar?`;
+    return `💠 *${intent.toUpperCase()}*\n${t.descripcion}\n\n🔬 *Objetivo:* ${t.objetivo}\n📅 *${t.sesiones} sesiones*  
+💰 *Precio:* $${t.precio.toLocaleString("es-CL")} CLP  
+
+Te recomiendo agendar una *evaluación gratuita* para definir tu protocolo personalizado 👉 ${LINK_RESERVO}`;
   }
 
   if (base.tratamientos.faciales[intent]) {
     const t = base.tratamientos.faciales[intent];
-    return `✨ *${intent.toUpperCase()}*\n${t.descripcion}\n\n💰 Precio: $${t.precio.toLocaleString("es-CL")} CLP\n\n¿Quieres que te ayude a coordinar tu diagnóstico facial gratuito?`;
+    return `✨ *${intent.toUpperCase()}*\n${t.descripcion}\n\n🔬 *Objetivo:* ${t.objetivo}\n📅 *${t.sesiones} sesiones*  
+💰 *Precio:* $${t.precio.toLocaleString("es-CL")} CLP  
+
+Puedes reservar tu *diagnóstico facial sin costo* aquí 👉 ${LINK_RESERVO}`;
+  }
+
+  if (base.maquinas[intent]) {
+    return `⚙️ *${intent.toUpperCase()}*\n${base.maquinas[intent]}\n\nEsta tecnología se utiliza dentro de nuestros protocolos clínicos.  
+¿Te gustaría que te indique qué plan incluye ${intent}?`;
   }
 
   if (base.zonas.includes(intent)) {
-    if (["abdomen", "cintura", "espalda"].includes(intent))
-      return "Para esa zona te recomiendo nuestro plan *Lipo Body Elite*, ideal para modelar y reducir grasa localizada con HIFU 12D + Cavitación + EMS Sculptor.";
-    if (["glúteos", "piernas"].includes(intent))
-      return "Para esa zona te recomiendo el plan *Push Up* o *Body Fitness*, ambos con EMS Sculptor para tonificar y levantar.";
-    if (["rostro", "cara", "papada"].includes(intent))
-      return "En tratamientos faciales puedes elegir entre *Face Elite* o *Full Face*, ambos con HIFU focal y radiofrecuencia avanzada.";
+    return `Para ${intent} trabajamos con combinaciones personalizadas de *HIFU 12D*, *Cavitación*, *Radiofrecuencia* y *EMS Sculptor*.  
+Esto permite reducir grasa, reafirmar y tonificar.  
+Puedes agendar una *evaluación sin costo* para diagnóstico corporal 👉 ${LINK_RESERVO}`;
   }
 
-  return base.fallback;
+  return `Puedo contarte más sobre nuestros tratamientos corporales y faciales.  
+¿Cuál es tu objetivo principal: *reducir grasa*, *reafirmar piel* o *rejuvenecer rostro*?  
+Agenda tu diagnóstico aquí 👉 ${LINK_RESERVO}`;
 }
 
-function guardarAprendizaje(texto, respuesta) {
-  try {
-    const nuevo = { texto, intent: "personalizado", respuesta };
-    memoria.ejemplos.push(nuevo);
-    fs.writeFileSync(MEMORIA_FILE, JSON.stringify(memoria, null, 2));
-    console.log("🧠 Nuevo aprendizaje guardado.");
-  } catch (e) {
-    console.error("⚠️ Error al guardar aprendizaje:", e.message);
-  }
-}
-
+// ==================== PROCESADOR ==================== //
 async function procesarMensaje(numero, texto) {
   const intent = detectarIntent(texto);
   const respuesta = generarRespuesta(intent);
-  if (intent === "fallback") guardarAprendizaje(texto, respuesta);
   await enviarMensaje(numero, respuesta);
 }
 
-// ==================== WEBHOOK META ==================== //
+// ==================== WEBHOOKS ==================== //
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode && token === VERIFY_TOKEN) {
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
-  }
+  if (mode && token === VERIFY_TOKEN) res.status(200).send(challenge);
+  else res.sendStatus(403);
 });
 
 app.post("/webhook", async (req, res) => {
@@ -211,11 +243,6 @@ app.post("/webhook", async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get("/", (req, res) => {
-  res.send("Zara Body Elite activa y aprendiendo.");
-});
+app.get("/", (req, res) => res.send("Zara Body Elite activa con conocimiento clínico y reservas."));
 
-// ==================== SERVIDOR ==================== //
-app.listen(PORT, () => {
-  console.log(`✅ Zara Body Elite activa en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Zara Body Elite activa en puerto ${PORT}`));
