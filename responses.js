@@ -60,7 +60,7 @@ Planes:
   }
 
   // GLÚTEOS
-  if (msg.includes("gluteo") || msg.includes("glúteo") || msg.includes("trasero") || msg.includes("push up"))) {
+  if (msg.includes("gluteo") || msg.includes("glúteo") || msg.includes("trasero") || msg.includes("push up")) {
     return "🍑 **Push Up ($376.000)** combina **EMS Sculptor + Radiofrecuencia** para levantar y tonificar glúteos sin cirugía. Resultados visibles desde la primera sesión. 👉 https://zara-bodyelite1.onrender.com/agenda";
   }
 
