@@ -1,3 +1,4 @@
+import { generarRespuesta } from "./responses.js";
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
@@ -68,4 +69,3 @@ app.listen(PORT, () => {
 integrarAmpliacionZara(app);
 
 console.log("✅ Integración final de Zara IA activa (clínica, emocional y Reservo)");
-import { generarRespuesta } from "./responses.js";
