@@ -16,7 +16,7 @@ app.post("/webhook", async (req, res) => {
     const mensaje = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.text?.body || ""
     if (!mensaje) return res.sendStatus(200)
 
-    console.log("Mensaje recibido:", mensaje)
+    console.log("📩 Mensaje recibido:", mensaje)
 
     const memoria = cargarMemoria()
     const intencion = detectarIntencion(mensaje)
@@ -34,12 +34,12 @@ app.post("/webhook", async (req, res) => {
     console.log("✅ Enviado:", respuestaFinal)
     res.sendStatus(200)
   } catch (error) {
-    console.error("Error procesando mensaje:", error)
+    console.error("❌ Error procesando mensaje:", error)
     res.sendStatus(500)
   }
 })
 
 app.listen(10000, () => {
   console.log("✅ Zara Body Elite corriendo en puerto 10000")
-  console.log("🌐 Integración completa activa (motor clínico + empatía + aprendizaje + agenda)")
+  console.log("🌐 Módulos activos: motor clínico + empatía + aprendizaje + agenda")
 })

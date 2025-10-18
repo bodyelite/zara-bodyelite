@@ -1,30 +1,20 @@
-import fs from "fs";
-
-const rutaMemoria = "./contexto_memoria.json";
+import fs from "fs"
+const archivo = "./contexto_memoria.json"
 
 export function cargarMemoria() {
-  if (!fs.existsSync(rutaMemoria)) {
-    fs.writeFileSync(rutaMemoria, JSON.stringify({ ejemplos: [] }, null, 2));
-  }
-  const data = fs.readFileSync(rutaMemoria, "utf8");
-  return JSON.parse(data);
+  if (!fs.existsSync(archivo)) fs.writeFileSync(archivo, "[]")
+  return JSON.parse(fs.readFileSync(archivo, "utf8"))
 }
 
-export function guardarEjemplo(pregunta, respuesta) {
-  const memoria = cargarMemoria();
-  memoria.ejemplos.push({ pregunta, respuesta, fecha: new Date().toISOString() });
-  fs.writeFileSync(rutaMemoria, JSON.stringify(memoria, null, 2));
+export function guardarAprendizaje(mensaje, respuesta, intencion) {
+  const memoria = cargarMemoria()
+  memoria.push({ entrada: mensaje, respuesta, intencion, fecha: new Date().toISOString() })
+  fs.writeFileSync(archivo, JSON.stringify(memoria, null, 2))
 }
 
-export function buscarRespuesta(pregunta) {
-  const memoria = cargarMemoria();
-  const entrada = memoria.ejemplos.find(e =>
-    pregunta.toLowerCase().includes(e.pregunta.toLowerCase())
-  );
-  return entrada ? entrada.respuesta : null;
-}
-
-if (process.argv[2] === "test") {
-  guardarEjemplo("hola", "Hola 👋 Soy Zara. ¿En qué puedo ayudarte?");
-  console.log("✅ Memoria inicializada y funcionando.");
+if (process.argv.includes("--importar")) {
+  const extra = JSON.parse(fs.readFileSync(process.argv[process.argv.indexOf("--importar")+1], "utf8"))
+  const memoria = cargarMemoria().concat(extra)
+  fs.writeFileSync(archivo, JSON.stringify(memoria, null, 2))
+  console.log("✅ Nuevos conocimientos importados sin perder lo anterior")
 }
