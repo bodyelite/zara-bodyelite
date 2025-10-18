@@ -86,12 +86,15 @@ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0n
 Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
   }
 
+  const respuestaFacial = generarRespuestaFacial(mensajeUsuario);
+  if (respuestaFacial) return respuestaFacial;
   return respuesta;
 }
 
 export {  clasificarPlan }
 
 // Alias para compatibilidad con index.js
+import { generarRespuestaFacial } from "./motor_facial.js";
 export function generarRespuestaClinica(input) {
   return clasificarPlan(input);
 }
