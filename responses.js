@@ -70,7 +70,7 @@ Planes:
   }
 
   // CONSULTAS SOBRE PLANES
-  if (msg.includes("plan") || msg.includes("tratamiento") || msg.includes("tienen") || msg.includes("opciones"))) {
+  if (msg.includes("plan") || msg.includes("tratamiento") || msg.includes("tienen") || msg.includes("opciones")) {
     return "💎 Ofrecemos planes personalizados: Lipo Express, Lipo Body Elite, Push Up, Face Elite y Full Face. Todos incluyen diagnóstico gratuito IA. 👉 https://zara-bodyelite1.onrender.com/agenda";
   }
 
