@@ -1,9 +1,10 @@
+// Parche seguridad input nulo
 // motor_clinico_v3.js
 // Versión clínica integral Body Elite
 // Reconoce síntomas, zonas, tecnologías y activos. Explica, recomienda y educa.
 
 const clasificarPlan = (mensaje) => {
-  const msg = defaultInput(mensaje).toLowerCase();
+  const msg = defaultInput(mensaje)defaultInput().toLowerCase();
 
   const faciales = ["rostro", "cara", "arrugas", "manchas", "ojeras", "papada", "flacidez facial", "rejuvenecer", "botox", "toxina", "limpieza", "hidratación", "poros", "cuello"];
   const corporales = ["abdomen", "cintura", "piernas", "brazos", "glúteos", "espalda", "flacidez corporal", "celulitis", "grasa", "adiposidad", "tonificar", "reafirmar", "modelar"];
@@ -90,3 +91,5 @@ export {  clasificarPlan }
 export function generarRespuestaClinica(input) {
   return clasificarPlan(input);
 }
+
+function defaultInput(input) { return typeof input === 'string' ? input : ''; }
