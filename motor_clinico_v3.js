@@ -5,11 +5,9 @@
 const clasificarPlan = (mensaje) => {
   const msg = mensaje.toLowerCase();
 
-  // === CATEGORÍAS ===
   const faciales = ["rostro", "cara", "arrugas", "manchas", "ojeras", "papada", "flacidez facial", "rejuvenecer", "botox", "toxina", "limpieza", "hidratación", "poros", "cuello"];
   const corporales = ["abdomen", "cintura", "piernas", "brazos", "glúteos", "espalda", "flacidez corporal", "celulitis", "grasa", "adiposidad", "tonificar", "reafirmar", "modelar"];
 
-  // === TECNOLOGÍAS Y ACTIVOS ===
   const tecnologias = {
     hifu: "HIFU 12D trabaja con ultrasonido focalizado para tensar la fascia SMAS y eliminar grasa subcutánea.",
     cavitacion: "Cavitación rompe los adipocitos por presión alternante, ayudando a reducir volumen.",
@@ -18,10 +16,9 @@ const clasificarPlan = (mensaje) => {
     pinkglow: "Pink Glow aporta péptidos y antioxidantes para regenerar y dar luminosidad a la piel.",
     exosomas: "Los exosomas regeneran tejido y mejoran textura, ideales en protocolos faciales avanzados.",
     led: "LED Therapy usa luz azul, roja y ámbar para reparar, desinflamar y revitalizar la piel.",
-    botox: "El botox se aplica dentro de protocolos como Face Elite o Full Face, potenciando resultados junto a HIFU y RF."
+    botox: "El botox forma parte de protocolos como Face Elite o Full Face, donde se combina con HIFU y RF para resultados más naturales y duraderos."
   };
 
-  // === PLANES ===
   const planes = {
     facial: {
       arrugas: "Face Elite",
@@ -47,52 +44,40 @@ const clasificarPlan = (mensaje) => {
     }
   };
 
-  // === DETECCIÓN ===
   let tipo = faciales.some(t => msg.includes(t)) ? "facial" :
              corporales.some(t => msg.includes(t)) ? "corporal" : "indefinido";
 
   let plan = "evaluación personalizada";
-
   if (tipo === "facial") {
-    for (const key in planes.facial) {
-      if (msg.includes(key)) plan = planes.facial[key];
-    }
+    for (const key in planes.facial) if (msg.includes(key)) plan = planes.facial[key];
   } else if (tipo === "corporal") {
-    for (const key in planes.corporal) {
-      if (msg.includes(key)) plan = planes.corporal[key];
-    }
+    for (const key in planes.corporal) if (msg.includes(key)) plan = planes.corporal[key];
   }
 
-  // === RESPUESTA CLÍNICA ===
   let descripcion = "";
   if (tipo === "facial") {
-    descripcion = `El plan *${plan}* combina ${msg.includes("botox") ? "toxina botulínica" : "HIFU 12D"} + Radiofrecuencia + Pink Glow${msg.includes("botox") ? " para relajar líneas de expresión y reafirmar tejidos." : " para firmeza, textura e hidratación profunda."}`;
+    descripcion = `El plan *${plan}* combina ${msg.includes("botox") ? "botox, HIFU 12D y Radiofrecuencia" : "HIFU 12D, Radiofrecuencia y Pink Glow"} para rejuvenecer y reafirmar la piel de forma natural.`;
   } else if (tipo === "corporal") {
-    descripcion = `El plan *${plan}* incluye HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor, logrando reducción de grasa localizada, reafirmación y tonificación sin cirugía.`;
+    descripcion = `El plan *${plan}* aplica HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor para reducir grasa localizada y tonificar sin cirugía.`;
   } else {
-    descripcion = "Cada plan se personaliza según diagnóstico con FitDays e IA clínica para máxima precisión.";
+    descripcion = "Cada plan se ajusta tras diagnóstico con IA y análisis corporal FitDays.";
   }
 
-  // === AMPLIACIÓN TECNOLÓGICA ===
   let infoExtra = "";
-  for (const key in tecnologias) {
-    if (msg.includes(key)) infoExtra += `\n💡 ${tecnologias[key]}`;
-  }
+  for (const key in tecnologias) if (msg.includes(key)) infoExtra += `\n💡 ${tecnologias[key]}`;
 
-  // === RESPUESTA FINAL ===
   let respuesta = "";
   if (tipo === "facial") {
     respuesta = `✨ ${descripcion}
-Los planes faciales Body Elite parten desde **$120.000** e incluyen evaluación asistida por IA.
-Agenda tu diagnóstico sin costo aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9${infoExtra}`;
+Planes faciales desde **$120.000** con evaluación gratuita asistida por IA.
+Reserva tu diagnóstico aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9${infoExtra}`;
   } else if (tipo === "corporal") {
     respuesta = `💪 ${descripcion}
-Los tratamientos corporales Body Elite parten desde **$232.000**, ajustados según diagnóstico IA.
-Reserva tu evaluación aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9${infoExtra}`;
+Planes corporales desde **$232.000**, definidos tras evaluación IA.
+Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9${infoExtra}`;
   } else {
     respuesta = `Puedo ayudarte a definir el tratamiento ideal.
-¿Tu objetivo es reducir grasa, reafirmar piel o rejuvenecer rostro?
-Con esa información, la IA de Body Elite te recomendará el plan exacto.
+¿Tu objetivo principal es reducir grasa, reafirmar piel o rejuvenecer rostro?
 Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
   }
 
