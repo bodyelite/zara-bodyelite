@@ -39,14 +39,14 @@ app.post("/webhook", async (req, res) => {
       respuesta = "Puedes agendar directamente aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
     await axios.post(
-      `https://graph.facebook.com/v17.0/${process.env.PHONE_ID}/messages`,
+      "https://graph.facebook.com/v17.0/${process.env.PHONE_ID}/messages",
       {
         messaging_product: "whatsapp",
         to: from,
         type: "text",
         text: { body: respuesta },
       },
-      { headers: { Authorization: `Bearer ${process.env.ACCESS_TOKEN}` } }
+      { headers: { Authorization: "Bearer ${process.env.ACCESS_TOKEN}" } }
     );
 
     res.sendStatus(200);
@@ -57,3 +57,4 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`✅ Zara Body Elite activa en puerto ${PORT}`));
+
