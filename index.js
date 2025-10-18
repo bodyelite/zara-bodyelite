@@ -1,70 +1,45 @@
-import express from "express";
-import bodyParser from "body-parser";
-import { generarRespuestaClinica } from "./motor_clinico_v3.js";
-import fs from "fs";
-import dotenv from "dotenv";
-dotenv.config();
+import express from "express"
+import bodyParser from "body-parser"
+import dotenv from "dotenv"
+import { generarRespuestaClinica } from "./motor_clinico_v3.js"
+import { detectarIntencion } from "./intents.js"
+import { obtenerRespuesta } from "./responses.js"
+import { guardarAprendizaje, cargarMemoria } from "./memoria.js"
+import { sendMessage } from "./sendMessage.js"
 
-const app = express();
-app.use(bodyParser.json());
-const PORT = process.env.PORT || 10000;
+dotenv.config()
+const app = express()
+app.use(bodyParser.json())
 
-// === Función principal Zara ===
 app.post("/webhook", async (req, res) => {
   try {
-    const entry = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-    if (!entry) return res.sendStatus(200);
+    const mensaje = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.text?.body || ""
+    if (!mensaje) return res.sendStatus(200)
 
-    const from = entry.from;
-    const text = entry.text?.body?.toLowerCase() || "";
+    console.log("Mensaje recibido:", mensaje)
 
-    console.log(`📩 Mensaje recibido de ${from}: ${text}`);
+    const memoria = cargarMemoria()
+    const intencion = detectarIntencion(mensaje)
+    const respuestaClinica = generarRespuestaClinica(mensaje)
+    const respuestaEmpatica = obtenerRespuesta(intencion, mensaje)
 
-    const zonas = ["abdomen","cintura","gluteo","trasero","pompis","pierna","muslo","brazo","cara","rostro","facial","papada","cuello"];
-    const objetivos = ["reducir","grasa","reafirmar","tonificar","levantar","definir","rejuvenecer","flacidez","celulitis","arrugas"];
+    const respuestaFinal =
+      respuestaClinica && respuestaClinica !== "general"
+        ? respuestaClinica
+        : respuestaEmpatica
 
-    let zonaDetectada = zonas.find(z => text.includes(z));
-    let objetivoDetectado = objetivos.find(o => text.includes(o));
+    await sendMessage(respuestaFinal)
+    guardarAprendizaje(mensaje, respuestaFinal, intencion)
 
-    const respuesta = generarRespuestaClinica(zonaDetectada, objetivoDetectado);
-
-    console.log(`🤖 Respuesta generada: ${respuesta}`);
-    await enviarMensaje(from, respuesta);
-  } catch (err) {
-    console.error("Error procesando mensaje:", err);
+    console.log("✅ Enviado:", respuestaFinal)
+    res.sendStatus(200)
+  } catch (error) {
+    console.error("Error procesando mensaje:", error)
+    res.sendStatus(500)
   }
-  res.sendStatus(200);
-});
+})
 
-// === Envío de mensajes ===
-async function enviarMensaje(numero, mensaje) {
-  const token = process.env.PAGE_ACCESS_TOKEN; // <--- correcto
-  const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
-
-  const data = {
-    messaging_product: "whatsapp",
-    to: numero,
-    type: "text",
-    text: { body: mensaje }
-  };
-
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  });
-  const result = await resp.json();
-  console.log("📤 Enviado:", result);
-}
-
-// === Rutas y servidor ===
-app.get("/", (req, res) => {
-  res.send("✅ Zara Body Elite activa con motor clínico v6 y token corregido.");
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ Zara Body Elite corriendo en puerto ${PORT}`);
-});
+app.listen(10000, () => {
+  console.log("✅ Zara Body Elite corriendo en puerto 10000")
+  console.log("🌐 Integración completa activa (motor clínico + empatía + aprendizaje + agenda)")
+})
