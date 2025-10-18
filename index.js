@@ -20,7 +20,6 @@ app.post("/webhook", async (req, res) => {
 
     console.log(`📩 Mensaje recibido de ${from}: ${text}`);
 
-    // --- lógica clínica ---
     const zonas = ["abdomen","cintura","gluteo","trasero","pompis","pierna","muslo","brazo","cara","rostro","facial","papada","cuello"];
     const objetivos = ["reducir","grasa","reafirmar","tonificar","levantar","definir","rejuvenecer","flacidez","celulitis","arrugas"];
 
@@ -39,8 +38,9 @@ app.post("/webhook", async (req, res) => {
 
 // === Envío de mensajes ===
 async function enviarMensaje(numero, mensaje) {
-  const token = process.env.ZARA_TOKEN;
-  const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_ID}/messages`;
+  const token = process.env.PAGE_ACCESS_TOKEN; // <--- correcto
+  const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
+
   const data = {
     messaging_product: "whatsapp",
     to: numero,
@@ -62,7 +62,7 @@ async function enviarMensaje(numero, mensaje) {
 
 // === Rutas y servidor ===
 app.get("/", (req, res) => {
-  res.send("✅ Zara Body Elite activa con motor clínico v6 y continuidad conversacional.");
+  res.send("✅ Zara Body Elite activa con motor clínico v6 y token corregido.");
 });
 
 app.listen(PORT, () => {
