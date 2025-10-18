@@ -130,3 +130,71 @@ export async function manejarWebhookReservo(req, res) {
 }
 
 export { enviarAvisoInterno };
+// ===== MÓDULO AMPLIADO ZARA vFinal =====
+
+export async function ampliarRespuestasZara(msg) {
+  msg = msg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  if (msg.includes("fea") || msg.includes("cansada") || msg.includes("mal") || msg.includes("baja autoestima")) {
+    return "💬 Te entiendo. Muchas personas sienten eso cuando su piel o cuerpo cambian. En Body Elite usamos tecnología clínica avanzada para que vuelvas a sentirte bien y segura con resultados visibles. ¿Quieres que te deje el enlace para agendar tu diagnóstico sin costo? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  }
+
+  if (msg.includes("flacidez") || msg.includes("celulitis") || msg.includes("reafirmar")) {
+    return "💪 Entiendo. La flacidez y celulitis se tratan con *Radiofrecuencia* y *Cavitación* para activar colágeno y reafirmar la piel. Te puedo orientar con planes como **Body Tensor ($232.000)** o **Body Fitness ($360.000)**. ¿Te gustaría que te deje el enlace para agendar tu evaluación sin costo? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  }
+
+  if (msg.includes("recomiendas") || msg.includes("cual") || msg.includes("me sirve")) {
+    return "✨ Puedo orientarte según tu objetivo. Cuéntame si deseas mejorar *rostro, abdomen o cuerpo* y te indico cuál plan se adapta mejor. Así puedo sugerirte el más efectivo y ayudarte a agendar tu evaluación gratuita.";
+  }
+
+  return null;
+}
+
+// ===== AVISOS INTERNOS BODY ELITE =====
+export async function enviarAvisoInterno(evento) {
+  const token = process.env.WHATSAPP_TOKEN;
+  const admins = ["56976992187", "56982162459", "56987122336"];
+  const mensaje = `📩 Aviso interno Body Elite: ${evento}`;
+
+  try {
+    for (const tel of admins) {
+      await fetch(`https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: tel,
+          text: { body: mensaje },
+        }),
+      });
+    }
+    console.log(`✅ Aviso interno enviado (${evento})`);
+  } catch (err) {
+    console.error("❌ Error al enviar aviso interno:", err);
+  }
+}
+
+// ===== CONFIRMACIÓN DE RESERVA (WEBHOOK) =====
+export async function manejarWebhookReservo(req, res) {
+  const reserva = req.body;
+  if (!reserva) return res.status(400).send("Sin datos recibidos");
+
+  try {
+    const mensaje = `📅 Nueva reserva registrada:\n👤 ${reserva.nombre}\n📞 ${reserva.telefono}\n🗓️ ${reserva.fecha} ${reserva.hora}\n💆 Tratamiento: ${reserva.tratamiento}`;
+    await enviarAvisoInterno(`Confirmación de reserva: ${mensaje}`);
+    console.log("✅ Confirmación enviada a administradores");
+    res.status(200).send("OK");
+  } catch (error) {
+    console.error("❌ Error en webhook Reservo:", error);
+    res.status(500).send("Error interno");
+  }
+}
+
+// ===== CONEXIÓN AUTOMÁTICA CON INDEX =====
+export function integrarAmpliacionZara(app) {
+  app.post("/reservowebhook", manejarWebhookReservo);
+  console.log("🔗 Webhook de Reservo activo y avisos internos listos");
+}
