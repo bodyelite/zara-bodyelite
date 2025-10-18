@@ -1,10 +1,179 @@
 {
-  "celulitis": ["celulitis", "piel de naranja", "piernas con hoyitos", "grasa localizada", "adiposidad", "muslos", "rollitos", "nódulos grasos", "celulitiss", "celulitisss"],
-  "flacidez": ["flacidez", "piel suelta", "cuerpo suelto", "me cuelga la piel", "tonificar", "reafirmar", "tensar", "levantar glúteos", "tensar abdomen", "piel floja"],
-  "botox": ["botox", "toxina", "expresión", "frente", "patas de gallo", "entrecejo", "relleno", "líneas de expresión"],
-  "lipo": ["lipo", "liposucción", "grasa", "bajar abdomen", "reductivo", "cintura", "vientre", "bajar panza", "sin cirugía"],
-  "facial": ["facial", "cara", "rostro", "piel", "poros", "manchas", "limpieza", "rejuvenecer", "antiage", "face"],
-  "ubicacion": ["ubicados", "donde estan", "direccion", "como llegar", "peñalolen", "lugar", "mapa", "avenida las perdices"],
-  "horario": ["horario", "abren", "cierran", "hora", "sabado", "domingo", "atencion"],
-  "planes": ["planes", "promociones", "precios", "valores", "ofertas", "cuanto cuesta", "valen", "promos"]
+  "modo": "comercial_activo",
+  "version": "v10_estable_render",
+  "ejemplos": [
+    {
+      "pregunta": "hola",
+      "respuesta": "Hola 👋 Soy Zara de Body Elite. ¿Podrías contarme qué zona deseas tratar? 💬"
+    },
+    {
+      "pregunta": "inicio",
+      "respuesta": "Hola 👋 Soy Zara, tu asistente de Body Elite. Puedo orientarte sobre tratamientos, precios o agendar tu evaluación sin costo."
+    },
+    {
+      "pregunta": "evaluacion",
+      "respuesta": "Tu evaluación es gratuita 💙 Incluye diagnóstico con FitDays y orientación clínica personalizada. Puedes agendar aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    },
+    {
+      "pregunta": "agenda",
+      "respuesta": "Agenda fácilmente desde nuestro sistema Reservo 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    },
+    {
+      "pregunta": "reserva",
+      "respuesta": "Puedes reservar tu cita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9 💙"
+    },
+    {
+      "pregunta": "direccion",
+      "respuesta": "📍 Av. Las Perdices Nº2990, Local 23, Peñalolén. Lunes a Viernes 9:30–20:00 | Sábado 9:30–13:00."
+    },
+    {
+      "pregunta": "horario",
+      "respuesta": "🕐 Lunes a Viernes 9:30–20:00 | Sábado 9:30–13:00. Estamos en Peñalolén 💙"
+    },
+    {
+      "pregunta": "meta",
+      "respuesta": "Si llegas desde un anuncio Meta Ads, te confirmo que la evaluación es gratuita y Zara te guiará hasta tu agenda 💬"
+    },
+    {
+      "pregunta": "meta ads",
+      "respuesta": "Zara reconoce los anuncios de Meta Ads. Si vienes desde uno, te ayudará a agendar tu evaluación gratuita 📅"
+    },
+    {
+      "pregunta": "body elite",
+      "respuesta": "En Body Elite combinamos tecnología estética avanzada con protocolos clínicos. Resultados reales, sin cirugía 💙"
+    },
+    {
+      "pregunta": "fitdays",
+      "respuesta": "📊 FitDays analiza grasa, músculo, metabolismo, agua corporal y edad biológica. Zara interpreta los datos para definir tu plan ideal."
+    },
+    {
+      "pregunta": "valor",
+      "respuesta": "💰 Planes faciales desde $120.000 y corporales desde $348.800. ¿Deseas que te detalle según tu objetivo?"
+    },
+    {
+      "pregunta": "precio",
+      "respuesta": "Nuestros tratamientos parten desde $120.000 en facial y $348.800 en corporal. ¿Qué zona quieres trabajar?"
+    },
+    {
+      "pregunta": "oferta",
+      "respuesta": "🔥 Promoción activa: 30% OFF en planes Lipo y Push Up. Cupos limitados hasta agotar agenda de la semana."
+    },
+    {
+      "pregunta": "promocion",
+      "respuesta": "🎯 Promoción del mes: 30% OFF en Lipo Body Elite y Push Up. Vigente hasta completar cupos."
+    },
+    {
+      "pregunta": "planes",
+      "respuesta": "💆‍♀️ FACIALES: Limpieza Full, Face Light, Face Smart, Face Inicia, Face Antiage, Face Elite. 🔥 CORPORALES: Lipo Reductiva, Lipo Body Elite, Push Up, Body Tensor, Body Fitness."
+    },
+    {
+      "pregunta": "lipo",
+      "respuesta": "💠 *Lipo Body Elite ($664.000)* combina *HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor*. Remodela abdomen, cintura o piernas sin cirugía 🔥"
+    },
+    {
+      "pregunta": "lipo express",
+      "respuesta": "⚡ *Lipo Express ($432.000)* es ideal para reducción rápida de volumen. Combina Cavitación + RF + drenaje localizado."
+    },
+    {
+      "pregunta": "push up",
+      "respuesta": "🍑 *Push Up Glúteos ($376.000)* tonifica y eleva sin cirugía. Combina EMS Sculptor + Radiofrecuencia para resultados visibles en 3 sesiones."
+    },
+    {
+      "pregunta": "flacidez",
+      "respuesta": "💪 Para flacidez corporal recomendamos *Body Tensor* o *Body Fitness*, ambos con RF y EMS Sculptor."
+    },
+    {
+      "pregunta": "abdomen",
+      "respuesta": "🔥 En abdomen te recomiendo *Lipo Body Elite* o *Body Fitness*. Reducen grasa y fortalecen el músculo con tecnología EMS Sculptor."
+    },
+    {
+      "pregunta": "piernas",
+      "respuesta": "✨ Para piernas y muslos recomendamos *Lipo Reductiva* o *Body Tensor*, según tu diagnóstico FitDays."
+    },
+    {
+      "pregunta": "celulitis",
+      "respuesta": "🍃 Para celulitis aplicamos *Cavitación + RF + drenaje*. En casos avanzados usamos *Lipo Reductiva*."
+    },
+    {
+      "pregunta": "face elite",
+      "respuesta": "💎 *Face Elite ($358.400)* es nuestro tratamiento más completo: HIFU + RF + activos regenerativos para firmeza y luminosidad facial."
+    },
+    {
+      "pregunta": "facial",
+      "respuesta": "💆‍♀️ Tratamientos faciales desde $120.000. Mejoran textura, firmeza y luminosidad con RF, LED y Pink Glow."
+    },
+    {
+      "pregunta": "limpieza facial",
+      "respuesta": "🫧 *Limpieza Facial Full ($120.000)* elimina impurezas y puntos negros. Incluye extracción, LED y radiofrecuencia suave."
+    },
+    {
+      "pregunta": "radiofrecuencia",
+      "respuesta": "🔥 *Radiofrecuencia* estimula colágeno y elastina, reafirmando y mejorando la textura de la piel."
+    },
+    {
+      "pregunta": "hifu",
+      "respuesta": "💠 *HIFU 12D* trabaja grasa y fascia muscular, tensando y modelando sin cirugía. Ideal para papada, abdomen o glúteos."
+    },
+    {
+      "pregunta": "ems",
+      "respuesta": "⚡ *EMS Sculptor* genera 20.000 contracciones musculares por sesión. Tonifica, levanta y define sin esfuerzo."
+    },
+    {
+      "pregunta": "pink glow",
+      "respuesta": "🌸 *Pink Glow* hidrata, regenera y devuelve luminosidad al rostro. Es una mesoterapia sin agujas."
+    },
+    {
+      "pregunta": "duele",
+      "respuesta": "No duele 😊 Todos los tratamientos son 100% no invasivos y sin recuperación."
+    },
+    {
+      "pregunta": "resultados",
+      "respuesta": "Los resultados se notan desde la primera sesión. Recomendamos continuidad para optimizarlos 💙"
+    },
+    {
+      "pregunta": "mapa",
+      "respuesta": "📍 https://goo.gl/maps/L6vAQvXkPCeGrPaw9"
+    },
+    {
+      "pregunta": "reagendar",
+      "respuesta": "🔁 Puedes reagendar aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    },
+    {
+      "pregunta": "meta campaña",
+      "respuesta": "Zara detecta origen desde campañas Meta. Si vienes desde un anuncio, te asignará prioridad en agenda 📅"
+    },
+    {
+      "pregunta": "agradecimiento",
+      "respuesta": "Gracias 💙 Recuerda que tu evaluación es gratuita y puedes agendar en el link que te envié."
+    },
+    {
+      "pregunta": "contacto",
+      "respuesta": "Puedes escribirme aquí mismo o agendar directo desde el enlace de Reservo 💬"
+    },
+    {
+      "pregunta": "fit",
+      "respuesta": "💪 *Body Fitness ($360.000)* mejora tono muscular y firmeza con EMS Sculptor. Ideal para abdomen, glúteos y brazos."
+    },
+    {
+      "pregunta": "tensor",
+      "respuesta": "✨ *Body Tensor ($232.000)* combina RF y drenaje para firmeza cutánea y reducción de flacidez leve."
+    },
+    {
+      "pregunta": "antiage",
+      "respuesta": "🧬 *Face Antiage ($281.600)* estimula colágeno y reduce líneas finas con RF facial y activos rejuvenecedores."
+    },
+    {
+      "pregunta": "mujer",
+      "respuesta": "Body Elite tiene protocolos específicos para mujeres, adaptados a cada zona y biotipo corporal 💙"
+    },
+    {
+      "pregunta": "hombre",
+      "respuesta": "También atendemos hombres. Los más solicitados: *Body Fitness* y *Lipo Reductiva* 💪"
+    },
+    {
+      "pregunta": "hola",
+      "respuesta": "Hola 👋 Soy Zara. ¿En qué puedo ayudarte?",
+      "fecha": "2025-10-18T03:06:46.836Z"
+    }
+  ]
 }
