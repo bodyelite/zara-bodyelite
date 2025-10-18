@@ -8,7 +8,6 @@ function defaultInput(input) {
 // Versión clínica integral Body Elite
 // Reconoce síntomas, zonas, tecnologías y activos. Explica, recomienda y educa.
 
-const clasificarPlan = (mensaje) => {
 
   const faciales = ["rostro", "cara", "arrugas", "manchas", "ojeras", "papada", "flacidez facial", "rejuvenecer", "botox", "toxina", "limpieza", "hidratación", "poros", "cuello"];
   const corporales = ["abdomen", "cintura", "piernas", "brazos", "glúteos", "espalda", "flacidez corporal", "celulitis", "grasa", "adiposidad", "tonificar", "reafirmar", "modelar"];
@@ -91,12 +90,10 @@ Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makere
   return respuesta;
 }
 
-export {  clasificarPlan }
 
 // Alias para compatibilidad con index.js
 import { generarRespuestaFacial } from "./motor_facial.js";
 export function generarRespuestaClinica(input) {
-  return clasificarPlan(input);
 }
 
 
@@ -105,7 +102,6 @@ export function generarRespuestaClinica(input) {
   }
   return "general"
 }
-export function clasificarPlan(mensajeUsuario) {
   if (!mensajeUsuario || typeof mensajeUsuario !== "string") return null
   const texto = mensajeUsuario.toLowerCase()
 
@@ -118,6 +114,27 @@ export function clasificarPlan(mensajeUsuario) {
 
   for (const [plan, regex] of Object.entries(patrones)) {
     if (regex.test(texto)) return plan
+  }
+
+  return "general"
+}
+export function clasificarPlan(mensajeUsuario) {
+  if (!mensajeUsuario || typeof mensajeUsuario !== "string") {
+    return "general"
+  }
+
+  const texto = mensajeUsuario.toLowerCase()
+  const patrones = {
+    botox: /(botox|toxina|arruga|frente|patas de gallo|expresion)/,
+    flacidez: /(flacidez|piel suelta|tensar|firmeza|lifting)/,
+    grasa: /(grasa|abdomen|cintura|lipo|celulitis|reductiva)/,
+    limpieza: /(limpieza|facial|poros|impurezas|blackheads|puntos negros)/
+  }
+
+  for (const [plan, regex] of Object.entries(patrones)) {
+    if (regex.test(texto)) {
+      return plan
+    }
   }
 
   return "general"
