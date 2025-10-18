@@ -99,3 +99,19 @@ export function generarRespuestaClinica(input) {
   return clasificarPlan(input);
 }
 
+function clasificarPlan(mensajeUsuario) {
+  if (!mensajeUsuario || typeof mensajeUsuario !== "string") return null
+  const texto = mensajeUsuario.toLowerCase()
+
+  const patrones = {
+    botox: /(botox|toxina|arruga|frente|patas de gallo|expresion)/,
+    flacidez: /(flacidez|piel suelta|tensar|firmeza)/,
+    grasa: /(grasa|abdomen|cintura|reductiva|celulitis|lipo)/,
+    limpieza: /(limpieza|poros|facial|puntos negros|impurezas)/,
+  }
+
+  for (const [plan, regex] of Object.entries(patrones)) {
+    if (regex.test(texto)) return plan
+  }
+  return "general"
+}
