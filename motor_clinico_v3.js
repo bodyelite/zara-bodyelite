@@ -1,129 +1,9 @@
-// Función de seguridad para entrada nula
-function defaultInput(input) {
-  return typeof input === 'string' ? input : '';
-}
+// motor_clinico_v3.js — versión estable limpia
 
-// Parche seguridad input nulo
-// motor_clinico_v3.js
-// Versión clínica integral Body Elite
-// Reconoce síntomas, zonas, tecnologías y activos. Explica, recomienda y educa.
-
-
-  const faciales = ["rostro", "cara", "arrugas", "manchas", "ojeras", "papada", "flacidez facial", "rejuvenecer", "botox", "toxina", "limpieza", "hidratación", "poros", "cuello"];
-  const corporales = ["abdomen", "cintura", "piernas", "brazos", "glúteos", "espalda", "flacidez corporal", "celulitis", "grasa", "adiposidad", "tonificar", "reafirmar", "modelar"];
-
-  const tecnologias = {
-    hifu: "HIFU 12D trabaja con ultrasonido focalizado para tensar la fascia SMAS y eliminar grasa subcutánea.",
-    cavitacion: "Cavitación rompe los adipocitos por presión alternante, ayudando a reducir volumen.",
-    radiofrecuencia: "Radiofrecuencia genera calor endógeno que estimula colágeno tipo I y III, logrando piel más firme y lisa.",
-    ems: "EMS Sculptor provoca 20.000 contracciones musculares en 30 minutos, tonificando y elevando músculo.",
-    pinkglow: "Pink Glow aporta péptidos y antioxidantes para regenerar y dar luminosidad a la piel.",
-    exosomas: "Los exosomas regeneran tejido y mejoran textura, ideales en protocolos faciales avanzados.",
-    led: "LED Therapy usa luz azul, roja y ámbar para reparar, desinflamar y revitalizar la piel.",
-    botox: "El botox forma parte de protocolos como Face Elite o Full Face, donde se combina con HIFU y RF para resultados más naturales y duraderos."
-  }
-
-  const planes = {
-    facial: {
-      arrugas: "Face Elite",
-      manchas: "Face Smart",
-      ojeras: "Face Light",
-      papada: "Face Inicia",
-      flacidez: "Face Antiage",
-      botox: "Face Elite",
-      toxina: "Face Elite",
-      limpieza: "Limpieza Facial Full",
-      rejuvenecer: "Full Face",
-      cuello: "Full Face",
-      default: "Face Smart"
-    },
-    corporal: {
-      celulitis: "Lipo Body Elite",
-      grasa: "Lipo Reductiva",
-      cintura: "Lipo Express",
-      glúteos: "Push Up",
-      flacidez: "Body Tensor",
-      tonificar: "Body Fitness",
-      default: "Lipo Body Elite"
-    }
-  }
-
-  let tipo = faciales.some(t => msg.includes(t)) ? "facial" :
-             corporales.some(t => msg.includes(t)) ? "corporal" : "indefinido";
-
-  let plan = "evaluación personalizada";
-  if (tipo === "facial") {
-    for (const key in planes.facial) if (msg.includes(key)) plan = planes.facial[key];
-  } else if (tipo === "corporal") {
-    for (const key in planes.corporal) if (msg.includes(key)) plan = planes.corporal[key];
-  }
-
-  let descripcion = "";
-  if (tipo === "facial") {
-    descripcion = `El plan *${plan}* combina ${msg.includes("botox") ? "botox, HIFU 12D y Radiofrecuencia" : "HIFU 12D, Radiofrecuencia y Pink Glow"} para rejuvenecer y reafirmar la piel de forma natural.`;
-  } else if (tipo === "corporal") {
-    descripcion = `El plan *${plan}* aplica HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor para reducir grasa localizada y tonificar sin cirugía.`;
-  } else {
-    descripcion = "Cada plan se ajusta tras diagnóstico con IA y análisis corporal FitDays.";
-  }
-
-  let infoExtra = "";
-  for (const key in tecnologias) if (msg.includes(key)) infoExtra += `\n💡 ${tecnologias[key]}`;
-
-  let respuesta = "";
-  if (tipo === "facial") {
-    respuesta = `✨ ${descripcion}
-Planes faciales desde **$120.000** con evaluación gratuita asistida por IA.
-Reserva tu diagnóstico aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9${infoExtra}`;
-  } else if (tipo === "corporal") {
-    respuesta = `💪 ${descripcion}
-Planes corporales desde **$232.000**, definidos tras evaluación IA.
-Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9${infoExtra}`;
-  } else {
-    respuesta = `Puedo ayudarte a definir el tratamiento ideal.
-¿Tu objetivo principal es reducir grasa, reafirmar piel o rejuvenecer rostro?
-Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
-  }
-
-  const respuestaFacial = generarRespuestaFacial(mensajeUsuario);
-  if (respuestaFacial) return respuestaFacial;
-  return respuesta;
-}
-
-
-// Alias para compatibilidad con index.js
-import { generarRespuestaFacial } from "./motor_facial.js";
-export function generarRespuestaClinica(input) {
-}
-
-
-  for (const [plan, regex] of Object.entries(patrones)) {
-    if (regex.test(texto)) return plan
-  }
-  return "general"
-}
-  if (!mensajeUsuario || typeof mensajeUsuario !== "string") return null
-  const texto = mensajeUsuario.toLowerCase()
-
-  const patrones = {
-    botox: /(botox|toxina|arruga|frente|patas de gallo|expresion)/,
-    flacidez: /(flacidez|piel suelta|tensar|firmeza|lifting)/,
-    grasa: /(grasa|abdomen|cintura|lipo|celulitis|reductiva)/,
-    limpieza: /(limpieza|facial|poros|impurezas|blackheads|puntos negros)/
-  }
-
-  for (const [plan, regex] of Object.entries(patrones)) {
-    if (regex.test(texto)) return plan
-  }
-
-  return "general"
-}
 export function clasificarPlan(mensajeUsuario) {
-  if (!mensajeUsuario || typeof mensajeUsuario !== "string") {
-    return "general"
-  }
-
+  if (!mensajeUsuario || typeof mensajeUsuario !== "string") return "general"
   const texto = mensajeUsuario.toLowerCase()
+
   const patrones = {
     botox: /(botox|toxina|arruga|frente|patas de gallo|expresion)/,
     flacidez: /(flacidez|piel suelta|tensar|firmeza|lifting)/,
@@ -132,10 +12,26 @@ export function clasificarPlan(mensajeUsuario) {
   }
 
   for (const [plan, regex] of Object.entries(patrones)) {
-    if (regex.test(texto)) {
-      return plan
-    }
+    if (regex.test(texto)) return plan
   }
 
   return "general"
+}
+
+export function generarRespuestaClinica(input) {
+  if (!input || typeof input !== "string") return "Por favor indícanos qué deseas mejorar."
+
+  const plan = clasificarPlan(input)
+  switch (plan) {
+    case "botox":
+      return "Para expresión facial y arrugas dinámicas recomendamos *FACE ELITE* o *FULL FACE*, que integran HIFU 12D + Radiofrecuencia + Pink Glow + Toxina Botulínica. Actúan sobre la fascia y líneas de expresión mejorando firmeza y textura. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    case "flacidez":
+      return "El tratamiento ideal es *BODY TENSOR* o *FACE ANTIAGE*, que trabajan con HIFU 12D + Radiofrecuencia para estimular colágeno y firmeza. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    case "grasa":
+      return "Nuestro tratamiento indicado es *LIPO BODY ELITE*, con HIFU 12D + Cavitación + EMS Sculptor. Reduce grasa localizada, reafirma y moldea sin cirugía. Incluye 12 sesiones. Valor $664.000. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    case "limpieza":
+      return "Recomendamos *LIMPIEZA FACIAL FULL*, que combina exfoliación, extracción profunda, alta frecuencia y mascarilla LED. Ideal para piel grasa o con poros dilatados. Valor $120.000. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    default:
+      return "Podemos ayudarte a elegir el tratamiento más adecuado según tu objetivo corporal o facial. Agenda una evaluación sin costo aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  }
 }
