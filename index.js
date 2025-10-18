@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { generarRespuestaClinica } from "./motor_clinico.js";
+import { generarRespuestaClinica } from "./motor_clinico_v3.js";
 import fs from "fs";
 import dotenv from "dotenv";
 dotenv.config();
