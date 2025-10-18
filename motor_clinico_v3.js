@@ -85,3 +85,8 @@ Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makere
 }
 
 export {  clasificarPlan }
+
+// Alias para compatibilidad con index.js
+export function generarRespuestaClinica(input) {
+  return clasificarPlan(input);
+}
