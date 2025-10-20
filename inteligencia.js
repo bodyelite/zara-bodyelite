@@ -20,8 +20,6 @@ async function analizarMensaje(texto) {
   const memoria = leerMemoria();
   const frases = respuestas.frases;
 
-  if (!Array.isArray(frases)) return "Error interno: estructura de respuestas inválida.";
-
   const encontrado = frases.find((f) =>
     texto.toLowerCase().includes(f.patron.toLowerCase())
   );
