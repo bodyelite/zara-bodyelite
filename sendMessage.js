@@ -1,10 +1,9 @@
-const axios = require('axios');
+import axios from 'axios';
 
-const sendMessage = async (to, message) => {
+export const sendMessage = async (to, message) => {
   try {
     const token = process.env.WHATSAPP_TOKEN;
     const phoneId = process.env.PHONE_NUMBER_ID;
-
     const url = `https://graph.facebook.com/v17.0/${phoneId}/messages`;
 
     const payload = {
@@ -25,6 +24,4 @@ const sendMessage = async (to, message) => {
     console.error('❌ Error al enviar mensaje:', error.response?.data || error.message);
   }
 };
-
-module.exports = { sendMessage };
 
