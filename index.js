@@ -9,10 +9,22 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => {
-  res.status(200).send("Zara IA activa y operativa");
+// Verificación de Meta
+app.get("/webhook", (req, res) => {
+  const verifyToken = process.env.VERIFY_TOKEN || "ZARA_TOKEN_VERIFICACION";
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (mode && token && mode === "subscribe" && token === verifyToken) {
+    console.log("✅ Verificación de webhook confirmada");
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
+  }
 });
 
+// Endpoint de mensajes entrantes
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
@@ -39,4 +51,4 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log("Zara IA ejecutándose en puerto 3000"));
+app.listen(3000, () => console.log("✅ Zara IA ejecutándose en puerto 3000"));
