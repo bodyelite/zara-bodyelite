@@ -1,26 +1,30 @@
+import fs from "fs";
+
+const frases = JSON.parse(fs.readFileSync("./src/49ecadaa-1b01-4e86-868a-9dd6642249c6.json", "utf8"));
+
 const inteligencia = {
   analizarMensaje: (texto) => {
     const msg = texto.toLowerCase().trim();
 
+    // --- Coincidencia directa con archivo de frases ---
+    const match = frases.find(f => msg.includes(f));
+    if (match) return inteligencia.buscarRespuestaClinica(match);
+
+    // --- Saludos ---
     if (/(^hola|buenas|hi|hey)/.test(msg)) {
       return "👋 Hola, soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita 🌸\n\n¿Quieres conocer nuestros planes corporales o faciales?\n👉 Responde *1* para corporales o *2* para faciales.";
     }
 
+    // --- Elección de categoría ---
     if (msg === "1") return inteligencia.resumenCorporales();
     if (msg === "2") return inteligencia.resumenFaciales();
 
+    // --- Agenda ---
     if (/agendar|reserva|hora|cita|agenda|reagendar|turno/.test(msg)) {
       return "✨ Puedes agendar directamente tu evaluación gratuita aquí:\n📅 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\nO escríbeme qué día y hora te acomoda para coordinarlo.";
     }
 
-    if (/grasa|abdomen|celulitis|hifu|cavitacion|radiofrecuencia|flacidez|musculo|gluteos|piel|arrugas/.test(msg)) {
-      return inteligencia.buscarRespuestaClinica(msg);
-    }
-
-    if (/gracias|ok|perfecto|listo|dale/.test(msg)) {
-      return "💙 Gracias por tu mensaje. Si deseas agendar tu evaluación, puedo ayudarte con el enlace directo cuando quieras.";
-    }
-
+    // --- Fallback ---
     return "🤖 No estoy segura de tu consulta. ¿Deseas conocer los *planes corporales* o *faciales*?";
   },
 
@@ -50,18 +54,18 @@ const inteligencia = {
   },
 
   buscarRespuestaClinica: (msg) => {
-    if (/hifu/.test(msg)) return "🔹 *HIFU 12D* trabaja con ultrasonido focalizado de alta intensidad sobre la fascia SMAS y grasa subcutánea. Ideal para abdomen, papada y lifting facial sin cirugía.";
-    if (/cavitacion/.test(msg)) return "🔹 *Cavitación* rompe adipocitos por presión alternante, reduciendo grasa localizada en abdomen, muslos y flancos.";
-    if (/radiofrecuencia|rf/.test(msg)) return "🔹 *Radiofrecuencia* genera calor endógeno que estimula colágeno I y III, tensando la piel y mejorando firmeza corporal y facial.";
-    if (/ems|musculo|sculptor/.test(msg)) return "🔹 *EMS Sculptor* produce contracciones musculares supramáximas, ayudando a tonificar glúteos, abdomen y piernas.";
-    if (/pink|glow/.test(msg)) return "🔹 *Pink Glow* aplica péptidos y antioxidantes para regenerar la piel, mejorar luminosidad y textura facial.";
-    if (/led|luz/.test(msg)) return "🔹 *LED Therapy* usa luz azul antibacteriana, roja regeneradora y ámbar estimulante para mejorar procesos cutáneos.";
-    if (/celulitis/.test(msg)) return "🔹 Para *celulitis*, combinamos Cavitación + Radiofrecuencia + drenaje corporal con resultados visibles desde las primeras sesiones.";
-    if (/flacidez/.test(msg)) return "🔹 Para *flacidez corporal o facial*, aplicamos Radiofrecuencia y HIFU 12D para estimular colágeno y tensar tejidos.";
-    if (/grasa|abdomen/.test(msg)) return "🔹 Para *grasa localizada en abdomen o cintura*, los protocolos Lipo Reductiva y Lipo Body Elite combinan HIFU, Cavitación y EMS Sculptor.";
-    if (/arrugas|manchas|piel/.test(msg)) return "🔹 Para *rejuvenecimiento facial*, los planes Face Antiage o Face Elite combinan HIFU facial, Pink Glow y LED Therapy para estimular colágeno y mejorar tono de piel.";
+    if (/abdomen|grasa|panza|vientre/.test(msg))
+      return "🔹 *Lipo Body Elite* o *Lipo Reductiva* combinan HIFU 12D, Cavitación y EMS Sculptor para reducir grasa y definir cintura.";
+    if (/flacidez|brazos|piernas|reafirmar/.test(msg))
+      return "🔹 *Body Tensor* o *Body Fitness* aplican Radiofrecuencia y EMS Sculptor para firmeza y tonificación muscular.";
+    if (/gluteos|push|levantar/.test(msg))
+      return "🔹 *Push Up* trabaja con EMS Sculptor para levantar y tonificar glúteos.";
+    if (/papada|rostro|cara|facial|piel|arrugas/.test(msg))
+      return "🔹 *Face Elite* y *Face Antiage* usan HIFU facial, Pink Glow y LED Therapy para rejuvenecer rostro y definir contorno.";
+    if (/limpieza|poros|acne|antiacne/.test(msg))
+      return "🔹 *Limpieza Facial Full* elimina impurezas, regula sebo y revitaliza tu piel.";
     return "💬 Nuestros tratamientos combinan tecnología avanzada para resultados visibles y sin cirugía. ¿Deseas agendar tu evaluación gratuita?";
   }
 };
 
-module.exports = inteligencia;
+export default inteligencia;
