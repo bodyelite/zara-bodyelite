@@ -1,3 +1,44 @@
 {
-  "contexto": []
+  "conversaciones": [
+    {
+      "usuario": ["hola", "buenas", "qué tal", "buen día", "quisiera más información"],
+      "zara": "Hola 🌸 Soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita 💫. ¿Te gustaría conocer los tratamientos corporales o faciales?"
+    },
+    {
+      "usuario": ["quiero saber precios", "cuánto cuesta", "precio", "valores"],
+      "zara": "Los precios dependen del plan que mejor se adapte a ti. Por ejemplo, Lipo Body Elite $664000, Lipo Express $432000 y Face Elite $358400. Todos incluyen diagnóstico y sesiones personalizadas."
+    },
+    {
+      "usuario": ["tengo grasa", "grasa localizada", "bajar abdomen", "rollitos", "papada", "celulitis"],
+      "zara": "Podemos ayudarte con planes reductivos como Lipo Express, Lipo Body Elite o tratamientos específicos según la zona. Usamos HIFU 12D, cavitación y radiofrecuencia para grasa localizada y tonificación."
+    },
+    {
+      "usuario": ["tengo flacidez", "piel suelta", "necesito firmeza"],
+      "zara": "Para la flacidez corporal o facial recomendamos Radiofrecuencia y HIFU 12D, que estimulan colágeno I–III y tensan la piel desde las capas profundas."
+    },
+    {
+      "usuario": ["quiero tonificar", "quiero levantar glúteos", "quiero marcar abdomen", "quiero mejorar músculos"],
+      "zara": "El plan Body Fitness o Push Up con EMS Sculptor genera contracciones musculares profundas (más de 20000 por sesión). Ideal para tonificar glúteos o abdomen."
+    },
+    {
+      "usuario": ["tengo acné", "piel grasa", "quiero limpiar mi cara", "quiero tratamiento facial"],
+      "zara": "Para piel grasa o acné, trabajamos con LED Therapy, Pink Glow y RF facial. Recomendamos Face Light o Face Elite según el tipo de piel."
+    },
+    {
+      "usuario": ["cómo agendo", "dónde están", "dirección", "quiero reservar", "agenda", "agendar"],
+      "zara": "Puedes agendar directamente aquí 💎 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9 📍Av. Las Perdices 2990, Peñalolén."
+    },
+    {
+      "usuario": ["qué tecnologías usan", "cómo funciona", "me da miedo el HIFU"],
+      "zara": "Usamos tecnología HIFU 12D (ultrasonido focalizado SMAS), Cavitación (rompe adipocitos), Radiofrecuencia (calor endógeno y colágeno profundo) y EMS Sculptor (contracciones musculares intensas). Seguros, sin dolor ni recuperación."
+    },
+    {
+      "usuario": ["qué incluye", "cuántas sesiones", "dura mucho", "cada cuánto se hace"],
+      "zara": "Cada plan incluye diagnóstico inicial, sesiones personalizadas (de 6 a 12 según tu caso) y seguimiento clínico con tecnología combinada (HIFU, Cavitación, RF y EMS)."
+    },
+    {
+      "usuario": ["gracias", "ok", "perfecto", "me interesa"],
+      "zara": "Excelente 💫. Te dejo el enlace para agendar tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9 Nos vemos en Body Elite ✨"
+    }
+  ]
 }
