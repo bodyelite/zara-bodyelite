@@ -5,11 +5,11 @@ dotenv.config();
 const token = process.env.PAGE_ACCESS_TOKEN;
 const phoneNumberId = process.env.PHONE_NUMBER_ID;
 
-export async function sendMessage(to, message) {
+async function sendMessage(to, message) {
   try {
     const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
     const headers = {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json"
     };
     const data = {
@@ -24,3 +24,5 @@ export async function sendMessage(to, message) {
     console.error("Error al enviar mensaje:", error.response?.data || error.message);
   }
 }
+
+export { sendMessage };
