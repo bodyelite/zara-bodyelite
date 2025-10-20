@@ -1,66 +1,58 @@
-import express from "express";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
-import { sendMessage } from "./sendMessage.js";
-import { obtenerRespuesta } from "./inteligencia.js";
-import { aprender } from "./memoria.js";
+const express = require('express');
+const bodyParser = require('body-parser');
+const intents = require('./intents');
+const responses = require('./responses');
+const { sendMessage } = require('./sendMessage');
 
-dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-app.get("/webhook", (req, res) => {
-  const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-
-  if (mode && token) {
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      console.log("✅ Webhook verificado correctamente.");
-      res.status(200).send(challenge);
-    } else {
-      res.sendStatus(403);
-    }
-  }
-});
-
-app.post("/webhook", async (req, res) => {
+// Webhook principal de Meta
+app.post('/webhook', (req, res) => {
   try {
-    const body = req.body;
+    const entry = req.body.entry && req.body.entry[0];
+    const changes = entry && entry.changes && entry.changes[0];
+    const messageData = changes && changes.value && changes.value.messages && changes.value.messages[0];
 
-    if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const message = changes?.value?.messages?.[0];
+    if (messageData && messageData.text && messageData.from) {
+      const message = messageData.text.body.toLowerCase().trim();
+      const from = messageData.from;
 
-      if (message && message.text && message.from) {
-        const textoUsuario = message.text.body.trim();
-        const telefono = message.from;
+      // Buscar coincidencia de intención
+      const intent = intents.find(i => i.patterns.some(p => message.includes(p)));
 
-        console.log("📩 Mensaje recibido:", textoUsuario);
-
-        const respuesta = obtenerRespuesta(textoUsuario);
-        await sendMessage(telefono, respuesta);
-        console.log("💬 Respuesta enviada:", respuesta);
-
-        // Aprendizaje automático (solo si no reconoció la frase)
-        if (respuesta.includes("No entendí tu mensaje")) {
-          aprender(textoUsuario, "Respuesta pendiente de definir (autoaprendizaje)");
-          console.log("🧠 Frase desconocida guardada para revisión.");
-        }
+      if (intent && responses[intent.response]) {
+        sendMessage(from, responses[intent.response]);
+        console.log('Respuesta enviada para intención:', intent.tag);
+      } else {
+        sendMessage(from, responses.fallback);
+        console.log('Frase desconocida:', message);
       }
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
     }
+
+    res.sendStatus(200);
   } catch (error) {
-    console.error("❌ Error procesando webhook:", error);
+    console.error('Error en webhook:', error);
     res.sendStatus(500);
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+// Webhook GET (verificación de Meta)
+app.get('/webhook', (req, res) => {
+  const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode && token && mode === 'subscribe' && token === VERIFY_TOKEN) {
+    console.log('Webhook verificado correctamente');
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
+  }
 });
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log('✅ Zara IA activa y escuchando');
+});
+
