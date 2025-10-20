@@ -52,7 +52,7 @@ app.post("/webhook", async (req, res) => {
             // Análisis con inteligencia local
                 await sendMessage(from, posible);
             }
-          text: { body: respuesta },
+          text: { body: respuesta }
         };
 
         const headers = {
