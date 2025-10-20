@@ -49,10 +49,10 @@ app.post("/webhook", async (req, res) => {
           messaging_product: "whatsapp",
           to: from,
         if (posible) return await sendMessage(from, posible);
-            let posible = inteligencia.analizarMensaje(texto);
-            if (posible) { await sendMessage(from, posible); return; }
-            let posible = inteligencia.analizarMensaje(texto);
-            if (posible) { await sendMessage(from, posible); return; }
+            const posible = inteligencia.analizarMensaje(texto);
+            if (posible) {
+                await sendMessage(from, posible);
+            }
           text: { body: respuesta },
         };
 
