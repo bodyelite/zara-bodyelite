@@ -1,28 +1,29 @@
-import axios from "axios";
-import dotenv from "dotenv";
-dotenv.config();
+import fetch from "node-fetch";
 
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+export async function sendMessage(to, message) {
+  const url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
+  const headers = {
+    Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+    "Content-Type": "application/json"
+  };
 
-async function sendMessage(to, text) {
+  const body = JSON.stringify({
+    messaging_product: "whatsapp",
+    to,
+    type: "text",
+    text: { body: message }
+  });
+
   try {
-    const url = "https://graph.facebook.com/v18.0/" + PHONE_NUMBER_ID + "/messages";
-    const headers = {
-      Authorization: "Bearer " + PAGE_ACCESS_TOKEN,
-      "Content-Type": "application/json"
-    };
-    const body = {
-      messaging_product: "whatsapp",
-      to: to,
-      type: "text",
-      text: { preview_url: false, body: text }
-    };
-    const response = await axios.post(url, body, { headers });
-    console.log("Mensaje enviado correctamente:", response.data);
+    const response = await fetch(url, { method: "POST", headers, body });
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Error al enviar mensaje:", data);
+    } else {
+      console.log("Mensaje enviado correctamente:", data);
+    }
   } catch (error) {
-    console.error("Error al enviar mensaje:", error.response?.data || error.message);
+    console.error("Error de conexión:", error);
   }
 }
-
-export { sendMessage };
