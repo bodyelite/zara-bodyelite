@@ -15,28 +15,30 @@ app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode === "subscribe" && token === VERIFY_TOKEN) res.status(200).send(challenge);
-  else res.sendStatus(403);
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
+  }
 });
 
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const message = changes?.value?.messages?.[0];
+    const message = entry?.changes?.[0]?.value?.messages?.[0];
     const from = message?.from;
-    const text = message?.text?.body?.toLowerCase();
-
-    if (from && text) {
-      console.log("Mensaje recibido:", text);
-      const respuesta = await analizarMensaje(text);
+    const texto = message?.text?.body?.toLowerCase();
+    if (from && texto) {
+      const respuesta = await analizarMensaje(texto);
       await sendMessage(from, respuesta);
     }
     res.sendStatus(200);
-  } catch (e) {
-    console.error("Error procesando mensaje:", e);
+  } catch (error) {
+    console.error("Error procesando mensaje:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
 
-app.listen(PORT, () => console.log("Servidor corriendo en puerto", PORT));
+app.listen(PORT, () => {
+  console.log("Servidor corriendo en puerto " + PORT);
+});
