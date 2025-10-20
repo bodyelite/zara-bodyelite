@@ -1,34 +1,34 @@
 import express from "express";
 import bodyParser from "body-parser";
-import dotenv from "dotenv";
 import axios from "axios";
-dotenv.config();
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-const token = process.env.PAGE_ACCESS_TOKEN;
-const phoneNumberId = process.env.PHONE_NUMBER_ID;
-const PORT = process.env.PORT || 3000;
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const PORT = process.env.PORT || 3000;
 
-async function sendMessage(to, message) {
+async function sendMessage(to, text) {
   try {
-    const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    const url = "https://graph.facebook.com/v18.0/" + PHONE_NUMBER_ID + "/messages";
     const headers = {
-      Authorization: `Bearer ${token}`,
+      "Authorization": "Bearer " + PAGE_ACCESS_TOKEN,
       "Content-Type": "application/json"
     };
-    const data = {
+    const body = {
       messaging_product: "whatsapp",
       to: to,
       type: "text",
-      text: { body: message }
+      text: { body: text }
     };
-    const response = await axios.post(url, data, { headers });
-    console.log("Mensaje enviado:", response.data);
-  } catch (error) {
-    console.error("Error al enviar mensaje:", error.response?.data || error.message);
+    const res = await axios.post(url, body, { headers });
+    console.log("Mensaje enviado correctamente:", res.data);
+  } catch (err) {
+    console.error("Error al enviar mensaje:", err.response?.data || err.message);
   }
 }
 
@@ -45,36 +45,31 @@ app.get("/webhook", (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   try {
-    const body = req.body;
-    if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const message = changes?.value?.messages?.[0];
-      const from = message?.from;
-      const text = message?.text?.body?.toLowerCase();
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const message = changes?.value?.messages?.[0];
+    const from = message?.from;
+    const text = message?.text?.body?.toLowerCase();
 
-      if (from && text) {
-        console.log("Mensaje recibido:", text);
-        let respuesta = "No entendi tu mensaje. Puedes reformularlo?";
+    if (from && text) {
+      console.log("Mensaje recibido:", text);
+      let respuesta = "No entendi tu mensaje. Por favor reformulalo.";
 
-        if (text.includes("hola")) {
-          respuesta = "Hola, soy Zara IA de Body Elite. Te acompano en tu evaluacion estetica gratuita. Quieres conocer nuestros planes corporales o faciales? Responde 1 para corporales o 2 para faciales.";
-        } else if (text === "1") {
-          respuesta = "Planes Corporales Body Elite: Lipo Body Elite, Body Fitness, Push Up, Body Tensor. Incluyen HIFU, EMS y Radiofrecuencia. Deseas conocer precios o agendar?";
-        } else if (text === "2") {
-          respuesta = "Planes Faciales Body Elite: Face Smart, Face Antiage, Face Elite. Incluyen Pink Glow, LED Therapy y Radiofrecuencia facial. Deseas conocer precios o agendar?";
-        } else if (text.includes("precio")) {
-          respuesta = "Lipo Body Elite $664000, Face Elite $358400. Puedes agendar tu evaluacion gratuita aqui: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
-        }
-
-        await sendMessage(from, respuesta);
+      if (text.includes("hola")) {
+        respuesta = "Hola, soy Zara IA de Body Elite. Te acompano en tu evaluacion gratuita. Escribe 1 para planes corporales o 2 para faciales.";
+      } else if (text === "1") {
+        respuesta = "Planes corporales: Lipo Body Elite, Body Fitness, Push Up, Body Tensor. Incluyen HIFU, EMS y Radiofrecuencia.";
+      } else if (text === "2") {
+        respuesta = "Planes faciales: Face Smart, Face Antiage, Face Elite. Incluyen Pink Glow, LED Therapy y Radiofrecuencia facial.";
+      } else if (text.includes("precio")) {
+        respuesta = "Lipo Body Elite 664000 CLP. Face Elite 358400 CLP. Agenda gratis aqui: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
       }
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
+
+      await sendMessage(from, respuesta);
     }
-  } catch (error) {
-    console.error("Error procesando mensaje:", error);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Error procesando mensaje:", err);
     res.sendStatus(500);
   }
 });
@@ -82,3 +77,4 @@ app.post("/webhook", async (req, res) => {
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
 });
+
