@@ -51,7 +51,6 @@ app.post("/webhook", async (req, res) => {
             if (posible) {
             }
             // Análisis con inteligencia local
-            const posible = inteligencia.analizarMensaje(texto);
             if (posible) {
                 await sendMessage(from, posible);
             }
