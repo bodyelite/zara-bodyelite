@@ -1,29 +1,30 @@
-import fetch from "node-fetch";
+const axios = require('axios');
 
-export async function sendMessage(to, message) {
-  const url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
-  const headers = {
-    Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-    "Content-Type": "application/json"
-  };
-
-  const body = JSON.stringify({
-    messaging_product: "whatsapp",
-    to,
-    type: "text",
-    text: { body: message }
-  });
-
+const sendMessage = async (to, message) => {
   try {
-    const response = await fetch(url, { method: "POST", headers, body });
-    const data = await response.json();
+    const token = process.env.WHATSAPP_TOKEN;
+    const phoneId = process.env.PHONE_NUMBER_ID;
 
-    if (!response.ok) {
-      console.error("Error al enviar mensaje:", data);
-    } else {
-      console.log("Mensaje enviado correctamente:", data);
-    }
+    const url = `https://graph.facebook.com/v17.0/${phoneId}/messages`;
+
+    const payload = {
+      messaging_product: 'whatsapp',
+      to: to,
+      type: 'text',
+      text: { body: message }
+    };
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+
+    await axios.post(url, payload, { headers });
+    console.log('✅ Mensaje enviado correctamente a', to);
   } catch (error) {
-    console.error("Error de conexión:", error);
+    console.error('❌ Error al enviar mensaje:', error.response?.data || error.message);
   }
-}
+};
+
+module.exports = { sendMessage };
+
