@@ -23,6 +23,10 @@ app.get("/webhook", (req, res) => {
 // Recepción y respuesta de mensajes
 app.post("/webhook", async (req, res) => {
   try {
+  // bloque try corregido
+} catch (error) {
+  console.error(error);
+}
     const body = req.body;
 
     if (body.object) {
