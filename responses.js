@@ -8,4 +8,4 @@ const responses = {
   agendar: '📅 Puedes agendar tu evaluación gratuita directamente en este enlace: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9. Horarios Lun–Vie 9:30–20:00 | Sáb 9:30–13:00. Te esperamos en Av. Las Perdices Nº2990, Peñalolén 🌷',
   fallback: 'No entendí tu mensaje. Escribe *hola* para comenzar o indica si te interesa un tratamiento *facial* o *corporal* 🌸'
 };
-module.exports = responses;
+export default responses;
