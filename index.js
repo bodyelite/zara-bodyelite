@@ -48,10 +48,8 @@ app.post("/webhook", async (req, res) => {
         const payload = {
           messaging_product: "whatsapp",
           to: from,
-            if (posible) {
             }
             // Análisis con inteligencia local
-            if (posible) {
                 await sendMessage(from, posible);
             }
           text: { body: respuesta },
