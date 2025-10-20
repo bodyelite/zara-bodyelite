@@ -3,25 +3,24 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export default async function sendMessage(to, texto) {
-  try {
-    const respuesta = {
-      messaging_product: "whatsapp",
-      to,
-      text: { body: texto }
-    };
+const token = process.env.ZARA_TOKEN;
+const telefono = process.env.PHONE_ID;
 
-    await axios.post(
-      `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
-      respuesta,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.ZARA_TOKEN}`,
-          "Content-Type": "application/json"
-        }
+export default async function sendMessage(to, texto) {
+  const url = "https://graph.facebook.com/v17.0/" + telefono + "/messages";
+
+  await axios.post(
+    url,
+    {
+      messaging_product: "whatsapp",
+      to: to,
+      text: { body: texto }
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
       }
-    );
-  } catch (error) {
-    console.error("Error enviando mensaje:", error);
-  }
+    }
+  );
 }

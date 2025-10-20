@@ -1,40 +1,42 @@
 import express from "express";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
-import inteligencia from "inteligencia.js";
-import sendMessage from "sendMessage.js";
+import axios from "axios";
+import inteligencia from "./inteligencia.js";
+import sendMessage from "./sendMessage.js";
 
 dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
+app.get("/", (req, res) => {
+  res.status(200).send("Zara IA activa y operativa");
+});
+
 app.post("/webhook", async (req, res) => {
   try {
-    const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const message = changes?.value?.messages?.[0];
+    const body = req.body;
+    if (body.object) {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const message = changes?.value?.messages?.[0];
 
-    if (message && message.text && message.from) {
-      const texto = message.text.body.toLowerCase();
-      const posible = inteligencia.analizarMensaje(texto);
-      const from = message.from;
+      if (message) {
+        const from = message.from;
+        const text = message.text?.body || "";
+        console.log("Mensaje recibido:", text);
 
-      if (posible) {
-        await sendMessage(from, posible);
-      } else {
-        await sendMessage(
-          from,
-          "Hola 👋 Soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita 🌸 ¿Quieres conocer nuestros planes corporales o faciales? 👉 Responde 1 para corporales o 2 para faciales."
-        );
+        const respuesta = await inteligencia.analizarMensaje(text);
+        await sendMessage(from, respuesta);
       }
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
     }
-
-    res.sendStatus(200);
   } catch (error) {
-    console.error("Error procesando mensaje:", error);
+    console.error("Error procesando mensaje:", error.message);
     res.sendStatus(500);
   }
 });
 
-app.listen(3000, () => console.log("✅ Servidor Zara Body Elite corriendo en puerto 3000"));
+app.listen(3000, () => console.log("Zara IA ejecutándose en puerto 3000"));
