@@ -1,8 +1,8 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const intents = require('./intents');
-const responses = require('./responses');
-const { sendMessage } = require('./sendMessage');
+import express from 'express';
+import bodyParser from 'body-parser';
+import intents from './intents.js';
+import responses from './responses.js';
+import { sendMessage } from './sendMessage.js';
 
 const app = express();
 app.use(bodyParser.json());
@@ -10,15 +10,13 @@ app.use(bodyParser.json());
 // Webhook principal de Meta
 app.post('/webhook', (req, res) => {
   try {
-    const entry = req.body.entry && req.body.entry[0];
-    const changes = entry && entry.changes && entry.changes[0];
-    const messageData = changes && changes.value && changes.value.messages && changes.value.messages[0];
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const messageData = changes?.value?.messages?.[0];
 
-    if (messageData && messageData.text && messageData.from) {
+    if (messageData?.text && messageData?.from) {
       const message = messageData.text.body.toLowerCase().trim();
       const from = messageData.from;
-
-      // Buscar coincidencia de intención
       const intent = intents.find(i => i.patterns.some(p => message.includes(p)));
 
       if (intent && responses[intent.response]) {
@@ -29,7 +27,6 @@ app.post('/webhook', (req, res) => {
         console.log('Frase desconocida:', message);
       }
     }
-
     res.sendStatus(200);
   } catch (error) {
     console.error('Error en webhook:', error);
@@ -37,7 +34,7 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-// Webhook GET (verificación de Meta)
+// Webhook GET (verificación)
 app.get('/webhook', (req, res) => {
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query['hub.mode'];
@@ -53,6 +50,6 @@ app.get('/webhook', (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log('✅ Zara IA activa y escuchando');
+  console.log('✅ Zara IA activa y escuchando (modo ESM)');
 });
 
