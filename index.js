@@ -50,6 +50,8 @@ app.post("/webhook", async (req, res) => {
           to: from,
         const posible = inteligencia.analizarMensaje(texto);
         if (posible) return await sendMessage(from, posible);
+            let posible = inteligencia.analizarMensaje(texto);
+            if (posible) { await sendMessage(from, posible); return; }
           text: { body: respuesta },
         };
 
