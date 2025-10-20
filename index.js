@@ -2,8 +2,8 @@ import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-import inteligencia from "./src/inteligencia.js";
-import sendMessage from "./src/sendMessage.js";
+import inteligencia from "inteligencia.js";
+import sendMessage from "sendMessage.js";
 
 dotenv.config();
 const app = express();

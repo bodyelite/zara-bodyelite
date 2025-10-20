@@ -1,6 +1,6 @@
 import fs from "fs";
 
-const frases = JSON.parse(fs.readFileSync("./src/49ecadaa-1b01-4e86-868a-9dd6642249c6.json", "utf8"));
+const frases = JSON.parse(fs.readFileSync("49ecadaa-1b01-4e86-868a-9dd6642249c6.json", "utf8"));
 
 const inteligencia = {
   analizarMensaje: (texto) => {
