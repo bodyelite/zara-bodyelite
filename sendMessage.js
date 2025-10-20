@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const sendMessage = async (to, message) => {
   try {
-    const token = process.env.WHATSAPP_TOKEN;
+    const token = process.env.PAGE_ACCESS_TOKEN;
     const phoneId = process.env.PHONE_NUMBER_ID;
     const url = `https://graph.facebook.com/v17.0/${phoneId}/messages`;
 
