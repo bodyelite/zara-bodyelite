@@ -1,90 +1,56 @@
 import express from "express";
-import fetch from "node-fetch";
 import bodyParser from "body-parser";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
+import inteligencia from "./src/inteligencia.js";
 
+dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-// Webhook verificación
-app.get("/webhook", (req, res) => {
-  const verify_token = process.env.VERIFY_TOKEN;
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-
-  if (mode && token === verify_token){
-    console.log("✅ Webhook verificado correctamente");
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
-  }
-});
-
-// Recepción y respuesta de mensajes
 app.post("/webhook", async (req, res) => {
   try {
-  // bloque try corregido
-} catch (error){
-  console.error(error);
-}
-    const body = req.body;
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const message = changes?.value?.messages?.[0];
 
-    if (body.object){
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const message = changes?.value?.messages?.[0];
+    if (message && message.text && message.from) {
+      const texto = message.text.body.toLowerCase();
+      const posible = inteligencia.analizarMensaje(texto);
+      const from = message.from;
 
-      if (message && message.text && message.from){
-        const phone_number_id = changes.value.metadata.phone_number_id;
-        const from = message.from;
-        const msg_body = message.text.body.toLowerCase();
-
-        console.log("📩 Mensaje recibido:", msg_body);
-
-        const respuesta =
-          "Hola 👋 Soy *Zara IA* de Body Elite.\n" +
-          "Te acompaño en tu evaluación estética gratuita 🌸\n\n" +
-          "¿Quieres conocer nuestros planes corporales o faciales?\n" +
-          "👉 Responde *1* para corporales o *2* para faciales.";
-
-        const url = `https://graph.facebook.com/v17.0/${phone_number_id}/messages`;
-
-        const payload = {
-          messaging_product: "whatsapp",
-          to: from,
-            }
-            // Análisis con inteligencia local
-                await sendMessage(from, posible);
-            }
-          text: { body: respuesta }
-        };
-
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-        };
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payload),
-        });
-
-        const data = await response.json();
-        console.log("✅ Enviado correctamente:", data);
+      if (posible) {
+        await sendMessage(from, posible);
+      } else {
+        await sendMessage(from, "Hola 👋 Soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita 🌸 ¿Quieres conocer nuestros planes corporales o faciales? 👉 Responde 1 para corporales o 2 para faciales.");
       }
-
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
     }
-  } catch (error){
-    console.error("❌ Error en webhook:", error);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Error procesando mensaje:", error);
     res.sendStatus(500);
   }
 });
 
-// Servidor
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`✅ Servidor Zara IA activo en puerto ${process.env.PORT || 3000}`);
-});
+async function sendMessage(to, texto) {
+  try {
+    const respuesta = {
+      messaging_product: "whatsapp",
+      to,
+      text: { body: texto }
+    };
+
+    await fetch("https://graph.facebook.com/v18.0/" + process.env.PHONE_NUMBER_ID + "/messages", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + process.env.ZARA_TOKEN,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(respuesta)
+    });
+  } catch (error) {
+    console.error("Error enviando mensaje:", error);
+  }
+}
+
+app.listen(3000, () => console.log("✅ Servidor Zara Body Elite en puerto 3000"));
