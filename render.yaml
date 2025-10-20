@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: zara-bodyelite-1
+    env: node
+    plan: starter
+    buildCommand: "npm install"
+    startCommand: "node index.js"
+    envVars:
+      - key: PORT
+        value: 3000
