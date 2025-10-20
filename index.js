@@ -12,7 +12,7 @@ app.get("/webhook", (req, res) => {
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode && token === verify_token) {
+  if (mode && token === verify_token){
     console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
@@ -24,17 +24,17 @@ app.get("/webhook", (req, res) => {
 app.post("/webhook", async (req, res) => {
   try {
   // bloque try corregido
-} catch (error) {
+} catch (error){
   console.error(error);
 }
     const body = req.body;
 
-    if (body.object) {
+    if (body.object){
       const entry = body.entry?.[0];
       const changes = entry?.changes?.[0];
       const message = changes?.value?.messages?.[0];
 
-      if (message && message.text && message.from) {
+      if (message && message.text && message.from){
         const phone_number_id = changes.value.metadata.phone_number_id;
         const from = message.from;
         const msg_body = message.text.body.toLowerCase();
@@ -78,7 +78,7 @@ app.post("/webhook", async (req, res) => {
     } else {
       res.sendStatus(404);
     }
-  } catch (error) {
+  } catch (error){
     console.error("❌ Error en webhook:", error);
     res.sendStatus(500);
   }
