@@ -1,3 +1,5 @@
+const inteligencia = require("./inteligencia");
+const inteligencia = require("./inteligencia");
 import { sendMessage } from "./sendMessage.js";
 import { obtenerRespuesta } from "./respuestas.js";
 export async function handleIncoming(message){
