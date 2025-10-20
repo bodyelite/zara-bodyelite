@@ -1,15 +1,27 @@
 import axios from "axios";
 import dotenv from "dotenv";
+
 dotenv.config();
-const token=process.env.PAGE_ACCESS_TOKEN;
-const phoneId=process.env.PHONE_NUMBER_ID;
-export async function sendMessage(to,text){
-  try{
-    await axios.post(`https://graph.facebook.com/v20.0/${phoneId}/messages`,
-      {messaging_product:"whatsapp",to,type:"text",text:{body:text}},
-      {headers:{Authorization:`Bearer ${token}`}}
+
+export default async function sendMessage(to, texto) {
+  try {
+    const respuesta = {
+      messaging_product: "whatsapp",
+      to,
+      text: { body: texto }
+    };
+
+    await axios.post(
+      `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      respuesta,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.ZARA_TOKEN}`,
+          "Content-Type": "application/json"
+        }
+      }
     );
-  }catch(err){
-    console.error("Error enviando mensaje:",err.response?.data||err.message);
+  } catch (error) {
+    console.error("Error enviando mensaje:", error);
   }
 }
