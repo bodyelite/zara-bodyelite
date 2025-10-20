@@ -55,28 +55,16 @@ app.post("/webhook", async (req, res) => {
 
       if (from && text) {
         console.log("Mensaje recibido:", text);
-        let respuesta = "No entendí tu mensaje 🤖. ¿Podrías reformularlo?";
+        let respuesta = "No entendi tu mensaje. Puedes reformularlo?";
 
         if (text.includes("hola")) {
-          respuesta = "Hola 👋 Soy Zara IA de Body Elite.
-Te acompaño en tu evaluación estética gratuita 🌸
-¿Quieres conocer nuestros planes corporales o faciales?
-👉 Responde 1 para corporales o 2 para faciales.";
+          respuesta = "Hola, soy Zara IA de Body Elite. Te acompano en tu evaluacion estetica gratuita. Quieres conocer nuestros planes corporales o faciales? Responde 1 para corporales o 2 para faciales.";
         } else if (text === "1") {
-          respuesta = "✨ Planes Corporales Body Elite ✨
-Lipo Body Elite • Body Fitness • Push Up • Body Tensor.
-Incluyen HIFU, EMS y Radiofrecuencia.
-¿Deseas conocer precios o agendar?";
+          respuesta = "Planes Corporales Body Elite: Lipo Body Elite, Body Fitness, Push Up, Body Tensor. Incluyen HIFU, EMS y Radiofrecuencia. Deseas conocer precios o agendar?";
         } else if (text === "2") {
-          respuesta = "🌸 Planes Faciales Body Elite 🌸
-Face Smart • Face Antiage • Face Elite.
-Incluyen Pink Glow, LED Therapy y Radiofrecuencia.
-¿Deseas conocer precios o agendar?";
+          respuesta = "Planes Faciales Body Elite: Face Smart, Face Antiage, Face Elite. Incluyen Pink Glow, LED Therapy y Radiofrecuencia facial. Deseas conocer precios o agendar?";
         } else if (text.includes("precio")) {
-          respuesta = "💠 Lipo Body Elite $664.000
-💠 Face Elite $358.400
-Puedes agendar tu evaluación gratuita aquí:
-🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
+          respuesta = "Lipo Body Elite $664000, Face Elite $358400. Puedes agendar tu evaluacion gratuita aqui: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
         }
 
         await sendMessage(from, respuesta);
@@ -92,5 +80,5 @@ Puedes agendar tu evaluación gratuita aquí:
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log("Servidor corriendo en puerto " + PORT);
 });
