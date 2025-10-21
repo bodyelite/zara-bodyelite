@@ -4,27 +4,51 @@
     "respuesta": "👋 Hola, soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita ✨ ¿Te gustaría conocer los tratamientos corporales o faciales?"
   },
   {
-    "patrones": ["facial", "faciales", "cara", "rostro", "arrugas", "manchas", "rejuvenecer", "flacidez facial", "lineas de expresion", "poros", "luminosidad"],
-    "respuesta": "✨ Nuestros tratamientos faciales mejoran textura, firmeza y luminosidad. Incluyen Limpieza Facial, Face Smart, Face Antiage y Face Elite. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["tratamientos", "que tratamientos tienen", "que hacen", "que servicios ofrecen"],
+    "respuesta": "✨ En Body Elite realizamos tratamientos faciales y corporales con tecnología avanzada: HIFU 12D, Cavitación, Radiofrecuencia, EMS Sculptor, Pink Glow, LED Therapy y Exosomas. Cada uno se adapta a tu diagnóstico corporal o facial. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["corporal", "cintura", "abdomen", "bajar cintura", "reducir grasa", "lipo", "muslos", "gluteos", "celulitis", "grasa localizada", "vientre", "piernas", "papada"],
-    "respuesta": "🔥 Nuestro tratamiento Lipo Body Elite reduce grasa localizada con HIFU 12D, Cavitación y EMS Sculptor. Sin bisturí ni dolor. Resultados visibles desde la primera sesión. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["hifu", "hifu 12d", "ultrasonido", "lifting sin cirugia", "rejuvenecimiento profundo"],
+    "respuesta": "💎 El HIFU 12D trabaja con ultrasonido focalizado en capas profundas (SMAS y grasa subcutánea) para tensar, reafirmar y definir contornos sin cirugía. Resultados visibles desde la primera sesión. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["tonificar", "reafirmar", "definir", "marcar", "tonicidad", "musculo", "tonificacion", "firmeza corporal", "tonificar abdomen", "levantar gluteos", "marcar abdomen", "definir piernas"],
-    "respuesta": "💪 El plan Body Fitness y Push Up usan tecnología EMS Sculptor para lograr contracciones musculares intensas (más de 20.000 por sesión). Ideal para tonificar, levantar y definir sin esfuerzo. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["cavitacion", "grasa localizada", "reduccion", "moldeo corporal"],
+    "respuesta": "🔥 La Cavitación rompe adipocitos mediante ondas de presión, ayudando a reducir grasa localizada en abdomen, cintura y muslos. Ideal combinada con HIFU o RF. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["precio", "cuanto vale", "valor", "cuanto cuesta", "costo", "precio facial", "precio corporal", "valores"],
-    "respuesta": "💰 Los valores varían según tu diagnóstico, pero por ejemplo: Lipo Body Elite $664.000 y Face Elite $358.400. Todos incluyen diagnóstico gratuito. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["radiofrecuencia", "rf", "flacidez", "colageno", "piel firme"],
+    "respuesta": "🌸 La Radiofrecuencia estimula colágeno I y III, mejora firmeza y textura cutánea. Se usa en protocolos faciales y corporales. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["botox", "toxina", "relleno", "acido hialuronico", "botulina", "botulínica", "toxina botulínica"],
-    "respuesta": "💉 En Body Elite aplicamos toxina botulínica (Botox) y ácido hialurónico con especialistas certificados. Tratamientos seguros, sin dolor y con resultados naturales. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["ems", "sculptor", "prosculpt", "musculo", "tonificar", "reafirmar", "definir", "marcar", "levantar gluteos"],
+    "respuesta": "💪 EMS Sculptor genera más de 20 000 contracciones musculares en 30 minutos para tonificar, levantar y definir sin esfuerzo. Parte del plan Body Fitness y Push Up. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["gracias", "muchas gracias", "ok", "listo", "perfecto", "super", "de acuerdo"],
-    "respuesta": "💛 Gracias a ti. Si deseas agendar, puedes hacerlo directo desde aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["pink glow", "mesoterapia", "vitaminas", "antioxidantes", "regenerar piel", "iluminar rostro"],
+    "respuesta": "🌷 Pink Glow aporta péptidos y antioxidantes que regeneran la piel y mejoran su luminosidad. Ideal tras limpieza facial o como refuerzo anti-edad. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["exosomas", "celulas", "regeneracion", "rejuvenecer", "biorevitalizacion"],
+    "respuesta": "🧬 Los Exosomas favorecen la regeneración celular, mejoran la textura y revitalizan la piel. Procedimiento seguro y biotecnológico sin dolor. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["facial", "arrugas", "manchas", "flacidez facial", "poros", "luminosidad"],
+    "respuesta": "✨ Los tratamientos faciales mejoran textura, firmeza y luminosidad. Incluyen Limpieza Facial, Face Smart, Face Antiage y Face Elite. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["corporal", "abdomen", "cintura", "muslos", "celulitis", "vientre", "papada"],
+    "respuesta": "🔥 El plan Lipo Body Elite reduce grasa localizada con HIFU 12D, Cavitación y EMS Sculptor. Resultados visibles desde la primera sesión. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["botox", "toxina", "relleno", "acido hialuronico"],
+    "respuesta": "💉 Aplicamos toxina botulínica (Botox) y ácido hialurónico con especialistas certificados. Resultados naturales y seguros. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["precio", "cuanto vale", "valor", "cuanto cuesta"],
+    "respuesta": "💰 Los valores varían según tu diagnóstico, pero por ejemplo: Lipo Body Elite $664 000 y Face Elite $358 400. Todos incluyen diagnóstico gratuito. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["gracias", "muchas gracias", "ok", "listo"],
+    "respuesta": "💛 Gracias a ti. Puedes agendar cuando quieras desde aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   }
 ]
