@@ -1,40 +1,31 @@
 import fs from "fs";
-import path from "path";
 
-const archivoMemoria = path.join(process.cwd(), "contexto_memoria.json");
+export default function procesarMensaje(texto, anterior) {
+  const memoriaPath = "./contexto_memoria.json";
+  let memoria = [];
 
-let memoria = [];
-try {
-  const data = fs.readFileSync(archivoMemoria, "utf8");
-  memoria = JSON.parse(data);
-  console.log("🧠 Memoria cargada correctamente:", memoria.length, "frases");
-} catch (error) {
-  console.error("⚠️ No se pudo cargar la memoria:", error.message);
-  memoria = [];
-}
-
-export function buscarRespuesta(texto) {
-  const limpio = texto.toLowerCase().trim();
-  for (const item of memoria) {
-    if (item.patrones.some(p => limpio.includes(p.toLowerCase()))) {
-      return item.respuesta;
+  if (fs.existsSync(memoriaPath)) {
+    try {
+      memoria = JSON.parse(fs.readFileSync(memoriaPath, "utf8"));
+    } catch (e) {
+      console.error("⚠️ Error al leer contexto_memoria.json:", e);
     }
   }
-  return null;
-}
 
-export function agregarFrase(patrones, respuesta) {
-  memoria.push({ patrones, respuesta });
-  guardarMemoria();
-}
+  texto = texto.toLowerCase();
 
-function guardarMemoria() {
-  try {
-    fs.writeFileSync(archivoMemoria, JSON.stringify(memoria, null, 2), "utf8");
-    console.log("💾 Memoria actualizada correctamente.");
-  } catch (error) {
-    console.error("⚠️ Error al guardar la memoria:", error.message);
+  for (const item of memoria) {
+    for (const patron of item.patrones) {
+      if (texto.includes(patron)) {
+        return item.respuesta;
+      }
+    }
   }
-}
 
-export default { buscarRespuesta, agregarFrase };
+  // Si el mensaje se relaciona con el anterior, mantener contexto simple
+  if (anterior && texto.includes("vale") && anterior.includes("pink glow")) {
+    return "💗 El tratamiento Pink Glow tiene un valor aproximado de $120.000 dependiendo de la zona y el protocolo. Incluye diagnóstico gratuito 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  }
+
+  return "";
+}
