@@ -1,54 +1,54 @@
 [
   {
     "patrones": ["hola", "buenas", "buenos dias", "buenas tardes", "buenas noches"],
-    "respuesta": "👋 Hola, soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita ✨ ¿Te gustaría conocer los tratamientos corporales o faciales?"
+    "respuesta": "👋 Hola, soy Zara, asistente IA de Body Elite. Estoy aquí para orientarte y ayudarte en tu evaluación estética ✨ ¿Qué zona de tu cuerpo te gustaría trabajar?\n\n✨ Recuerda que tu evaluación es gratuita y personalizada con IA."
   },
   {
-    "patrones": ["tratamientos", "que tratamientos tienen", "que hacen", "que servicios ofrecen"],
-    "respuesta": "✨ En Body Elite realizamos tratamientos faciales y corporales con tecnología avanzada: HIFU 12D, Cavitación, Radiofrecuencia, EMS Sculptor, Pink Glow, LED Therapy y Exosomas. Cada uno se adapta a tu diagnóstico corporal o facial. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["facial", "rostro", "cara", "piel", "arrugas", "manchas", "flacidez facial", "rejuvenecer", "poros", "luminosidad"],
+    "respuesta": "🌸 Los tratamientos faciales de Body Elite mejoran textura, firmeza y luminosidad. Usamos HIFU 12D, Radiofrecuencia, LED Therapy, Pink Glow y Exosomas.\n💰 Desde $120.000 CLP según diagnóstico y tipo de piel.\n✨ Los valores se ajustan a tu evaluación gratuita asistida con IA. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["corporal", "abdomen", "cintura", "lipo", "grasa localizada", "celulitis", "vientre", "muslos", "gluteos", "piernas", "papada", "bajar cintura", "reducir grasa"],
+    "respuesta": "🔥 Los tratamientos corporales de Body Elite combinan HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor para reducir grasa y reafirmar la piel.\n💰 Desde $348.800 CLP según diagnóstico y zona tratada.\n✨ Los valores se ajustan a tu evaluación gratuita asistida con IA. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
     "patrones": ["hifu", "hifu 12d", "ultrasonido", "lifting sin cirugia", "rejuvenecimiento profundo"],
-    "respuesta": "💎 El HIFU 12D trabaja con ultrasonido focalizado en capas profundas (SMAS y grasa subcutánea) para tensar, reafirmar y definir contornos sin cirugía. Resultados visibles desde la primera sesión. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "respuesta": "💎 El HIFU 12D actúa en capas profundas de la piel (SMAS y grasa subcutánea) para tensar y definir sin cirugía. Resultados visibles desde la primera sesión.\n💬 Incluido en protocolos como Lipo Body Elite y Face Elite.\nAgenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["cavitacion", "grasa localizada", "reduccion", "moldeo corporal"],
-    "respuesta": "🔥 La Cavitación rompe adipocitos mediante ondas de presión, ayudando a reducir grasa localizada en abdomen, cintura y muslos. Ideal combinada con HIFU o RF. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["cavitacion", "reducir grasa", "romper grasa", "grasa abdominal"],
+    "respuesta": "🔥 La Cavitación utiliza ondas ultrasónicas para romper adipocitos, reduciendo grasa localizada sin bisturí. Ideal en abdomen, piernas y brazos.\n💬 Incluida en tratamientos Lipo Express y Lipo Reductiva.\nAgenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["radiofrecuencia", "rf", "flacidez", "colageno", "piel firme"],
-    "respuesta": "🌸 La Radiofrecuencia estimula colágeno I y III, mejora firmeza y textura cutánea. Se usa en protocolos faciales y corporales. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["radiofrecuencia", "rf", "colageno", "flacidez", "firmeza", "piel tonificada"],
+    "respuesta": "🌸 La Radiofrecuencia estimula colágeno tipo I y III, reafirmando y mejorando la textura de la piel. Ideal para rostro, abdomen y brazos.\n💬 Presente en planes Face Antiage y Body Tensor.\nAgenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["ems", "sculptor", "prosculpt", "musculo", "tonificar", "reafirmar", "definir", "marcar", "levantar gluteos"],
-    "respuesta": "💪 EMS Sculptor genera más de 20 000 contracciones musculares en 30 minutos para tonificar, levantar y definir sin esfuerzo. Parte del plan Body Fitness y Push Up. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["ems", "sculptor", "prosculpt", "tonificar", "definir", "musculo", "marcar", "abdomen marcado", "levantar gluteos"],
+    "respuesta": "💪 EMS Sculptor genera más de 20.000 contracciones musculares por sesión, tonificando y levantando sin esfuerzo.\n💬 Usado en Body Fitness y Push Up.\nAgenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["pink glow", "mesoterapia", "vitaminas", "antioxidantes", "regenerar piel", "iluminar rostro"],
-    "respuesta": "🌷 Pink Glow aporta péptidos y antioxidantes que regeneran la piel y mejoran su luminosidad. Ideal tras limpieza facial o como refuerzo anti-edad. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["pink glow", "vitaminas", "luminosidad", "rejuvenecer piel", "manchas", "mesoterapia"],
+    "respuesta": "🌷 Pink Glow regenera la piel con péptidos y antioxidantes, mejorando tono, textura y luminosidad. Ideal tras limpieza facial.\n💰 Desde $120.000 CLP.\nAgenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["exosomas", "celulas", "regeneracion", "rejuvenecer", "biorevitalizacion"],
-    "respuesta": "🧬 Los Exosomas favorecen la regeneración celular, mejoran la textura y revitalizan la piel. Procedimiento seguro y biotecnológico sin dolor. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["exosomas", "biorevitalizacion", "regenerar", "celulas", "revitalizar"],
+    "respuesta": "🧬 Los Exosomas estimulan la regeneración celular, mejorando firmeza y textura. Biotecnología avanzada, sin dolor ni efectos secundarios.\n💰 Desde $198.400 CLP.\nAgenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["facial", "arrugas", "manchas", "flacidez facial", "poros", "luminosidad"],
-    "respuesta": "✨ Los tratamientos faciales mejoran textura, firmeza y luminosidad. Incluyen Limpieza Facial, Face Smart, Face Antiage y Face Elite. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["cuantas sesiones", "sesiones", "tiempo", "cuanto dura", "resultados", "cambio"],
+    "respuesta": "⏱️ Los resultados son visibles desde la primera sesión. Normalmente se recomiendan entre 6 y 10 sesiones según diagnóstico y objetivo.\n✨ Cada plan se ajusta tras tu evaluación gratuita asistida con IA.\nAgenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["corporal", "abdomen", "cintura", "muslos", "celulitis", "vientre", "papada"],
-    "respuesta": "🔥 El plan Lipo Body Elite reduce grasa localizada con HIFU 12D, Cavitación y EMS Sculptor. Resultados visibles desde la primera sesión. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["duele", "molesta", "seguro", "riesgos", "efectos"],
+    "respuesta": "🤍 Todos nuestros tratamientos son seguros y sin dolor. Usamos tecnología no invasiva aprobada clínicamente.\n✨ Tu evaluación gratuita asistida con IA te indicará el mejor plan para ti.\nAgenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["botox", "toxina", "relleno", "acido hialuronico"],
-    "respuesta": "💉 Aplicamos toxina botulínica (Botox) y ácido hialurónico con especialistas certificados. Resultados naturales y seguros. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["precio", "valor", "cuanto cuesta", "costo", "tarifa"],
+    "respuesta": "💰 Los valores dependen del diagnóstico y la zona trabajada. Por ejemplo:\n- Lipo Body Elite desde $664.000 CLP.\n- Face Elite desde $358.400 CLP.\n- Body Fitness desde $360.000 CLP.\n✨ Todos incluyen diagnóstico gratuito asistido con IA.\nAgenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
-    "patrones": ["precio", "cuanto vale", "valor", "cuanto cuesta"],
-    "respuesta": "💰 Los valores varían según tu diagnóstico, pero por ejemplo: Lipo Body Elite $664 000 y Face Elite $358 400. Todos incluyen diagnóstico gratuito. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": ["gracias", "muchas gracias", "ok", "listo"],
-    "respuesta": "💛 Gracias a ti. Puedes agendar cuando quieras desde aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "patrones": ["gracias", "ok", "perfecto", "super", "de acuerdo", "me interesa"],
+    "respuesta": "💛 Gracias por tu interés. Puedes agendar tu evaluación gratuita y recibir orientación personalizada aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   }
 ]
