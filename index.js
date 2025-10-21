@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
-import { procesarMensaje } from "./memoria.js";
+import memoria from "./memoria.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -25,7 +25,7 @@ app.post("/webhook", async (req, res) => {
     console.log("📩 Mensaje recibido:", textoUsuario);
 
     // Procesa el mensaje con el módulo de memoria (inteligencia)
-    const respuesta = await procesarMensaje(textoUsuario);
+    const respuesta = await memoria.buscarRespuesta(textoUsuario);
 
     const token = process.env.PAGE_ACCESS_TOKEN;
     await axios.post(
