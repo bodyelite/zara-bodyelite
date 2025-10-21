@@ -36,4 +36,4 @@ const intents = [
   }
 ];
 
-export default intents;
+module.exports = { intents };
