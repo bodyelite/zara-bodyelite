@@ -1,138 +1,30 @@
-{
-  "saludo": [
-    "hola",
-    "hola zara",
-    "buen dia",
-    "buenas tardes",
-    "buenas noches",
-    "hola queria hacer una consulta",
-    "hola como estan",
-    "hola me ayudan?",
-    "hola queria informacion"
-  ],
-  "facial": [
-    "tienen algo para el acné?",
-    "quiero mejorar mi piel",
-    "me interesa un tratamiento facial",
-    "tengo manchas",
-    "arrugas alrededor de los ojos",
-    "piel opaca",
-    "tratamiento para poros abiertos",
-    "rejuvenecimiento sin agujas",
-    "limpieza facial profunda",
-    "facial antiage",
-    "face elite",
-    "face smart",
-    "face light",
-    "quiero reafirmar mi cara",
-    "quitar líneas de expresión",
-    "tratamiento para ojeras",
-    "tienen botox?",
-    "me interesa hifu facial",
-    "piel sensible",
-    "quiero un tratamiento para luminosidad"
-  ],
-  "corporal": [
-    "tienen tratamiento para abdomen?",
-    "quiero bajar grasa",
-    "reducción de cintura",
-    "moldear mi cuerpo",
-    "lipo sin cirugía",
-    "reductor corporal",
-    "flacidez en brazos",
-    "celulitis piernas",
-    "gluteos caídos",
-    "levantamiento sin cirugía",
-    "tienen algo para reafirmar abdomen?",
-    "tratamiento para tonificar piernas",
-    "cavitacion abdomen",
-    "radiofrecuencia corporal",
-    "lipo body elite",
-    "body fitness",
-    "body tensor",
-    "push up gluteos",
-    "quiero reducir grasa localizada",
-    "necesito tonificar"
-  ],
-  "flacidez": [
-    "piel flácida",
-    "perdí firmeza",
-    "piel suelta abdomen",
-    "reafirmar brazos",
-    "firmeza en gluteos",
-    "mejorar tonicidad",
-    "tratamiento reafirmante",
-    "body tensor",
-    "me interesa algo para la flacidez",
-    "me siento con piel floja"
-  ],
-  "botox": [
-    "botox sin agujas",
-    "relleno facial",
-    "alternativa al botox",
-    "tratamiento tipo botox",
-    "toxina botulinica",
-    "sin agujas pero con efecto botox",
-    "quiero rejuvenecer naturalmente"
-  ],
-  "dolor": [
-    "duele?",
-    "tiene anestesia?",
-    "es doloroso?",
-    "molesta el tratamiento?",
-    "es seguro?",
-    "tiene riesgos?",
-    "hay efectos secundarios?",
-    "es sin cirugía?",
-    "duele el hifu?",
-    "duele la cavitacion?"
-  ],
-  "precios": [
-    "cuanto vale la lipo?",
-    "cuanto cuesta el tratamiento facial?",
-    "precios corporales",
-    "valor face elite",
-    "valor limpieza facial",
-    "promocion lipo",
-    "ofertas vigentes",
-    "descuento tratamientos",
-    "precio face smart",
-    "cuanto cuesta el push up?",
-    "cuanto sale body fitness?",
-    "precio lipo reductiva",
-    "valor radiofrecuencia",
-    "tienen promociones?",
-    "que valor tiene el tratamiento"
-  ],
-  "sesiones": [
-    "cuantas sesiones necesito?",
-    "duración del tratamiento",
-    "cuantas veces debo ir?",
-    "cuanto dura el procedimiento?",
-    "cuantas sesiones por semana?",
-    "necesito mantenimiento?",
-    "cada cuanto se hace?",
-    "cantidad de sesiones"
-  ],
-  "agendar": [
-    "quiero agendar hora",
-    "quiero reservar cita",
-    "como agendo?",
-    "quiero agendar evaluacion",
-    "donde reservo?",
-    "quiero agendar ahora",
-    "como puedo pedir hora",
-    "quiero evaluación gratis",
-    "como saco hora?",
-    "quiero ir a body elite"
-  ],
-  "agradecimiento": [
-    "gracias",
-    "muchas gracias",
-    "super amable",
-    "te agradezco",
-    "ok gracias",
-    "muy amable zara",
-    "genial gracias"
-  ]
-}
+[
+  {
+    "patrones": ["hola", "buenas", "hey", "holaa", "qué tal"],
+    "respuesta": "👋 Hola, soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita ✨ ¿Te gustaría conocer los tratamientos corporales o faciales?"
+  },
+  {
+    "patrones": ["facial", "cara", "arrugas", "rejuvenecer", "luminosidad"],
+    "respuesta": "✨ Nuestros tratamientos faciales mejoran textura, firmeza y luminosidad. Incluyen Limpieza Facial, Face Smart, Face Antiage y Face Elite. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["corporal", "cuerpo", "grasa", "lipo", "moldear", "abdomen", "piernas", "glúteos", "celulitis"],
+    "respuesta": "🔥 Nuestro tratamiento *Lipo Body Elite* reduce grasa localizada con HIFU 12D, Cavitación y EMS Sculptor. Sin bisturí ni dolor. Resultados visibles desde la primera sesión. Reserva tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["precio", "cuánto vale", "valor", "costos", "cuánto cuesta"],
+    "respuesta": "💰 Los valores varían según diagnóstico, pero por ejemplo: Lipo Body Elite $664.000 y Face Elite $358.400. Todos incluyen diagnóstico gratuito. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["agendar", "cita", "reserva", "evaluación", "hora"],
+    "respuesta": "📅 Puedes reservar tu evaluación gratuita en este enlace 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": ["duele", "dolor", "molesta", "incomodo"],
+    "respuesta": "😊 Todos nuestros procedimientos son no invasivos y sin dolor. Utilizamos tecnología avanzada como HIFU 12D y EMS Sculptor para resultados visibles sin molestias."
+  },
+  {
+    "patrones": ["gracias", "muy amable", "te agradezco", "genial"],
+    "respuesta": "💛 Me alegra ayudarte, estoy aquí para acompañarte en todo tu proceso Body Elite."
+  }
+]
