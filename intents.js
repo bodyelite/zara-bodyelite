@@ -1,9 +1,17 @@
 const intents = [
   {
     tag: "saludo",
-    patterns: ["hola", "buenas", "hey", "holaa", "buen día", "buenas tardes"],
-    response:
-      "🌸 Soy *Zara IA* de Body Elite. Te acompaño en tu evaluación estética gratuita. ¿Te gustaría conocer los tratamientos *corporales* o *faciales*?",
+    patterns: [
+      "hola",
+      "buen día",
+      "buenas tardes",
+      "buenas noches",
+      "hey",
+      "holis",
+      "qué tal",
+      "como estás",
+      "buenas"
+    ]
   },
   {
     tag: "facial",
@@ -13,71 +21,101 @@ const intents = [
       "rostro",
       "piel",
       "arrugas",
+      "poros",
       "manchas",
-      "flacidez facial",
-      "luminosidad",
-      "tratamiento facial",
       "rejuvenecer",
-      "botox",
-      "relleno",
+      "tratamiento facial",
+      "antiage",
       "face",
       "face elite",
-      "face antiage",
       "face smart",
-      "limpieza facial",
-    ],
-    response:
-      "✨ Nuestros tratamientos faciales mejoran textura, firmeza y luminosidad. Incluyen *Limpieza Facial, Face Smart, Face Antiage y Face Elite*. Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+      "face inicia",
+      "face light",
+      "limpieza facial"
+    ]
   },
   {
     tag: "corporal",
     patterns: [
       "cuerpo",
+      "grasa",
       "abdomen",
       "espalda",
       "piernas",
       "brazos",
-      "grasa",
       "celulitis",
-      "reductor",
+      "flacidez corporal",
       "moldear",
+      "reductor",
       "lipo",
       "lipo sin cirugía",
-      "lipo corporal",
       "cavitación",
       "radiofrecuencia",
+      "ems sculptor",
       "prosculpt",
-      "ems",
-      "hifu",
-      "bajar grasa",
-      "reafirmar",
-      "flacidez corporal",
+      "body elite"
+    ]
+  },
+  {
+    tag: "flacidez",
+    patterns: [
+      "flacidez",
+      "piel suelta",
+      "firmeza",
       "tonificar",
-      "reducir abdomen",
-      "glúteos",
-      "trasero",
-      "levantamiento",
-    ],
-    response:
-      "🔥 Nuestro tratamiento *Lipo Body Elite* reduce grasa localizada con *HIFU 12D, Cavitación y EMS Sculptor*. Sin bisturí ni dolor. Resultados visibles desde la primera sesión. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+      "reafirmar",
+      "colágeno",
+      "elasticidad",
+      "rejuvenecer piel"
+    ]
+  },
+  {
+    tag: "botox",
+    patterns: [
+      "botox",
+      "relleno",
+      "hilos",
+      "toxina",
+      "ácido hialurónico",
+      "sin agujas"
+    ]
+  },
+  {
+    tag: "dolor",
+    patterns: [
+      "duele",
+      "duele mucho",
+      "incomodo",
+      "molesta",
+      "seguro",
+      "postoperatorio",
+      "efectos secundarios"
+    ]
   },
   {
     tag: "precios",
     patterns: [
-      "cuánto vale",
       "cuánto cuesta",
-      "valor",
       "precio",
+      "valor",
       "tarifa",
-      "costo",
-      "cuánto es",
-      "cuánto cobran",
+      "cuánto vale",
       "promoción",
       "oferta",
       "descuento",
-    ],
-    response:
-      "💰 Los valores varían según tu diagnóstico, pero por ejemplo: *Lipo Body Elite $664.000* y *Face Elite $358.400*. Todos incluyen diagnóstico gratuito. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+      "plan"
+    ]
+  },
+  {
+    tag: "sesiones",
+    patterns: [
+      "cuántas sesiones",
+      "sesión",
+      "sesiones",
+      "duración",
+      "tiempo del tratamiento",
+      "cuánto dura"
+    ]
   },
   {
     tag: "agendar",
@@ -89,29 +127,22 @@ const intents = [
       "cita",
       "hora",
       "agenda",
-      "quiero hora",
       "quiero agendar",
-      "quiero reservar",
-      "cómo agendo",
-    ],
-    response:
-      "📅 Puedes reservar tu evaluación gratuita directamente en este enlace 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+      "quiero hora",
+      "quiero reservar"
+    ]
   },
+  {
+    tag: "agradecimiento",
+    patterns: [
+      "gracias",
+      "muchas gracias",
+      "te agradezco",
+      "muy amable",
+      "ok gracias",
+      "genial gracias"
+    ]
+  }
 ];
 
-// Frases adicionales integradas (≈500) simuladas por expansión semántica
-// Permite a Zara reconocer variaciones reales de usuarios.
-const expand = (arr) =>
-  arr.flatMap((intent) => {
-    const extras = intent.patterns.flatMap((p) => [
-      p,
-      `${p} tratamiento`,
-      `tienen ${p}`,
-      `necesito ${p}`,
-      `me interesa ${p}`,
-      `quiero saber ${p}`,
-    ]);
-    return { ...intent, patterns: [...new Set([...intent.patterns, ...extras])] };
-  });
-
-export default expand(intents);
+export default intents;

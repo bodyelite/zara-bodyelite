@@ -1,103 +1,138 @@
 {
-  "conversaciones": [
-    {
-      "usuario": [
-        "hola",
-        "buenas",
-        "qué tal",
-        "buen día",
-        "quisiera más información"
-      ],
-      "zara": "Hola 🌸 Soy Zara IA de Body Elite. Te acompaño en tu evaluación estética gratuita 💫. ¿Te gustaría conocer los tratamientos corporales o faciales?"
-    },
-    {
-      "usuario": [
-        "quiero saber precios",
-        "cuánto cuesta",
-        "precio",
-        "valores"
-      ],
-      "zara": "Los precios dependen del plan que mejor se adapte a ti. Por ejemplo, Lipo Body Elite $664000, Lipo Express $432000 y Face Elite $358400. Todos incluyen diagnóstico y sesiones personalizadas."
-    },
-    {
-      "usuario": [
-        "tengo grasa",
-        "grasa localizada",
-        "bajar abdomen",
-        "rollitos",
-        "papada",
-        "celulitis"
-      ],
-      "zara": "Podemos ayudarte con planes reductivos como Lipo Express, Lipo Body Elite o tratamientos específicos según la zona. Usamos HIFU 12D, cavitación y radiofrecuencia para grasa localizada y tonificación."
-    },
-    {
-      "usuario": [
-        "tengo flacidez",
-        "piel suelta",
-        "necesito firmeza"
-      ],
-      "zara": "Para la flacidez corporal o facial recomendamos Radiofrecuencia y HIFU 12D, que estimulan colágeno I–III y tensan la piel desde las capas profundas."
-    },
-    {
-      "usuario": [
-        "quiero tonificar",
-        "quiero levantar glúteos",
-        "quiero marcar abdomen",
-        "quiero mejorar músculos"
-      ],
-      "zara": "El plan Body Fitness o Push Up con EMS Sculptor genera contracciones musculares profundas (más de 20000 por sesión). Ideal para tonificar glúteos o abdomen."
-    },
-    {
-      "usuario": [
-        "tengo acné",
-        "piel grasa",
-        "quiero limpiar mi cara",
-        "quiero tratamiento facial"
-      ],
-      "zara": "Para piel grasa o acné, trabajamos con LED Therapy, Pink Glow y RF facial. Recomendamos Face Light o Face Elite según el tipo de piel."
-    },
-    {
-      "usuario": [
-        "cómo agendo",
-        "dónde están",
-        "dirección",
-        "quiero reservar",
-        "agenda",
-        "agendar"
-      ],
-      "zara": "Puedes agendar directamente aquí 💎 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9 📍Av. Las Perdices 2990, Peñalolén."
-    },
-    {
-      "usuario": [
-        "qué tecnologías usan",
-        "cómo funciona",
-        "me da miedo el HIFU"
-      ],
-      "zara": "Usamos tecnología HIFU 12D (ultrasonido focalizado SMAS), Cavitación (rompe adipocitos), Radiofrecuencia (calor endógeno y colágeno profundo) y EMS Sculptor (contracciones musculares intensas). Seguros, sin dolor ni recuperación."
-    },
-    {
-      "usuario": [
-        "qué incluye",
-        "cuántas sesiones",
-        "dura mucho",
-        "cada cuánto se hace"
-      ],
-      "zara": "Cada plan incluye diagnóstico inicial, sesiones personalizadas (de 6 a 12 según tu caso) y seguimiento clínico con tecnología combinada (HIFU, Cavitación, RF y EMS)."
-    },
-    {
-      "usuario": [
-        "gracias",
-        "ok",
-        "perfecto",
-        "me interesa"
-      ],
-      "zara": "Excelente 💫. Te dejo el enlace para agendar tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9 Nos vemos en Body Elite ✨"
-    },
-    {
-      "usuario": [
-        "tengo estrías"
-      ],
-      "zara": "Las estrías se tratan con Radiofrecuencia y regeneradores dérmicos. Te recomiendo agendar evaluación gratuita 🌸"
-    }
+  "saludo": [
+    "hola",
+    "hola zara",
+    "buen dia",
+    "buenas tardes",
+    "buenas noches",
+    "hola queria hacer una consulta",
+    "hola como estan",
+    "hola me ayudan?",
+    "hola queria informacion"
+  ],
+  "facial": [
+    "tienen algo para el acné?",
+    "quiero mejorar mi piel",
+    "me interesa un tratamiento facial",
+    "tengo manchas",
+    "arrugas alrededor de los ojos",
+    "piel opaca",
+    "tratamiento para poros abiertos",
+    "rejuvenecimiento sin agujas",
+    "limpieza facial profunda",
+    "facial antiage",
+    "face elite",
+    "face smart",
+    "face light",
+    "quiero reafirmar mi cara",
+    "quitar líneas de expresión",
+    "tratamiento para ojeras",
+    "tienen botox?",
+    "me interesa hifu facial",
+    "piel sensible",
+    "quiero un tratamiento para luminosidad"
+  ],
+  "corporal": [
+    "tienen tratamiento para abdomen?",
+    "quiero bajar grasa",
+    "reducción de cintura",
+    "moldear mi cuerpo",
+    "lipo sin cirugía",
+    "reductor corporal",
+    "flacidez en brazos",
+    "celulitis piernas",
+    "gluteos caídos",
+    "levantamiento sin cirugía",
+    "tienen algo para reafirmar abdomen?",
+    "tratamiento para tonificar piernas",
+    "cavitacion abdomen",
+    "radiofrecuencia corporal",
+    "lipo body elite",
+    "body fitness",
+    "body tensor",
+    "push up gluteos",
+    "quiero reducir grasa localizada",
+    "necesito tonificar"
+  ],
+  "flacidez": [
+    "piel flácida",
+    "perdí firmeza",
+    "piel suelta abdomen",
+    "reafirmar brazos",
+    "firmeza en gluteos",
+    "mejorar tonicidad",
+    "tratamiento reafirmante",
+    "body tensor",
+    "me interesa algo para la flacidez",
+    "me siento con piel floja"
+  ],
+  "botox": [
+    "botox sin agujas",
+    "relleno facial",
+    "alternativa al botox",
+    "tratamiento tipo botox",
+    "toxina botulinica",
+    "sin agujas pero con efecto botox",
+    "quiero rejuvenecer naturalmente"
+  ],
+  "dolor": [
+    "duele?",
+    "tiene anestesia?",
+    "es doloroso?",
+    "molesta el tratamiento?",
+    "es seguro?",
+    "tiene riesgos?",
+    "hay efectos secundarios?",
+    "es sin cirugía?",
+    "duele el hifu?",
+    "duele la cavitacion?"
+  ],
+  "precios": [
+    "cuanto vale la lipo?",
+    "cuanto cuesta el tratamiento facial?",
+    "precios corporales",
+    "valor face elite",
+    "valor limpieza facial",
+    "promocion lipo",
+    "ofertas vigentes",
+    "descuento tratamientos",
+    "precio face smart",
+    "cuanto cuesta el push up?",
+    "cuanto sale body fitness?",
+    "precio lipo reductiva",
+    "valor radiofrecuencia",
+    "tienen promociones?",
+    "que valor tiene el tratamiento"
+  ],
+  "sesiones": [
+    "cuantas sesiones necesito?",
+    "duración del tratamiento",
+    "cuantas veces debo ir?",
+    "cuanto dura el procedimiento?",
+    "cuantas sesiones por semana?",
+    "necesito mantenimiento?",
+    "cada cuanto se hace?",
+    "cantidad de sesiones"
+  ],
+  "agendar": [
+    "quiero agendar hora",
+    "quiero reservar cita",
+    "como agendo?",
+    "quiero agendar evaluacion",
+    "donde reservo?",
+    "quiero agendar ahora",
+    "como puedo pedir hora",
+    "quiero evaluación gratis",
+    "como saco hora?",
+    "quiero ir a body elite"
+  ],
+  "agradecimiento": [
+    "gracias",
+    "muchas gracias",
+    "super amable",
+    "te agradezco",
+    "ok gracias",
+    "muy amable zara",
+    "genial gracias"
   ]
 }
