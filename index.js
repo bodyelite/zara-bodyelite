@@ -52,7 +52,7 @@ async function sendMessage(numero, mensaje) {
     const r = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+        Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`, // ✅ usa PAGE_ACCESS_TOKEN
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
