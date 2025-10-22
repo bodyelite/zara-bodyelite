@@ -57,7 +57,9 @@ app.post("/webhook", async (req, res) => {
     console.log("Mensaje recibido:", texto);
 
     const anterior = contextoPrevio[phone] || null;
-    const respuesta = procesarMensaje(texto, anterior, nombresUsuarios[phone]);
+
+    // Esperar la respuesta real del módulo memoria.js
+    const respuesta = await procesarMensaje(texto, anterior, nombresUsuarios[phone]);
     contextoPrevio[phone] = texto;
 
     const mensajeEnviar =
