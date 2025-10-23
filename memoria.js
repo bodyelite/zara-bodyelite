@@ -1,13 +1,13 @@
 import fs from "fs";
 
-// Carga del contexto de memoria
+// Carga del contexto de memoria desde la versión Body Elite Plus
 let contexto = [];
 try {
-  const rawData = fs.readFileSync("./contexto_memoria.json", "utf8");
+  const rawData = fs.readFileSync("./contexto_memoria_bodyelite_plus.json", "utf8");
   contexto = JSON.parse(rawData);
-  console.log(`✅ Memoria cargada correctamente (${contexto.length} patrones)`);
+  console.log(`✅ Memoria Body Elite Plus cargada correctamente (${contexto.length} patrones)`);
 } catch (err) {
-  console.error("❌ Error cargando contexto_memoria.json:", err.message);
+  console.error("❌ Error cargando contexto_memoria_bodyelite_plus.json:", err.message);
 }
 
 // Procesamiento principal del mensaje
