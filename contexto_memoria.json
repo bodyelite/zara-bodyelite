@@ -7,7 +7,7 @@
       "buenas tardes",
       "buenas noches"
     ],
-    "respuesta": "👋 Hola, soy Zara, asistente IA de Body Elite. Estoy aquí para orientarte y ayudarte en tu evaluación estética ✨ ¿Qué zona te gustaría mejorar hoy?\n\n✨ Recuerda que tu evaluación es gratuita y personalizada con IA."
+    "respuesta": "👋 Hola, soy Zara, asistente IA de Body Elite. Estoy aquí para orientarte en tu evaluación estética ✨ ¿Qué zona te gustaría trabajar hoy?\n\n✨ Recuerda que tu diagnóstico es gratuito y asistido con inteligencia artificial para definir el mejor plan según tus objetivos."
   },
   {
     "patrones": [
@@ -16,186 +16,17 @@
       "cara",
       "piel",
       "arrugas",
-      "manchas",
       "flacidez facial",
       "rejuvenecer",
       "poros",
       "luminosidad"
     ],
-    "respuesta": "🌸 Nuestros tratamientos faciales mejoran textura, firmeza y luminosidad. Usamos HIFU 12D, Radiofrecuencia, LED Therapy, Pink Glow y Exosomas.\n💰 Desde $120.000 según diagnóstico y tipo de piel.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "respuesta": "🌸 En Body Elite los tratamientos faciales combinan HIFU 12D, Radiofrecuencia, LED Therapy, Pink Glow y Exosomas para mejorar textura, firmeza y luminosidad.\n💰 Desde $120.000 según diagnóstico.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   },
   {
     "patrones": [
-      "limpieza facial",
-      "limpieza",
-      "facial express",
-      "facial básico"
+      "fallback"
     ],
-    "respuesta": "🧖‍♀️ La Limpieza Facial Full elimina impurezas, renueva la piel y deja una sensación fresca e hidratada.\n💰 Desde $40.000.\n✨ Agenda tu limpieza o diagnóstico facial gratuito asistido con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "botox",
-      "toxina",
-      "toxina botulinica",
-      "relleno",
-      "rellenos",
-      "labios",
-      "entrecejo",
-      "frente",
-      "arrugas",
-      "patas de gallo"
-    ],
-    "respuesta": "💉 Aplicamos Toxina Botulínica y Rellenos faciales certificados, seguros y sin dolor. Atenúan arrugas y realzan contornos de forma natural.\n💬 Resultados visibles en pocos días.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "rejuvenecimiento",
-      "antiage",
-      "reafirmar cara",
-      "mejorar flacidez facial",
-      "lifting facial",
-      "piel firme"
-    ],
-    "respuesta": "💎 Los planes faciales antiage estimulan colágeno, tensan y redefinen el rostro sin cirugía.\n💰 Face Antiage desde $281.600.\n✨ Agenda tu evaluación gratuita y descubre cuál plan se ajusta mejor a ti 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "corporal",
-      "abdomen",
-      "vientre",
-      "barriga",
-      "cintura",
-      "espalda",
-      "muslo",
-      "muslos",
-      "pierna",
-      "piernas",
-      "grasa",
-      "reductor",
-      "reductivo",
-      "celulitis",
-      "flacidez corporal",
-      "reafirmar cuerpo"
-    ],
-    "respuesta": "🔥 Los tratamientos corporales combinan HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor para reducir grasa, moldear y reafirmar.\n💰 Lipo Express desde $432.000 / Lipo Body Elite desde $664.000.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "flacidez",
-      "piel suelta",
-      "tonificar abdomen",
-      "tonificar piernas",
-      "reafirmar",
-      "radiofrecuencia corporal",
-      "cavitacion",
-      "grasa localizada"
-    ],
-    "respuesta": "💪 Body Tensor y Lipo Reductiva combinan cavitación y radiofrecuencia para eliminar grasa y tensar la piel sin bisturí.\n💰 Desde $480.000.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "lipo",
-      "lipo express",
-      "lipo body elite",
-      "lipo reductiva",
-      "grasa abdomen",
-      "reducir abdomen",
-      "quemar grasa",
-      "reafirmar abdomen"
-    ],
-    "respuesta": "🔥 Nuestras lipos sin cirugía trabajan grasa profunda con HIFU 12D, Cavitación y EMS Sculptor.\n💰 Lipo Express desde $432.000 / Lipo Body Elite desde $664.000.\n✨ Agenda tu diagnóstico gratuito asistido con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "gluteos",
-      "glúteos",
-      "trasero",
-      "cola",
-      "push up",
-      "levantar gluteos",
-      "tonificar gluteos",
-      "aumentar gluteos"
-    ],
-    "respuesta": "🍑 El plan Push Up levanta y tonifica glúteos con EMS Sculptor y radiofrecuencia avanzada.\n💰 Desde $376.000.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "musculo",
-      "abdomen marcado",
-      "tonificar",
-      "definir",
-      "body fitness",
-      "prosculpt",
-      "ems",
-      "sculptor"
-    ],
-    "respuesta": "💪 Body Fitness combina EMS Sculptor y HIFU 12D para definir abdomen, brazos y glúteos con resultados visibles.\n💰 Desde $360.000.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "cuantas sesiones",
-      "sesiones",
-      "duracion",
-      "tiempo",
-      "cuanto dura",
-      "resultado",
-      "resultados"
-    ],
-    "respuesta": "⏱️ Los resultados se notan desde la primera sesión. Normalmente se recomiendan entre 6 y 10 según tu diagnóstico.\n✨ Cada plan se ajusta tras tu evaluación gratuita asistida con IA.\n👉 Agenda aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "duele",
-      "molesta",
-      "seguro",
-      "riesgo",
-      "efectos",
-      "certificado",
-      "aprobado"
-    ],
-    "respuesta": "🤍 Todos los tratamientos son seguros, sin dolor y clínicamente aprobados. Usamos equipos certificados y tecnología no invasiva.\n✨ Agenda tu evaluación gratuita con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "precio",
-      "valor",
-      "cuanto cuesta",
-      "costo",
-      "tarifa",
-      "promocion",
-      "oferta"
-    ],
-    "respuesta": "💰 Los valores varían según zona y objetivo. Ejemplo:\n- Lipo Body Elite desde $664.000\n- Lipo Express desde $432.000\n- Face Elite desde $358.400\n- Body Fitness desde $360.000\n✨ Incluyen diagnóstico gratuito asistido con IA.\n👉 Agenda aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "cuotas",
-      "pago",
-      "efectivo",
-      "transferencia",
-      "tarjeta"
-    ],
-    "respuesta": "💳 Puedes pagar con tarjeta, transferencia o en cuotas según disponibilidad.\n✨ Agenda tu evaluación gratuita y te orientamos con los medios de pago 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "ubicacion",
-      "direccion",
-      "donde estan",
-      "como llegar"
-    ],
-    "respuesta": "📍 Estamos en Av. Las Perdices Nº2990, Local 23. Peñalolén.\n🕓 Horario: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.\n✨ Agenda tu visita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
-  },
-  {
-    "patrones": [
-      "gracias",
-      "perfecto",
-      "super",
-      "ok",
-      "me interesa",
-      "quiero agendar"
-    ],
-    "respuesta": "💛 Gracias por tu interés. Puedes agendar tu evaluación gratuita y conocer tu plan ideal aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+    "respuesta": "💛 Entiendo lo que mencionas. En Body Elite podemos ayudarte con un diagnóstico corporal o facial asistido con IA para definir el plan ideal según tu objetivo.\n✨ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   }
 ]
