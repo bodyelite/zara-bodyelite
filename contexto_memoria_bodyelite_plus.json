@@ -1,0 +1,32 @@
+[
+  {
+    "patrones": [
+      "hola",
+      "buenas",
+      "buenos dias",
+      "buenas tardes",
+      "buenas noches"
+    ],
+    "respuesta": "👋 Hola, soy Zara, asistente IA de Body Elite. Estoy aquí para orientarte en tu evaluación estética ✨ ¿Qué zona te gustaría trabajar hoy?\n\n✨ Recuerda que tu diagnóstico es gratuito y asistido con inteligencia artificial para definir el mejor plan según tus objetivos."
+  },
+  {
+    "patrones": [
+      "facial",
+      "rostro",
+      "cara",
+      "piel",
+      "arrugas",
+      "flacidez facial",
+      "rejuvenecer",
+      "poros",
+      "luminosidad"
+    ],
+    "respuesta": "🌸 En Body Elite los tratamientos faciales combinan HIFU 12D, Radiofrecuencia, LED Therapy, Pink Glow y Exosomas para mejorar textura, firmeza y luminosidad.\n💰 Desde $120.000 según diagnóstico.\n✨ Agenda tu evaluación gratuita asistida con IA 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  },
+  {
+    "patrones": [
+      "fallback"
+    ],
+    "respuesta": "💛 Entiendo lo que mencionas. En Body Elite podemos ayudarte con un diagnóstico corporal o facial asistido con IA para definir el plan ideal según tu objetivo.\n✨ Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+  }
+]
