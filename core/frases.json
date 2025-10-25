@@ -1,0 +1,71 @@
+{
+  "bienvenida": [
+    "hola","ola","holi","buenas","buen dia","hello","hi","🙋","👋",
+    "quiero info","consulta","informacion","me das datos","necesito saber","buenas tardes","buenas noches","buenos dias"
+  ],
+  "precio": [
+    "precio","vale","cuesta","costo","oferta","promocion","promo","descuento",
+    "cuanto","valor","precio por sesion","cuanto cobran","💰","$","tienen promociones","hay algun descuento"
+  ],
+  "sesiones": [
+    "cuantas sesiones","cantidad de sesiones","duracion","tiempo de sesion","tiempo tratamiento","duracion tratamiento"
+  ],
+  "resultados": [
+    "resultados","efecto","efectos","funciona","sirve","efectividad","se nota","desde cuando se ve","duele","molesta","riesgo","seguro"
+  ],
+  "humano": [
+    "hablar con alguien","humano","persona","asesor","profesional","especialista","contactar","numero","telefono","whatsapp","me llama","👩‍💼"
+  ],
+  "ubicacion": [
+    "donde estan","ubicacion","direccion","como llegar","mapa","donde queda","ubicados","peñalolen","sucursal","local","punto de referencia"
+  ],
+  "horarios": [
+    "horario","atencion","abren","cierran","dias","sabado","domingo","hasta que hora","de lunes a viernes","dias de atencion","a que hora abren"
+  ],
+  "emocional": [
+    "no me gusta","no bajo","me cuesta","estoy insegura","me da verguenza",
+    "me siento mal","quiero mejorar","necesito ayuda","no logro bajar","me cuesta el gym",
+    "no me resulta la dieta","quiero sentirme mejor","no me veo bien","😔","🥺","😞"
+  ],
+  "campanias": [
+    "verano","sin rollitos","sin cirugia","navidad","oferta especial","campaña"
+  ],
+  "planes": [
+    "lipo","body elite","body fitness","tensor","push up","facial","face elite",
+    "face antiage","limpieza","rf","radiofrecuencia","pink glow","led","ems"
+  ],
+  "errores_comunes": [
+    "lippo","liposuccion","lipolaser","ifuu","ifus","haifu","cavitasion",
+    "rediofrecuencia","cabitacion","proscup","prosculpt","escultor"
+  ],
+  "agradecimientos": [
+    "gracias","ok","perfecto","super","listo","genial","excelente","muchas gracias","vale","okey"
+  ],
+  "cierres": [
+    "nos vemos","hasta pronto","chau","bye","adios","gracias por todo","me interesa","lo haré"
+  ],
+  "intencion_agendar": [
+    "quiero agendar","quiero reservar","agendar cita","agenda","quiero mi hora","reservar","como agendo",
+    "puedo agendar","quiero ir","quiero la evaluacion","me interesa agendar","me agendan"
+  ],
+  "emoji_y_abreviaciones": [
+    "xfa","pls","porfa","porfavor","🙏","❤️","💖","💪","😉","😃","😍","😊","👌","👍","🙌","💆‍♀️","💅","🔥","💎"
+  ],
+
+  "zonas_corporales": [
+    "abdomen","barriga","guata","guatita","panza","vientre","cintura",
+    "flancos","rollitos","piernas","muslos","gluteos","cola","trasero","pompis","trasera",
+    "brazos","antebrazos","espalda","espalda baja","espalda alta"
+  ],
+  "zonas_faciales": [
+    "cara","rostro","papada","cuello","menton","mejillas","frente","ojeras","contorno","lineas de expresion"
+  ],
+  "problemas_comunes": [
+    "grasa","flacidez","celulitis","arrugas","piel suelta","piel caida","tonificar",
+    "marcar","definir","rejuvenecer","manchas","poros","luminosidad","reafirmar"
+  ],
+  "faq_comercial": [
+    "como funciona","que incluye","que hacen","que procedimiento es","como es el tratamiento",
+    "es sin cirugia","sin dolor","es rapido","recomendacion","que recomiendan"
+  ]
+}

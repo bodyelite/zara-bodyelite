@@ -1,0 +1,11 @@
+{
+  "usuario_local": {
+    "estado": "visitado"
+  },
+  "ig_user_demo": {
+    "estado": "confirmada"
+  },
+  "ig_user_nuevo": {
+    "estado": "nuevo"
+  }
+}
