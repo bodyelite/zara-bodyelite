@@ -1,16 +1,14 @@
 {
-  "name": "zara-monitor-2-1",
+  "name": "zara-2-1",
   "version": "1.0.0",
-  "description": "Monitor web en tiempo real para WhatsApp e Instagram de Zara 2.1",
-  "main": "server.js",
+  "main": "zara_core_full_2_1.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node zara_core_full_2_1.js"
   },
   "dependencies": {
-    "body-parser": "^1.20.2",
     "express": "^4.21.2",
-    "node-fetch": "^3.3.2",
-    "socket.io": "^4.7.2"
+    "body-parser": "^1.20.2",
+    "node-fetch": "^3.3.2"
   }
 }

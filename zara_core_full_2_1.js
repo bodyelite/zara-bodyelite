@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import fs from "fs";
-import { obtenerRespuesta } from "./ia_logs.js";
+import { procesarMensaje } from "./memoria.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -11,10 +11,8 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PORT = process.env.PORT || 3000;
-
 const LOG_WSP = "logs_wsp.json";
 
-// === FUNCIÓN PARA ENVIAR MENSAJES ===
 async function enviarMensaje(to, body) {
   try {
     const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
@@ -29,13 +27,12 @@ async function enviarMensaje(to, body) {
       text: { body }
     };
     const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(data) });
-    if (!res.ok) console.error("❌ Error al enviar mensaje:", await res.text());
+    if (!res.ok) console.error("❌ Error al enviar:", await res.text());
   } catch (err) {
     console.error("❌ Error enviarMensaje:", err);
   }
 }
 
-// === WEBHOOK VERIFICACIÓN META ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -48,21 +45,17 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// === RECEPCIÓN DE MENSAJES ===
 app.post("/webhook", async (req, res) => {
   try {
     const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
     if (!msg || !msg.from || !msg.text) return res.sendStatus(200);
 
     const from = msg.from;
-    const texto = msg.text.body.trim().toLowerCase();
-
+    const texto = msg.text.body.trim();
     console.log("💬 Mensaje recibido:", texto);
 
-    // Lógica de respuesta inteligente
-    const respuesta = obtenerRespuesta(texto);
+    const respuesta = await procesarMensaje(texto);
 
-    // Guarda en log local
     const log = {
       fecha: new Date().toISOString(),
       canal: "wsp",
@@ -73,9 +66,7 @@ app.post("/webhook", async (req, res) => {
     };
     fs.appendFileSync(LOG_WSP, JSON.stringify(log) + ",\n");
 
-    // Envía la respuesta al usuario
     await enviarMensaje(from, respuesta);
-
     res.sendStatus(200);
   } catch (error) {
     console.error("❌ Error webhook:", error);
@@ -83,7 +74,6 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// === ENDPOINT LOGS PARA MONITOR ===
 app.get("/logs", (req, res) => {
   try {
     const data = fs.readFileSync(LOG_WSP, "utf8");
@@ -95,5 +85,4 @@ app.get("/logs", (req, res) => {
   }
 });
 
-// === INICIO DEL SERVIDOR ===
-app.listen(PORT, () => console.log("✅ Zara IA 2.1 activa en puerto", PORT));
+app.listen(PORT, () => console.log("✅ Zara 2.1 conectada con IA actualizada en puerto", PORT));
