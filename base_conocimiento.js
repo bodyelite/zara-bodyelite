@@ -7,39 +7,47 @@ export const datos = {
   },
   frases: {
     bienvenida:["hola","holi","buenas","hello","hi","🙋","👋","quiero info","consulta"],
-    precio:["precio","valor","cuesta","promocion","oferta"],
-    ubicacion:["ubicacion","direccion","peñalolen","donde"],
-    horarios:["horario","dias","sabado","domingo"],
+    precio:["precio","valor","cuesta","promocion","oferta","tarifa","costo"],
+    ubicacion:["ubicacion","direccion","peñalolen","donde","mapa"],
+    horarios:["horario","dias","sabado","domingo","hora"],
     emocional:["no me gusta","me siento","no bajo","me cuesta","verguenza","😔","🥺"],
-    humano:["hablar con alguien","persona","asesor","whatsapp","telefono"],
-    intencion:["quiero agendar","reservar","cita","agenda","evaluacion"]
+    humano:["hablar con alguien","persona","asesor","whatsapp","telefono","humano"],
+    intencion:["quiero agendar","reservar","cita","agenda","evaluacion","turno","hora"]
   },
   alias:{
-    rostro:["cara","papada","frente","menton","mejillas","ojeras","cuello"],
-    abdomen:["vientre","barriga","panza","guata","cintura"],
-    gluteos:["cola","pompis","trasero"],
-    flancos:["rollitos","laterales"]
+    rostro:["cara","papada","frente","menton","mejillas","ojeras","cuello","rostro","facial","expresion"],
+    abdomen:["vientre","barriga","panza","guata","cintura","abdomen","estomago","abdomen bajo","abdomen alto"],
+    gluteos:["cola","pompis","trasero","gluteos","nalgas"],
+    flancos:["rollitos","laterales","costados","cintura baja"]
   },
   problemas:{
     rostro:{
       arrugas:["Face Elite","Face Antiage"],
       flacidez:["Face Antiage","Face Inicia"],
       manchas:["Face Light","Face Smart"],
-      acne:["BE Antiacné Pro","Face Light"]
+      acne:["BE Antiacné Pro","Face Light"],
+      envejecimiento:["Face Elite","Face Antiage"],
+      lineas:["Face Elite","Face Antiage"]
     },
     abdomen:{
       grasa:["Lipo Body Elite","Lipo Express"],
       flacidez:["Body Tensor","Lipo Reductiva"],
       celulitis:["Lipo Reductiva","Lipo Focalizada Reductiva"],
-      tonificar:["Body Fitness","Lipo Express"]
+      tonificar:["Body Fitness","Lipo Express"],
+      marcar:["Body Fitness","Lipo Express"],
+      tensar:["Body Tensor","Lipo Reductiva"],
+      adelgazar:["Lipo Express","Lipo Reductiva"]
     },
     gluteos:{
       flacidez:["Push Up","Body Tensor"],
       tonificar:["Push Up","Body Fitness"],
-      levantar:["Push Up","Body Fitness"]
+      levantar:["Push Up","Body Fitness"],
+      aumentar:["Push Up","Body Fitness"],
+      reafirmar:["Push Up","Body Tensor"]
     },
     flancos:{
-      grasa:["Lipo Body Elite","Lipo Express"]
+      grasa:["Lipo Body Elite","Lipo Express"],
+      tonificar:["Body Fitness","Lipo Express"]
     }
   },
   planes:{
