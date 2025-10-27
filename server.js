@@ -2,17 +2,18 @@ import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import fs from "fs";
-import { Server } from "socket.io";
 import http from "http";
+import { Server } from "socket.io";
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PHONE_NUMBER_ID   = process.env.PHONE_NUMBER_ID;
 const VERIFY_TOKEN      = process.env.VERIFY_TOKEN;
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
