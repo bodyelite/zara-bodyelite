@@ -1,6 +1,10 @@
 import fs from "fs";
+import fs from "fs";
 
 const conocimientos = JSON.parse(fs.readFileSync("./conocimientos.json", "utf8"));
+let extendidos = {};
+try { extendidos = JSON.parse(fs.readFileSync("./conocimientos_extendidos.json", "utf8")).planes_extendidos; } catch (e) { extendidos = {}; }
+Object.assign(conocimientos.planes, extendidos);
 const frases = JSON.parse(fs.readFileSync("./frases.json", "utf8"));
 
 const planes = conocimientos.planes;
