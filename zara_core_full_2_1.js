@@ -2,50 +2,45 @@ import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import fs from "fs";
-import { generarRespuesta } from "./respuestas.js";
+import { obtenerRespuesta } from "./ia_logs.js";
 
 const app = express();
 app.use(bodyParser.json());
 
-const token = process.env.PAGE_ACCESS_TOKEN;
-const verifyToken = process.env.VERIFY_TOKEN;
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PORT = process.env.PORT || 3000;
 
-const LOG_WSP = "./logs_wsp.json";
+const LOG_WSP = "logs_wsp.json";
 
-// === FUNCIÓN PARA ENVIAR MENSAJES A META ===
-async function enviarMensaje(to, text) {
+// === FUNCIÓN PARA ENVIAR MENSAJES ===
+async function enviarMensaje(to, body) {
   try {
-    const response = await fetch(
-      `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to,
-          text: { body: text }
-        })
-      }
-    );
-
-    const data = await response.json();
-    if (!response.ok) console.error("❌ Error al enviar mensaje:", data);
-  } catch (error) {
-    console.error("❌ Error en enviarMensaje:", error);
+    const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`
+    };
+    const data = {
+      messaging_product: "whatsapp",
+      to,
+      type: "text",
+      text: { body }
+    };
+    const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(data) });
+    if (!res.ok) console.error("❌ Error al enviar mensaje:", await res.text());
+  } catch (err) {
+    console.error("❌ Error enviarMensaje:", err);
   }
 }
 
-// === VERIFICACIÓN WEBHOOK META ===
+// === WEBHOOK VERIFICACIÓN META ===
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  const verify_token = req.query["hub.verify_token"];
-
-  if (mode && verify_token === verifyToken) {
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
@@ -56,48 +51,43 @@ app.get("/webhook", (req, res) => {
 // === RECEPCIÓN DE MENSAJES ===
 app.post("/webhook", async (req, res) => {
   try {
-    const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const msg = changes?.value?.messages?.[0];
-
-    if (!msg || !msg.from || !msg.text) {
-      return res.sendStatus(200);
-    }
+    const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    if (!msg || !msg.from || !msg.text) return res.sendStatus(200);
 
     const from = msg.from;
-    const texto = msg.text.body.toLowerCase().trim();
+    const texto = msg.text.body.trim().toLowerCase();
 
-    // Mensaje base genérico
-    const base = "👋 Hola, soy Zara IA de Body Elite. ¿Qué zona te gustaría mejorar hoy?";
-    // Genera la respuesta usando el módulo inteligente
-    const respuesta = generarRespuesta(texto, base);
+    console.log("💬 Mensaje recibido:", texto);
 
-    // Guarda log local
+    // Lógica de respuesta inteligente
+    const respuesta = obtenerRespuesta(texto);
+
+    // Guarda en log local
     const log = {
       fecha: new Date().toISOString(),
       canal: "wsp",
       from,
       texto,
       respuesta,
-      status: "nuevo"
+      estado: "rojo"
     };
     fs.appendFileSync(LOG_WSP, JSON.stringify(log) + ",\n");
 
-    // Envía respuesta al usuario
+    // Envía la respuesta al usuario
     await enviarMensaje(from, respuesta);
-    res.sendStatus(200);
 
+    res.sendStatus(200);
   } catch (error) {
     console.error("❌ Error webhook:", error);
     res.sendStatus(500);
   }
 });
 
-// === ENDPOINT DE LOGS PARA EL MONITOR ===
+// === ENDPOINT LOGS PARA MONITOR ===
 app.get("/logs", (req, res) => {
   try {
-    const contenido = fs.readFileSync(LOG_WSP, "utf8");
-    const mensajes = "[" + contenido.replace(/,\s*$/, "") + "]";
+    const data = fs.readFileSync(LOG_WSP, "utf8");
+    const mensajes = "[" + data.replace(/,\s*$/, "") + "]";
     res.setHeader("Content-Type", "application/json");
     res.send(mensajes);
   } catch {
@@ -106,6 +96,4 @@ app.get("/logs", (req, res) => {
 });
 
 // === INICIO DEL SERVIDOR ===
-app.listen(PORT, () => {
-  console.log(`✅ Zara IA 2.1 activa en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log("✅ Zara IA 2.1 activa en puerto", PORT));
