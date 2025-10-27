@@ -1,83 +1,41 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import fs from "fs";
-import http from "http";
 import { Server } from "socket.io";
+import http from "http";
 
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const PHONE_NUMBER_ID   = process.env.PHONE_NUMBER_ID;
-const VERIFY_TOKEN      = process.env.VERIFY_TOKEN;
 const PORT = process.env.PORT || 3000;
+const BOT_URL = "https://zara-bodyelite-1.onrender.com"; // bot principal que genera los mensajes
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 app.use(bodyParser.json());
-app.use(express.static("public"));
-
 let chats = [];
 
-// --- webhook whatsapp / instagram ---
-app.post("/webhook", async (req, res) => {
+// === Obtener logs del bot Zara IA ===
+async function obtenerLogs() {
   try {
-    const data = req.body.entry?.[0]?.changes?.[0]?.value;
-    if (!data) return res.sendStatus(200);
-    const msg = data.messages?.[0];
-    if (msg && msg.from && msg.text) {
-      const origen = data.messaging_product === "instagram" ? "IG" : "WSP";
-      const nuevo = {
-        id: msg.id,
-        from: msg.from,
-        text: msg.text.body,
-        origen,
-        timestamp: new Date().toISOString(),
-        status: "nuevo"
-      };
-      chats.unshift(nuevo);
-      fs.appendFileSync("logs.json", JSON.stringify(nuevo) + ",\n");
-      io.emit("nuevoMensaje", nuevo);
-    }
-    res.sendStatus(200);
-  } catch (e) {
-    console.error(e);
-    res.sendStatus(500);
+    const res = await fetch(`${BOT_URL}/logs`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
   }
-});
+}
 
-// --- verificación meta ---
-app.get("/webhook", (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-  if (mode === "subscribe" && token === VERIFY_TOKEN) res.status(200).send(challenge);
-  else res.sendStatus(403);
-});
+// === Refresco cada 10 segundos ===
+setInterval(async () => {
+  chats = await obtenerLogs();
+  io.emit("updateChats", chats);
+}, 10000);
 
-// --- dashboard datos ---
-app.get("/estadisticas", (req, res) => {
-  const total = chats.length;
-  const nuevos = chats.filter(c => c.status === "nuevo").length;
-  const intencion = chats.filter(c => c.status === "intencion").length;
-  const sinAgendar = chats.filter(c => c.status === "sinAgendar").length;
-  const agendados = chats.filter(c => c.status === "agendado").length;
-  res.json({
-    total, nuevos, intencion, sinAgendar, agendados,
-    porcentaje: {
-      nuevos: total ? ((nuevos/total)*100).toFixed(1) : 0,
-      intencion: total ? ((intencion/total)*100).toFixed(1) : 0,
-      sinAgendar: total ? ((sinAgendar/total)*100).toFixed(1) : 0,
-      agendados: total ? ((agendados/total)*100).toFixed(1) : 0
-    }
-  });
-});
-
-// --- interfaz web ---
+// === Interfaz Web ===
 app.get("/", (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"/>
-<title>Monitor Zara 2.1</title>
+<title>Monitor Zara 2.1 Conectado al Bot</title>
 <script src="/socket.io/socket.io.js"></script>
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#ece5dd;}
@@ -110,6 +68,7 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#ece5dd;}
 const socket = io();
 let chats = [];
 let origenActual = "WSP";
+
 function renderContactos(){
   const cDiv=document.getElementById("contactos");
   cDiv.innerHTML="";
@@ -124,29 +83,17 @@ function mostrarChat(num){
   const mDiv=document.getElementById("mensajes");
   mDiv.innerHTML=msgs.map(m=>'<div class="mensaje"><span class="msg-from">'+m.from+':</span> '+m.text+'</div>').join("");
 }
-socket.on("nuevoMensaje",m=>{chats.unshift(m);renderContactos();});
+socket.on("updateChats",data=>{chats=data;renderContactos();});
 document.querySelectorAll(".tab").forEach(t=>{
   t.onclick=()=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("activa"));
     t.classList.add("activa");
     origenActual=t.dataset.origen;
-    if(origenActual==="DASH"){
-      fetch("/estadisticas").then(r=>r.json()).then(d=>{
-        document.getElementById("contactos").innerHTML='<h3>Dashboard</h3>'+
-          '<p>Total: '+d.total+'</p>'+
-          '<p>Nuevos: '+d.nuevos+' ('+d.porcentaje.nuevos+'%)</p>'+
-          '<p>Sin agendar: '+d.sinAgendar+' ('+d.porcentaje.sinAgendar+'%)</p>'+
-          '<p>Intención: '+d.intencion+' ('+d.porcentaje.intencion+'%)</p>'+
-          '<p>Agendados: '+d.agendados+' ('+d.porcentaje.agendados+'%)</p>';
-        document.getElementById("mensajes").innerHTML="";
-      });
-    }else{
-      renderContactos();
-      document.getElementById("mensajes").innerHTML="";
-    }
+    renderContactos();
+    document.getElementById("mensajes").innerHTML="";
   };
 });
 </script></body></html>`);
 });
 
-server.listen(PORT,()=>console.log("✅ Monitor Zara 2.1 activo en puerto "+PORT));
+server.listen(PORT,()=>console.log("✅ Monitor Zara 2.1 conectado al bot en",BOT_URL,"puerto",PORT));
