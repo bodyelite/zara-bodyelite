@@ -1,8 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import memoria from "./memoria.js";
-import motor_respuesta from "./motor_respuesta.js";
+import procesarMensaje from "./memoria.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -37,7 +36,7 @@ app.post("/webhook", async (req, res) => {
         const texto = message.text.body.toLowerCase();
         const from = message.from;
 
-        const respuesta = motor_respuesta(texto);
+        const respuesta = procesarMensaje(texto);
 
         await enviarMensaje(from, respuesta);
 
@@ -49,7 +48,7 @@ app.post("/webhook", async (req, res) => {
             body: JSON.stringify({
               fecha: new Date().toISOString(),
               canal: "whatsapp",
-              from: message.from || "usuario_desconocido",
+              from: from || "usuario_desconocido",
               texto: texto,
               respuesta: respuesta,
               estado: "recibido"
