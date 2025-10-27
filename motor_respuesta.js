@@ -37,19 +37,21 @@ export function responder(texto){
   if(f.emocional.some(x=>t.includes(x))) 
     return "💬 Entiendo lo que sientes. Muchos pacientes comienzan igual y logran excelentes resultados con un plan personalizado. ¿Te gustaría que te oriente?";
 
-  // 3. detección zona / alias
+  // 3. detección de zona (usa alias o palabra aislada)
   let zonaDetectada = null;
   for(const [zona, lista] of Object.entries(alias)){
-    if(lista.some(a => palabras.includes(a) || t.includes(a))) zonaDetectada = zona;
+    if(lista.some(a => palabras.includes(a) || t.includes(a))){
+      zonaDetectada = zona;
+      break;
+    }
   }
-  if(!zonaDetectada) zonaDetectada = Object.keys(probs).find(z=>t.includes(z));
 
-  // 4. detección problema (usa coincidencias parciales y sinónimos)
+  // 4. detección de problema (usa coincidencia flexible)
   let problemaDetectado = null;
   for(const [zona, grupo] of Object.entries(probs)){
     for(const [clave] of Object.entries(grupo)){
       const tokens = clave.split(" ");
-      if(tokens.some(tok => palabras.includes(tok) || t.includes(tok))){
+      if(tokens.some(tok => t.includes(tok))){
         problemaDetectado = clave;
         if(!zonaDetectada) zonaDetectada = zona;
         break;
@@ -62,7 +64,7 @@ export function responder(texto){
   if(zonaDetectada && problemaDetectado){
     const arr = probs[zonaDetectada][problemaDetectado];
     if(arr){
-      const p1 = arr[0], p2 = arr[1];
+      const [p1,p2] = arr;
       const d1 = planes[p1] || "", d2 = planes[p2] || "";
       let r = `✨ Para ${zonaDetectada} con ${problemaDetectado}, te recomiendo **${p1}**.\n${d1}`;
       if(p2) r += `\nTambién puedes considerar **${p2}**.\n${d2}`;
@@ -71,13 +73,14 @@ export function responder(texto){
     }
   }
 
-  // 6. detección parcial: zona sin problema
+  // 6. si detecta zona sin problema (ej. “muslos”)
   if(zonaDetectada){
     const grupo = probs[zonaDetectada];
     const p1 = Object.values(grupo)[0][0];
-    return `💡 Para ${zonaDetectada}, te recomiendo **${p1}**.\n${planes[p1]}\n📅 Agenda tu evaluación gratuita 👉 ${info.agendar}`;
+    const d1 = planes[p1];
+    return `💡 Para ${zonaDetectada}, te recomiendo **${p1}**.\n${d1}\n📅 Agenda tu evaluación gratuita 👉 ${info.agendar}`;
   }
 
   // 7. respuesta genérica
-  return "✨ Soy Zara IA de Body Elite. Cuéntame qué zona deseas mejorar (rostro, abdomen, glúteos, etc.) y te indicaré el tratamiento ideal con descripción y valor.";
+  return "✨ Soy Zara IA de Body Elite. Cuéntame qué zona deseas mejorar (rostro, abdomen, glúteos, muslos, brazos, etc.) y te indicaré el tratamiento ideal con descripción y valor.";
 }
