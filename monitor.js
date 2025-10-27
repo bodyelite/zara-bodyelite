@@ -1,5 +1,4 @@
 import express from "express";
-import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
@@ -57,5 +56,5 @@ app.get("/", (req, res) => {
   </html>`);
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 conectado a logs en tiempo real de BodyElite"));
