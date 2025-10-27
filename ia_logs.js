@@ -6,7 +6,6 @@ export function obtenerRespuesta(texto) {
   const t = texto.toLowerCase();
   const agendar = "📲 Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-  // === Búsqueda por alias de zona ===
   const alias = conocimientos.alias_zonas || {};
   const zonas = conocimientos.problema_zona || {};
   const planes = conocimientos.planes || {};
@@ -19,7 +18,6 @@ export function obtenerRespuesta(texto) {
     }
   }
 
-  // === Búsqueda directa por nombre de zona ===
   if (!zonaDetectada) {
     for (const z of Object.keys(zonas)) {
       if (t.includes(z)) {
@@ -29,7 +27,6 @@ export function obtenerRespuesta(texto) {
     }
   }
 
-  // === Casos base (saludo, info general, ubicación, etc.) ===
   const bases = [
     {
       palabras: ["hola", "buenas", "hey", "zara"],
@@ -45,7 +42,7 @@ export function obtenerRespuesta(texto) {
     },
     {
       palabras: ["precio", "vale", "valor", "cuesta", "coste"],
-      respuesta: "💰 Nuestros planes parten desde $120.000 CLP en faciales y $348.800 CLP en corporales. Incluyen diagnóstico IA y tecnologías como HIFU 12D, RF y EMS Sculptor. " + agendar
+      respuesta: "💰 Nuestros planes parten desde $120.000 CLP (faciales) y $348.800 CLP (corporales). Incluyen diagnóstico IA y tecnologías avanzadas como HIFU 12D, RF y EMS Sculptor. " + agendar
     },
     {
       palabras: ["sesion", "sesiones", "cuantas", "cuantos"],
@@ -61,7 +58,6 @@ export function obtenerRespuesta(texto) {
     if (b.palabras.some(p => t.includes(p))) return b.respuesta;
   }
 
-  // === Si se detecta zona, buscar problema asociado ===
   if (zonaDetectada && zonas[zonaDetectada]) {
     const problemas = zonas[zonaDetectada];
     for (const [problema, planesRelacionados] of Object.entries(problemas)) {
@@ -69,18 +65,17 @@ export function obtenerRespuesta(texto) {
         const planKey = planesRelacionados[0];
         const plan = planes[planKey];
         if (plan) {
-          return `💡 ${plan.nombre}\n${plan.descripcion}\n💰 ${plan.precio}\n${agendar}`;
+          return `💡 ${planKey}\n${plan.descripcion}\n💰 ${plan.precio}\n${agendar}`;
         }
       }
     }
 
-    // Si hay zona pero sin problema específico
-    const primerPlan = Object.values(planes)[0];
+    const primerPlanKey = Object.keys(planes)[0];
+    const primerPlan = planes[primerPlanKey];
     if (primerPlan) {
-      return `✨ Tratamiento recomendado para ${zonaDetectada}:\n${primerPlan.nombre}\n${primerPlan.descripcion}\n💰 ${primerPlan.precio}\n${agendar}`;
+      return `✨ Tratamiento recomendado para ${zonaDetectada}:\n${primerPlanKey}\n${primerPlan.descripcion}\n💰 ${primerPlan.precio}\n${agendar}`;
     }
   }
 
-  // === Si no se entiende nada ===
   return "✨ No estoy segura, pero puedo ayudarte con una evaluación gratuita asistida por IA. Cuéntame qué zona te gustaría mejorar 💬 " + agendar;
 }
