@@ -1,4 +1,5 @@
 import { generarRespuesta } from "./respuestas.js";
+import { generarRespuestaAvanzada } from "./respuestas_inteligentes.js";
 
 export async function procesarMensaje(texto, contextoPrevio = null, usuario = null) {
   const msg = texto.toLowerCase().trim();
@@ -7,7 +8,7 @@ export async function procesarMensaje(texto, contextoPrevio = null, usuario = nu
     return "👋 Hola, soy Zara IA de Body Elite. ¿Qué zona te gustaría mejorar?";
   }
 
-  const respuesta = generarRespuesta(msg);
+  const respuesta = generarRespuestaAvanzada(msg) || generarRespuesta(msg);
   if (respuesta) return respuesta;
 
   return "✨ Soy Zara IA de Body Elite. Puedo orientarte sobre tratamientos faciales o corporales. Cuéntame qué zona te gustaría trabajar.";
