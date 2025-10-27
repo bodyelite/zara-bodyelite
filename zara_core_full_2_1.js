@@ -66,7 +66,7 @@ app.post("/webhook", async (req, res) => {
     fs.appendFileSync(LOG_WSP, JSON.stringify(log) + ",\n");
 
     await enviarMensaje(from, respuesta);
-    res.sendStatus(200);
+  try {n    await fetch("https://zara-monitor-2-1.onrender.com/api/logs", {n      method: "POST",n      headers: { "Content-Type": "application/json" },n      body: JSON.stringify({n        fecha: new Date().toISOString(),n        canal: "whatsapp",n        from: from,n        texto: texto,n        respuesta: respuesta,n        estado: "recibido"n      })n    });n  } catch (e) { console.error("Error enviando al monitor:", e); }n    res.sendStatus(200);
   } catch (error) {
     console.error("❌ Error webhook:", error);
     res.sendStatus(500);
