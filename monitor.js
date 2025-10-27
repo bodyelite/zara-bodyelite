@@ -1,31 +1,7 @@
 import express from "express";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
+import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LOGS_FILE = path.join(__dirname, "logs_wsp.json");
-
-// --- API guardar logs ---
-app.post("/api/logs", (req, res) => {
-  const data = req.body;
-  let logs = [];
-  if (fs.existsSync(LOGS_FILE)) {
-    try { logs = JSON.parse(fs.readFileSync(LOGS_FILE, "utf8")); } catch { logs = []; }
-  }
-  logs.unshift(data);
-  fs.writeFileSync(LOGS_FILE, JSON.stringify(logs.slice(0, 200), null, 2));
-  res.json({ status: "ok" });
-});
-
-// --- API obtener logs ---
-app.get("/logs", (req, res) => {
-  if (!fs.existsSync(LOGS_FILE)) return res.json([]);
-  const logs = JSON.parse(fs.readFileSync(LOGS_FILE, "utf8"));
-  res.json(logs);
-});
 
 // --- Interfaz visual ---
 app.get("/", (req, res) => {
@@ -44,14 +20,14 @@ app.get("/", (req, res) => {
     </style>
     <script>
       async function cargar(){
-        const r = await fetch('/logs');
+        const r = await fetch('https://zara-bodyelite-1.onrender.com/logs');
         const data = await r.json();
         const cont = document.getElementById('wsp');
         cont.innerHTML = '';
         data.forEach(l=>{
-          const fecha = l.fecha || l.timestamp || new Date().toISOString();
-          const usuario = l.usuario || l.from || 'sin usuario';
-          const mensaje = l.texto || l.mensaje || '';
+          const fecha = l.fecha || new Date().toISOString();
+          const usuario = l.from || 'sin usuario';
+          const mensaje = l.texto || '';
           const resp = l.respuesta || '';
           const div = document.createElement('div');
           div.className = 'msg';
@@ -59,7 +35,7 @@ app.get("/", (req, res) => {
           cont.appendChild(div);
         });
       }
-      setInterval(cargar,5000);
+      setInterval(cargar,4000);
       window.onload=cargar;
     </script>
   </head>
@@ -71,12 +47,12 @@ app.get("/", (req, res) => {
     </header>
     <section>
       <div class="panel" id="wsp"></div>
-      <div class="panel" id="ig"></div>
-      <div class="panel" id="dash"></div>
+      <div class="panel" id="ig"><i>Próximamente</i></div>
+      <div class="panel" id="dash"><i>Próximamente</i></div>
     </section>
   </body>
   </html>`);
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 activo en puerto", PORT));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 activo y leyendo datos en tiempo real desde BodyElite"));
