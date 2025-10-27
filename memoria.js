@@ -1,6 +1,7 @@
 import { generarRespuesta } from "./respuestas.js";
 import { generarRespuestaAvanzada } from "./respuestas_inteligentes.js";
 import { expandirTexto } from "./diccionario_expandido.js";
+import { expandirTexto } from "./diccionario_expandido.js";
 
 export async function procesarMensaje(texto, contextoPrevio = null, usuario = null) {
   const msg = expandirTexto(texto.toLowerCase().trim());
