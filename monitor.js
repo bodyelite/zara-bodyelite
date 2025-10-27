@@ -3,7 +3,6 @@ import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
-// --- Interfaz visual ---
 app.get("/", (req, res) => {
   res.send(`
   <html>
@@ -20,20 +19,23 @@ app.get("/", (req, res) => {
     </style>
     <script>
       async function cargar(){
-        const r = await fetch('https://zara-bodyelite-1.onrender.com/logs');
-        const data = await r.json();
-        const cont = document.getElementById('wsp');
-        cont.innerHTML = '';
-        data.forEach(l=>{
-          const fecha = l.fecha || new Date().toISOString();
-          const usuario = l.from || 'sin usuario';
-          const mensaje = l.texto || '';
-          const resp = l.respuesta || '';
-          const div = document.createElement('div');
-          div.className = 'msg';
-          div.innerHTML = '<small>' + new Date(fecha).toLocaleString() + ' · ' + usuario + '</small><br><b>' + mensaje + '</b><br>' + resp;
-          cont.appendChild(div);
-        });
+        try {
+          const r = await fetch('https://zara-bodyelite-1.onrender.com/logs');
+          const texto = await r.text();
+          const data = JSON.parse(texto.replace(/^Impresión con formato estilístico/, '').trim());
+          const cont = document.getElementById('wsp');
+          cont.innerHTML = '';
+          data.forEach(l=>{
+            const fecha = l.fecha || new Date().toISOString();
+            const usuario = l.from || 'sin usuario';
+            const mensaje = l.texto || '';
+            const resp = l.respuesta || '';
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = '<small>' + new Date(fecha).toLocaleString() + ' · ' + usuario + '</small><br><b>' + mensaje + '</b><br>' + resp;
+            cont.appendChild(div);
+          });
+        } catch(e){ console.error(e); }
       }
       setInterval(cargar,4000);
       window.onload=cargar;
@@ -55,4 +57,4 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 activo y leyendo datos en tiempo real desde BodyElite"));
+app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 conectado a logs en tiempo real de BodyElite"));
