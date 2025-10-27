@@ -1,34 +1,48 @@
 import fs from "fs";
 
-const frases = JSON.parse(fs.readFileSync("./frases.json", "utf-8"));
 const conocimientos = JSON.parse(fs.readFileSync("./conocimientos.json", "utf-8"));
+const alias = conocimientos.alias_zonas || {};
+const planes = conocimientos.planes || {};
+const zonas = conocimientos.problema_zona || {};
 
 export function generarRespuesta(texto, base) {
   const msg = texto.toLowerCase().trim();
 
-  // Coincidencias directas
-  if (msg.includes("abdomen") || msg.includes("flanco") || msg.includes("cintura")) {
-    return "🔥 Tratamiento corporal Body Elite, ideal para abdomen y flancos. Agenda tu evaluación 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  // --- Buscar zona o alias ---
+  let zona = Object.keys(zonas).find(z => msg.includes(z));
+  if (!zona) {
+    for (const [aliasTerm, zonaReal] of Object.entries(alias)) {
+      if (msg.includes(aliasTerm)) {
+        zona = zonaReal;
+        break;
+      }
+    }
   }
 
-  if (msg.includes("gluteo") || msg.includes("trasero") || msg.includes("cola")) {
-    return "🍑 El plan Push Up de Body Elite trabaja glúteos con HIFU 12D + EMS Sculptor. Resultados visibles desde la primera sesión 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  // --- Si se identificó zona ---
+  if (zona && zonas[zona]) {
+    const problemas = zonas[zona];
+    for (const [clave, planesRelacionados] of Object.entries(problemas)) {
+      if (msg.includes(clave)) {
+        const plan = planes[planesRelacionados[0]];
+        if (plan) {
+          return `💡 ${plan.descripcion}\n💰 ${plan.precio}\n📅 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
+        }
+      }
+    }
   }
 
-  if (msg.includes("facial") || msg.includes("cara") || msg.includes("rostro")) {
-    return "✨ Tratamiento facial Face Elite para lifting sin cirugía con HIFU 12D + radiofrecuencia. Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  // --- Coincidencias generales ---
+  if (msg.includes("hola") || msg.includes("buenas")) {
+    return "👋 Hola, soy Zara IA de Body Elite. Cuéntame qué zona te gustaría mejorar y te recomendaré el plan ideal.";
+  }
+  if (msg.includes("precio") || msg.includes("valor")) {
+    return "💰 Nuestros planes parten desde $120.000 (faciales) y $348.800 (corporales). Incluyen diagnóstico gratuito asistido con IA.";
+  }
+  if (msg.includes("ubicacion") || msg.includes("direccion") || msg.includes("peñalolén")) {
+    return "📍 Av. Las Perdices Nº2990, Local 23, Peñalolén.\n🕒 Lunes a Viernes 9:30–20:00 | Sábado 9:30–13:00";
   }
 
-  // Aprendizaje de frases
-  for (const f of frases) {
-    if (msg.includes(f.patron)) return f.respuesta;
-  }
-
-  // Coincidencias por conocimiento
-  for (const c of conocimientos) {
-    if (msg.includes(c.zona)) return c.mensaje;
-  }
-
-  // Por defecto
+  // --- Por defecto ---
   return base;
 }
