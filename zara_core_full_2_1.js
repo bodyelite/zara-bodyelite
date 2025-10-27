@@ -1,10 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
 import fs from "fs";
 import { procesarMensaje } from "./memoria.js";
 
-import fetch from "node-fetch";
 const app = express();
 app.use(bodyParser.json());
 
