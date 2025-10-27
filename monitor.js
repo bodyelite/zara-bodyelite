@@ -8,7 +8,7 @@ app.use(express.json());
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOGS_FILE = path.join(__dirname, "logs_wsp.json");
 
-// --- API para recibir los logs desde Zara ---
+// === API para recibir logs desde Zara (mantiene conexión actual) ===
 app.post("/api/logs", (req, res) => {
   const data = req.body;
   let logs = [];
@@ -20,65 +20,91 @@ app.post("/api/logs", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// --- API para entregar logs al navegador ---
+// === API para entregar logs al navegador ===
 app.get("/logs", (req, res) => {
   if (!fs.existsSync(LOGS_FILE)) return res.json([]);
   const logs = JSON.parse(fs.readFileSync(LOGS_FILE, "utf8"));
   res.json(logs);
 });
 
-// --- Interfaz visual ---
+// === INTERFAZ VISUAL (basada en v2, pero conectada a logs actuales) ===
 app.get("/", (req, res) => {
   res.send(`
   <html>
   <head>
-    <title>Monitor Zara 2.1</title>
-    <meta charset="UTF-8">
-    <style>
-      body { font-family: Arial; margin:0; background:#e0d5ca; }
-      header { background:#036b63; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-around; }
-      section { display:grid; grid-template-columns:1fr 1fr 1fr; height:90vh; }
-      .panel { padding:10px; overflow:auto; }
-      .msg { background:white; border-radius:10px; padding:10px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
-      .msg small { color:gray; font-size:11px; }
-    </style>
-    <script>
-      async function cargar(){
-        try {
-          const r = await fetch('/logs');
-          const data = await r.json();
-          const cont = document.getElementById('wsp');
-          cont.innerHTML = '';
-          data.forEach(l=>{
-            const fecha = l.fecha || new Date().toISOString();
-            const usuario = l.from || 'sin usuario';
-            const mensaje = l.texto || '';
-            const resp = l.respuesta || '';
-            const div = document.createElement('div');
-            div.className = 'msg';
-            div.innerHTML = '<small>' + new Date(fecha).toLocaleString() + ' · ' + usuario + '</small><br><b>' + mensaje + '</b><br>' + resp;
-            cont.appendChild(div);
-          });
-        } catch(e){ console.error(e); }
-      }
-      setInterval(cargar,4000);
-      window.onload=cargar;
-    </script>
+  <title>Monitor Zara 2.1</title>
+  <meta charset="UTF-8">
+  <style>
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f2f4f7;}
+  .tabs{display:flex;background:#1c3d5a;color:white;}
+  .tab{flex:1;padding:12px;text-align:center;cursor:pointer;}
+  .tab.active{background:#0f2538;}
+  .panel{display:flex;height:90vh;}
+  .lista{width:30%;background:white;overflow-y:auto;border-right:1px solid #ccc;}
+  .chat{flex:1;display:flex;flex-direction:column;}
+  .mensajes{flex:1;padding:10px;overflow-y:auto;background:#eef1f4;}
+  .msg{margin:8px 0;padding:8px;border-radius:8px;max-width:70%;}
+  .msg-rec{background:white;align-self:flex-start;}
+  .msg-env{background:#cce5ff;align-self:flex-end;}
+  small{color:gray;font-size:11px;}
+  </style>
   </head>
   <body>
-    <header>
-      <div>WhatsApp</div>
-      <div>Instagram</div>
-      <div>Dashboard</div>
-    </header>
-    <section>
-      <div class="panel" id="wsp"></div>
-      <div class="panel" id="ig"><i>Próximamente</i></div>
-      <div class="panel" id="dash"><i>Próximamente</i></div>
-    </section>
-  </body>
-  </html>`);
+  <div class="tabs">
+    <div class="tab active" id="tab-wsp">WhatsApp</div>
+    <div class="tab" id="tab-ig">Instagram</div>
+    <div class="tab" id="tab-dash">Dashboard</div>
+  </div>
+  <div class="panel">
+    <div class="lista" id="lista"></div>
+    <div class="chat"><div class="mensajes" id="mensajes"></div></div>
+  </div>
+  <script>
+  let canal="whatsapp"; let logs=[];
+
+  async function cargar(){
+    const res=await fetch("/logs");
+    logs=await res.json();
+    renderLista();
+  }
+
+  function renderLista(){
+    const l=document.getElementById("lista");
+    l.innerHTML="";
+    const porContacto={};
+    logs.forEach(x=>{
+      const from=x.from||"sin usuario";
+      if(!porContacto[from])porContacto[from]=[];
+      porContacto[from].push(x);
+    });
+    for(const u in porContacto){
+      const div=document.createElement("div");
+      div.className="contacto";
+      div.style.padding="10px";
+      div.style.borderBottom="1px solid #eee";
+      div.innerHTML=u;
+      div.onclick=()=>abrirChat(u);
+      l.appendChild(div);
+    }
+  }
+
+  function abrirChat(u){
+    const msgs=logs.filter(x=>x.from===u);
+    const m=document.getElementById("mensajes");
+    m.innerHTML="";
+    msgs.reverse().forEach(x=>{
+      const div=document.createElement("div");
+      div.className="msg "+(x.estado==="recibido"?"msg-rec":"msg-env");
+      div.innerHTML='<b>'+u+'</b><br>'+x.texto+'<br><small>'+new Date(x.fecha).toLocaleString()+'</small><br>'+x.respuesta;
+      m.appendChild(div);
+    });
+  }
+
+  setInterval(cargar,5000);
+  cargar();
+  </script>
+  </body></html>`);
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 escuchando en puerto", PORT));
+app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 visual mejorado en puerto", PORT));
