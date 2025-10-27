@@ -1,42 +1,22 @@
 import express from "express";
 import bodyParser from "body-parser";
-import fs from "fs";
-import { procesarMensaje } from "./memoria.js";
+import fetch from "node-fetch";
+import memoria from "./memoria.js";
+import motor_respuesta from "./motor_respuesta.js";
 
 const app = express();
 app.use(bodyParser.json());
 
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const PORT = process.env.PORT || 3000;
-const LOG_WSP = "logs_wsp.json";
+const token = process.env.PAGE_ACCESS_TOKEN;
+const verifyToken = process.env.VERIFY_TOKEN;
+const port = process.env.PORT || 3000;
 
-async function enviarMensaje(to, body) {
-  try {
-    const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`
-    };
-    const data = {
-      messaging_product: "whatsapp",
-      to,
-      type: "text",
-      text: { body }
-    };
-    const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(data) });
-    if (!res.ok) console.error("❌ Error al enviar:", await res.text());
-  } catch (err) {
-    console.error("❌ Error enviarMensaje:", err);
-  }
-}
-
+// Verificación del webhook
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+  const verifyTokenParam = req.query["hub.verify_token"];
+  if (mode === "subscribe" && verifyTokenParam === verifyToken) {
     console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
@@ -44,44 +24,69 @@ app.get("/webhook", (req, res) => {
   }
 });
 
+// Recepción de mensajes
 app.post("/webhook", async (req, res) => {
   try {
-    const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-    if (!msg || !msg.from || !msg.text) return res.sendStatus(200);
+    const body = req.body;
+    if (body.object) {
+      const entry = body.entry?.[0];
+      const changes = entry.changes?.[0];
+      const message = changes?.value?.messages?.[0];
 
-    const from = msg.from;
-    const texto = msg.text.body.trim();
-    console.log("💬 Mensaje recibido:", texto);
+      if (message && message.text) {
+        const texto = message.text.body.toLowerCase();
+        const from = message.from;
 
-    const respuesta = await procesarMensaje(texto);
+        const respuesta = motor_respuesta(texto);
 
-    const log = {
-      fecha: new Date().toISOString(),
-      canal: "wsp",
-      from,
-      texto,
-      respuesta,
-      estado: "rojo"
-    };
-    fs.appendFileSync(LOG_WSP, JSON.stringify(log) + ",\n");
+        await enviarMensaje(from, respuesta);
 
-    await enviarMensaje(from, respuesta);
-  try {n    await fetch("https://zara-monitor-2-1.onrender.com/api/logs", {n      method: "POST",n      headers: { "Content-Type": "application/json" },n      body: JSON.stringify({n        fecha: new Date().toISOString(),n        canal: "whatsapp",n        from: from,n        texto: texto,n        respuesta: respuesta,n        estado: "recibido"n      })n    });n  } catch (e) { console.error("Error enviando al monitor:", e); }n    res.sendStatus(200);
+        // --- Envío de log al monitor ---
+        try {
+          await fetch("https://zara-monitor-2-1.onrender.com/api/logs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fecha: new Date().toISOString(),
+              canal: "whatsapp",
+              from: from,
+              texto: texto,
+              respuesta: respuesta,
+              estado: "recibido"
+            })
+          });
+        } catch (err) {
+          console.error("Error enviando al monitor:", err);
+        }
+      }
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
+    }
   } catch (error) {
-    console.error("❌ Error webhook:", error);
+    console.error("Error en webhook:", error);
     res.sendStatus(500);
   }
 });
 
-app.get("/logs", (req, res) => {
+// Enviar mensaje por API de WhatsApp
+async function enviarMensaje(to, text) {
   try {
-    const data = fs.readFileSync(LOG_WSP, "utf8");
-    const mensajes = "[" + data.replace(/,\s*$/, "") + "]";
-    res.setHeader("Content-Type", "application/json");
-    res.send(mensajes);
-  } catch {
-    res.send("[]");
+    await fetch(`https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        text: { body: text },
+      }),
+    });
+  } catch (e) {
+    console.error("Error enviando mensaje a WhatsApp:", e);
   }
-});
+}
 
-app.listen(PORT, () => console.log("✅ Zara 2.1 conectada con IA actualizada en puerto", PORT));
+app.listen(port, () => console.log(`✅ Zara 2.1 corriendo en puerto ${port}`));
