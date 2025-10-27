@@ -49,7 +49,7 @@ app.post("/webhook", async (req, res) => {
             body: JSON.stringify({
               fecha: new Date().toISOString(),
               canal: "whatsapp",
-              from: from,
+              from: message.from || "usuario_desconocido",
               texto: texto,
               respuesta: respuesta,
               estado: "recibido"
