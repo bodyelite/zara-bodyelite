@@ -1,28 +1,84 @@
 import express from "express";
-import http from "http";
-import { Server } from "socket.io";
-import fetch from "node-fetch";
+import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
-const PORT = process.env.PORT || 10000;
+app.use(express.json());
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const LOGS_FILE = path.join(__dirname, "logs_wsp.json");
 
-app.use(express.static(path.resolve("./public")));
-
-io.on("connection", (socket) => {
-  console.log("🟢 Monitor conectado");
-  const intervalo = setInterval(async () => {
+// API para guardar logs desde Zara
+app.post("/api/logs", (req, res) => {
+  const data = req.body;
+  let logs = [];
+  if (fs.existsSync(LOGS_FILE)) {
     try {
-      const r = await fetch("https://zara-2-1.onrender.com/logs");
-      const data = await r.json();
-      socket.emit("logs", data);
-    } catch (err) {
-      console.error("Error actualizando monitor:", err.message);
+      logs = JSON.parse(fs.readFileSync(LOGS_FILE, "utf8"));
+    } catch {
+      logs = [];
     }
-  }, 3000);
-  socket.on("disconnect", () => clearInterval(intervalo));
+  }
+  logs.unshift(data);
+  fs.writeFileSync(LOGS_FILE, JSON.stringify(logs.slice(0, 100), null, 2));
+  res.json({ status: "ok" });
 });
 
-server.listen(PORT, () => console.log("✅ Monitor activo en puerto", PORT));
+// API para obtener logs
+app.get("/logs", (req, res) => {
+  if (!fs.existsSync(LOGS_FILE)) return res.json([]);
+  const logs = JSON.parse(fs.readFileSync(LOGS_FILE, "utf8"));
+  res.json(logs);
+});
+
+// Interfaz visual
+app.get("/", (req, res) => {
+  res.send(`
+  <html>
+    <head>
+      <title>Zara Monitor 2.1</title>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial; margin:0; background:#e0d5ca; }
+        header { background:#036b63; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-around; }
+        section { display:grid; grid-template-columns:1fr 1fr 1fr; height:90vh; }
+        .panel { padding:10px; overflow:auto; }
+        .msg { background:white; border-radius:10px; padding:10px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+        .msg small { color:gray; font-size:11px; }
+      </style>
+      <script>
+        async function cargar() {
+          const res = await fetch('/logs');
+          const data = await res.json();
+          const cont = document.getElementById('wsp');
+          cont.innerHTML = '';
+          data.forEach(log => {
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = '<small>' + new Date(log.fecha).toLocaleString() + '</small><br><b>' +
+              (log.texto || '') + '</b><br>' +
+              (log.respuesta || '');
+            cont.appendChild(div);
+          });
+        }
+        setInterval(cargar, 5000);
+        window.onload = cargar;
+      </script>
+    </head>
+    <body>
+      <header>
+        <div>WhatsApp</div>
+        <div>Instagram</div>
+        <div>Dashboard</div>
+      </header>
+      <section>
+        <div class="panel" id="wsp"></div>
+        <div class="panel" id="ig"></div>
+        <div class="panel" id="dash"></div>
+      </section>
+    </body>
+  </html>`);
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 activo en puerto", PORT));
