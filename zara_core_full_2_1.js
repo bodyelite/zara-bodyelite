@@ -89,3 +89,5 @@ async function enviarMensaje(to, text) {
 }
 
 app.listen(port, () => console.log(`✅ Zara 2.1 corriendo en puerto ${port}`));
+import igRouter from "./instagram/ig_webhook.js";
+app.use("/ig", igRouter);

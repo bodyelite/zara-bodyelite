@@ -1,0 +1,49 @@
+{
+  "flujo_zara_instagram": {
+    "inicio": {
+      "detonantes": ["hola", "planes", "tratamiento", "lipo", "mejorar", "flacidez", "grasa", "cuerpo", "rostro"],
+      "respuesta": "¡Hola {{nombre}}! 🌸 Soy Zara, asistente IA de Body Elite. Un gusto ayudarte 💫 ¿Qué zona te gustaría mejorar? (abdomen, glúteos, brazos o rostro)",
+      "siguiente": "zona"
+    },
+    "zona": {
+      "detonantes": ["abdomen", "gluteos", "brazos", "rostro"],
+      "respuesta": "Perfecto 😊 ¿Buscas reducir grasa o reafirmar la piel en esa zona?",
+      "siguiente": "objetivo"
+    },
+    "objetivo": {
+      "detonantes": ["grasa", "flacidez", "ambas"],
+      "respuesta": {
+        "grasa": "Usamos tecnologías como HIFU 12D, Cavitación y Radiofrecuencia, que ayudan a reducir grasa localizada y mejorar la firmeza de la piel.",
+        "flacidez": "Usamos Radiofrecuencia y EMS Sculptor para reafirmar la piel y tonificar músculos. Resultados visibles desde el primer mes.",
+        "ambas": "Combinamos HIFU 12D, Cavitación, RF y EMS Sculptor 💪 para tratar grasa y flacidez al mismo tiempo. Resultados visibles desde el primer mes."
+      },
+      "siguiente": "evaluacion"
+    },
+    "evaluacion": {
+      "respuesta": "Lo ideal es una evaluación gratuita con nuestras profesionales 👩‍⚕️ Así determinamos cuál plan se ajusta mejor a ti. ¿Te gustaría que te ayude a agendarla?",
+      "siguiente": "coordinacion"
+    },
+    "coordinacion": {
+      "respuesta": "Estamos de lunes a viernes de 9:30 a 20:00 hrs y sábados de 9:30 a 13:00 hrs. ¿Qué día te acomoda más?",
+      "siguiente": "confirmacion"
+    },
+    "confirmacion": {
+      "respuesta": "Perfecto 🌸 El día anterior recibirás un correo para confirmar tu asistencia. 📍 Av. Las Perdices 2990, Local 23, Peñalolén. ¡Gracias por preferir Body Elite, te esperamos! ✨",
+      "fin": true
+    },
+    "precios": {
+      "detonantes": ["precio", "valor", "promocion", "oferta", "costo"],
+      "respuesta": "💰 Nuestros planes parten desde $120 000 (faciales) y $348 800 (corporales). Incluyen diagnóstico gratuito asistido por IA 👩‍⚕️ ¿Te gustaría saber cuál se ajusta mejor a ti?",
+      "siguiente": "zona"
+    },
+    "alternativas": {
+      "detonantes": ["barato", "economico", "alternativa", "otra opcion"],
+      "respuesta": "💡 Si buscas una opción más económica, podemos recomendarte el plan de menor valor dentro de la misma línea. Todo se confirma durante la evaluación gratuita. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+      "fin": true
+    },
+    "no_entendido": {
+      "respuesta": "🤔 No logré entender tu pregunta, pero nuestras profesionales podrán aclarar todo durante la evaluación gratuita. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+      "fin": true
+    }
+  }
+}

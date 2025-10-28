@@ -84,3 +84,75 @@ export function responder(texto){
   // 7. respuesta genérica
   return "✨ Soy Zara IA de Body Elite. Cuéntame qué zona deseas mejorar (rostro, abdomen, glúteos, muslos, brazos, etc.) y te indicaré el tratamiento ideal con descripción y valor.";
 }
+
+/* --- Extensión Zara 2.1: respuesta clínica avanzada y fallback --- */
+function ampliarRespuesta(textoOriginal, zona, problema) {
+  const techInfo = "🧠 HIFU 12D actúa sobre fascia SMAS y grasa subcutánea. Cavitación rompe adipocitos. Radiofrecuencia estimula colágeno. EMS Sculptor tonifica músculo. Pink Glow regenera células. LED reduce inflamación.";
+  let texto = textoOriginal;
+  if (zona && problema) texto += "\n\n" + techInfo;
+  return texto;
+}
+
+function planMasBarato(grupoPlanes, planes) {
+  let menor = null, menorValor = Infinity;
+  for (const p of grupoPlanes) {
+    const match = planes[p]?.match(/\$([\d\.]+)/);
+    if (match) {
+      const val = parseFloat(match[1].replace(/\./g, "").replace(",", "."));
+      if (val < menorValor) { menorValor = val; menor = p; }
+    }
+  }
+  return menor;
+}
+
+export function responderExtendido(textoUsuario) {
+  const base = responder(textoUsuario);
+  const t = textoUsuario.toLowerCase();
+
+  // Detectar si no entendió
+  if (base.includes("Soy Zara IA de Body Elite. Cuéntame")) {
+    return "🤔 No logré entender tu pregunta, pero nuestras profesionales podrán aclarar todas tus dudas durante la evaluación gratuita. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  }
+
+  // Comparar precios
+  if (t.includes("barato") || t.includes("económico") || t.includes("alternativa")) {
+    try {
+      const zona = base.match(/Para ([a-záéíóúñ]+) con/gi)?.[0]?.replace(/Para | con/gi,"").trim() || "";
+      const problema = base.match(/con ([a-záéíóúñ]+)/gi)?.[0]?.replace(/con /gi,"").trim() || "";
+      import("./base_conocimiento.js").then(({datos})=>{
+        const grupo = datos.problemas[zona]?.[problema];
+        if (grupo) {
+          const barato = planMasBarato(grupo, datos.planes);
+          if (barato) {
+            const d = datos.planes[barato];
+            return `💡 Si buscas una opción más económica, considera **${barato}**. ${d}\n📅 Agenda tu evaluación gratuita 👉 ${datos.info.agendar}`;
+          }
+        }
+      });
+    } catch {}
+  }
+
+  // Agregar información clínica si corresponde
+  if (base.includes("Para")) {
+    const zona = base.match(/Para ([a-záéíóúñ]+)/i)?.[1];
+    const problema = base.match(/con ([a-záéíóúñ]+)/i)?.[1];
+    return ampliarRespuesta(base, zona, problema);
+  }
+
+  return base;
+}
+
+/* --- Bloque de prueba local --- */
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const casos = [
+    "tengo grasa en abdomen",
+    "hay algo más barato para abdomen",
+    "tengo flacidez en brazos",
+    "no entiendo nada"
+  ];
+  console.log("=== PRUEBAS ZARA 2.1 EXTENDIDA ===");
+  for (const c of casos) {
+    const r = responderExtendido(c);
+    console.log(`\n🗣️ Usuario: ${c}\n🤖 Zara: ${r}\n`);
+  }
+}
