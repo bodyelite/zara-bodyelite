@@ -120,3 +120,60 @@ export async function capaInterna(textoUsuario) {
   const detalle = datos.planes[nombre] || "";
   return `🧠 [MODO INTERNO]\nTratamiento **${nombre}**:\n${detalle}\n\nUso clínico interno — sin CTA ni enlace.`;
 }
+
+
+/* === EXTENSIÓN FINAL: responderExtendido con capas internas === */
+export function responderExtendido(textoUsuario) {
+  const t = textoUsuario.toLowerCase().trim();
+
+  // --- 1. MODO INTERNO (solo si inicia con "zara") ---
+  if (t.startsWith("zara")) {
+    const nombres = Object.keys(datos.planes).map(p => p.toLowerCase());
+    const encontrado = nombres.find(p => t.includes(p));
+    if (encontrado) {
+      const nombre = Object.keys(datos.planes).find(p => p.toLowerCase() === encontrado);
+      const detalle = datos.planes[nombre] || "";
+      return `🧠 [MODO INTERNO]\nTratamiento **${nombre}**:\n${detalle}\n\nUso clínico interno — sin CTA ni enlace.`;
+    }
+    return "🧠 [MODO INTERNO] No encontré un tratamiento con ese nombre. Verifica la escritura.";
+  }
+
+  // --- 2. RESPUESTA BASE ---
+  const base = responder(textoUsuario);
+
+  // --- 3. CAPA DE CURIOSIDAD ---
+  const curiosas = [
+    "en que consiste","cómo funciona","como funciona","me explicas",
+    "detalle","que incluye","que es","por que tan caro","porque tan caro",
+    "hay algo mas barato","opcion economica","alternativa","cuentame mas",
+    "explicame mas","dime mas","cuantas sesiones","resultado","resultados"
+  ];
+
+  if (curiosas.some(f => t.includes(f))) {
+    const match = base.match(/\*\*(.*?)\*\*/);
+    if (match) {
+      const plan = match[1].trim();
+      const detalle = datos.planes[plan] || "";
+      if (t.includes("barato") || t.includes("econ"))
+        return "💡 También existen planes más accesibles con resultados progresivos. Podemos orientarte según tu presupuesto.";
+      if (t.includes("caro"))
+        return `💬 El plan **${plan}** utiliza tecnología premium (HIFU 12D, RF, EMS) y diagnóstico profesional. Refleja resultados reales y duraderos.`;
+      if (t.includes("sesion"))
+        return `📆 El plan **${plan}** incluye entre 6 y 12 sesiones según evaluación clínica. Resultados visibles desde la primera.`;
+      return `💬 El plan **${plan}** consiste en ${detalle.toLowerCase()}. Combina tecnología avanzada con enfoque clínico seguro.`;
+    }
+  }
+
+  // --- 4. CAPA EMPÁTICA ---
+  const saludo = "Hola 😊 ";
+  const pie = "\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  const enlace = "\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  if (base.includes("Para")) {
+    return saludo + "Esa grasita o flacidez se puede tratar sin cirugía ✨\n" +
+      base.replace("✨ Para", "Con nuestros planes").replace("💡 Para", "Con nuestros planes") +
+      enlace + pie;
+  }
+
+  // --- 5. FALLBACK ---
+  return base;
+}
