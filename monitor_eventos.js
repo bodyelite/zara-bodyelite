@@ -81,3 +81,19 @@ app.post("/webhook", async (req, res) => {
   }
   res.status(200).json({ status: "ok" });
 });
+app.post("/webhook", async (req, res) => {
+  const { telefono } = req.body;
+  if (telefono) {
+    try {
+      await fetch("https://zara-monitor-2-1.onrender.com/api/reserva", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefono })
+      });
+      console.log("Reserva confirmada y enviada al monitor:", telefono);
+    } catch (e) {
+      console.error("Error al enviar confirmación al monitor:", e);
+    }
+  }
+  res.status(200).json({ status: "ok" });
+});
