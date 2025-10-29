@@ -159,7 +159,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 
 /* === Capa empática añadida Zara 2.1 === */
-export function respuestaEmpatica(textoUsuario, respuestaBase) {
   const saludo = "Hola 😊 ";
   const pie = "\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
   const enlace = "\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
@@ -235,7 +234,6 @@ export async function responderDetalle(textoUsuario, respuestaBase) {
 /* === Extensiones estables añadidas Zara 2.1 === */
 
 // Capa empática: humaniza la respuesta base sin alterar estructura
-export function respuestaEmpatica(textoUsuario, respuestaBase) {
   const saludo = "Hola 😊 ";
   const pie = "\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
   const enlace = "\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
