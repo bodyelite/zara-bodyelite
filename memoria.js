@@ -7,7 +7,10 @@ export default async function procesarMensaje(texto) {
 
     const base = responder(texto);
     const conEmpatia = capaEmpatica(texto, base);
-    return await capaCuriosidad(texto, conEmpatia);
+    const final = await capaCuriosidad(texto, conEmpatia);
+
+    // Fallback seguro
+    return final || conEmpatia || base || "✨ Soy Zara IA de Body Elite. Cuéntame qué zona deseas mejorar para orientarte con el tratamiento ideal.";
   } catch (e) {
     console.error("Error procesando mensaje:", e);
     return "⚠️ Sistema en actualización, intenta nuevamente en unos segundos.";
