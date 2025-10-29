@@ -17,10 +17,8 @@ app.post("/api/logs", (req, res) => {
     : [];
   if (!data.status) data.status = "azul";
   if (data.texto?.includes("reservo.cl")) data.status = "rojo";
-  if (data.texto?.includes("clic reserva") || data.texto?.includes("click reserva"))
-    data.status = "amarillo";
-  if (data.texto?.includes("reserva ok") || data.texto?.includes("confirmado"))
-    data.status = "verde";
+  if (data.texto?.includes("clic reserva") || data.texto?.includes("click reserva")) data.status = "amarillo";
+  if (data.texto?.includes("reserva ok") || data.texto?.includes("confirmado")) data.status = "verde";
   logs.unshift(data);
   fs.writeFileSync(LOGS_FILE, JSON.stringify(logs.slice(0, 400), null, 2));
   res.json({ status: "ok" });
@@ -30,9 +28,7 @@ app.post("/api/logs", (req, res) => {
 app.post("/api/reservo", (req, res) => {
   try {
     const { telefono, nombre, fecha, servicio } = req.body;
-    let logs = fs.existsSync(LOGS_FILE)
-      ? JSON.parse(fs.readFileSync(LOGS_FILE, "utf8"))
-      : [];
+    let logs = fs.existsSync(LOGS_FILE) ? JSON.parse(fs.readFileSync(LOGS_FILE, "utf8")) : [];
     const idx = logs.findIndex((l) => l.from && l.from.includes(telefono));
     if (idx !== -1) {
       logs[idx].status = "verde";
@@ -56,9 +52,7 @@ app.post("/api/reservo", (req, res) => {
 app.post("/api/reservo-click", (req, res) => {
   try {
     const { telefono } = req.body;
-    let logs = fs.existsSync(LOGS_FILE)
-      ? JSON.parse(fs.readFileSync(LOGS_FILE, "utf8"))
-      : [];
+    let logs = fs.existsSync(LOGS_FILE) ? JSON.parse(fs.readFileSync(LOGS_FILE, "utf8")) : [];
     const idx = logs.findIndex((l) => l.from && l.from.includes(telefono));
     if (idx !== -1) {
       logs[idx].status = "amarillo";
@@ -75,21 +69,13 @@ app.post("/api/reservo-click", (req, res) => {
 app.post("/api/send", async (req, res) => {
   try {
     const { telefono, texto } = req.body;
-    if (!telefono || !texto)
-      return res.status(400).json({ error: "Faltan parámetros" });
+    if (!telefono || !texto) return res.status(400).json({ error: "Faltan parámetros" });
     const token = process.env.PAGE_ACCESS_TOKEN;
     const phoneId = process.env.PHONE_NUMBER_ID;
     await fetch(`https://graph.facebook.com/v18.0/${phoneId}/messages`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: telefono,
-        text: { body: texto },
-      }),
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", to: telefono, text: { body: texto } }),
     });
     res.json({ status: "ok", enviado: true });
   } catch (e) {
@@ -128,7 +114,7 @@ header{background:#036b63;color:white;padding:10px;font-weight:bold;display:flex
 .unread{background:#036b63;color:white;border-radius:50%;padding:3px 6px;font-size:11px;float:right;}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px;}
 .card{background:white;padding:10px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
-.chart-container{width:400px;margin:auto;}
+.chart-container{width:420px;height:320px;margin:auto;}
 button.filtro{margin:4px;padding:6px 10px;border:none;border-radius:6px;cursor:pointer;color:white;}
 button.activo{background:#0f2538;}
 button#btn-wsp{background:#25d366;}
@@ -175,7 +161,7 @@ function abrirChat(u,total){usuarioActivo=u;leidos[u]=total;localStorage.setItem
 async function enviarManual(){const texto=document.getElementById("textoManual").value.trim();if(!texto||!usuarioActivo)return;document.getElementById("textoManual").value="";const nuevo={from:usuarioActivo,texto:texto,respuesta:"(enviado manual)",fecha:new Date().toISOString(),status:"azul",canal:canalFiltro,estado:"enviado"};logs.unshift(nuevo);await fetch("/api/logs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(nuevo)});abrirChat(usuarioActivo,logs.filter(x=>x.from===usuarioActivo).length);await fetch("/api/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({telefono:usuarioActivo,texto:texto})});}
 function setCanal(c,btn){canalFiltro=c;document.querySelectorAll(".filtro").forEach(b=>b.classList.remove("activo"));btn.classList.add("activo");actualizarDash();}
 function renderDashboard(){const hoy=new Date();const ayer=new Date(hoy);ayer.setDate(hoy.getDate()-1);document.getElementById("desde").value=document.getElementById("desde").value||ayer.toISOString().slice(0,10);document.getElementById("hasta").value=document.getElementById("hasta").value||ayer.toISOString().slice(0,10);actualizarDash();}
-function actualizarDash(){const desde=new Date(document.getElementById("desde").value);const hasta=new Date(document.getElementById("hasta").value);hasta.setHours(23,59,59);let filtrados=logs.filter(x=>{const f=new Date(x.fecha);return f>=desde&&f<=hasta;});if(canalFiltro!=="todos")filtrados=filtrados.filter(x=>(x.canal||"").toLowerCase()===canalFiltro);const total=filtrados.length;const estados={azul:0,rojo:0,amarillo:0,verde:0};filtrados.forEach(x=>{if(x.status==="verde")estados.verde++;else if(x.status==="amarillo")estados.amarillo++;else if(x.status==="rojo")estados.rojo++;else estados.azul++;});const stats=document.getElementById("stats");stats.innerHTML="";const labels=[{k:"azul",t:"🔵 Nuevos"},{k:"rojo",t:"🔴 Link"},{k:"amarillo",t:"🟡 Click"},{k:"verde",t:"🟢 Reservados"}];labels.forEach(lab=>{const q=estados[lab.k],p=((q/total)*100||0).toFixed(1);const card=document.createElement("div");card.className="card";card.innerHTML=\`<b>\${lab.t}</b><br>Q: \${q}<br>%: \${p}%\`;stats.appendChild(card);});const ctx=document.getElementById("grafico");const data={labels:labels.map(l=>l.t),datasets:[{data:[estados.azul,estados.rojo,estados.amarillo,estados.verde],backgroundColor:["#34b7f1","#f44336","#ffeb3b","#4caf50"]}]};if(chart)chart.destroy();chart=new Chart(ctx,{type:"pie",data});}
+function actualizarDash(){const desde=new Date(document.getElementById("desde").value);const hasta=new Date(document.getElementById("hasta").value);hasta.setHours(23,59,59);let filtrados=logs.filter(x=>{const f=new Date(x.fecha);return f>=desde&&f<=hasta;});if(canalFiltro!=="todos")filtrados=filtrados.filter(x=>(x.canal||"").toLowerCase()===canalFiltro);const total=filtrados.length;const estados={azul:0,rojo:0,amarillo:0,verde:0};filtrados.forEach(x=>{if(x.status==="verde")estados.verde++;else if(x.status==="amarillo")estados.amarillo++;else if(x.status==="rojo")estados.rojo++;else estados.azul++;});const stats=document.getElementById("stats");stats.innerHTML="";const labels=[{k:"azul",t:"🔵 Nuevos"},{k:"rojo",t:"🔴 Link"},{k:"amarillo",t:"🟡 Click"},{k:"verde",t:"🟢 Reservados"}];labels.forEach(lab=>{const q=estados[lab.k],p=((q/total)*100||0).toFixed(1);const card=document.createElement("div");card.className="card";card.innerHTML=\`<b>\${lab.t}</b><br>Q: \${q}<br>%: \${p}%\`;stats.appendChild(card);});const ctx=document.getElementById("grafico");const data={labels:labels.map(l=>l.t),datasets:[{data:[estados.azul,estados.rojo,estados.amarillo,estados.verde],backgroundColor:["#34b7f1","#f44336","#ffeb3b","#4caf50"],borderWidth:1}]};if(chart)chart.destroy();chart=new Chart(ctx,{type:"pie",data,options:{responsive:false,plugins:{legend:{position:"top"}},layout:{padding:10},aspectRatio:1.4}});}
 function descargarExcel(){const filtrados=canalFiltro==="todos"?logs:logs.filter(x=>(x.canal||"").toLowerCase()===canalFiltro);const data=filtrados.map(x=>({Telefono:x.from||"",Estado:x.status||"",Fecha:new Date(x.fecha).toLocaleString(),Canal:x.canal||"",Texto:x.texto||"",Respuesta:x.respuesta||""}));const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Leads Body Elite");XLSX.writeFile(wb,"leads_bodyelite.xlsx");}
 document.getElementById("tab-dash").onclick=()=>{document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.getElementById("tab-dash").classList.add("active");document.getElementById("panel-main").style.display="none";document.getElementById("dashboard").style.display="block";renderDashboard();};
 document.getElementById("tab-wsp").onclick=()=>{canalFiltro="whatsapp";document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.getElementById("tab-wsp").classList.add("active");document.getElementById("dashboard").style.display="none";document.getElementById("panel-main").style.display="flex";renderLista();};
