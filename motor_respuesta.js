@@ -224,3 +224,9 @@ export async function responderInterno(textoUsuario) {
 
   return "🧠 Consulta interna detectada, pero no encontré un tratamiento coincidente. Revisa la ortografía del nombre.";
 }
+
+
+// --- Fallback temporal si responderDetalle no existe ---
+export async function responderDetalle(textoUsuario, respuestaBase) {
+  return respuestaBase;
+}
