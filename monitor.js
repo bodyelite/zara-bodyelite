@@ -172,3 +172,22 @@ setInterval(cargar,5000);cargar();
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log("✅ Monitor Zara 2.1 operativo en puerto", PORT));
+// === AUTO DETECTOR DE CLIC EN LINK RESERVO ===
+document.addEventListener('click', async (e) => {
+  const link = e.target.closest('a');
+  if (link && link.href.includes('agendamiento.reservo.cl')) {
+    const telefonoActivo = document.querySelector('#chatTelefono')?.textContent?.trim();
+    if (telefonoActivo) {
+      try {
+        await fetch('http://localhost:3002/api/reservo-click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telefono: telefonoActivo })
+        });
+        console.log('✅ Click en Reservo detectado para', telefonoActivo);
+      } catch (err) {
+        console.error('❌ Error al notificar click Reservo:', err);
+      }
+    }
+  }
+});
