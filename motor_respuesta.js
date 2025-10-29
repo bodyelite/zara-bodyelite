@@ -230,3 +230,64 @@ export async function responderInterno(textoUsuario) {
 export async function responderDetalle(textoUsuario, respuestaBase) {
   return respuestaBase;
 }
+
+
+/* === Extensiones estables añadidas Zara 2.1 === */
+
+// Capa empática: humaniza la respuesta base sin alterar estructura
+export function respuestaEmpatica(textoUsuario, respuestaBase) {
+  const saludo = "Hola 😊 ";
+  const pie = "\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  const enlace = "\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  if (respuestaBase.includes("Para")) {
+    return (
+      saludo +
+      "Esa grasita o flacidez se puede tratar sin cirugía ✨\n" +
+      respuestaBase.replace("✨ Para", "Con nuestros planes").replace("💡 Para", "Con nuestros planes") +
+      enlace +
+      pie
+    );
+  }
+  return saludo + respuestaBase + enlace + pie;
+}
+
+// Capa de curiosidad: responde a "en qué consiste", "cómo funciona", etc.
+export async function responderCuriosidad(textoUsuario, respuestaBase) {
+  const t = textoUsuario.toLowerCase();
+  const { datos } = await import("./base_conocimiento.js");
+  if (!datos.frases?.curiosidad) return respuestaBase;
+
+  if (datos.frases.curiosidad.some(f => t.includes(f))) {
+    const match = respuestaBase.match(/\*\*(.*?)\*\*/);
+    if (match) {
+      const plan = match[1].trim();
+      const detalle = datos.planes[plan] || "";
+      if (t.includes("barato") || t.includes("econ")) {
+        return "💡 También existen planes más accesibles con resultados progresivos. Podemos orientarte según tu presupuesto.";
+      }
+      if (t.includes("caro")) {
+        return `💬 El plan **${plan}** usa tecnología premium (HIFU 12D, RF, EMS) y diagnóstico personalizado. Refleja resultados reales y duraderos.`;
+      }
+      if (t.includes("sesion")) {
+        return `📆 El plan **${plan}** considera entre 6 y 12 sesiones según evaluación clínica. Resultados visibles desde la primera.`;
+      }
+      return `💬 El plan **${plan}** consiste en ${detalle.toLowerCase()}. Combina tecnología avanzada con enfoque clínico seguro.`;
+    }
+  }
+  return respuestaBase;
+}
+
+// Capa interna: consultas del equipo que comienzan con "zara"
+export async function responderInterno(textoUsuario) {
+  const t = textoUsuario.toLowerCase().trim();
+  if (!t.startsWith("zara")) return null;
+  const { datos } = await import("./base_conocimiento.js");
+  const nombres = Object.keys(datos.planes).map(p => p.toLowerCase());
+  const encontrado = nombres.find(p => t.includes(p));
+  if (encontrado) {
+    const nombre = Object.keys(datos.planes).find(p => p.toLowerCase() === encontrado);
+    const detalle = datos.planes[nombre] || "";
+    return `🧠 [MODO INTERNO]\nTratamiento **${nombre}**:\n${detalle}\n\nUso clínico interno — sin CTA ni enlace.`;
+  }
+  return "🧠 [MODO INTERNO] No encontré un tratamiento con ese nombre. Verifica la escritura.";
+}
