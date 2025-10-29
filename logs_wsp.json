@@ -1,5 +1,15 @@
 [
   {
+    "from": "56937648536",
+    "status": "verde",
+    "reserva": {
+      "nombre": "Juan",
+      "fecha": "2025-10-29",
+      "servicio": "Evaluación"
+    },
+    "fecha": "2025-10-29T16:51:39.123Z"
+  },
+  {
     "from": "56911111111",
     "texto": "hola",
     "respuesta": "(enviado manual)",

@@ -135,3 +135,12 @@ export const datos = {
     "Depilación Bikini":"Depilación láser zona íntima. Valor $60.000"
   }
 };
+
+
+// === Frases de curiosidad y comparación ===
+datos.frases.curiosidad = [
+  "en que consiste","cómo funciona","como funciona","me explicas",
+  "detalle","que incluye","que es","por que tan caro","porque tan caro",
+  "hay algo mas barato","opcion economica","alternativa","cuentame mas",
+  "explicame mas","dime mas","cuantas sesiones","resultado","resultados"
+];

@@ -156,3 +156,71 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`\n🗣️ Usuario: ${c}\n🤖 Zara: ${r}\n`);
   }
 }
+
+
+/* === Capa empática añadida Zara 2.1 === */
+export function respuestaEmpatica(textoUsuario, respuestaBase) {
+  const saludo = "Hola 😊 ";
+  const pie = "\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  const enlace = "\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
+  // Si ya es una respuesta técnica ("Para ... te recomiendo"), se reescribe con cercanía
+  if (respuestaBase.includes("Para")) {
+    return (
+      saludo +
+      "Esa grasita o flacidez se puede tratar sin cirugía ✨\n" +
+      respuestaBase
+        .replace("✨ Para", "Con nuestros planes")
+        .replace("💡 Para", "Con nuestros planes") +
+      enlace +
+      pie
+    );
+  }
+
+  // Si es mensaje genérico
+  return saludo + respuestaBase + enlace + pie;
+}
+
+
+/* === Capa de curiosidad y comparación === */
+export async function responderCuriosidad(textoUsuario, respuestaBase) {
+  const t = textoUsuario.toLowerCase();
+  const { frases, planes } = (await import("./base_conocimiento.js")).datos;
+
+  if (frases.curiosidad.some(f => t.includes(f))) {
+    const match = respuestaBase.match(/\*\*(.*?)\*\*/);
+    if (match) {
+      const plan = match[1].trim();
+      const detalle = planes[plan] || "";
+      if (t.includes("barato") || t.includes("econ")) {
+        return `💡 Si buscas algo más económico, también tenemos planes de menor valor con resultados progresivos. Puedo ayudarte a ver cuál se ajusta mejor a tu presupuesto. ¿Te gustaría que te oriente?`;
+      }
+      if (t.includes("caro")) {
+        return `💬 Entiendo tu duda 😊 Nuestros precios reflejan la tecnología y resultados reales que ofrecemos. El plan **${plan}** incluye equipos de última generación (HIFU 12D, RF, EMS) y un diagnóstico profesional.`;
+      }
+      if (t.includes("sesion")) {
+        return `📆 El plan **${plan}** incluye entre 6 y 12 sesiones según tu evaluación inicial. Cada sesión combina distintas tecnologías para resultados visibles desde la primera.`;
+      }
+      return `💬 El plan **${plan}** consiste en ${detalle.toLowerCase()}. Logra resultados visibles en pocas sesiones y sin tiempo de recuperación.`;
+    }
+  }
+  return respuestaBase;
+}
+
+
+/* === Capa interna Body Elite: consultas que comienzan con "zara" === */
+export async function responderInterno(textoUsuario) {
+  const t = textoUsuario.toLowerCase().trim();
+  if (!t.startsWith("zara")) return null; // solo si inicia con "zara"
+
+  const { planes } = (await import("./base_conocimiento.js")).datos;
+  const nombresPlanes = Object.keys(planes).map(p => p.toLowerCase());
+  const encontrado = nombresPlanes.find(p => t.includes(p));
+  if (encontrado) {
+    const nombre = Object.keys(planes).find(p => p.toLowerCase() === encontrado);
+    const detalle = planes[nombre] || "";
+    return `🧠 Consulta interna detectada.\nTratamiento **${nombre}**:\n${detalle}\n\nEsta descripción es de uso clínico interno. No se incluye CTA ni enlace.`;
+  }
+
+  return "🧠 Consulta interna detectada, pero no encontré un tratamiento coincidente. Revisa la ortografía del nombre.";
+}
