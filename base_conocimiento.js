@@ -1,146 +1,154 @@
-export const datos = {
-  info: {
-    direccion: "Av. Las Perdices Nº2990, Local 23. Peñalolén",
-    horarios: "Lunes a Viernes 9:30 – 20:00 · Sábado 9:30 – 13:00",
-    telefono: "+56 9 3764 8536",
-    agendar: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
+const baseConocimiento = [
+  {
+    activador: "face smart",
+    plan: "Face Smart",
+    detalle: `**Tratamiento:** Face Smart
+**Objetivo:** Reafirmar piel facial, estimular colágeno y mejorar textura.
+**Tecnologías:** Radiofrecuencia fraccionada + LED terapéutico + activos antioxidantes.
+**Duración por sesión:** 45 min.
+**Frecuencia:** 1 vez por semana.
+**Sesiones:** 6–8.
+**Zonas tratables:** rostro completo y cuello.
+**Resultados esperados:** piel más firme, luminosa y con poros reducidos.
+**Registro fotográfico:** antes y después (sesión 1 y 6).
+**Valor referencial:** $198.400 (sujeto a evaluación).`
   },
-
-  // --- Frases comunes y chilenas ---
-  frases: {
-    bienvenida:[
-      "hola","holi","buenas","hello","hi","🙋","👋",
-      "quiero info","consulta","necesito informacion","me puedes ayudar",
-      "tengo una duda","me interesa un tratamiento","quisiera saber",
-      "hola body elite","holi zara","buen dia","buenas tardes","buenas noches"
-    ],
-    precio:[
-      "precio","valor","cuesta","promocion","oferta","tarifa","costo",
-      "cuanto vale","cuanto sale","precio plan","valor facial","valor corporal",
-      "precio body fitness","valor face elite","cuanto cobran","precio lipo","precio hifu"
-    ],
-    ubicacion:[
-      "ubicacion","direccion","peñalolen","donde","mapa","como llegar",
-      "queda lejos","ubicacion exacta","sede","local","tienda","centro"
-    ],
-    horarios:[
-      "horario","dias","sabado","domingo","hora","atienden el finde",
-      "cuando abren","cuando cierran","atencion","a que hora"
-    ],
-    emocional:[
-      "no me gusta","me siento","no bajo","me cuesta","verguenza","triste",
-      "insegura","sin confianza","no logro resultados","no me resulta","no puedo bajar"
-    ],
-    humano:[
-      "hablar con alguien","persona","asesor","whatsapp","telefono","humano",
-      "llamar","quiero hablar","necesito contacto"
-    ],
-    intencion:[
-      "quiero agendar","reservar","cita","agenda","evaluacion","turno","hora",
-      "agendar hora","agenda gratis","sacar hora","quiero ir","me interesa reservar"
-    ]
+  {
+    activador: "face antiage",
+    plan: "Face Antiage",
+    detalle: `**Tratamiento:** Face Antiage
+**Objetivo:** Tratar arrugas finas, flacidez media y piel apagada.
+**Tecnologías:** Radiofrecuencia fraccionada + HIFU 12D + activos tensores.
+**Duración:** 60 min.
+**Frecuencia:** 1 por semana.
+**Sesiones:** 6–8.
+**Resultados esperados:** lifting progresivo, mejora del tono y elasticidad.
+**Registro fotográfico:** antes, sesión 4 y final.
+**Valor referencial:** $281.600 (sujeto a evaluación).`
   },
-
-  // --- Alias extendidos ---
-  alias:{
-    rostro:[
-      "cara","papada","frente","menton","mejillas","ojeras","cuello","rostro",
-      "facial","expresion","piel","arrugas","lineas","flacidez facial","cutis"
-    ],
-    abdomen:[
-      "abdomen","guata","vientre","barriga","panza","cintura","estomago",
-      "abdomen bajo","abdomen alto","rollitos","pancita","michelines"
-    ],
-    gluteos:[
-      "gluteos","cola","pompis","poto","trasero","nalgas","traserito",
-      "muslos","piernas","caderas"
-    ],
-    flancos:[
-      "flancos","costados","laterales","rollitos","llantitas","cintura baja"
-    ],
-    brazos:[
-      "brazos","brazo","triceps","flacidez en brazos","piel suelta brazos"
-    ],
-    depilacion:[
-      "depilacion","depilar","vello","pelos","cera","laser","sin vellos","axilas","piernas","bikini"
-    ]
+  {
+    activador: "face elite",
+    plan: "Face Elite",
+    detalle: `**Tratamiento:** Face Elite
+**Objetivo:** Lifting facial sin cirugía.
+**Tecnologías:** HIFU 12D + Radiofrecuencia fraccionada + Toxina Botulínica.
+**Duración:** 60 min.
+**Frecuencia:** 1 vez por semana.
+**Sesiones:** 6.
+**Zonas tratables:** rostro completo, cuello, contorno mandibular.
+**Resultados esperados:** tensado SMAS, contorno definido, piel firme y luminosa.
+**Registro fotográfico:** antes / después + control sesión 3.
+**Valor referencial:** $358.400 (sujeto a evaluación).`
   },
-
-  // --- Problemas extendidos ---
-  problemas:{
-    rostro:{
-      arrugas:["Face Elite","Face Antiage"],
-      flacidez:["Face Antiage","Face Inicia"],
-      manchas:["Face Light","Face Smart"],
-      acne:["BE Antiacné Pro","Face Light"],
-      envejecimiento:["Face Elite","Face Antiage"],
-      lineas:["Face Elite","Face Antiage"],
-      poros:["Face Smart","Face Light"],
-      textura:["Face Smart","Face Light"]
-    },
-    abdomen:{
-      grasa:["Lipo Body Elite","Lipo Express"],
-      flacidez:["Body Tensor","Lipo Reductiva"],
-      celulitis:["Lipo Reductiva","Lipo Focalizada Reductiva"],
-      tonificar:["Body Fitness","Lipo Express"],
-      marcar:["Body Fitness","Lipo Express"],
-      tensar:["Body Tensor","Lipo Reductiva"],
-      adelgazar:["Lipo Express","Lipo Reductiva"],
-      volumen:["Lipo Express","Lipo Body Elite"]
-    },
-    gluteos:{
-      flacidez:["Push Up","Body Tensor"],
-      tonificar:["Push Up","Body Fitness"],
-      levantar:["Push Up","Body Fitness"],
-      aumentar:["Push Up","Body Fitness"],
-      reafirmar:["Push Up","Body Tensor"],
-      muslos:["Lipo Focalizada Reductiva","Body Tensor"]
-    },
-    flancos:{
-      grasa:["Lipo Body Elite","Lipo Express"],
-      tonificar:["Body Fitness","Lipo Express"]
-    },
-    brazos:{
-      flacidez:["Body Tensor","Body Fitness"],
-      tonificar:["Body Fitness","Body Tensor"]
-    },
-    depilacion:{
-      vello:["Depilación Láser Diodo","Depilación Facial Láser"],
-      piernas:["Depilación Láser Piernas","Depilación Corporal Completa"],
-      axilas:["Depilación Axilas","Depilación Corporal Completa"],
-      bikini:["Depilación Bikini","Depilación Completa"]
-    }
+  {
+    activador: "full face",
+    plan: "Full Face",
+    detalle: `**Tratamiento:** Full Face
+**Objetivo:** Renovación facial integral.
+**Tecnologías:** HIFU 12D + RF + LED + Toxina Botulínica + Pink Glow.
+**Duración:** 90 min.
+**Frecuencia:** 1 cada 10 días.
+**Sesiones:** 6–8.
+**Resultados esperados:** lifting completo, mejor textura e hidratación profunda.
+**Registro fotográfico:** antes / durante / después.
+**Valor referencial:** $584.000 (sujeto a evaluación).`
   },
-
-  // --- Planes oficiales ---
-  planes:{
-    "Face Light":"Limpieza facial LED + bioestimulación dérmica + Pink Glow. Ideal para acné leve y manchas. Valor $128.800",
-    "Face Smart":"HIFU 12D facial + RF + Pink Glow. Aumenta firmeza y luminosidad. Valor $198.400",
-    "Face Inicia":"HIFU 12D + RF + Pink Glow. Corrige flacidez y redefine contornos. Valor $270.400",
-    "Face Antiage":"HIFU 12D + Toxina + RF. Rejuvenece y atenúa arrugas profundas. Valor $281.600",
-    "Face Elite":"HIFU 12D + RF + Toxina + Pink Glow. Lifting sin cirugía. Valor $358.400",
-    "Full Face":"HIFU 12D + Toxina + Pink Glow + RF en todo rostro y cuello. Valor $584.000",
-    "BE Antiacné Pro":"Luz azul + antibacterianos + regeneradores tisulares. Valor $329.000",
-    "Body Tensor":"Radiofrecuencia corporal reafirmante. Valor $232.000",
-    "Body Fitness":"EMS Sculptor (20 000 contracciones / 30 min). Valor $360.000",
-    "Push Up":"Prosculpt + RF para glúteos firmes. Valor $376.000",
-    "Lipo Focalizada Reductiva":"Cavitación + HIFU 12D + RF. Valor $348.800",
-    "Lipo Express":"HIFU 12D + Prosculpt + RF reductora. Valor $432.000",
-    "Lipo Reductiva":"HIFU 12D + Lipoláser + Prosculpt + RF. Valor $480.000",
-    "Lipo Body Elite":"HIFU 12D + Cavitación + RF + Prosculpt avanzado. Valor $664.000",
-    "Depilación Láser Diodo":"Luz diodo de última generación. Sin dolor, resultados progresivos. Valor desde $50.000",
-    "Depilación Facial Láser":"Depilación láser suave para rostro y cuello. Valor $60.000",
-    "Depilación Corporal Completa":"Piernas, axilas, bikini y brazos. Valor $190.000",
-    "Depilación Axilas":"Depilación láser axilas. Valor $45.000",
-    "Depilación Bikini":"Depilación láser zona íntima. Valor $60.000"
+  {
+    activador: "limpieza facial",
+    plan: "Limpieza Facial Full",
+    detalle: `**Tratamiento:** Limpieza Facial Full
+**Objetivo:** Higienizar y oxigenar la piel grasa o mixta.
+**Tecnologías:** Ultrasonido + extracción manual + LED antibacteriano.
+**Duración:** 45 min.
+**Frecuencia:** cada 10–15 días.
+**Sesiones:** 6.
+**Resultados esperados:** piel limpia, equilibrada y renovada.
+**Valor referencial:** $120.000 (sujeto a evaluación).`
+  },
+  {
+    activador: "lipo reductiva",
+    plan: "Lipo Reductiva",
+    detalle: `**Tratamiento:** Lipo Reductiva
+**Objetivo:** Reducir grasa localizada y reafirmar piel.
+**Tecnologías:** Cavitación + RF + EMS Sculptor + Drenaje.
+**Duración:** 75 min.
+**Frecuencia:** 2 por semana.
+**Sesiones:** 8–10.
+**Resultados esperados:** reducción de centímetros y mejora del contorno.
+**Registro fotográfico:** inicio / sesión 5 / final.
+**Valor referencial:** $480.000 (sujeto a evaluación).`
+  },
+  {
+    activador: "lipo express",
+    plan: "Lipo Express",
+    detalle: `**Tratamiento:** Lipo Express
+**Objetivo:** Reducir grasa rebelde rápidamente.
+**Tecnologías:** Cavitación + RF + Vacumterapia.
+**Duración:** 60 min.
+**Frecuencia:** 2 por semana.
+**Sesiones:** 6–8.
+**Resultados esperados:** contorno más definido y reducción visible desde la 2ª sesión.
+**Valor referencial:** $432.000 (sujeto a evaluación).`
+  },
+  {
+    activador: "body tensor",
+    plan: "Body Tensor",
+    detalle: `**Tratamiento:** Body Tensor
+**Objetivo:** Reafirmar tejido en brazos, abdomen o muslos.
+**Tecnologías:** RF dual + EMS Sculptor.
+**Duración:** 60 min.
+**Frecuencia:** 2 por semana.
+**Sesiones:** 6–8.
+**Resultados esperados:** piel más tensa y tonificada.
+**Valor referencial:** $232.000 (sujeto a evaluación).`
+  },
+  {
+    activador: "body fitness",
+    plan: "Body Fitness",
+    detalle: `**Tratamiento:** Body Fitness
+**Objetivo:** Tonificar músculo y reducir flacidez general.
+**Tecnologías:** EMS Sculptor + RF.
+**Duración:** 45 min.
+**Frecuencia:** 2 por semana.
+**Sesiones:** 8.
+**Resultados esperados:** músculos más definidos y piel firme.
+**Valor referencial:** $360.000 (sujeto a evaluación).`
+  },
+  {
+    activador: "push up",
+    plan: "Push Up Glúteo",
+    detalle: `**Tratamiento:** Push Up Glúteo
+**Objetivo:** Elevar y dar volumen natural al glúteo.
+**Tecnologías:** EMS Sculptor + RF + HIFU focal.
+**Duración:** 60 min.
+**Frecuencia:** 2 por semana.
+**Sesiones:** 8–10.
+**Resultados esperados:** efecto push up visible desde la 2ª semana.
+**Valor referencial:** $376.000 (sujeto a evaluación).`
+  },
+  {
+    activador: "pink glow",
+    plan: "Pink Glow",
+    detalle: `**Tratamiento:** Pink Glow
+**Objetivo:** Rejuvenecer piel facial mediante péptidos y vitaminas.
+**Tecnologías:** Mesoterapia virtual + LED roja + RF suave.
+**Duración:** 40 min.
+**Frecuencia:** 1 por semana.
+**Sesiones:** 6.
+**Resultados esperados:** piel hidratada, uniforme y luminosa.
+**Valor referencial:** $180.000 (sujeto a evaluación).`
+  },
+  {
+    activador: "toxina",
+    plan: "Toxina Botulínica Facial",
+    detalle: `**Tratamiento:** Toxina Botulínica Facial
+**Objetivo:** Relajar músculos de expresión y suavizar arrugas.
+**Zonas frecuentes:** frente, entrecejo, patas de gallo.
+**Dosis promedio:** 25–40 U según zona.
+**Duración del efecto:** 4–6 meses.
+**Combinación:** puede aplicarse junto a Face Elite o Full Face.
+**Valor referencial:** desde $180.000 (sujeto a evaluación).`
   }
-};
-
-
-// === Frases de curiosidad y comparación ===
-datos.frases.curiosidad = [
-  "en que consiste","cómo funciona","como funciona","me explicas",
-  "detalle","que incluye","que es","por que tan caro","porque tan caro",
-  "hay algo mas barato","opcion economica","alternativa","cuentame mas",
-  "explicame mas","dime mas","cuantas sesiones","resultado","resultados"
 ];
+
+export default baseConocimiento;

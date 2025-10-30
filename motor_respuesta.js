@@ -1,52 +1,78 @@
-import { registrarConversacion } from "./memoria.js";
+import fs from "fs";
 import baseConocimiento from "./base_conocimiento.js";
-import logs from "./logs_wsp.json" assert { type: "json" };
+import { registrarContexto, obtenerContexto } from "./memoria.js";
 
-/* === FUNCIÓN PRINCIPAL DE RESPUESTA === */
 export async function responder(mensaje) {
-  const t = mensaje.toLowerCase().trim();
-  let respuesta = "";
+  const t = mensaje.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-  /* --- RESPUESTAS EMPÁTICAS / CLÍNICAS --- */
-  if (t.includes("poto") || t.includes("gluteo") || t.includes("glúteo") || t.includes("trasero") || (t.includes("levantar") && (t.includes("gluteo") || t.includes("poto")))) {
-    return "Hola 😊 Esa zona se puede levantar y tonificar sin cirugía ✨\nCon nuestros planes **Push Up** desde $376.000 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  // === 1. MODO INTERNO (uso del staff) ===
+  if (t.startsWith("zara")) {
+    const encontrado = baseConocimiento.find(
+      (p) => t.includes(p.activador)
+    );
+    if (encontrado) {
+      registrarContexto("interno", encontrado.plan);
+      return `🧠 [Modo interno activo]\n${encontrado.detalle}`;
+    } else {
+      return "🧠 [Modo interno activo] No encontré un tratamiento con ese nombre. Verifica la escritura.";
+    }
   }
 
-  if (t.includes("panza") || t.includes("abdomen") || t.includes("vientre") || t.includes("rollito") || t.includes("grasa localizada") || t.includes("reductor")) {
-    return "Hola 😊 Esa grasita abdominal se puede tratar sin cirugía ✨\nCon nuestros planes **Lipo Reductiva** desde $348.800 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  // === 2. RECUPERAR CONTEXTO ACTIVO (si lo hay) ===
+  const contextoPrevio = obtenerContexto();
+
+  // === 3. DETECCIÓN DE INTENCIÓN ===
+  const categorias = {
+    corporal: ["abdomen","panza","rollitos","grasa","vientre","cintura","brazos","flacidez","celulitis","pierna","gluteo","glúteo","poto","trasero","tonificar","endurecer"],
+    facial: ["cara","rostro","papada","arrugas","lineas","expresion","frente","ojeras","manchas","piel","luminosidad","rejuvenecer"],
+    tecnologia: ["hifu","cavitacion","radiofrecuencia","ems","sculptor","toxina","botox","pink","led","luz"],
+    curiosidad: ["en que consiste","como funciona","que incluye","porque tan caro","mas barato","cuantas sesiones","detalle","explicame","dime mas"],
+    duda: ["duele","sirve para hombres","demora","puedo pagar","cuando podria","no tengo tiempo","cuanto dura","efecto"],
+    cierre: ["gracias","ok","perfecto","genial","listo"],
+  };
+
+  // === 4. RESPUESTAS PRINCIPALES ===
+  // 4.1 CORPORAL
+  if (categorias.corporal.some(p => t.includes(p))) {
+    registrarContexto("corporal", "Lipo Reductiva / Body Tensor / Push Up");
+    return "Hola 😊 Esa zona se puede tratar sin cirugía ✨ Con nuestros planes **Lipo Reductiva**, **Body Tensor** o **Push Up**, según diagnóstico. Trabajamos con **HIFU 12D, Cavitación, RF y EMS Sculptor**, que reducen grasa y tensan la piel 💪 Resultados visibles desde las primeras sesiones. Planes desde **$348.800 (valor referencial, sujeto a evaluación clínica)**. ¿Quieres agendar tu evaluación gratuita? 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  if (t.includes("brazo") || t.includes("brazos") || (t.includes("flacidez") && t.includes("brazo"))) {
-    return "Hola 😊 Esa flacidez en brazos se puede mejorar sin cirugía ✨\nCon nuestros planes **Body Tensor** desde $232.000 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  // 4.2 FACIAL
+  if (categorias.facial.some(p => t.includes(p))) {
+    registrarContexto("facial", "Face Smart / Face Antiage / Face Elite / Limpieza Facial Full");
+    return "Hola 😊 Podemos mejorar la firmeza, textura y luminosidad de tu piel ✨ Con nuestros planes **Face Smart**, **Face Antiage**, **Face Elite** o **Limpieza Facial Full**, según tu diagnóstico. Usamos **HIFU 12D, RF fraccionada y activos antioxidantes**. Planes desde **$120.000 (valor referencial, sujeto a evaluación clínica)**. ¿Quieres agendar tu evaluación facial gratuita? 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  if (t.includes("flacidez corporal") || t.includes("tonificar") || t.includes("endurecer")) {
-    return "Hola 😊 Podemos ayudarte a tonificar y reafirmar la piel ✨\nCon nuestros planes **Body Fitness** desde $360.000 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  // 4.3 TECNOLÓGICA
+  if (categorias.tecnologia.some(p => t.includes(p))) {
+    registrarContexto("tecnologia", "Explicación técnica");
+    return "💡 Trabajamos con tecnología avanzada: **HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor**. Cada una actúa sobre grasa, músculo o colágeno según tu necesidad. Durante tu evaluación gratuita definimos la combinación ideal para ti. 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  if (t.includes("cara") || t.includes("rostro") || t.includes("papada") || t.includes("arrugas") || t.includes("frente") || t.includes("ojeras") || t.includes("piel apagada") || t.includes("cara cansada")) {
-    return "Hola 😊 Podemos mejorar la firmeza y luminosidad de tu rostro ✨\nCon nuestros planes **Face Smart** desde $198.400 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  // 4.4 CURIOSIDAD
+  if (categorias.curiosidad.some(p => t.includes(p))) {
+    if (contextoPrevio) {
+      return `✨ Este tratamiento combina ${contextoPrevio.plan} con tecnologías seguras que actúan por calor o ultrasonido. Las sesiones duran entre 45 y 75 min, según zona. Los resultados son progresivos y visibles desde la primera aplicación 💬 ¿Quieres reservar tu evaluación gratuita?`;
+    }
+    return "✨ Es un procedimiento no invasivo que estimula colágeno y reduce grasa o flacidez según la zona. Resultados visibles desde las primeras sesiones 💬 ¿Quieres agendar tu evaluación gratuita? 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  if (t.includes("acne") || t.includes("espinilla") || t.includes("grano") || t.includes("piel grasa") || t.includes("imperfeccion")) {
-    return "Hola 😊 Ese tipo de piel se puede equilibrar con limpieza profunda y luz LED ✨\nCon nuestros planes **Limpieza Facial Full** desde $120.000 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  // 4.5 DUDA
+  if (categorias.duda.some(p => t.includes(p))) {
+    if (t.includes("duele")) return "No duele 😊 Sentirás un leve calor o pequeñas contracciones, pero es perfectamente tolerable. Son procedimientos no invasivos y cómodos.";
+    if (t.includes("hombres")) return "Sí 🙌 Todos nuestros tratamientos corporales y faciales son unisex. Ajustamos parámetros según tipo de piel y estructura corporal.";
+    if (t.includes("pagar")) return "Sí 😊 Puedes pagar por sesión o en plan completo con descuento. En la evaluación gratuita te mostramos todas las opciones.";
+    if (t.includes("tiempo")) return "Cada sesión dura menos de una hora y no requiere recuperación ✨ Puedes venir incluso en tu hora de almuerzo.";
+    return "Te cuento 😊 los resultados dependen de la zona y plan, pero generalmente se notan desde las primeras sesiones.";
   }
 
-  if (t.includes("hifu") || t.includes("radiofrecuencia") || t.includes("ems") || t.includes("sculptor") || t.includes("cavitacion")) {
-    return "Hola 😊 Trabajamos con tecnología avanzada como HIFU 12D, Cavitación y EMS Sculptor ✨\nPodemos recomendarte un plan desde $348.800 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
+  // 4.6 CIERRE
+  if (categorias.cierre.some(p => t.includes(p))) {
+    return "Me alegra poder orientarte 😊 Recuerda que puedes agendar tu evaluación gratuita cuando quieras. 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  if (t.includes("toxina") || t.includes("botox") || t.includes("arrugas") || t.includes("expresion")) {
-    return "Hola 😊 Podemos suavizar las líneas de expresión y mejorar la firmeza facial ✨\nCon nuestros planes **Face Elite** desde $358.400 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
-  }
-
-  if (t.includes("manchas") || t.includes("luminosidad") || t.includes("rejuvenecer") || t.includes("antiedad") || t.includes("antiage") || t.includes("renovar")) {
-    return "Hola 😊 Podemos rejuvenecer y devolver luminosidad a tu piel ✨\nCon nuestros planes **Face Antiage** desde $281.600 (valor referencial, sujeto a evaluación clínica).\n🔗 Agenda tu evaluación gratuita 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9\n\n📍 Av. Las Perdices 2990, Peñalolén\n🕐 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00";
-  }
-
-  /* --- SI NO HAY COINCIDENCIAS --- */
-  respuesta = baseConocimiento.find((e) => t.includes(e.pregunta));
-  if (respuesta) return respuesta.respuesta;
-
-  return "✨ Soy Zara IA de Body Elite. Cuéntame qué zona deseas mejorar (rostro, abdomen, glúteos, muslos, brazos, etc.) y te indicaré el tratamiento ideal con descripción y valor.";
+  // === 5. FALLBACK ===
+  registrarContexto("general", "ninguno");
+  return "No logré entender completamente tu mensaje, pero estoy segura de que tus dudas serán resueltas por nuestras profesionales durante tu evaluación gratuita 💬 Agenda aquí 👇 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 }

@@ -1,15 +1,16 @@
 {
   "name": "zara-2-1",
   "version": "1.0.0",
+  "description": "Zara IA Body Elite 2.1 - servidor unificado WhatsApp + Instagram",
   "main": "zara_core_full_2_1.js",
   "type": "module",
   "scripts": {
     "start": "node zara_core_full_2_1.js"
   },
   "dependencies": {
-    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "express": "^4.21.2",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
     "node-fetch": "^3.3.2"
   }
 }

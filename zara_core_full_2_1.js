@@ -1,14 +1,15 @@
 import express from "express";
 import fetch from "node-fetch";
-import fs from "fs";
 import cors from "cors";
-import { fileURLToPath } from "url";
+import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import procesarMensaje from "./memoria.js";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -26,14 +27,14 @@ app.post("/webhook", async (req, res) => {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${process.env.ZARA_TOKEN}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
           to: from,
           type: "text",
-          text: { body: respuesta },
-        }),
+          text: { body: respuesta }
+        })
       });
     }
     res.sendStatus(200);
@@ -69,13 +70,13 @@ app.post("/igwebhook", async (req, res) => {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${process.env.ZARA_TOKEN}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           messaging_type: "RESPONSE",
           recipient: { id: sender },
-          message: { text: respuesta },
-        }),
+          message: { text: respuesta }
+        })
       });
     }
     res.sendStatus(200);
@@ -85,45 +86,7 @@ app.post("/igwebhook", async (req, res) => {
   }
 });
 
-/* === MONITOR Y DASHBOARD === */
-app.get("/", (req, res) => {
-  res.send(`
-  <html>
-  <head>
-    <title>Zara 2.1 Monitor</title>
-    <meta charset="UTF-8">
-    <style>
-      body { font-family: Arial; background:#e0d5ca; margin:0; }
-      header { background:#036b63; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; }
-      section { padding:20px; }
-      textarea { width:100%; height:400px; border-radius:10px; border:1px solid #ccc; padding:10px; }
-      footer { background:#036b63; color:white; text-align:center; padding:5px; position:fixed; bottom:0; width:100%; }
-    </style>
-  </head>
-  <body>
-    <header><div>Zara 2.1 Monitor</div><div>Body Elite</div></header>
-    <section>
-      <h3>Estado del sistema</h3>
-      <p>✅ Servidor activo y escuchando en puerto 3000</p>
-      <textarea readonly id="logs"></textarea>
-    </section>
-    <footer>Body Elite Estética Avanzada</footer>
-    <script>
-      async function cargarLogs(){
-        try{
-          const res = await fetch('/logs');
-          const txt = await res.text();
-          document.getElementById('logs').value = txt;
-        }catch(e){ console.error(e); }
-      }
-      cargarLogs();
-      setInterval(cargarLogs,10000);
-    </script>
-  </body>
-  </html>
-  `);
-});
-
+/* === LOGS === */
 app.get("/logs", (req, res) => {
   try {
     const data = fs.readFileSync(path.join(__dirname, "logs_wsp.json"), "utf8");
