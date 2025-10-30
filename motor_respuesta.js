@@ -36,7 +36,7 @@ export async function responder(mensaje) {
     tecnologia: ["hifu","cavitacion","radiofrecuencia","ems","sculptor","toxina","botox","pink","led","luz"],
     curiosidad: [
       "en que consiste","como funciona","que incluye","porque tan caro","mas barato",
-      "cuantas sesiones","detalle","explicame","dime mas"
+      "cuantas sesiones","detalle","explicame","dime mas","que es","cual me sirve","cual recomiendas"
     ],
     duda: [
       "duele","sirve para hombres","demora","puedo pagar","cuando podria",
