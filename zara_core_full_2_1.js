@@ -23,10 +23,11 @@ app.post("/webhook", async (req, res) => {
       const mensaje = messages[0].text?.body || "";
       const from = messages[0].from;
       const respuesta = await procesarMensaje(mensaje);
-      await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_ID}/messages`, {
+
+      await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.ZARA_TOKEN}`,
+          "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -69,7 +70,7 @@ app.post("/igwebhook", async (req, res) => {
       await fetch(`https://graph.facebook.com/v19.0/${sender}/messages`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.ZARA_TOKEN}`,
+          "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -94,6 +95,11 @@ app.get("/logs", (req, res) => {
   } catch {
     res.type("text").send("Sin registros");
   }
+});
+
+/* === ENDPOINT PRINCIPAL === */
+app.get("/", (req, res) => {
+  res.send("✅ Zara 2.1 operativo en puerto 3000");
 });
 
 /* === SERVIDOR === */
