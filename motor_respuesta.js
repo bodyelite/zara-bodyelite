@@ -109,7 +109,6 @@ export async function responder(mensaje) {
 }
 
 // === CAPA CLÍNICA AVANZADA (mapa de zonas + contexto + cierre obligatorio) ===
-import { obtenerContexto, registrarContexto } from "./memoria.js";
 
 function mapaClinicoAvanzado(mensaje) {
   const t = mensaje.toLowerCase();
