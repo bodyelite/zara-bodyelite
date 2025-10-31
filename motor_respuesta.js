@@ -2,17 +2,6 @@ import fs from "fs";
 import baseConocimiento from "./base_conocimiento.js";
 import { registrarContexto, obtenerContexto } from "./memoria.js";
 
-export async function responder(mensaje) {
-  const t = mensaje.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-  const contextoPrevio = obtenerContexto();
-
-  // --- saludos ---
-  const saludos = ["hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches", "hey", "holi"];
-  if (saludos.some((s) => t.startsWith(s))) {
-    registrarContexto("saludo", "inicio conversacion");
-    return "Hola 😊 Soy Zara de Body Elite. Cuéntame qué zona te gustaría mejorar para orientarte con el tratamiento ideal ✨";
-  }
-
   // --- ubicación y horarios ---
   if (t.includes("donde") || t.includes("ubic") || t.includes("direccion")) {
     return "📍 Estamos en **Av. Las Perdices 2990, Local 23, Peñalolén (Strip Center Las Pircas)**. Horarios: Lun–Vie 9:30–20:00 y Sáb 9:30–13:00.";
@@ -161,8 +150,3 @@ function mapaClinicoAvanzado(mensaje) {
 
 // --- Hook de integración final ---
 const responderOriginal = responder;
-export async function responder(mensaje) {
-  const respuestaAvanzada = mapaClinicoAvanzado(mensaje);
-  if (respuestaAvanzada) return respuestaAvanzada;
-  return await responderOriginal(mensaje);
-}
