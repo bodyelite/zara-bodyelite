@@ -4,95 +4,106 @@ import { registrarContexto, obtenerContexto } from "./memoria.js";
 
 export async function responder(mensaje) {
   const t = mensaje.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const contextoPrevio = obtenerContexto();
 
-  if (t.startsWith("zara")) {
-    const encontrado = baseConocimiento.find((p) => t.includes(p.activador));
-    if (encontrado) {
-      registrarContexto("interno", encontrado.plan);
-      return `🧠 [Modo interno activo]\n${encontrado.detalle}`;
-    } else {
-      return "🧠 [Modo interno activo] No encontré un tratamiento con ese nombre. Verifica la escritura.";
-    }
-  }
-
+  // --- saludos ---
   const saludos = ["hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches", "hey", "holi"];
   if (saludos.some((s) => t.startsWith(s))) {
     registrarContexto("saludo", "inicio conversacion");
     return "Hola 😊 Soy Zara de Body Elite. Cuéntame qué zona te gustaría mejorar para orientarte con el tratamiento ideal ✨";
   }
 
-  const contextoPrevio = obtenerContexto();
+  // --- ubicación y horarios ---
+  if (t.includes("donde") || t.includes("ubic") || t.includes("direccion")) {
+    return "📍 Estamos en **Av. Las Perdices 2990, Local 23, Peñalolén (Strip Center Las Pircas)**. Horarios: Lun–Vie 9:30–20:00 y Sáb 9:30–13:00.";
+  }
+  if (t.includes("horario") || t.includes("abren") || t.includes("atienden")) {
+    return "🕓 Nuestro horario es de **lunes a viernes 9:30 a 20:00 (última atención 19:00)** y **sábado de 9:30 a 13:00**.";
+  }
 
+  // --- intención positiva ---
+  const positiva = ["si", "sí", "me interesa", "quiero", "ok", "claro", "perfecto", "genial", "obvio", "dale"];
+  if (positiva.some((p) => t === p || t.includes(p))) {
+    if (contextoPrevio?.tipo === "corporal") {
+      return "Excelente 💪 podemos coordinar tu evaluación corporal gratuita. ¿Qué día te acomoda asistir? Lunes a viernes de 9:30 a 20:00 o sábado en la mañana.";
+    }
+    if (contextoPrevio?.tipo === "facial") {
+      return "Perfecto 😊 agendemos tu evaluación facial sin costo. ¿Qué día te acomoda?";
+    }
+    return "Excelente 😊 podemos coordinar tu evaluación sin costo. ¿Qué día te acomoda asistir?";
+  }
+
+  // --- categorías principales ---
   const categorias = {
     corporal: [
       "abdomen","panza","rollitos","grasa","grasita","vientre","cintura","brazos",
-      "flacidez","celulitis","pierna","piernas","muslo","muslos","gluteo","glúteo",
-      "poto","trasero","cola","tonificar","endurecer"
+      "flacidez","celulitis","pierna","muslo","gluteo","glúteo","poto","trasero","cola"
     ],
     facial: [
-      "cara","rostro","papada","arrugas","lineas","expresion","frente","ojeras",
-      "manchas","piel","luminosidad","rejuvenecer"
+      "cara","rostro","papada","arrugas","lineas","expresion","frente","ojeras","manchas","piel","luminosidad"
     ],
-    tecnologia: ["hifu","cavitacion","radiofrecuencia","ems","sculptor","toxina","botox","pink","led","luz"],
     curiosidad: [
-      "en que consiste","como funciona","que incluye","porque tan caro","mas barato",
-      "cuantas sesiones","detalle","explicame","dime mas","que es","cual me sirve","cual recomiendas"
+      "en que consiste","como funciona","que incluye","cuantas sesiones","detalle","explicame","dime mas","que es","cual recomiendas"
     ],
     duda: [
-      "duele","sirve para hombres","demora","puedo pagar","cuando podria",
-      "no tengo tiempo","cuanto dura","efecto","garantia","garantias"
+      "duele","sirve para hombres","demora","puedo pagar","cuando podria","garantia","garantias"
     ],
     cierre: ["gracias","ok","perfecto","genial","listo"]
   };
 
+  // --- tratamientos corporales personalizados ---
   if (categorias.corporal.some(p => t.includes(p))) {
-    registrarContexto("corporal", "Lipo Reductiva / Body Tensor / Push Up");
-    return "Hola 😊 Esa zona se puede tratar sin cirugía ✨ Con nuestros planes **Lipo Reductiva**, **Body Tensor** o **Push Up**, según diagnóstico. Trabajamos con **HIFU 12D, Cavitación, RF y EMS Sculptor**, que reducen grasa y tensan la piel 💪 Resultados visibles desde las primeras sesiones. Planes desde **$348.800 (valor referencial, sujeto a evaluación clínica)**. ¿Quieres agendar tu evaluación gratuita? 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  }
+    registrarContexto("tipo", "corporal");
 
-  if (categorias.facial.some(p => t.includes(p))) {
-    registrarContexto("facial", "Face Smart / Face Antiage / Face Elite / Limpieza Facial Full");
-    return "Hola 😊 Podemos mejorar la firmeza, textura y luminosidad de tu piel ✨ Con nuestros planes **Face Smart**, **Face Antiage**, **Face Elite** o **Limpieza Facial Full**, según tu diagnóstico. Usamos **HIFU 12D, RF fraccionada y activos antioxidantes**. Planes desde **$120.000 (valor referencial, sujeto a evaluación clínica)**. ¿Quieres agendar tu evaluación facial gratuita? 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  }
-
-  if (categorias.tecnologia.some(p => t.includes(p))) {
-    registrarContexto("tecnologia", "Explicación técnica");
-    return "💡 Trabajamos con tecnología avanzada: **HIFU 12D, Cavitación, Radiofrecuencia y EMS Sculptor**. Cada una actúa sobre grasa, músculo o colágeno según tu necesidad. Durante tu evaluación gratuita definimos la combinación ideal para ti. 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  }
-
-  if (categorias.curiosidad.some(p => t.includes(p))) {
-    if (contextoPrevio) {
-      return `✨ Este tratamiento combina ${contextoPrevio.plan} con tecnologías seguras que actúan por calor o ultrasonido. Las sesiones duran entre 45 y 75 min, según zona. Los resultados son progresivos y visibles desde la primera aplicación 💬 ¿Quieres reservar tu evaluación gratuita?`;
+    if (t.includes("flacidez")) {
+      return "Para flacidez localizada te recomiendo **Body Tensor**, que utiliza radiofrecuencia dual y EMS Sculptor para tonificar piel y músculo. Resultados visibles desde las primeras sesiones 💪 ¿Quieres agendar tu evaluación gratuita?";
     }
-    return "✨ Es un procedimiento no invasivo que estimula colágeno y reduce grasa o flacidez según la zona. Resultados visibles desde las primeras sesiones 💬 ¿Quieres agendar tu evaluación gratuita? 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    if (t.includes("gluteo") || t.includes("glúteo") || t.includes("poto")) {
+      return "Para levantar y definir glúteos el plan ideal es **Push Up**, combina EMS Sculptor con radiofrecuencia. Mejora tono y volumen natural sin dolor 🍑 ¿Quieres reservar tu evaluación gratuita?";
+    }
+    if (t.includes("grasa") || t.includes("abdomen") || t.includes("vientre")) {
+      return "Para reducción de grasa abdominal te recomendamos **Lipo Reductiva** o **Lipo Body Elite**, que combinan HIFU 12D, cavitación y radiofrecuencia. Reducción visible desde la primera sesión 🔥 ¿Agendamos tu evaluación?";
+    }
+
+    return "Hola 😊 Esa zona se puede tratar sin cirugía ✨ Con nuestros planes **Lipo Reductiva**, **Body Tensor** o **Push Up**, según diagnóstico. Trabajamos con **HIFU 12D, Cavitación, RF y EMS Sculptor** 💪 Resultados visibles desde las primeras sesiones. ¿Quieres agendar tu evaluación gratuita?";
   }
 
+  // --- tratamientos faciales ---
+  if (categorias.facial.some(p => t.includes(p))) {
+    registrarContexto("tipo", "facial");
+    return "Podemos mejorar la firmeza, textura y luminosidad de tu piel ✨ con **Face Smart**, **Face Antiage** o **Face Elite**, según diagnóstico. Usamos **HIFU 12D, RF fraccionada y activos antioxidantes**. ¿Quieres agendar tu evaluación facial gratuita?";
+  }
+
+  // --- dudas ---
   if (categorias.duda.some(p => t.includes(p))) {
-    if (t.includes("duele")) return "No duele 😊 Sentirás un leve calor o pequeñas contracciones, pero es perfectamente tolerable. Son procedimientos no invasivos y cómodos.";
-    if (t.includes("hombres")) return "Sí 🙌 Todos nuestros tratamientos corporales y faciales son unisex. Ajustamos parámetros según tipo de piel y estructura corporal.";
-    if (t.includes("pagar")) return "Sí 😊 Puedes pagar por sesión o en plan completo con descuento. En la evaluación gratuita te mostramos todas las opciones.";
-    if (t.includes("tiempo")) return "Cada sesión dura menos de una hora y no requiere recuperación ✨ Puedes venir incluso en tu hora de almuerzo.";
-    if (t.includes("garantia")) return "Nuestros tratamientos están respaldados por tecnología certificada y seguimiento clínico personalizado. Garantizamos resultados visibles y medibles en cada fase del plan 💪";
-    return "Te cuento 😊 los resultados dependen de la zona y plan, pero generalmente se notan desde las primeras sesiones.";
+    if (t.includes("duele")) return "No duele 😊 sentirás calor leve o contracciones suaves, perfectamente tolerables.";
+    if (t.includes("hombres")) return "Sí 🙌 todos nuestros tratamientos son unisex, ajustamos parámetros según tu tipo de piel y estructura corporal.";
+    if (t.includes("pagar")) return "Puedes pagar por sesión o plan completo con descuento 💳. En la evaluación gratuita te mostramos las opciones.";
+    if (t.includes("garantia")) return "Nuestros equipos están certificados y los resultados son medibles clínicamente. Acompañamos tu proceso en cada sesión 💪.";
+    return "Los resultados se notan desde las primeras sesiones y mejoran progresivamente.";
   }
 
+  // --- curiosidad ---
+  if (categorias.curiosidad.some(p => t.includes(p))) {
+    if (contextoPrevio?.tipo === "corporal") {
+      return "Nuestros tratamientos corporales combinan ultrasonido, radiofrecuencia y EMS Sculptor. Sesiones de 45–60 min, sin cirugía ni tiempo de recuperación 💬 ¿Quieres coordinar tu evaluación gratuita?";
+    }
+    if (contextoPrevio?.tipo === "facial") {
+      return "Los tratamientos faciales estimulan colágeno y firmeza con tecnología HIFU 12D y RF fraccionada. Piel más firme y luminosa desde la primera sesión 💬 ¿Agendamos tu evaluación gratuita?";
+    }
+    return "Es un tratamiento no invasivo que actúa sobre grasa o flacidez según la zona, con resultados visibles desde las primeras sesiones 💬 ¿Quieres tu evaluación gratuita?";
+  }
+
+  // --- cierre ---
   if (categorias.cierre.some(p => t.includes(p))) {
-    return "Me alegra poder orientarte 😊 Recuerda que puedes agendar tu evaluación gratuita cuando quieras. 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+    return "Encantada 😊 recuerda que puedes agendar tu evaluación gratuita en el horario que prefieras. 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  // === CAPA CLÍNICA COMPLEMENTARIA ===
-  function obtenerDetalleClinico() {
-    const claves = ["muslo","pierna","gluteo","abdomen","arruga","papada","mancha","toxina","botox","pink","limpieza"];
-    const clave = claves.find(c => t.includes(c));
-    if (!clave) return null;
-    const plan = baseConocimiento.find(p => t.includes(p.activador.split(" ")[0]));
-    if (!plan) return null;
-    return `📋 **${plan.plan}**\n${plan.detalle}`;
+  // --- capa clínica resumida ---
+  const detalle = baseConocimiento.find(p => t.includes(p.activador));
+  if (detalle) {
+    return `📋 **${detalle.plan}**\n${detalle.detalle}\n¿Quieres agendar tu evaluación gratuita? 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
   }
 
-  const detalle = obtenerDetalleClinico();
-  if (detalle) return detalle;
-
-  registrarContexto("general", "ninguno");
   return "No logré entender completamente tu mensaje, pero estoy segura de que tus dudas serán resueltas por nuestras profesionales durante tu evaluación gratuita 💬 Agenda aquí 👇 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 }
