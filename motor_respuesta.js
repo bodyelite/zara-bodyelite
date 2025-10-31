@@ -2,11 +2,11 @@ import fs from "fs";
 import baseConocimiento from "./base_conocimiento.js";
 import { registrarContexto, obtenerContexto } from "./memoria.js";
 
-// === FUNCIÓN PRINCIPAL DE RESPUESTA ===
+// === MOTOR DE RESPUESTA CLÍNICO-COMERCIAL ===
 export async function responder(mensaje) {
   const t = mensaje.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   const CTA = "🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  const contextoPrevio = obtenerContexto();
+  const ctx = obtenerContexto();
 
   // --- saludos ---
   const saludos = ["hola","buenas","buen dia","buenos dias","buenas tardes","buenas noches","hey","holi"];
@@ -26,10 +26,36 @@ export async function responder(mensaje) {
   // --- intención positiva ---
   const positiva = ["si","sí","me interesa","quiero","ok","claro","perfecto","genial","obvio","dale"];
   if (positiva.some(p => t === p || t.includes(p))) {
-    if (contextoPrevio?.tipo === "corporal") return "Excelente 💪 podemos coordinar tu evaluación corporal gratuita. ¿Qué día te acomoda asistir?";
-    if (contextoPrevio?.tipo === "facial") return "Perfecto 😊 agendemos tu evaluación facial sin costo. ¿Qué día te acomoda?";
+    if (ctx?.tipo === "corporal") return "Excelente 💪 podemos coordinar tu evaluación corporal gratuita. ¿Qué día te acomoda asistir?";
+    if (ctx?.tipo === "facial") return "Perfecto 😊 agendemos tu evaluación facial sin costo. ¿Qué día te acomoda?";
     return "Excelente 😊 podemos coordinar tu evaluación sin costo. ¿Qué día te acomoda asistir?";
   }
+
+  // --- capa clínica avanzada (mapa de zonas) ---
+  const mapaClinicoAvanzado = (mensaje) => {
+    const t = mensaje.toLowerCase();
+    if (t.includes("pierna")||t.includes("muslo")) {
+      registrarContexto("tipo","corporal");
+      return `En piernas y muslos recomendamos **Body Tensor**, que usa **RF Dual + EMS Sculptor** para mejorar tono y firmeza ✨ Resultados visibles desde la primera sesión. ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
+    }
+    if (t.includes("gluteo")||t.includes("glúteo")||t.includes("cola")||t.includes("poto")||t.includes("trasero")) {
+      registrarContexto("tipo","corporal");
+      return `Para glúteos aplicamos el plan **Push Up Glúteo**, con **EMS Sculptor + RF Dual**, ideal para levantar, tonificar y mejorar el volumen natural 🍑 ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
+    }
+    if (t.includes("brazo")||t.includes("brazos")) {
+      registrarContexto("tipo","corporal");
+      return `En brazos tratamos **grasa localizada y flacidez** con **Body Tensor** o **Lipo Focalizada**, que combinan **HIFU 12D + RF Dual + EMS Sculptor**. Resultados visibles desde la primera sesión 💪 ¿Agendamos tu evaluación gratuita? ${CTA}`;
+    }
+    if (t.includes("abdomen")||t.includes("vientre")||t.includes("cintura")) {
+      registrarContexto("tipo","corporal");
+      return `Para grasa abdominal o cintura te recomendamos **Lipo Reductiva** o **Body Elite**, que combinan **HIFU 12D + Cavitación + RF**, logrando reducción y firmeza desde las primeras sesiones 🔥 ¿Quieres coordinar tu evaluación gratuita? ${CTA}`;
+    }
+    if (t.includes("rostro")||t.includes("cara")||t.includes("papada")||t.includes("arrugas")||t.includes("frente")) {
+      registrarContexto("tipo","facial");
+      return `En rostro trabajamos con **Face Elite** o **Face Antiage**, que usan **HIFU 12D + RF Fraccionada + Toxina Botulínica** para lifting facial sin cirugía ✨ ¿Agendamos tu evaluación gratuita? ${CTA}`;
+    }
+    return null;
+  };
 
   // --- categorías principales ---
   const categorias = {
@@ -40,35 +66,35 @@ export async function responder(mensaje) {
     cierre:["gracias","ok","perfecto","genial","listo"]
   };
 
-  // --- tratamientos corporales personalizados ---
+  // --- tratamientos corporales ---
   if (categorias.corporal.some(p => t.includes(p))) {
+    const respuestaAvanzada = mapaClinicoAvanzado(mensaje);
+    if (respuestaAvanzada) return respuestaAvanzada;
     registrarContexto("tipo","corporal");
-    if (t.includes("flacidez")) return `Para flacidez localizada recomendamos **Body Tensor**, que utiliza RF Dual + EMS Sculptor para tonificar piel y músculo. Resultados visibles desde las primeras sesiones 💪 ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
-    if (t.includes("gluteo")||t.includes("glúteo")||t.includes("poto")||t.includes("cola")) return `Para levantar y definir glúteos el plan ideal es **Push Up Glúteo**, con EMS Sculptor + Radiofrecuencia Dual 🍑 ¿Quieres reservar tu evaluación gratuita? ${CTA}`;
-    if (t.includes("brazo")||t.includes("brazos")) return `En brazos trabajamos grasa y flacidez con **Body Tensor** o **Lipo Focalizada**, que combinan HIFU 12D + RF Dual. ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
-    if (t.includes("grasa")||t.includes("abdomen")||t.includes("vientre")) return `Para reducción de grasa abdominal te recomendamos **Lipo Reductiva** o **Lipo Body Elite**, con HIFU 12D y Cavitación 🔥 ¿Agendamos tu evaluación? ${CTA}`;
-    return `Podemos tratar esa zona sin cirugía ✨ con **Lipo Reductiva**, **Body Tensor** o **Push Up**, según diagnóstico. Usamos HIFU 12D, Cavitación, RF y EMS Sculptor 💪 ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
+    return `Podemos tratar esa zona sin cirugía ✨ con **Lipo Reductiva**, **Body Tensor** o **Push Up**, según diagnóstico. Usamos **HIFU 12D**, **Cavitación**, **RF** y **EMS Sculptor** 💪 ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
   }
 
   // --- tratamientos faciales ---
   if (categorias.facial.some(p => t.includes(p))) {
+    const respuestaAvanzada = mapaClinicoAvanzado(mensaje);
+    if (respuestaAvanzada) return respuestaAvanzada;
     registrarContexto("tipo","facial");
-    return `Podemos mejorar firmeza y luminosidad facial con **Face Smart**, **Face Antiage** o **Face Elite**, según diagnóstico. Usamos HIFU 12D y RF fraccionada ✨ ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
+    return `Podemos mejorar firmeza y luminosidad facial con **Face Smart**, **Face Antiage** o **Face Elite**, según diagnóstico. Usamos **HIFU 12D y RF Fraccionada** ✨ ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
   }
 
-  // --- dudas ---
+  // --- dudas frecuentes ---
   if (categorias.duda.some(p => t.includes(p))) {
-    if (t.includes("duele")) return "No duele 😊 solo sentirás un calor leve o pequeñas contracciones tolerables.";
+    if (t.includes("duele")) return "No duele 😊 solo sentirás un calor leve o pequeñas contracciones tolerables, sin molestias.";
     if (t.includes("hombres")) return "Sí 🙌 todos nuestros tratamientos son unisex y ajustados a cada tipo de piel.";
-    if (t.includes("pagar")) return "Puedes pagar por sesión o plan completo con descuento 💳 en la evaluación te mostramos las opciones.";
-    if (t.includes("garantia")) return "Nuestros equipos están certificados y los resultados son medibles clínicamente. Acompañamos tu proceso en cada sesión 💪.";
+    if (t.includes("pagar")) return "Puedes pagar por sesión o plan completo con descuento 💳 En la evaluación te mostramos las opciones.";
+    if (t.includes("garantia")) return "Nuestros equipos están certificados y los resultados son medibles clínicamente 💪";
     return "Los resultados se notan desde las primeras sesiones y mejoran progresivamente.";
   }
 
   // --- curiosidad ---
   if (categorias.curiosidad.some(p => t.includes(p))) {
-    if (contextoPrevio?.tipo==="corporal") return `Nuestros tratamientos corporales combinan ultrasonido, RF y EMS Sculptor. Sesiones de 45–60 min, sin cirugía ni recuperación 💬 ¿Quieres coordinar tu evaluación gratuita? ${CTA}`;
-    if (contextoPrevio?.tipo==="facial") return `Los tratamientos faciales estimulan colágeno y firmeza con HIFU 12D y RF fraccionada ✨ ¿Agendamos tu evaluación gratuita? ${CTA}`;
+    if (ctx?.tipo === "corporal") return `Nuestros tratamientos corporales combinan **HIFU 12D, RF y EMS Sculptor**. Sesiones de 45–60 min, sin cirugía ni recuperación 💬 ¿Quieres coordinar tu evaluación gratuita? ${CTA}`;
+    if (ctx?.tipo === "facial") return `Los tratamientos faciales estimulan colágeno y firmeza con **HIFU 12D y RF Fraccionada** ✨ ¿Agendamos tu evaluación gratuita? ${CTA}`;
     return `Son tratamientos no invasivos que actúan sobre grasa o flacidez según la zona 💬 ¿Quieres tu evaluación gratuita? ${CTA}`;
   }
 
@@ -77,18 +103,6 @@ export async function responder(mensaje) {
     return `Encantada 😊 recuerda que puedes agendar tu evaluación gratuita cuando quieras. ${CTA}`;
   }
 
-  // --- capa clínica avanzada integrada ---
-  const mapaClinicoAvanzado = (mensaje) => {
-    const t = mensaje.toLowerCase();
-    if (t.includes("pierna")||t.includes("muslo")) return `En piernas y muslos recomendamos **Body Tensor**, que usa RF Dual + EMS Sculptor para mejorar tono y firmeza ✨ ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
-    if (t.includes("gluteo")||t.includes("glúteo")||t.includes("cola")||t.includes("poto")) return `Para glúteos aplicamos **Push Up Glúteo** con EMS Sculptor + RF Dual 🍑 Resultados reales desde la segunda semana. ¿Quieres tu evaluación gratuita? ${CTA}`;
-    if (t.includes("brazo")||t.includes("brazos")) return `En brazos usamos **Body Tensor** y **Lipo Focalizada**, que reducen grasa localizada y tensan la piel. Resultados visibles desde la primera sesión 💪 ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
-    if (t.includes("abdomen")||t.includes("vientre")) return `**Lipo Reductiva** combina HIFU 12D + Cavitación para reducir grasa abdominal 🔥 ¿Agendamos tu evaluación gratuita? ${CTA}`;
-    return null;
-  };
-  const respuestaAvanzada = mapaClinicoAvanzado(mensaje);
-  if (respuestaAvanzada) return respuestaAvanzada;
-
-  // --- fallback ---
+  // --- fallback general ---
   return `No logré entender completamente tu mensaje, pero estoy segura de que tus dudas serán resueltas por nuestras profesionales 💬 Agenda aquí 👇 ${CTA}`;
 }
