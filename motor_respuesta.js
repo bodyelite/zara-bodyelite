@@ -107,3 +107,63 @@ export async function responder(mensaje) {
 
   return "No logré entender completamente tu mensaje, pero estoy segura de que tus dudas serán resueltas por nuestras profesionales durante tu evaluación gratuita 💬 Agenda aquí 👇 🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 }
+
+// === CAPA CLÍNICA AVANZADA (mapa de zonas + contexto + cierre obligatorio) ===
+import { obtenerContexto, registrarContexto } from "./memoria.js";
+
+function mapaClinicoAvanzado(mensaje) {
+  const t = mensaje.toLowerCase();
+  const CTA = "🔗 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  let respuesta = null;
+  let plan = null;
+
+  // --- detección de zonas y planes ---
+  if (t.includes("abdomen") || t.includes("vientre") || t.includes("cintura")) {
+    plan = "Lipo Reductiva";
+    respuesta = "En abdomen trabajamos con **Lipo Reductiva** o **Body Elite**, que combinan **HIFU 12D + Cavitación + Radiofrecuencia** para reducir grasa abdominal y tensar la piel 💪 Resultados visibles desde la primera sesión.";
+  } else if (t.includes("brazo") || t.includes("brazos")) {
+    plan = "Body Tensor";
+    respuesta = "En brazos tratamos **grasa localizada y flacidez** con nuestro plan **Body Tensor** o **Lipo Focalizada**, que usa **HIFU 12D + RF Dual + EMS Sculptor** para definir y reafirmar la piel sin cirugía.";
+  } else if (t.includes("gluteo") || t.includes("glúteo") || t.includes("cola") || t.includes("poto")) {
+    plan = "Push Up Glúteo";
+    respuesta = "Para levantar y definir glúteos usamos nuestro plan **Push Up Glúteo**, con **EMS Sculptor + RF Dual**, que tonifica y mejora el volumen natural 🍑.";
+  } else if (t.includes("pierna") || t.includes("muslo") || t.includes("muslos")) {
+    plan = "Body Tensor";
+    respuesta = "En piernas y muslos recomendamos **Body Tensor**, que combina **RF Dual + EMS Sculptor** para mejorar tono, textura y firmeza de la piel ✨.";
+  } else if (t.includes("rostro") || t.includes("cara") || t.includes("papada") || t.includes("arruga")) {
+    plan = "Face Elite";
+    respuesta = "En rostro trabajamos con **Face Elite** o **Face Antiage**, que combinan **HIFU 12D + Radiofrecuencia fraccionada + Toxina Botulínica**, logrando lifting facial sin cirugía ✨.";
+  }
+
+  // --- si encontró plan ---
+  if (plan && respuesta) {
+    registrarContexto("planActivo", plan);
+    if (!respuesta.endsWith(CTA)) respuesta += ` ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
+    return respuesta;
+  }
+
+  // --- si no encontró, revisar si el usuario pregunta precio sobre plan activo ---
+  const ctx = obtenerContexto();
+  if ((t.includes("precio") || t.includes("vale") || t.includes("cuanto")) && ctx?.planActivo) {
+    const precios = {
+      "Lipo Reductiva": "$480.000",
+      "Body Tensor": "$232.000",
+      "Lipo Focalizada": "$348.800",
+      "Push Up Glúteo": "$376.000",
+      "Face Elite": "$358.400",
+      "Face Antiage": "$281.600",
+    };
+    const valor = precios[ctx.planActivo] || "sujeto a evaluación clínica";
+    return `El valor referencial del plan **${ctx.planActivo}** es **${valor}** (puede variar según diagnóstico). ¿Quieres agendar tu evaluación gratuita? ${CTA}`;
+  }
+
+  return null; // si no aplica esta capa
+}
+
+// --- Hook de integración final ---
+const responderOriginal = responder;
+export async function responder(mensaje) {
+  const respuestaAvanzada = mapaClinicoAvanzado(mensaje);
+  if (respuestaAvanzada) return respuestaAvanzada;
+  return await responderOriginal(mensaje);
+}
