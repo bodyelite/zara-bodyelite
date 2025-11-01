@@ -44,7 +44,6 @@ export async function responder(mensaje) {
         tipo:"corporal",
         plan:"Body Tensor o Lipo Focalizada",
         texto:"En brazos tratamos **grasa localizada y flacidez** con **Body Tensor** o **Lipo Focalizada**, que combinan **HIFU 12D + RF Dual + EMS Sculptor** 💪",
-        precio:"desde $232.000 CLP"
       };
     if (t.includes("abdomen")||t.includes("vientre")||t.includes("cintura")||t.includes("panza"))
       return {
@@ -58,14 +57,12 @@ export async function responder(mensaje) {
         tipo:"corporal",
         plan:"Body Tensor",
         texto:"En piernas y muslos aplicamos **Body Tensor**, que utiliza **RF Dual + EMS Sculptor** para mejorar tono, textura y firmeza ✨",
-        precio:"desde $232.000 CLP"
       };
     if (t.includes("rostro")||t.includes("cara")||t.includes("papada")||t.includes("arrugas")||t.includes("frente"))
       return {
         tipo:"facial",
         plan:"Face Elite o Face Antiage",
         texto:"En rostro trabajamos con **Face Elite** o **Face Antiage**, que combinan **HIFU 12D + Radiofrecuencia Fraccionada + Toxina Botulínica**, logrando lifting facial sin cirugía ✨",
-        precio:"desde $281.600 CLP"
       };
     return null;
   };
@@ -101,6 +98,14 @@ export async function responder(mensaje) {
     return `Encantada 😊 Recuerda que puedes agendar tu evaluación gratuita cuando quieras. ${CTA}`;
   }
 
+  // --- mejora precio y contexto ---
+  if (t.includes("precio") || t.includes("vale") || t.includes("cuesta") || t.includes("valor")) {
+    if (ctx?.plan) {
+      return `El plan **${ctx.plan}** tiene un valor ${ctx.plan.toLowerCase().includes("face") ? "desde $281.600 CLP" : "desde $232.000 CLP"} según evaluación inicial 💬 ¿Quieres que coordinemos tu evaluación gratuita? ${CTA}`;
+    }
+    return `Los tratamientos corporales van **desde $232.000 CLP** y los faciales **desde $120.000 CLP**, dependiendo de la zona y diagnóstico. ¿Quieres que agendemos tu evaluación gratuita? ${CTA}`;
+  }
+
   // --- fallback ---
   return `No logré entender completamente tu mensaje, pero estoy segura de que tus dudas serán resueltas por nuestras profesionales 💬 Agenda aquí 👇 ${CTA}`;
 }
@@ -108,10 +113,8 @@ export async function responder(mensaje) {
 if (t.includes("precio") || t.includes("vale") || t.includes("cuesta") || t.includes("valor")) {
   if (ctx?.plan) {
     return `El plan **${ctx.plan}** tiene un valor ${
-      ctx.plan.toLowerCase().includes("face") ? "desde $281.600 CLP" : "desde $232.000 CLP"
     } según evaluación inicial 💬 ¿Quieres que coordinemos tu evaluación gratuita? ${CTA}`;
   }
-  return `Los tratamientos corporales van **desde $232.000 CLP** y los faciales **desde $120.000 CLP**, dependiendo de la zona y diagnóstico. ¿Quieres que agendemos tu evaluación gratuita? ${CTA}`;
 }
 // === FIN BLOQUE DE MEJORA ===
 
@@ -119,23 +122,18 @@ if (typeof t === "string") {
   if (t.includes("precio") || t.includes("vale") || t.includes("cuesta") || t.includes("valor")) {
     if (ctx?.plan) {
       return `El plan **${ctx.plan}** tiene un valor ${
-        ctx.plan.toLowerCase().includes("face") ? "desde $281.600 CLP" : "desde $232.000 CLP"
       } según evaluación inicial 💬 ¿Quieres que coordinemos tu evaluación gratuita? ${CTA}`;
     }
-    return `Los tratamientos corporales van **desde $232.000 CLP** y los faciales **desde $120.000 CLP**, dependiendo de la zona y diagnóstico. ¿Quieres que agendemos tu evaluación gratuita? ${CTA}`;
   }
 }
 // === FIN BLOQUE DE MEJORA ===
 
-// === BLOQUE DE MEJORA PRECIO Y CONTEXTO (ZARA 2.1 CORREGIDO) ===
 if (typeof t === "string") {
   if (t.includes("precio") || t.includes("vale") || t.includes("cuesta") || t.includes("valor")) {
     if (ctx?.plan) {
       return `El plan **${ctx.plan}** tiene un valor ${
-        ctx.plan.toLowerCase().includes("face") ? "desde $281.600 CLP" : "desde $232.000 CLP"
       } según evaluación inicial 💬 ¿Quieres que coordinemos tu evaluación gratuita? ${CTA}`;
     }
-    return `Los tratamientos corporales van **desde $232.000 CLP** y los faciales **desde $120.000 CLP**, dependiendo de la zona y diagnóstico. ¿Quieres que agendemos tu evaluación gratuita? ${CTA}`;
   }
 }
 // === FIN BLOQUE DE MEJORA ===
