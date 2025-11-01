@@ -105,7 +105,6 @@ export async function responder(mensaje) {
   return `No logré entender completamente tu mensaje, pero estoy segura de que tus dudas serán resueltas por nuestras profesionales 💬 Agenda aquí 👇 ${CTA}`;
 }
 
-// === BLOQUE DE MEJORA PRECIO Y CONTEXTO (ZARA 2.1) ===
 if (t.includes("precio") || t.includes("vale") || t.includes("cuesta") || t.includes("valor")) {
   if (ctx?.plan) {
     return `El plan **${ctx.plan}** tiene un valor ${
@@ -113,5 +112,18 @@ if (t.includes("precio") || t.includes("vale") || t.includes("cuesta") || t.incl
     } según evaluación inicial 💬 ¿Quieres que coordinemos tu evaluación gratuita? ${CTA}`;
   }
   return `Los tratamientos corporales van **desde $232.000 CLP** y los faciales **desde $120.000 CLP**, dependiendo de la zona y diagnóstico. ¿Quieres que agendemos tu evaluación gratuita? ${CTA}`;
+}
+// === FIN BLOQUE DE MEJORA ===
+
+// === BLOQUE DE MEJORA PRECIO Y CONTEXTO (ZARA 2.1 CORREGIDO) ===
+if (typeof t === "string") {
+  if (t.includes("precio") || t.includes("vale") || t.includes("cuesta") || t.includes("valor")) {
+    if (ctx?.plan) {
+      return `El plan **${ctx.plan}** tiene un valor ${
+        ctx.plan.toLowerCase().includes("face") ? "desde $281.600 CLP" : "desde $232.000 CLP"
+      } según evaluación inicial 💬 ¿Quieres que coordinemos tu evaluación gratuita? ${CTA}`;
+    }
+    return `Los tratamientos corporales van **desde $232.000 CLP** y los faciales **desde $120.000 CLP**, dependiendo de la zona y diagnóstico. ¿Quieres que agendemos tu evaluación gratuita? ${CTA}`;
+  }
 }
 // === FIN BLOQUE DE MEJORA ===
