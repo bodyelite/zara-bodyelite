@@ -135,3 +135,5 @@ export const datos = {
     "Depilación Bikini":"Depilación láser zona íntima. Valor $60.000"
   }
 };
+export default datos;
+
