@@ -34,6 +34,30 @@ export function responderCurioso(texto) {
   if (t.includes("seguro") || t.includes("riesgo") || t.includes("contraindicacion") || t.includes("contraindicación")) return "⚕️ Es seguro y no invasivo. No se aplica en embarazo, lactancia ni enfermedades agudas.";
   if (t.includes("precio") || t.includes("valor") || t.includes("costo")) return "💰 Planes desde $120.000 (faciales) y $348.800 (corporales). Incluye diagnóstico gratuito.";
   return null;
+  if (t.includes("certificado") || t.includes("certificados") || t.includes("autorizado") || t.includes("autorización")) 
+    return "📋 Sí, todos los equipos están certificados y cuentan con registro sanitario vigente. Body Elite trabaja bajo estándares clínicos de uso profesional.";
+
+  if (t.includes("medico") || t.includes("doctor") || t.includes("doctora") || t.includes("profesional a cargo"))
+    return "⚕️ Cada evaluación es supervisada por profesionales de salud con formación en estética avanzada y respaldo médico.";
+
+  if (t.includes("botox") || t.includes("toxina") || t.includes("relleno") || t.includes("acido") || t.includes("ácido hialurónico"))
+    return "💉 Aplicamos toxina botulínica y ácido hialurónico según protocolos médicos. Los productos son originales y aprobados por ISP y ANMAT.";
+
+  if (t.includes("aprobado") || t.includes("regulado") || t.includes("isp") || t.includes("anmat"))
+    return "✅ Todos los productos y tecnologías de Body Elite están aprobados por ISP Chile y ANMAT Argentina para uso clínico profesional.";
+
+  if (t.includes("certificado") || t.includes("certificados") || t.includes("autorizado") || t.includes("autorización")) 
+    return "📋 Sí, todos los equipos están certificados y cuentan con registro sanitario vigente. Body Elite trabaja bajo estándares clínicos de uso profesional.";
+
+  if (t.includes("medico") || t.includes("doctor") || t.includes("doctora") || t.includes("profesional a cargo"))
+    return "⚕️ Cada evaluación es supervisada por profesionales de salud con formación en estética avanzada y respaldo médico.";
+
+  if (t.includes("botox") || t.includes("toxina") || t.includes("relleno") || t.includes("acido") || t.includes("ácido hialurónico"))
+    return "💉 Aplicamos toxina botulínica y ácido hialurónico según protocolos médicos. Los productos son originales y aprobados por ISP y ANMAT.";
+
+  if (t.includes("aprobado") || t.includes("regulado") || t.includes("isp") || t.includes("anmat"))
+    return "✅ Todos los productos y tecnologías de Body Elite están aprobados por ISP Chile y ANMAT Argentina para uso clínico profesional.";
+
 }
 
 function responderObjecion(texto) {
