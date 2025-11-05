@@ -34,6 +34,15 @@ export function responderCurioso(texto) {
   if (t.includes("seguro") || t.includes("riesgo") || t.includes("contraindicacion") || t.includes("contraindicación")) return "⚕️ Es seguro y no invasivo. No se aplica en embarazo, lactancia ni enfermedades agudas.";
   if (t.includes("precio") || t.includes("valor") || t.includes("costo")) return "💰 Planes desde $120.000 (faciales) y $348.800 (corporales). Incluye diagnóstico gratuito.";
   return null;
+  if (t.includes("exosoma") || t.includes("exosomas"))
+    return "🧬 Los exosomas son vesículas celulares con factores de crecimiento y proteínas que estimulan la regeneración profunda del tejido. En Body Elite se aplican para mejorar textura, firmeza y luminosidad de la piel.";
+
+  if (t.includes("plasma") || t.includes("plaquetas") || t.includes("prp"))
+    return "💉 El Plasma Rico en Plaquetas (PRP) utiliza tus propios factores de crecimiento para regenerar piel, mejorar cicatrices y estimular colágeno de forma natural. Procedimiento seguro y avalado médicamente.";
+
+  if (t.includes("pink glow") || t.includes("pinkglow") || t.includes("vitaminas") || t.includes("bioestimulante"))
+    return "🌸 Pink Glow es un biorevitalizante dérmico con péptidos, antioxidantes y ácido hialurónico. Restaura el tono, mejora la luminosidad y rehidrata la piel con efecto inmediato.";
+
   if (t.includes("certificado") || t.includes("certificados") || t.includes("autorizado") || t.includes("autorización")) 
     return "📋 Sí, todos los equipos están certificados y cuentan con registro sanitario vigente. Body Elite trabaja bajo estándares clínicos de uso profesional.";
 
