@@ -1,138 +1,116 @@
 /* ============================================================
-   MOTOR RESPUESTA ZARA 2.1 — CONSOLIDADO FINAL
+   MOTOR RESPUESTA ZARA 2.1 — CONSOLIDADO CON CONTEXTO ACTIVO
    ============================================================ */
 
-import { datos } from "./base_conocimiento.js";
+import datos from "./base_conocimiento.js";
+import { guardarContexto, obtenerContexto } from "./memoria.js";
 
-/* ====== CONTEXTO CONVERSACIONAL ====== */
+/* === CLASIFICADOR PRINCIPAL === */
 function detectarCategoria(texto) {
   const t = texto.toLowerCase();
-  if (t.match(/botox|toxina|arruga|relleno|face|facial|papada|codigo|código/i))
-    return "facial";
-  if (t.match(/grasa|abdomen|gluteo|glúteo|muslo|celulitis|cintura|lipo|body|brazos|espalda/i))
-    return "corporal";
-  if (t.match(/pink|exosoma|exosomas|plasma|prp|regenerativo|bioestimulante/i))
-    return "regenerativo";
+  if (t.match(/botox|toxina|arruga|relleno|face|facial|papada/)) return "facial";
+  if (t.match(/grasa|abdomen|gluteo|lipo|body|muslo|celulitis/)) return "corporal";
+  if (t.match(/pink|exosoma|plasma|prp|regenerativo|bioestimulante/)) return "regenerativo";
   return "general";
 }
 
+/* === MEMORIA DE CONTEXTO === */
+function recordarCategoria(usuario, texto) {
+  const previo = obtenerContexto(usuario);
+  const lower = texto.toLowerCase();
+  if (
+    previo &&
+    (lower.includes("cuanto") ||
+      lower.includes("vale") ||
+      lower.includes("duele") ||
+      lower.includes("resultado") ||
+      lower.includes("certificado") ||
+      lower.includes("gratis"))
+  ) {
+    return previo;
+  }
+  const nueva = detectarCategoria(texto);
+  if (nueva && usuario) guardarContexto(usuario, nueva);
+  return nueva;
+}
+
+/* === PLAN RECOMENDADO === */
 function planRecomendado(categoria) {
   switch (categoria) {
     case "facial":
       return {
-        nombre: "Face Antiage / Face Elite / Full Face",
+        nombre: "Face Elite / Face Antiage / Full Face",
         descripcion:
-          "Combinan HIFU 12D, Radiofrecuencia, Pink Glow y Toxina Botulínica para atenuar arrugas, reafirmar y rejuvenecer rostro y cuello sin cirugía.",
+          "Protocolos con HIFU 12D, Radiofrecuencia, Pink Glow y Toxina Botulínica según diagnóstico clínico.",
         precio: "$281.600 – $584.000",
-        cta: "diagnóstico facial"
       };
     case "corporal":
       return {
         nombre: "Lipo Reductiva / Lipo Body Elite / Body Fitness",
         descripcion:
-          "Integran Cavitación, Radiofrecuencia y EMS Sculptor para reducir grasa localizada, tensar tejido y tonificar músculo.",
-        precio: "$360.000 – $664.000",
-        cta: "evaluación corporal"
+          "Protocolos corporales con HIFU 12D, Cavitación, RF y EMS Sculptor según objetivo clínico.",
+        precio: "$348.800 – $664.000",
       };
     case "regenerativo":
       return {
-        nombre: "Pink Glow / (y opcionalmente Exosomas según evaluación)",
+        nombre: "Pink Glow / Bioestimulante / PRP",
         descripcion:
-          "Biorevitalización con péptidos y antioxidantes para mejorar textura, luminosidad e hidratación de la piel; efecto visible y progresivo.",
-        precio: "$198.400 – $281.600",
-        cta: "valoración regenerativa"
+          "Protocolos regenerativos con factores de crecimiento, antioxidantes y péptidos bioactivos.",
+        precio: "desde $198.400",
       };
     default:
       return {
-        nombre: "Planes Body Elite",
+        nombre: "Diagnóstico Body Elite",
         descripcion:
-          "Protocolos faciales y corporales con HIFU 12D, RF, EMS Sculptor y Pink Glow según diagnóstico y objetivo clínico.",
-        precio: "desde $120.000",
-        cta: "evaluación gratuita"
+          "Incluye evaluación facial y corporal con IA, diagnóstico clínico y propuesta personalizada.",
+        precio: "gratuita",
       };
   }
 }
 
-/* ====== FUNCIONES EXISTENTES (EMPATÍA / OBJECIONES / CURIOSIDAD) ====== */
-export function responderEmpatico(texto) {
-  const t = texto.toLowerCase();
-  if (t.includes("hola")) return "👋 ¡Hola! Soy Zara IA de Body Elite. ¿Cómo estás hoy?";
-  if (t.includes("gracias")) return "✨ Encantada de ayudarte. ¿Quieres que te muestre los planes disponibles?";
-  return null;
-}
-
-export function responderObjecion(texto) {
-  const t = texto.toLowerCase();
-  if (t.match(/caro|caros|precio alto|vale mucho/))
-    return "💬 Entiendo tu punto. Nuestros valores reflejan la tecnología, el control médico y los resultados reales sin cirugía.";
-  if (t.match(/duelen|dolor|molesta/))
-    return "😊 Son tratamientos cómodos y no invasivos. Puedes sentir leve calor o contracción suave según la tecnología aplicada (HIFU, RF o EMS Sculptor).";
-  return null;
-}
-
-export function responderCurioso(texto) {
-  const t = texto.toLowerCase();
-  if (t.match(/duele|dolor|molesta/))
-    return "😊 No duele. Son tratamientos cómodos y no invasivos. Puedes sentir leve calor o contracción suave según la tecnología aplicada (HIFU, RF o EMS Sculptor).";
-  if (t.match(/cuánto|valor|precio/))
-    return "💰 Nuestros planes parten desde $120.000 (faciales) y $348.800 (corporales). Incluyen diagnóstico gratuito con IA.";
-  if (t.match(/dónde están|ubicación|dirección/))
-    return "📍 Estamos en Av. Las Perdices N° 2990, Local 23, Peñalolén. Horario: Lunes a Viernes 9:30–20:00 · Sábado 9:30–13:00.";
-  if (t.match(/certificado|médico|doctor|profesional/))
-    return "⚕️ Contamos con equipo médico y productos certificados por ISP y ANMAT.";
-  return null;
-}
-
-/* ====== RESPUESTA CONTEXTUAL PRINCIPAL ====== */
-export function responderExtendido(textoUsuario) {
-  const t = textoUsuario.toLowerCase();
-
-  // 1) Empatía, objeción, curiosidad (prioridad alta)
-  const emp = responderEmpatico(textoUsuario);
-  if (emp)
-    return emp + "\n📅 ¿Quieres coordinar tu evaluación gratuita? " + datos.info.agendar;
-
-  const obj = responderObjecion(textoUsuario);
-  if (obj)
-    return obj + "\n💬 Puedo mostrarte alternativas según tu objetivo. 👉 " + datos.info.agendar;
-
-  const cur = responderCurioso(textoUsuario);
-  if (cur) {
-    if (t.match(/botox|toxina|arruga|relleno/))
-      return cur + "\n💉 Podemos coordinar una valoración facial para definir dosis y zonas. 👉 " + datos.info.agendar;
-    if (t.match(/pink|exosoma|plasma|prp/))
-      return cur + "\n✨ Agenda una valoración regenerativa sin costo. 👉 " + datos.info.agendar;
-    if (t.match(/certificado|médico|doctor/))
-      return cur + "\n⚕️ Si deseas, puedo agendarte una evaluación con nuestro equipo clínico. 👉 " + datos.info.agendar;
-    return cur + "\n📅 ¿Te gustaría agendar tu evaluación gratuita? 👉 " + datos.info.agendar;
-  }
-
-  // 2) Detección de categoría clínica
-  const categoria = detectarCategoria(textoUsuario);
-  const plan = planRecomendado(categoria);
-
-  // 3) Ajustes por intención específica
-  if (categoria === "facial" && (t.includes("cuánto") || t.includes("precio") || t.includes("valor")))
-    return "💉 Nuestros tratamientos con toxina botulínica parten desde $281.600 (Face Antiage), $358.400 (Face Elite) y $584.000 (Full Face). Incluyen combinación HIFU 12D + RF + Pink Glow + Toxina según diagnóstico.\n📅 Agenda tu " + plan.cta + " aquí 👉 " + datos.info.agendar;
-
-  if (categoria === "corporal" && (t.includes("cuánto") || t.includes("precio") || t.includes("valor")))
-    return "💪 Planes corporales: Body Fitness $360.000, Lipo Reductiva $480.000, Lipo Body Elite $664.000. Tecnologías Cavitación + RF + EMS Sculptor según zona.\n📅 Agenda tu " + plan.cta + " aquí 👉 " + datos.info.agendar;
-
-  // 4) Construcción de respuesta por contexto
-  let resp = "✨ ";
+/* === RESPUESTAS === */
+function responderEmpatico(categoria) {
   if (categoria === "facial")
-    resp += `Para rejuvenecer y atenuar líneas, te recomiendo ${plan.nombre}. ${plan.descripcion}`;
-  else if (categoria === "corporal")
-    resp += `Para moldear y reducir grasa, te recomiendo ${plan.nombre}. ${plan.descripcion}`;
-  else if (categoria === "regenerativo")
-    resp += `Podemos trabajar con ${plan.nombre}. ${plan.descripcion}`;
-  else resp += plan.descripcion;
-
-  resp += "\n💰 Valores " + plan.precio + ". Incluye diagnóstico gratuito con IA y profesional clínico.";
-  resp += "\n📅 Agenda tu " + plan.cta + " aquí 👉 " + datos.info.agendar;
-  return resp;
+    return "💆‍♀️ Trabajamos con HIFU, RF, Pink Glow y toxina botulínica. Resultados visibles desde la primera sesión.";
+  if (categoria === "corporal")
+    return "💪 Nuestros tratamientos usan HIFU 12D, RF, EMS Sculptor y Cavitación sin cirugía.";
+  if (categoria === "regenerativo")
+    return "✨ Usamos Pink Glow y exosomas aprobados por ISP y ANMAT para regeneración y luminosidad.";
+  return "💫 Todos nuestros tratamientos incluyen diagnóstico gratuito con IA y seguimiento profesional.";
 }
 
-/* ============================================================
-   FIN DEL MOTOR CONSOLIDADO
-   ============================================================ */
+function responderObjeccion(textoUsuario) {
+  const t = textoUsuario.toLowerCase();
+  if (t.includes("caro") || t.includes("precio"))
+    return "💸 Nuestros valores reflejan tecnología avanzada, equipos médicos y resultados reales sin cirugía.";
+  if (t.includes("barato"))
+    return "⚡️ Usamos equipos clínicos certificados y productos originales, lo que asegura resultados duraderos.";
+  return null;
+}
+
+function responderCurioso(textoUsuario) {
+  const t = textoUsuario.toLowerCase();
+  if (t.includes("duele"))
+    return "😌 No duele. Son tratamientos cómodos, puedes sentir leve calor o contracción según la tecnología.";
+  if (t.includes("gratis"))
+    return "🎯 La evaluación diagnóstica inicial es gratuita. Puedes agendar tu cita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  if (t.includes("certificado"))
+    return "📋 Todos los equipos y productos están certificados por ISP y ANMAT.";
+  if (t.includes("resultado"))
+    return "✅ Resultados visibles desde las primeras sesiones, reforzados con control clínico y diagnóstico IA.";
+  return null;
+}
+
+/* === MOTOR PRINCIPAL === */
+export function responderExtendido(usuario, textoUsuario) {
+  const categoria = recordarCategoria(usuario, textoUsuario);
+  const plan = planRecomendado(categoria);
+  const obj = responderObjeccion(textoUsuario);
+  const curiosidad = responderCurioso(textoUsuario);
+
+  if (obj) return obj;
+  if (curiosidad) return curiosidad;
+
+  const base = responderEmpatico(categoria);
+  return `${base}\n\n📋 ${plan.nombre}\n${plan.descripcion}\n💰 ${plan.precio}\n\n📅 Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
+}
