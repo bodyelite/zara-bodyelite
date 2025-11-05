@@ -47,4 +47,6 @@ function responderGeneral(t) {
   return "😊 Podemos agendar tu evaluación gratuita con IA para definir el mejor plan. Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 }
 
-export default procesarMensaje;
+
+
+export { procesarMensaje };
