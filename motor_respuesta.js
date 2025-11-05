@@ -2,7 +2,7 @@
    MOTOR RESPUESTA ZARA 2.1 — CONSOLIDADO FINAL
    ============================================================ */
 
-import datos from "./base_conocimiento.js";
+import { datos } from "./base_conocimiento.js";
 
 /* ====== CONTEXTO CONVERSACIONAL ====== */
 function detectarCategoria(texto) {
