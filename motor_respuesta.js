@@ -1,8 +1,7 @@
 import { datos } from "./base_conocimiento.js";
 
 function limpiar(t) {
-  return t
-    .toLowerCase()
+  return t.toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9\s]/g, " ")
@@ -19,20 +18,20 @@ export function responder(texto) {
   const probs = datos.problemas;
   const planes = datos.planes;
 
-  if (f.bienvenida.some(x => t.includes(x)))
+  if (f.bienvenida.some(x => t.includes(x))) 
     return "🌸 Hola, soy Zara IA de Body Elite. Cuéntame qué zona te gustaría mejorar.";
-  if (f.precio.some(x => t.includes(x)))
+  if (f.precio.some(x => t.includes(x))) 
     return "💰 Nuestros planes parten desde $120.000 (faciales) y $348.800 (corporales). Incluyen diagnóstico gratuito con IA.";
-  if (f.ubicacion.some(x => t.includes(x)))
+  if (f.ubicacion.some(x => t.includes(x))) 
     return `📍 ${info.direccion}\n🕒 ${info.horarios}`;
-  if (f.horarios.some(x => t.includes(x)))
+  if (f.horarios.some(x => t.includes(x))) 
     return `🕒 Horarios de atención: ${info.horarios}`;
-  if (f.humano.some(x => t.includes(x)))
+  if (f.humano.some(x => t.includes(x))) 
     return `📞 Puedes hablar con un especialista al ${info.telefono}`;
-  if (f.intencion.some(x => t.includes(x)))
+  if (f.intencion.some(x => t.includes(x))) 
     return `📅 Agenda tu evaluación gratuita aquí 👉 ${info.agendar}`;
-  if (f.emocional.some(x => t.includes(x)))
-    return "💬 Entiendo lo que sientes. Muchos pacientes comienzan igual y logran excelentes resultados. ¿Te gustaría que te oriente?";
+  if (f.emocional.some(x => t.includes(x))) 
+    return "💬 Entiendo lo que sientes. Podemos ayudarte con un plan personalizado.";
 
   let zonaDetectada = null;
   for (const [zona, lista] of Object.entries(alias)) {
@@ -97,55 +96,36 @@ export function responderEmpatico(texto) {
 
 export function responderCurioso(texto) {
   const t = texto.toLowerCase();
-
   if (t.includes("duele") || t.includes("dolor") || t.includes("molesta"))
-    return "😊 No duele. Son tratamientos cómodos y no invasivos. Puedes sentir leve calor o contracción suave según la tecnología aplicada (HIFU, RF o EMS Sculptor).";
-
+    return "😊 No duele. Son tratamientos cómodos y no invasivos. Puedes sentir un leve calor o contracción suave según la tecnología aplicada (HIFU, RF o EMS Sculptor).";
   if (t.includes("consiste") || t.includes("funciona") || t.includes("qué hacen") || t.includes("cómo actúa"))
-    return "🧬 Cada plan combina tecnologías: HIFU 12D para grasa y fascia, RF para tensar colágeno, Cavitación para adipocitos y EMS Sculptor para tonificar. Ajustado al diagnóstico corporal.";
-
-  if (t.includes("cuánto dura") || t.includes("duración") || t.includes("tiempo de efecto"))
-    return "⏳ Los resultados duran 8–12 meses según hábitos y alimentación.";
-
-  if (t.includes("cuántas sesiones") || t.includes("sesiones") || t.includes("veces"))
-    return "📅 Se indican 6–12 sesiones por zona según el plan. La evaluación inicial define la cantidad exacta.";
-
-  if (t.includes("resultados") || t.includes("cuándo se notan"))
-    return "✨ Los resultados se notan desde la primera sesión y se consolidan en la tercera. Son progresivos y naturales.";
-
+    return "🧬 Combinamos tecnologías como HIFU 12D, RF y Prosculpt para modelar, tensar y regenerar tejido. Todo guiado por diagnóstico corporal.";
+  if (t.includes("cuánto dura") || t.includes("duración"))
+    return "⏳ Los resultados duran entre 8 y 12 meses según tus hábitos y alimentación.";
+  if (t.includes("cuántas sesiones") || t.includes("sesiones"))
+    return "📅 Generalmente se recomiendan entre 6 y 12 sesiones por zona, según evaluación.";
+  if (t.includes("resultados") || t.includes("efecto"))
+    return "✨ Notarás cambios desde la primera sesión; se consolidan en la tercera o cuarta.";
+  if (t.includes("precio") || t.includes("valor"))
+    return "💰 Nuestros planes comienzan desde $120.000 (faciales) y $348.800 (corporales).";
   if (t.includes("seguro") || t.includes("riesgo"))
-    return "⚕️ Es seguro. No invasivo y aprobado clínicamente. No se aplica en embarazo o enfermedades agudas.";
-
-  if (t.includes("precio") || t.includes("valor") || t.includes("costo"))
-    return "💰 Los planes parten desde $120.000 (faciales) y $348.800 (corporales). Incluyen diagnóstico gratuito.";
-
+    return "⚕️ Es seguro, no invasivo y aprobado clínicamente. No se aplica en embarazo o enfermedades agudas.";
   return null;
 }
 
 export function responderExtendido(textoUsuario) {
-  const curioso = responderCurioso(textoUsuario);
-  if (curioso) return curioso;
-
-  const base = responder(textoUsuario);
+  // Prioridad 1: empatía
   const empatica = responderEmpatico(textoUsuario);
   if (empatica) return empatica;
 
-  const t = textoUsuario.toLowerCase();
+  // Prioridad 2: curiosidad clínica
+  const curioso = responderCurioso(textoUsuario);
+  if (curioso) return curioso;
 
-  if (base.includes("Soy Zara IA de Body Elite. Cuéntame")) {
-    return "🤔 No logré entender tu pregunta, pero nuestras profesionales te orientarán en tu evaluación gratuita. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  }
+  // Prioridad 3: recomendación clínica
+  const base = responder(textoUsuario);
+  if (!base.includes("Soy Zara IA de Body Elite")) return base;
 
-  if (base.includes("Para")) {
-    const zona = base.match(/Para ([a-záéíóúñ]+)/i)?.[1];
-    const problema = base.match(/con ([a-záéíóúñ]+)/i)?.[1];
-    return ampliarRespuesta(base, zona, problema);
-  }
-
-  return base;
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const casos = ["tengo grasa en abdomen", "duele?", "en qué consiste", "cuántas sesiones son"];
-  for (const c of casos) console.log(`\n🗣️ ${c}\n🤖 ${responderExtendido(c)}`);
+  // Prioridad 4: fallback genérico
+  return "🤔 No logré entender tu pregunta, pero nuestras profesionales podrán orientarte durante tu evaluación gratuita. 📅 Agenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 }
