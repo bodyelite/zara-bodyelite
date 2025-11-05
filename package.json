@@ -1,10 +1,10 @@
 {
   "name": "zara-2-1",
   "version": "1.0.0",
-  "main": "zara_core_full_2_1.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node zara_core_full_2_1.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.21.2",
