@@ -2,7 +2,7 @@ import { guardarContexto, obtenerContexto } from "./memoria.js";
 import { datos } from "./base_conocimiento.js";
 
 /* ============================================================
-   MOTOR RESPUESTA ZARA 2.1 — FINAL COMPATIBLE CON RENDER
+   MOTOR ZARA REAL v27 — EMPÁTICO + CLÍNICO + COMERCIAL
    ============================================================ */
 
 function recordarCategoria(usuario, texto) {
@@ -37,7 +37,7 @@ function planRecomendado(categoria) {
       return {
         nombre: "Face Antiage / Face Elite / Full Face",
         descripcion:
-          "Combinan HIFU 12D, RF, Pink Glow y Toxina Botulínica para rejuvenecer rostro y cuello.",
+          "Combinan HIFU 12D, Radiofrecuencia, Pink Glow y Toxina Botulínica para rejuvenecer rostro y cuello sin cirugía.",
         precio: "$281.600 – $584.000",
         cta: "diagnóstico facial",
       };
@@ -53,7 +53,7 @@ function planRecomendado(categoria) {
       return {
         nombre: "Pink Glow / Exosomas (según evaluación)",
         descripcion:
-          "Biorevitalización con péptidos y antioxidantes para mejorar textura e hidratación.",
+          "Biorevitalización con péptidos y antioxidantes para mejorar textura, luminosidad e hidratación.",
         precio: "$198.400 – $281.600",
         cta: "valoración regenerativa",
       };
@@ -61,56 +61,57 @@ function planRecomendado(categoria) {
       return {
         nombre: "Planes Body Elite",
         descripcion:
-          "Protocolos faciales y corporales con HIFU 12D, RF, EMS Sculptor y Pink Glow.",
+          "Protocolos faciales y corporales con HIFU 12D, RF, EMS Sculptor y Pink Glow según tu diagnóstico.",
         precio: "desde $120.000",
         cta: "evaluación gratuita",
       };
   }
 }
 
+/* ====== RESPUESTAS BASE (MODO EMPÁTICO) ====== */
 function responderEmpatico(texto) {
   const t = texto.toLowerCase();
-  if (t.includes("hola"))
-    return "👋 ¡Hola! Soy Zara IA de Body Elite. ¿Cómo estás hoy?";
+  if (t.includes("hola") || t.includes("buenas"))
+    return "✨ Hola 💛 qué gusto saludarte, soy Zara de Body Elite. Cuéntame qué zona te gustaría mejorar para orientarte bien.";
   if (t.includes("gracias"))
-    return "✨ Encantada de ayudarte. ¿Quieres que te muestre los planes disponibles?";
+    return "😊 Me alegra mucho ayudarte 💫 ¿quieres que te muestre las opciones más adecuadas para ti?";
+  if (t.includes("quiero") && t.includes("info"))
+    return "💬 Por supuesto, te acompaño a ver las alternativas según tu objetivo ✨";
   return null;
 }
 
 function responderObjecion(texto) {
   const t = texto.toLowerCase();
   if (t.match(/caro|precio alto|vale mucho/))
-    return "💬 Entiendo tu punto. Nuestros valores reflejan la tecnología y los resultados reales sin cirugía.";
+    return "💬 Entiendo tu punto, nuestros valores reflejan la tecnología y los resultados reales sin cirugía. Además, la evaluación es sin costo 😉";
   if (t.match(/duele|dolor|molesta/))
-    return "😊 Son tratamientos cómodos y no invasivos. Puedes sentir leve calor o contracción suave según la tecnología aplicada.";
+    return "🌿 Tranquila, todos nuestros tratamientos son no invasivos y muy cómodos. Solo puedes sentir un leve calor o contracción suave según la tecnología.";
   return null;
 }
 
 function responderCurioso(texto) {
   const t = texto.toLowerCase();
   if (t.match(/cuánto|valor|precio/))
-    return "💰 Nuestros planes parten desde $120.000 (faciales) y $348.800 (corporales). Incluyen diagnóstico gratuito con IA.";
-  if (t.match(/dónde están|ubicación|dirección/))
-    return "📍 Estamos en Av. Las Perdices N°2990, Local 23, Peñalolén. Lunes a Viernes 9:30–20:00 · Sábado 9:30–13:00.";
+    return "💰 Nuestros planes faciales parten desde $120.000 y los corporales desde $348.800. Incluyen diagnóstico gratuito con IA y profesional clínico.";
+  if (t.match(/dónde|ubicación|dirección/))
+    return "📍 Estamos en Av. Las Perdices N°2990, Local 23, Peñalolén. Lunes a Viernes 9:30 – 20:00 · Sábado 9:30 – 13:00.";
   if (t.match(/certificado|médico|doctor/))
-    return "⚕️ Contamos con equipo médico y productos certificados por ISP y ANMAT.";
-  if (t.match(/duele|dolor|molesta/))
-    return "😊 No duele. Tratamientos cómodos y no invasivos.";
+    return "⚕️ Todo nuestro equipo es clínico y usamos equipos certificados por ISP y ANMAT.";
   return null;
 }
 
-/* ====== RESPUESTA PRINCIPAL ====== */
+/* ====== MOTOR PRINCIPAL ====== */
 export function procesarMensaje(usuario, texto) {
   const t = texto.toLowerCase();
 
   const emp = responderEmpatico(texto);
-  if (emp) return emp + "\n📅 ¿Quieres coordinar tu evaluación gratuita? " + datos.info.agendar;
+  if (emp) return emp;
 
   const obj = responderObjecion(texto);
-  if (obj) return obj + "\n💬 Puedo mostrarte alternativas según tu objetivo. 👉 " + datos.info.agendar;
+  if (obj) return obj + "\n📅 ¿Te acompaño a coordinar tu evaluación gratuita? 👉 " + datos.info.agendar;
 
   const cur = responderCurioso(texto);
-  if (cur) return cur + "\n📅 Agenda tu evaluación gratuita aquí 👉 " + datos.info.agendar;
+  if (cur) return cur + "\n📅 Reserva aquí 👉 " + datos.info.agendar;
 
   const categoria = recordarCategoria(usuario, texto);
   const plan = planRecomendado(categoria);
@@ -122,9 +123,12 @@ export function procesarMensaje(usuario, texto) {
     resp += `Para moldear y reducir grasa, te recomiendo ${plan.nombre}. ${plan.descripcion}`;
   else if (categoria === "regenerativo")
     resp += `Podemos trabajar con ${plan.nombre}. ${plan.descripcion}`;
-  else resp += plan.descripcion;
+  else
+    resp += plan.descripcion;
 
   resp += "\n💰 Valores " + plan.precio + ". Incluye diagnóstico gratuito con IA y profesional clínico.";
   resp += "\n📅 Agenda tu " + plan.cta + " aquí 👉 " + datos.info.agendar;
   return resp;
 }
+
+export default { procesarMensaje };
