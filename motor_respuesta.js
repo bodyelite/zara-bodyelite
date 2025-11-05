@@ -2,7 +2,7 @@ import { guardarContexto, obtenerContexto } from "./memoria.js";
 import { datos } from "./base_conocimiento.js";
 
 /* ============================================================
-   MOTOR ZARA REAL CONTEXTUAL AVANZADO + TECNOLOGÍAS
+   MOTOR ZARA REAL CONTEXTUAL AVANZADO + TECNOLOGÍAS (FIX)
    ============================================================ */
 
 function recordarCategoria(usuario, texto) {
@@ -63,32 +63,38 @@ function responderObjecion(texto) {
 }
 
 /* ============================================================
+   NUEVO BLOQUE FALTANTE — CURIOSIDAD GENERAL
+   ============================================================ */
+function responderCurioso(texto) {
+  const t = texto.toLowerCase();
+  if (t.match(/cuánto|valor|precio/))
+    return "💰 Los planes faciales comienzan desde $120.000 y los corporales desde $348.800. Todos incluyen diagnóstico gratuito con IA y profesional clínico.";
+  if (t.match(/dónde|ubicación|dirección|peñalolen/))
+    return "📍 Estamos en Av. Las Perdices N° 2990, Local 23 · Peñalolén. Lunes a Viernes 9:30–20:00 · Sábado 9:30–13:00.";
+  if (t.match(/certificado|médico|doctor/))
+    return "⚕️ Nuestro equipo es clínico y trabajamos con equipos certificados por ISP y ANMAT.";
+  return null;
+}
+
+/* ============================================================
    DETECCIÓN DE TECNOLOGÍAS
    ============================================================ */
 function responderTecnologia(texto) {
   const t = texto.toLowerCase();
-
   if (t.match(/hifu/))
-    return "💎 Sí, trabajamos con **HIFU 12D**, ultrasonido focalizado que actúa sobre grasa subcutánea y fascia SMAS para tensar y definir. Forma parte de planes como **Lipo Body Elite**, **Lipo Reductiva** y **Face Elite**.\n📅 Agenda tu diagnóstico gratuito 👉 " + datos.info.agendar;
-
+    return "💎 Sí, trabajamos con **HIFU 12D**, ultrasonido focalizado que actúa sobre grasa y fascia SMAS para tensar y definir. Forma parte de **Lipo Body Elite**, **Lipo Reductiva** y **Face Elite**.\n📅 Agenda tu diagnóstico gratuito 👉 " + datos.info.agendar;
   if (t.match(/cavitacion|cavitación/))
-    return "💠 Sí, aplicamos **Cavitación**, que rompe adipocitos mediante presión ultrasónica para eliminar grasa localizada. Está presente en planes **Lipo Reductiva**, **Lipo Focalizada Reductiva** y **Lipo Body Elite**.\n📅 Agenda tu evaluación corporal aquí 👉 " + datos.info.agendar;
-
+    return "💠 Sí, aplicamos **Cavitación**, que rompe adipocitos mediante presión ultrasónica para eliminar grasa localizada. Está presente en **Lipo Reductiva** y **Lipo Body Elite**.\n📅 Agenda aquí 👉 " + datos.info.agendar;
   if (t.match(/radiofrecuencia|rf/))
-    return "🌡️ Sí, usamos **Radiofrecuencia**, que estimula colágeno I y III para reafirmar piel y mejorar textura. Incluida en **Body Tensor**, **Face Antiage**, **Face Elite** y todos los planes corporales.\n📅 Agenda tu diagnóstico sin costo 👉 " + datos.info.agendar;
-
+    return "🌡️ Sí, usamos **Radiofrecuencia**, que estimula colágeno I y III para reafirmar piel y mejorar textura. Incluida en **Body Tensor**, **Face Antiage** y **Face Elite**.\n📅 Agenda aquí 👉 " + datos.info.agendar;
   if (t.match(/ems|sculptor|prosculpt/))
-    return "⚡ Exacto, usamos **EMS Sculptor Pro**, que provoca contracciones musculares supramáximas (20 000 / 30 min) para tonificar y aumentar masa muscular. Incluido en **Body Fitness** y **Push Up**.\n📅 Agenda tu valoración 👉 " + datos.info.agendar;
-
+    return "⚡ Exacto, usamos **EMS Sculptor Pro**, que genera 20 000 contracciones en 30 min para tonificar y aumentar masa muscular. Incluido en **Body Fitness** y **Push Up**.\n📅 Agenda tu valoración 👉 " + datos.info.agendar;
   if (t.match(/pink glow|pinkglow/))
-    return "🌸 Sí, **Pink Glow** es un bioestimulante con péptidos y antioxidantes que mejora luminosidad y regeneración. Forma parte de **Face Smart**, **Face Inicia**, **Face Elite** y **Full Face**.\n📅 Agenda tu diagnóstico facial 👉 " + datos.info.agendar;
-
+    return "🌸 Sí, **Pink Glow** es un bioestimulante con péptidos y antioxidantes que mejora luminosidad y regeneración. Forma parte de **Face Smart**, **Face Inicia**, **Face Elite** y **Full Face**.\n📅 Agenda aquí 👉 " + datos.info.agendar;
   if (t.match(/exosoma|exosomas/))
-    return "🧬 Sí, aplicamos **Exosomas**, regeneradores celulares que estimulan fibroblastos y colágeno IV. Se utilizan en protocolos regenerativos avanzados junto a **Pink Glow**.\n📅 Agenda tu valoración regenerativa 👉 " + datos.info.agendar;
-
+    return "🧬 Sí, aplicamos **Exosomas**, regeneradores celulares que estimulan fibroblastos y colágeno IV. Se usan junto a **Pink Glow** en protocolos regenerativos.\n📅 Agenda aquí 👉 " + datos.info.agendar;
   if (t.match(/toxina|botox/))
-    return "💉 Sí, aplicamos **Toxina Botulínica (Botox)** de forma clínica y segura. Se usa en **Face Antiage**, **Face Elite** y **Full Face** para suavizar arrugas y relajar músculos de expresión.\n📅 Agenda tu diagnóstico facial 👉 " + datos.info.agendar;
-
+    return "💉 Sí, aplicamos **Toxina Botulínica (Botox)** de forma clínica y segura. Se usa en **Face Antiage**, **Face Elite** y **Full Face** para suavizar arrugas.\n📅 Agenda tu diagnóstico facial 👉 " + datos.info.agendar;
   return null;
 }
 
@@ -98,26 +104,18 @@ function responderTecnologia(texto) {
 export function procesarMensaje(usuario, texto) {
   const t = texto.toLowerCase();
 
-  // 1. empatía, objeción o pregunta directa
   const emp = responderEmpatico(texto);
   if (emp) return emp;
 
   const obj = responderObjecion(texto);
   if (obj) return obj + "\n📅 ¿Te coordino tu evaluación gratuita? 👉 " + datos.info.agendar;
 
-  // 2. tecnologías específicas
   const tec = responderTecnologia(texto);
   if (tec) return tec;
 
-  // 3. ubicación ampliada
-  if (t.match(/donde|ubicacion|dirección|peñalolen|mapa|quedan|centro|local/))
-    return "📍 Estamos en **Av. Las Perdices N° 2990, Local 23, Peñalolén**. Muy cerca de Av. Tobalaba.\n🕒 Horario: Lunes a Viernes 9:30 – 20:00 · Sábado 9:30 – 13:00.\n📅 Puedes agendar directamente aquí 👉 " + datos.info.agendar;
-
-  // 4. curiosidad o intención general
   const cur = responderCurioso(texto);
   if (cur) return cur + "\n📅 Agenda aquí 👉 " + datos.info.agendar;
 
-  // 5. intención corporal/facial general
   const categoria = recordarCategoria(usuario, texto);
   const intencion = detectarIntencion(texto);
 
@@ -130,39 +128,11 @@ export function procesarMensaje(usuario, texto) {
     ].join("\n");
   }
 
-  if (categoria === "corporal" && intencion === "reductivo") {
-    return [
-      "💪 Perfecto, si buscas reducir grasa o moldear tu cuerpo te recomiendo **Lipo Reductiva**, **Lipo Body Elite** o **Lipo Express**.",
-      "Usamos HIFU 12D + Cavitación + Radiofrecuencia para resultados visibles desde las primeras sesiones.",
-      "💰 Valores $432.000 – $664.000. Incluyen evaluación y control clínico.",
-      "📅 Agenda tu evaluación corporal aquí 👉 " + datos.info.agendar
-    ].join("\n");
-  }
-
-  if (categoria === "corporal" && intencion === "tonificar") {
-    return [
-      "💫 Excelente meta. Para tonificar y definir trabajamos con **Body Fitness** y **Body Tensor**.",
-      "Usamos EMS Sculptor (20 000 contracciones / 30 min) y Radiofrecuencia reafirmante.",
-      "💰 Valores $232.000 – $360.000. Incluyen diagnóstico sin costo.",
-      "📅 ¿Agendamos tu evaluación corporal? 👉 " + datos.info.agendar
-    ].join("\n");
-  }
-
-  if (categoria === "facial" && intencion === "rejuvenecer") {
-    return [
-      "🌸 Perfecto, para rejuvenecer y atenuar líneas trabajamos con **Face Antiage**, **Face Elite** o **Full Face**.",
-      "Combinan HIFU 12D, RF, Pink Glow y Toxina Botulínica según tu diagnóstico.",
-      "💰 Valores $281.600 – $584.000.",
-      "📅 Agenda tu diagnóstico facial aquí 👉 " + datos.info.agendar
-    ].join("\n");
-  }
-
-  // 6. respuesta general empática
   let resp = "✨ ";
   if (categoria === "facial")
     resp += "Podemos trabajar tu rejuvenecimiento con protocolos como Face Antiage o Face Elite. Resultados naturales y sin cirugía.";
   else if (categoria === "corporal")
-    resp += "Podemos ayudarte a lograr el cuerpo que deseas con planes como Lipo Body Elite o Body Fitness, según tu diagnóstico.";
+    resp += "Podemos ayudarte a lograr el cuerpo que deseas con planes como Lipo Body Elite o Body Fitness.";
   else if (categoria === "regenerativo")
     resp += "Los tratamientos regenerativos como Pink Glow o Exosomas mejoran textura y luminosidad progresivamente.";
   else
