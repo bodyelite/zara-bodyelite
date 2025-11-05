@@ -2,7 +2,7 @@ import { guardarContexto, obtenerContexto } from "./memoria.js";
 import { datos } from "./base_conocimiento.js";
 
 /* ============================================================
-   MOTOR ZARA REAL — CONTEXTUAL + TECNOLOGÍAS + FALLBACK ESTABLE
+   MOTOR ZARA REAL FINAL — EMPÁTICO, TECNOLÓGICO Y ESTABLE
    ============================================================ */
 
 function recordarCategoria(usuario, texto) {
@@ -53,9 +53,9 @@ function responderEmpatico(usuario, texto) {
 function responderObjecion(texto) {
   const t = texto.toLowerCase();
   if (t.match(/caro|precio alto|vale mucho/))
-    return "💬 Entiendo tu punto, los valores reflejan tecnología y resultados reales sin cirugía. La evaluación es sin costo 😉";
+    return "💬 Entiendo tu punto, los valores reflejan tecnología avanzada y resultados reales sin cirugía. La evaluación es sin costo 😉";
   if (t.match(/duele|dolor|molesta/))
-    return "🌿 No te preocupes, son tratamientos cómodos y no invasivos. Solo puedes sentir un leve calor o contracción suave.";
+    return "🌿 Son tratamientos cómodos y no invasivos. Puedes sentir solo un leve calor o contracción suave según la tecnología.";
   return null;
 }
 
@@ -63,8 +63,8 @@ function responderCurioso(texto) {
   const t = texto.toLowerCase();
   if (t.match(/cuánto|valor|precio/))
     return "💰 Los planes faciales comienzan desde $120.000 y los corporales desde $348.800. Todos incluyen diagnóstico gratuito con IA y profesional clínico.";
-  if (t.match(/dónde|ubicación|dirección|peñalolen|local|centro/))
-    return "📍 Estamos en Av. Las Perdices N°2990, Local 23 · Peñalolén. Lunes a Viernes 9:30–20:00 · Sábado 9:30–13:00.\n📅 Agenda tu evaluación gratuita aquí 👉 " + datos.info.agendar;
+  if (t.match(/donde|ubicacion|ubicación|direccion|dirección|peñalolen|queda|parte|zona|cerca/))
+    return "📍 Estamos en **Av. Las Perdices N°2990, Local 23, Peñalolén**, cerca de Av. Tobalaba.\n🕒 Horario: Lunes a Viernes 9:30–20:00 · Sábado 9:30–13:00.\n📅 Agenda tu evaluación gratuita aquí 👉 " + datos.info.agendar;
   if (t.match(/certificado|médico|doctor|seremi|permiso/))
     return "⚕️ Nuestro centro cuenta con autorización sanitaria y profesionales clínicos acreditados. Trabajamos con equipos certificados por ISP y ANMAT.";
   return null;
@@ -75,9 +75,9 @@ function responderTecnologia(texto) {
   if (t.match(/hifu/))
     return "💎 Sí, trabajamos con **HIFU 12D**, ultrasonido focalizado que actúa sobre grasa y fascia SMAS para tensar y definir. Forma parte de **Lipo Body Elite**, **Lipo Reductiva** y **Face Elite**.";
   if (t.match(/cavitacion|cavitación/))
-    return "💠 Sí, usamos **Cavitación**, que rompe adipocitos mediante presión ultrasónica para eliminar grasa localizada. Incluida en **Lipo Reductiva** y **Lipo Body Elite**.";
+    return "💠 Sí, aplicamos **Cavitación**, que rompe adipocitos mediante presión ultrasónica para eliminar grasa localizada. Está en **Lipo Reductiva** y **Lipo Body Elite**.";
   if (t.match(/radiofrecuencia|rf/))
-    return "🌡️ Sí, aplicamos **Radiofrecuencia**, que estimula colágeno I y III para reafirmar y mejorar textura. Presente en **Body Tensor**, **Face Antiage** y **Face Elite**.";
+    return "🌡️ Sí, usamos **Radiofrecuencia**, que estimula colágeno I y III para reafirmar piel y mejorar textura. Está en **Body Tensor**, **Face Antiage** y **Face Elite**.";
   if (t.match(/ems|sculptor|prosculpt/))
     return "⚡ Exacto, usamos **EMS Sculptor Pro**, que genera contracciones supramáximas para tonificar y aumentar masa muscular. Está en **Body Fitness** y **Push Up**.";
   if (t.match(/pink glow|pinkglow/))
@@ -110,17 +110,21 @@ export function procesarMensaje(usuario, texto) {
   const categoria = recordarCategoria(usuario, texto);
   const intencion = detectarIntencion(texto);
 
+  // --- Reacciones empáticas por intención ---
   if (categoria === "corporal" && intencion === "gluteos")
-    return "🍑 Para levantar y reafirmar glúteos trabajamos con **Push Up** y **Body Fitness**. Push Up combina Prosculpt + RF, mientras Body Fitness utiliza EMS Sculptor para tono y fuerza.\n💰 Valores entre $360.000 – $376.000. Incluyen diagnóstico gratuito.\n📅 Agenda tu valoración 👉 " + datos.info.agendar;
+    return "🍑 Me encanta ese objetivo. Para levantar y reafirmar glúteos trabajamos con **Push Up** y **Body Fitness**. Push Up combina Prosculpt + RF, mientras Body Fitness utiliza EMS Sculptor para tono y fuerza.\n💰 Valores entre $360.000 – $376.000. Incluyen diagnóstico gratuito.\n📅 Agenda tu valoración 👉 " + datos.info.agendar;
 
   if (categoria === "corporal" && intencion === "reductivo")
-    return "💪 Para reducir grasa o moldear el cuerpo, te recomiendo **Lipo Reductiva** o **Lipo Body Elite**, con HIFU 12D, Cavitación y RF. Incluyen diagnóstico y control clínico.\n📅 Agenda aquí 👉 " + datos.info.agendar;
+    return "💪 Me encanta ese objetivo. Para reducir grasa o moldear el cuerpo, te recomiendo **Lipo Reductiva** o **Lipo Body Elite**, con HIFU 12D, Cavitación y RF.\n💰 Valores $432.000 – $664.000. Incluyen diagnóstico y control clínico.\n📅 Agenda tu evaluación corporal 👉 " + datos.info.agendar;
+
+  if (categoria === "corporal" && intencion === "tonificar")
+    return "💫 Me encanta ese objetivo. Para tonificar y definir trabajamos con **Body Fitness** y **Body Tensor**. Usamos EMS Sculptor y Radiofrecuencia reafirmante.\n💰 Valores $232.000 – $360.000. Incluyen diagnóstico sin costo.\n📅 Agenda tu evaluación corporal 👉 " + datos.info.agendar;
 
   if (categoria === "facial" && intencion === "rejuvenecer")
-    return "🌸 Para rejuvenecer y atenuar líneas trabajamos con **Face Antiage**, **Face Elite** o **Full Face**, combinando HIFU 12D, RF, Pink Glow y Toxina Botulínica.\n📅 Agenda tu diagnóstico 👉 " + datos.info.agendar;
+    return "🌸 Me encanta ese objetivo. Para rejuvenecer y atenuar líneas trabajamos con **Face Antiage**, **Face Elite** o **Full Face**, combinando HIFU 12D, RF, Pink Glow y Toxina Botulínica.\n💰 Valores $281.600 – $584.000.\n📅 Agenda tu diagnóstico facial 👉 " + datos.info.agendar;
 
-  // ===== FALLBACK =====
-  return "💬 Disculpa, no logré entender tu pregunta, pero estoy segura de que nuestras profesionales podrán resolver todas tus dudas durante la evaluación gratuita. 💛\n📅 Agenda tu cita aquí 👉 " + datos.info.agendar;
+  // --- Fallback amigable ---
+  return "💬 Disculpa, no logré entender tu pregunta, pero estoy segura de que nuestras profesionales podrán resolver todas tus dudas durante la evaluación gratuita 💛.\n📅 Agenda tu cita aquí 👉 " + datos.info.agendar;
 }
 
 export default { procesarMensaje };
