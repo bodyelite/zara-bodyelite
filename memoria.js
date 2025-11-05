@@ -1,3 +1,5 @@
+// ===== MEMORIA DE CONTEXTO ZARA 2.1 =====
+
 let contextoGlobal = {};
 
 export function guardarContexto(usuario, categoria) {
@@ -8,5 +10,5 @@ export function guardarContexto(usuario, categoria) {
 export function obtenerContexto(usuario) {
   return contextoGlobal[usuario] || null;
 }
-export { guardarContexto, obtenerContexto };
+
 export default { guardarContexto, obtenerContexto };
