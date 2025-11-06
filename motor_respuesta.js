@@ -23,9 +23,9 @@ function recordarCategoria(usuario, texto) {
   ) return previo;
 
   let categoria = "general";
-  if (t.match(/botox|toxina|arruga|relleno|face|facial|papada|piel|mancha|cutis|ojera|frente|mentón/))
+  if (t.match(/botox|toxina|arruga|relleno|face|facial|papada|piel|mancha|cutis|ojera|frente|mentón|acne|acné|poros|antiage|rejuvenecer|luminosidad|hidratar/))
     categoria = "facial";
-  else if (t.match(/grasa|abdomen|rollitos|cintura|flacidez|gluteo|glúteo|trasero|poto|cola|nalgas|pierna|brazos|espalda|tonificar|levantar|reducir|body/))
+  else if (t.match(/grasa|abdomen|rollitos|cintura|flacidez|gluteo|glúteo|trasero|poto|cola|nalgas|pierna|brazos|espalda|tonificar|levantar|reducir|body|depilacion|depilar|laser|láser|vello|pelos|axilas|bikini|piernas/))
     categoria = "corporal";
   else if (t.match(/pink|exosoma|plasma|prp|bioestimulante|regenerativo|luminosidad/))
     categoria = "regenerativo";
