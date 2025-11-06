@@ -164,7 +164,13 @@ export function procesarMensaje(usuario, texto) {
     return "🌸 Me encanta ese objetivo. Para rejuvenecer y atenuar líneas trabajamos con **Face Antiage**, **Face Elite** o **Full Face**, combinando HIFU 12D, RF, Pink Glow y Toxina Botulínica.\n💰 Valores $281.600 – $584.000.\n📅 Agenda tu diagnóstico facial 👉 " + datos.info.agendar;
   }
 
-  // Fallback único
+if (categoria === "corporal" && !intencion) {
+  return "💪 Me encanta ese objetivo. Para mejorar firmeza o reducir grasa trabajamos con **Lipo Reductiva**, **Body Tensor** o **Body Fitness**, según la zona y diagnóstico.\n💰 Valores entre $232.000 – $664.000. Incluyen evaluación gratuita.\n📅 Agenda tu valoración 👉 " + datos.info.agendar;
+}
+
+if (categoria === "facial" && !intencion) {
+  return "🌸 Perfecto. Para rostro o cuello recomendamos **Face Smart**, **Face Antiage** o **Face Elite**, según el tipo de piel y flacidez. Incluyen diagnóstico facial gratuito.\n💰 Valores entre $198.400 – $584.000.\n📅 Agenda aquí 👉 " + datos.info.agendar;
+}  // Fallback único
   return "💬 Disculpa, no logré entender tu pregunta, pero estoy segura de que nuestras profesionales podrán resolver todas tus dudas durante la evaluación gratuita 💛.\n📅 Agenda tu cita aquí 👉 " + datos.info.agendar;
 }
 
