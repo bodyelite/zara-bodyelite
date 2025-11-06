@@ -23,7 +23,7 @@ function recordarCategoria(usuario, texto) {
   ) return previo;
 
   let categoria = "general";
-  if (t.match(/botox|toxina|arruga|relleno|face|facial|papada|piel|mancha|cutis|ojera|frente|mentón|acne|acné|poros|antiage|rejuvenecer|luminosidad|hidratar/))
+  if (t.match(/botox|toxina|arruga|relleno|face|facial|papada|piel facial|mancha|cutis|ojera|frente|mentón|acne|acné|poros|antiage|rejuvenecer|luminosidad|hidratar|patas de gallo|contorno de ojos|bolsas|ojeras|líneas de expresión|flacidez rostro/))
     categoria = "facial";
   else if (t.match(/grasa|abdomen|rollitos|cintura|flacidez|gluteo|glúteo|trasero|poto|cola|nalgas|pierna|brazos|espalda|tonificar|levantar|reducir|body|depilacion|depilar|laser|láser|vello|pelos|axilas|bikini|piernas/))
     categoria = "corporal";
@@ -39,7 +39,7 @@ function detectarIntencion(texto) {
   if (t.match(/reducir|bajar|adelgazar|grasa|rollitos|celulitis/)) return "reductivo";
   if (t.match(/tonificar|firme|fitness|definir|marcar|tensar|flacidez/)) return "tonificar";
   if (t.match(/levantar|gluteo|glúteo|trasero|cola|poto|nalgas|push/)) return "gluteos";
-  if (t.match(/rejuvenecer|arruga|piel|luminosidad|antiage/)) return "rejuvenecer";
+  if (t.match(/rejuvenecer|arruga|piel facial|luminosidad|antiage/)) return "rejuvenecer";
   return null;
 }
 
@@ -170,7 +170,9 @@ if (categoria === "corporal" && !intencion) {
 
 if (categoria === "facial" && !intencion) {
   return "🌸 Perfecto. Para rostro o cuello recomendamos **Face Smart**, **Face Antiage** o **Face Elite**, según el tipo de piel y flacidez. Incluyen diagnóstico facial gratuito.\n💰 Valores entre $198.400 – $584.000.\n📅 Agenda aquí 👉 " + datos.info.agendar;
-}  // Fallback único
+if (categoria === "corporal" && t.match(/depilacion|depilar|láser|laser|vello|axilas|piernas|bikini/)) {
+  return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+}}  // Fallback único
   return "💬 Disculpa, no logré entender tu pregunta, pero estoy segura de que nuestras profesionales podrán resolver todas tus dudas durante la evaluación gratuita 💛.\n📅 Agenda tu cita aquí 👉 " + datos.info.agendar;
 }
 
