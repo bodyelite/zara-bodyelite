@@ -172,7 +172,9 @@ if (categoria === "facial" && !intencion) {
   return "🌸 Perfecto. Para rostro o cuello recomendamos **Face Smart**, **Face Antiage** o **Face Elite**, según el tipo de piel y flacidez. Incluyen diagnóstico facial gratuito.\n💰 Valores entre $198.400 – $584.000.\n📅 Agenda aquí 👉 " + datos.info.agendar;
 if (categoria === "corporal" && t.match(/depilacion|depilar|láser|laser|vello|axilas|piernas|bikini/)) {
   return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
-}}  // Fallback único
+if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+  return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+}}}  // Fallback único
   return "💬 Disculpa, no logré entender tu pregunta, pero estoy segura de que nuestras profesionales podrán resolver todas tus dudas durante la evaluación gratuita 💛.\n📅 Agenda tu cita aquí 👉 " + datos.info.agendar;
 }
 
