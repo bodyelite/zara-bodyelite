@@ -13,7 +13,9 @@ let ultimoTema = {};
 function recordarCategoria(usuario, texto) {
   const previo = obtenerContexto(usuario);
   const t = texto.toLowerCase();
-
+  if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+    return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+  }
   if (
     previo &&
     (t.includes("cuanto") ||
@@ -36,7 +38,9 @@ function recordarCategoria(usuario, texto) {
 
 function detectarIntencion(texto) {
   const t = texto.toLowerCase();
-  if (t.match(/reducir|bajar|adelgazar|grasa|rollitos|celulitis/)) return "reductivo";
+  if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+    return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+  }  if (t.match(/reducir|bajar|adelgazar|grasa|rollitos|celulitis/)) return "reductivo";
   if (t.match(/tonificar|firme|fitness|definir|marcar|tensar|flacidez/)) return "tonificar";
   if (t.match(/levantar|gluteo|glúteo|trasero|cola|poto|nalgas|push/)) return "gluteos";
   if (t.match(/rejuvenecer|arruga|piel facial|luminosidad|antiage/)) return "rejuvenecer";
@@ -49,14 +53,18 @@ function detectarIntencion(texto) {
 function responderEmpatico(usuario, texto) {
   const contexto = obtenerContexto(usuario);
   const t = texto.toLowerCase();
-  if (!contexto && (t.includes("hola") || t.includes("buenas") || t.includes("ola")))
+  if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+    return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+  }  if (!contexto && (t.includes("hola") || t.includes("buenas") || t.includes("ola")))
     return "✨ Hola 💛 soy Zara de Body Elite. Qué gusto saludarte, cuéntame qué te gustaría mejorar o conseguir para orientarte mejor.";
   return null;
 }
 
 function responderObjecion(texto) {
   const t = texto.toLowerCase();
-  if (t.match(/caro|precio alto|vale mucho/))
+  if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+    return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+  }  if (t.match(/caro|precio alto|vale mucho/))
     return "💬 Entiendo tu punto, nuestros valores reflejan tecnología avanzada y resultados reales sin cirugía. La evaluación es sin costo 😉";
   if (t.match(/duele|dolor|molesta/))
     return "🌿 Son tratamientos cómodos y no invasivos. Solo puedes sentir un leve calor o contracción suave según la tecnología.";
@@ -65,7 +73,9 @@ function responderObjecion(texto) {
 
 function responderCurioso(usuario, texto) {
   const t = texto.toLowerCase();
-
+  if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+    return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+  }
   // Contextualización de “cuánto vale”
   if (t.match(/cuánto|valor|precio|vale/)) {
     const ultimo = ultimoTema[usuario];
@@ -92,7 +102,9 @@ function responderCurioso(usuario, texto) {
 
 function responderTecnologia(usuario, texto) {
   const t = texto.toLowerCase();
-  if (t.match(/hifu/)) {
+  if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+    return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+  }  if (t.match(/hifu/)) {
     ultimoTema[usuario] = "hifu";
     return "💎 Sí, usamos **HIFU 12D**, ultrasonido focalizado que actúa sobre grasa y fascia SMAS para tensar y definir. Forma parte de **Lipo Body Elite**, **Lipo Reductiva** y **Face Elite**.";
   }
@@ -128,7 +140,9 @@ function responderTecnologia(usuario, texto) {
    ============================================================ */
 export function procesarMensaje(usuario, texto) {
   const t = texto.toLowerCase();
-
+  if (t.match(/depilacion|depilar|láser|laser|vello|pelos|axilas|piernas|bikini/)) {
+    return "✨ Ofrecemos **Depilación Láser Diodo**, rápida y sin dolor. También opciones para rostro, piernas, axilas y bikini.\n💰 Valores desde $45.000 según zona.\n📅 Agenda tu sesión 👉 " + datos.info.agendar;
+  }
   const emp = responderEmpatico(usuario, texto);
   if (emp) return emp;
 
