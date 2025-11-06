@@ -37,7 +37,7 @@ function recordarCategoria(usuario, texto) {
 function detectarIntencion(texto) {
   const t = texto.toLowerCase();
   if (t.match(/reducir|bajar|adelgazar|grasa|rollitos|celulitis/)) return "reductivo";
-  if (t.match(/tonificar|firme|fitness|definir|marcar|tensar/)) return "tonificar";
+  if (t.match(/tonificar|firme|fitness|definir|marcar|tensar|flacidez/)) return "tonificar";
   if (t.match(/levantar|gluteo|glúteo|trasero|cola|poto|nalgas|push/)) return "gluteos";
   if (t.match(/rejuvenecer|arruga|piel|luminosidad|antiage/)) return "rejuvenecer";
   return null;
