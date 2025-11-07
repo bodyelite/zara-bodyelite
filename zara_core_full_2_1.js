@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import { procesarMensaje } from "./motor_respuesta.js";
+import { procesarMensaje } from "./motor_respuesta_v3.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -44,7 +44,7 @@ app.post("/webhook", async (req, res) => {
         console.log("📩 Mensaje recibido:", texto);
 
         // Procesamiento con motor extendido
-        const respuesta = procesarMensaje(from, texto);
+        const respuesta = await procesarMensaje(from, texto);
         console.log("🤖 Respuesta generada:", respuesta);
 
         // Enviar respuesta por WhatsApp
