@@ -74,7 +74,7 @@ export async function procesarMensaje(usuario, texto) {
   }
 
   // === Depilación ===
-  if (texto.includes("depil") || texto.includes("pelos") || texto.includes("axila") || texto.includes("bikini") || texto.includes("pierna") || texto.includes("gluteo"))) {
+  if (texto.includes("depil") || texto.includes("pelos") || texto.includes("axila") || texto.includes("bikini") || texto.includes("pierna") || texto.includes("gluteo")) {
     memoria.guardarContexto(usuario, "depilacion");
     return "🌿 La Depilación Láser Diodo Triple Onda elimina el vello desde la raíz sin dolor. Planes desde $35.000 o $180.000 por 6 sesiones (bikini completo). ¿Quieres que te ayude a agendar tu diagnóstico gratuito?";
   }
