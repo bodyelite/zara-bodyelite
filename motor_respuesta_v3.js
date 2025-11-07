@@ -34,7 +34,7 @@ export async function procesarMensaje(usuario, mensaje) {
       memoria.guardarContexto(usuario,"faceelite");
       return "🌟 El *Face Elite* combina *HIFU 12D + Toxina + Pink Glow* para lifting completo.\nValor desde $358 400.\n✨ Si te parece, puedo ayudarte a agendar tu diagnóstico gratuito para confirmar tu plan ideal. ¿Quieres que te ayude a reservar?";
     }
-    if (texto.includes("cómo") || texto.includes("funciona") || texto.includes("duele") || texto.includes("sesion") || texto.includes("resulta"))) {
+    if (texto.includes("cómo") || texto.includes("funciona") || texto.includes("duele") || texto.includes("sesion") || texto.includes("resulta")) {
       return "✨ Durante el tratamiento facial aplicamos *HIFU 12D* para estimular colágeno profundo, seguido de *Radiofrecuencia* y *Pink Glow* para textura y brillo.\nNo duele, solo se percibe calor leve. Cada sesión dura 40 min y se recomiendan 4–6 según tu piel.\n✨ Si te parece, puedo ayudarte a agendar tu diagnóstico gratuito para confirmar tu plan. ¿Quieres que te ayude a coordinarlo?";
     }
   }
@@ -54,7 +54,7 @@ export async function procesarMensaje(usuario, mensaje) {
       memoria.guardarContexto(usuario,"tensor");
       return "💪 Para reafirmar y tonificar usamos *Body Tensor* o *Body Fitness* (*HIFU 12D + RF + EMS Sculptor*).\nIdeales postparto o tras pérdida de peso.\n✨ Si te parece, puedo ayudarte a agendar tu diagnóstico gratuito y definir el programa ideal. ¿Quieres que te ayude a coordinarlo?";
     }
-    if (texto.includes("cómo") || texto.includes("funciona") || texto.includes("duele") || texto.includes("sesion") || texto.includes("resulta"))) {
+    if (texto.includes("cómo") || texto.includes("funciona") || texto.includes("duele") || texto.includes("sesion") || texto.includes("resulta")) {
       return "✨ El tratamiento corporal combina *HIFU 12D* para romper grasa, *Cavitación* para drenaje y *RF* para tensar piel.\nNo duele, solo un calor leve; cada sesión 45–60 min y se recomiendan 6–8 según objetivo.\n✨ Si te parece, puedo ayudarte a agendar tu diagnóstico gratuito para confirmar sesiones. ¿Quieres que te ayude a coordinarlo?";
     }
   }
