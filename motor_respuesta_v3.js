@@ -10,7 +10,7 @@ const { conocimientos } = datos;
 export async function procesarMensaje(usuario, mensaje) {
   const texto = mensaje.toLowerCase().trim();
   const contexto = memoria.obtenerContexto(usuario);
-  if (!contexto && memoria.obtenerUltimoTema(usuario)) {n    memoria.guardarContexto(usuario, memoria.obtenerUltimoTema(usuario));n  }n  const afirmativos = ["sí","si","dale","quiero","me interesa","claro","por supuesto"];
+  if (!contexto && memoria.obtenerUltimoTema(usuario)) {n    memoria.guardarContexto(usuario, memoria.obtenerUltimoTema(usuario));n  }n  if (!contexto && memoria.obtenerUltimoTema(usuario)) {n    memoria.guardarContexto(usuario, memoria.obtenerUltimoTema(usuario));n  }n  const afirmativos = ["sí","si","dale","quiero","me interesa","claro","por supuesto"];
 
   // --- SALUDO ------------------------------------------------
   if (texto === "hola" || texto.startsWith("buen")) {
