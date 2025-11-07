@@ -74,7 +74,8 @@ Normalmente se indican entre 6 y 8 sesiones para resultados visibles y sostenido
   if (contexto === "facial") {
     if (texto.includes("lifting") || texto.includes("rejuvenecer") || texto.includes("antiage")) {
       return `🌸 Para lifting y rejuvenecimiento facial el indicado es *Face Elite* con *HIFU 12D + Toxina + Pink Glow*.  
-Reafirma y suaviza arrugas profundas. Valor desde $358.400.`;
+Reafirma y suaviza arrugas profundas. Valor desde $358.400.  
+💡 Si quieres, puedo explicarte por qué vale esa inversión.`;
     }
     if (texto.includes("luminosidad") || texto.includes("hidratar")) {
       return `💧 Perfecto. En ese caso el *Face Light* con *Pink Glow* y *LED Therapy* mejora textura, hidratación y brillo natural. Valor $128.800.`;
@@ -85,20 +86,32 @@ Cada sesión dura entre 30 y 45 minutos.`;
     }
   }
 
-  // --- CONTEXTO DEPILACIÓN ---
-  if (contexto === "depilacion") {
-    if (texto.includes("sesiones") || texto.includes("cuántas")) {
-      return `🕓 En promedio se requieren 6 a 8 sesiones por zona para eliminar el vello con efectividad clínica.  
-Contamos con descuentos por combinación de áreas.`;
-    }
+  // --- OBJECIONES: PRECIO ---
+  if (texto.includes("caro") || texto.includes("carísimo") || texto.includes("precio alto")) {
+    return `💬 Entiendo completamente, es normal comparar precios.  
+Nuestros valores reflejan el uso de *tecnología HIFU 12D original, Cavitación clínica y protocolos personalizados con seguimiento profesional*.  
+Además, la *evaluación es gratuita* y permite adaptar el plan a tu presupuesto.  
+¿Quieres que veamos opciones con menor cantidad de sesiones o zonas combinadas?`;
   }
 
-  // --- CONTEXTO TOXINA ---
-  if (contexto === "toxina") {
-    if (texto.includes("frente") || texto.includes("entrecejo") || texto.includes("patas")) {
-      return `💉 Perfecto. En esas zonas aplicamos microdosis precisas de *Toxina Botulínica*, logrando suavizar líneas sin alterar expresividad.  
-Los resultados se aprecian en 3 a 5 días.`;
-    }
+  // --- OBJECIONES: DISTANCIA / UBICACIÓN ---
+  if (texto.includes("lejos") || texto.includes("peñalolén") || texto.includes("queda lejos") || texto.includes("soy de")) {
+    return `🚗 Estamos en *Av. Las Perdices Nº2990, Local 23 – Peñalolén*, con fácil acceso desde Tobalaba y Vespucio Sur.  
+Muchos pacientes vienen desde otras comunas porque logramos resultados reales con tecnología avanzada.  
+Podemos coordinar tu cita en horario extendido o sábado si lo prefieres.`;
+  }
+
+  // --- OBJECIONES: TIEMPO / DISPONIBILIDAD ---
+  if (texto.includes("no tengo tiempo") || texto.includes("ocupada") || texto.includes("agenda llena") || texto.includes("después")) {
+    return `⌚ Lo entiendo totalmente, muchas pacientes parten con poco tiempo.  
+Los tratamientos son rápidos y sin reposo, duran entre 30 y 45 minutos y puedes retomarlo todo al instante.  
+Además, el diagnóstico no toma más de 15 minutos.`;
+  }
+
+  // --- OBJECIONES: LO PENSARÉ / MÁS ADELANTE ---
+  if (texto.includes("lo pensaré") || texto.includes("te aviso") || texto.includes("más adelante")) {
+    return `💛 Por supuesto, tómate tu tiempo.  
+Solo recuerda que puedes agendar tu evaluación gratuita sin compromiso para conocer opciones personalizadas y precios preferenciales de temporada.`;
   }
 
   // --- UBICACIÓN / HORARIOS ---
@@ -115,10 +128,10 @@ Recuerda que la *evaluación es gratuita* y sin compromiso, para que una profesi
 Aquí puedes reservar tu hora 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
   }
 
-  // --- PREGUNTAS GENERALES DE SESIONES / INCLUYE ---
+  // --- PREGUNTAS GENERALES ---
   if (texto.includes("incluye") || texto.includes("qué trae") || texto.includes("qué hacen")) {
     return `🩵 Cada plan incluye una combinación personalizada de tecnologías (HIFU 12D, Cavitación, RF o EMS Sculptor) según diagnóstico inicial.  
-El equipo clínico ajusta la intensidad y sesiones según tu biotipo y objetivo estético.`;
+El equipo clínico ajusta intensidad y cantidad de sesiones según tu biotipo y objetivo estético.`;
   }
 
   if (texto.includes("duele") || texto.includes("dolor")) return conocimientos.dolor;
