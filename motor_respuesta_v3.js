@@ -12,61 +12,50 @@ export async function procesarMensaje(usuario, mensaje) {
     return `🧠 *MODO INTERNO – ANÁLISIS CLÍNICO Y COMERCIAL*\n${consulta}\n\n— Fin del modo interno —`;
   }
 
-  // --- DETECCIÓN TEMÁTICA ---
-  if (texto.includes("cara") || texto.includes("facial") || texto.includes("rostro")) {
-    memoria.guardarContexto(usuario, "facial");
-    return `${conocimientos.faciales}\n\n✨ Si deseas, puedo contarte qué plan facial se ajusta mejor a ti según tu objetivo (luminosidad, antiage o lifting).`;
+  // --- MODO EMPÁTICO GENERAL ---
+  const respuestasEmpaticas = [
+    { palabras: ["grasa", "abdomen", "muslos", "piernas", "brazos", "poto", "glúteos"], 
+      respuesta: `💛 Entiendo, muchas personas también notan esa acumulación en esas zonas y suele deberse a grasa localizada que cuesta eliminar solo con ejercicio.  
+✨ En esos casos trabajamos con tecnologías como *HIFU 12D, Cavitación y Radiofrecuencia*, que reducen volumen y tensan la piel sin dolor.  
+Si me comentas tu objetivo (reducir, tonificar o definir), puedo orientarte con el plan corporal más indicado.` },
+    { palabras: ["cara", "rostro", "papada", "facial"], 
+      respuesta: `💆‍♀️ La zona del rostro responde muy bien a tratamientos como *HIFU 12D, Radiofrecuencia y Pink Glow*, que estimulan colágeno y mejoran la firmeza sin cirugía.  
+Puedo ayudarte a identificar si te conviene un *Face Smart* o un *Face Elite* según tu objetivo (luminosidad, lifting o antiage).` },
+    { palabras: ["botox", "toxina", "relleno"], 
+      respuesta: `💉 *Toxina Botulínica Facial* relaja los músculos responsables de las arrugas de expresión, logrando un aspecto natural y fresco.  
+Se aplica en frente, entrecejo o patas de gallo, y los resultados se aprecian desde los primeros días.  
+¿Quieres que te cuente cómo personalizamos el tratamiento según tus zonas de interés?` },
+    { palabras: ["depil", "pelos", "axila", "pierna completa"], 
+      respuesta: `💫 Nuestra *Depilación Láser Diodo con triple onda Alexandrita* elimina el vello desde la raíz sin dolor, incluso en pieles sensibles.  
+Si me indicas las zonas que deseas tratar, puedo orientarte sobre la cantidad de sesiones y descuentos combinados.` }
+  ];
+
+  for (const tema of respuestasEmpaticas) {
+    if (tema.palabras.some(p => texto.includes(p))) {
+      memoria.guardarContexto(usuario, tema.palabras[0]);
+      return `${tema.respuesta}\n\n📅 Agenda tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
+    }
   }
 
-  if (texto.includes("grasa") || texto.includes("abdomen") || texto.includes("piernas") || texto.includes("muslos") || texto.includes("glúteos") || texto.includes("flacidez") || texto.includes("celulitis")) {
-    memoria.guardarContexto(usuario, "corporal");
-    return `${conocimientos.corporales}\n\n💡 Si me comentas tu objetivo (reducir, tonificar o definir), puedo orientarte con precisión clínica.`;
-  }
-
-  if (texto.includes("depil") || texto.includes("axila") || texto.includes("pierna completa") || texto.includes("pelos")) {
-    memoria.guardarContexto(usuario, "depilacion");
-    return `${conocimientos.depilacion}\n\n💬 ¿Quieres saber cuántas sesiones se recomiendan o las zonas combinables?`;
-  }
-
-  if (texto.includes("botox") || texto.includes("toxina") || texto.includes("relleno")) {
-    memoria.guardarContexto(usuario, "toxina");
-    return `💉 *Toxina botulínica facial* relaja los músculos responsables de las arrugas de expresión y deja un aspecto natural y fresco.  
-Se aplica en frente, patas de gallo y entrecejo.  
-💰 Valor según zona desde $95.000.\nAgenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
-  }
-
+  // --- DOLOR Y PRECIOS ---
   if (texto.includes("duele") || texto.includes("dolor")) return conocimientos.dolor;
   if (texto.includes("precio") || texto.includes("vale") || texto.includes("cuánto")) return conocimientos.precios;
   if (texto.includes("dónde están") || texto.includes("ubicación") || texto.includes("dirección")) return conocimientos.direccion;
 
+  // --- SALUDO ---
   if (texto === "hola" || texto.startsWith("buen")) {
     memoria.guardarContexto(usuario, "inicio");
-    return conocimientos.saludo;
+    return `✨ Soy *Zara de Body Elite*. Qué gusto saludarte.  
+Cuéntame qué zona o tratamiento te gustaría mejorar, y te orientaré con total honestidad clínica.`;
   }
 
   // --- CONTEXTO PREVIO ---
-  if (contextoPrevio === "facial" && texto.includes("arrugas")) {
-    return `✨ Para arrugas y pérdida de firmeza facial te recomiendo *Face Elite* o *Face Antiage*.  
-Ambos usan HIFU 12D y Toxina para lifting no invasivo.  
-💰 Desde $281.600. Agenda tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
-  }
-
-  if (contextoPrevio === "corporal" && texto.includes("definir")) {
-    return `💪 Si tu objetivo es tonificar o marcar, el plan indicado es *Body Fitness* con *EMS Sculptor* + *Radiofrecuencia*.  
-Genera 20.000 contracciones en 30 min.  
-Valor desde $360.000.`;
-  }
-
-  if (contextoPrevio === "corporal" && texto.includes("reafirmar")) {
-    return `✨ Para reafirmar piel en zonas difíciles te recomiendo *Body Tensor* (HIFU + RF tensora).  
-Ideal postparto o pérdida de peso. Valor $232.000.`;
-  }
-
-  if (contextoPrevio === "depilacion" && texto.includes("sesiones")) {
-    return `🕓 En promedio se requieren 6–8 sesiones por zona para eliminar el vello con efectividad clínica.  
-Contamos con paquetes con descuento por combinación de áreas.`;
+  if (contextoPrevio && texto.includes("quiero") && texto.includes("reafirmar")) {
+    return `✨ Perfecto. Para reafirmar piel en zonas difíciles trabajamos con *Body Tensor* (HIFU + RF tensora).  
+Ideal postparto o pérdida de peso. Valor desde $232.000.`;
   }
 
   // --- FALLBACK EMPÁTICO ---
-  return conocimientos.fallback;
+  return `💛 Disculpa, no logré entender tu pregunta, pero estoy segura de que nuestras profesionales podrán resolver todas tus dudas durante la evaluación gratuita.  
+Agenda tu cita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
 }
