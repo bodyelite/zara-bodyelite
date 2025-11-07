@@ -1,38 +1,46 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { procesarMensaje } from "./motor_respuesta.js";
+import { sendMessage } from "./sendMessage.js";
 
 const app = express();
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => {
-  res.status(200).send("Zara 2.1 corriendo en puerto 3000");
+/* Verificación del webhook (GET) */
+app.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+  if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
+  }
+  return res.sendStatus(403);
 });
 
+/* Recepción de mensajes (POST) */
 app.post("/webhook", async (req, res) => {
   try {
-    const body = req.body;
-    if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const value = changes?.value;
-      const mensaje = value?.messages?.[0];
-      const texto = mensaje?.text?.body;
-      const usuario = mensaje?.from;
+    const entry = req.body?.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const value = changes?.value;
+    const msg = value?.messages?.[0];
 
-      if (texto && usuario) {
-        const respuesta = procesarMensaje(usuario, texto);
-        console.log("Mensaje recibido:", texto);
-        console.log("Respuesta generada:", respuesta);
-      }
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
+    const texto = msg?.text?.body || null;
+    const usuario = msg?.from || null;
+
+    if (texto && usuario) {
+      console.log("Mensaje recibido:", texto);
+      const respuesta = procesarMensaje(usuario, texto);
+      console.log("Respuesta generada:", respuesta);
+      await sendMessage(usuario, respuesta);
     }
-  } catch (error) {
-    console.error("Error en webhook:", error);
-    res.sendStatus(500);
+    return res.sendStatus(200);
+  } catch (e) {
+    console.error("Error en webhook:", e);
+    return res.sendStatus(500);
   }
 });
 
-app.listen(3000, () => console.log("✅ Zara 2.1 corriendo en puerto 3000"));
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Zara 2.1 corriendo en puerto", process.env.PORT || 3000);
+});
