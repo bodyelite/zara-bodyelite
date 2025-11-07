@@ -1,14 +1,31 @@
-// ===== MEMORIA DE CONTEXTO ZARA 2.1 =====
+// ============================================================
+// Módulo de memoria persistente - v2 con contexto temático
+// ============================================================
 
-let contextoGlobal = {};
+const memoriaUsuarios = new Map();
 
-export function guardarContexto(usuario, categoria) {
-  if (!usuario) return;
-  contextoGlobal[usuario] = categoria;
-}
+export default {
+  guardarContexto(usuario, contexto) {
+    if (!memoriaUsuarios.has(usuario)) {
+      memoriaUsuarios.set(usuario, {});
+    }
+    memoriaUsuarios.get(usuario).contexto = contexto;
+    memoriaUsuarios.get(usuario).ultimoTema = contexto; // guarda último tema activo
+  },
 
-export function obtenerContexto(usuario) {
-  return contextoGlobal[usuario] || null;
-}
+  obtenerContexto(usuario) {
+    const datos = memoriaUsuarios.get(usuario);
+    return datos ? datos.contexto : null;
+  },
 
-export default { guardarContexto, obtenerContexto };
+  obtenerUltimoTema(usuario) {
+    const datos = memoriaUsuarios.get(usuario);
+    return datos ? datos.ultimoTema : null;
+  },
+
+  limpiarContexto(usuario) {
+    if (memoriaUsuarios.has(usuario)) {
+      delete memoriaUsuarios.get(usuario).contexto;
+    }
+  }
+};
