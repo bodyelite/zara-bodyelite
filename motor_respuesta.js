@@ -1,34 +1,18 @@
 /* =========================================================
-   MOTOR DE RESPUESTA ZARA 2.1
-   Estructura centralizada: mantiene comportamiento actual,
-   agrega memoria temporal y prepara conexión con Campañas.xlsx
+   MOTOR DE RESPUESTA ZARA 2.1 (actualizado)
+   Incluye:
+   - Nuevos grupos clínicos: Depilación Láser Diodo y Limpieza Facial Full
+   - Modo interno mejorado
+   - Mantiene estructura, memoria y respuestas previas
    ========================================================= */
 
 import fs from "fs";
-// import * as XLSX from "xlsx"; // ← Activar más adelante para leer campañas.xlsx
+// import * as XLSX from "xlsx"; // ← Activar en el futuro para leer Campañas.xlsx
+
+let contextoUltimo = null; // memoria temporal de último tratamiento
 
 /* =========================================================
-   1. CONFIGURACIÓN Y MEMORIA TEMPORAL
-   ========================================================= */
-let contextoUltimo = null; // memoriza último tratamiento mencionado (temporal)
-
-/* =========================================================
-   2. PLANTILLA DE CAMPAÑAS (opcional futuro)
-   ========================================================= */
-// let campañas = [];
-// try {
-//   if (fs.existsSync("./Campañas.xlsx")) {
-//     const workbook = XLSX.readFile("./Campañas.xlsx");
-//     const hoja = workbook.Sheets[workbook.SheetNames[0]];
-//     campañas = XLSX.utils.sheet_to_json(hoja);
-//     console.log("Campañas cargadas:", campañas.length);
-//   }
-// } catch (err) {
-//   console.error("No se pudo leer Campañas.xlsx:", err);
-// }
-
-/* =========================================================
-   3. TABLAS BASE: SINÓNIMOS Y PRECIOS
+   1. TABLAS BASE
    ========================================================= */
 const precios = {
   "pink glow": "$198.400 (parte de Face Smart, Face Inicia y Face Elite)",
@@ -39,41 +23,37 @@ const precios = {
   "face": "$120.000 a $584.000 según plan",
   "push up": "$376.000 (con Prosculpt + RF)",
   "body fitness": "$360.000 (EMS Sculptor + tonificación)",
-  "body tensor": "$232.000 (Reafirmación y tensado corporal)"
+  "body tensor": "$232.000 (Reafirmación corporal)",
+  "depilacion": "$35.000 por zona o sesión",
+  "limpieza facial": "$120.000 (6 sesiones)"
 };
 
 const sinonimos = {
   "pink glow": ["pink", "glow", "biostimulante"],
   "toxina": ["botox", "toxina", "arruga"],
-  "exosoma": ["exosoma", "regeneración", "fibroblasto"],
+  "exosoma": ["exosoma", "regeneracion", "fibroblasto"],
   "rf": ["radiofrecuencia", "rf"],
   "lipo": ["lipo", "grasa", "abdomen", "cintura"],
   "face": ["facial", "cara", "rostro", "face"],
-  "push up": ["push up", "glúteo", "gluteo", "trasero", "poto"],
+  "push up": ["push up", "gluteo", "glúteo", "trasero", "poto"],
   "body fitness": ["fitness", "tonificar", "sculptor", "ems"],
-  "body tensor": ["tensor", "reafirmar", "flacidez"]
+  "body tensor": ["tensor", "reafirmar", "flacidez"],
+  "depilacion": ["depilacion", "depilación", "pelos", "vello", "vellos", "afeitar", "láser", "laser"],
+  "limpieza facial": ["limpieza", "facial", "piel", "puntos", "acné", "espinillas", "manchas", "poros"]
 };
 
 /* =========================================================
-   4. FUNCIÓN PRINCIPAL
+   2. FUNCIÓN PRINCIPAL
    ========================================================= */
 export function procesarMensaje(usuario, texto) {
   if (!texto) return "✨ Soy Zara de Body Elite. Cuéntame qué zona o tratamiento te gustaría mejorar.";
 
   const lower = texto.toLowerCase().trim();
 
-  /* ---- MODO INTERNO (mensaje comienza con 'zara') ---- */
+  /* ---- MODO INTERNO ---- */
   if (lower.startsWith("zara")) {
-    return generarRespuestaInterna(lower);
+    return generarRespuestaInterna(lower.replace(/^zara\s*/i, ""));
   }
-
-  /* ---- DETECCIÓN DE CAMPAÑA (bloque preparado) ---- */
-  // if (campañas.length > 0) {
-  //   const match = campañas.find(c => lower.includes(c.palabra_clave.toLowerCase()));
-  //   if (match) {
-  //     return `${match.saludo}\n\n${match.descripcion}\n💰 ${match.precio} · ${match.sesiones} sesiones\n${match.cta}`;
-  //   }
-  // }
 
   /* ---- DETECCIÓN DE TRATAMIENTO ---- */
   for (const [clave, lista] of Object.entries(sinonimos)) {
@@ -96,12 +76,15 @@ export function procesarMensaje(usuario, texto) {
     return "📍 Estamos en *Av. Las Perdices Nº2990, Local 23, Peñalolén*, cerca de Av. Tobalaba.\n🕒 Horarios: Lun–Vie 9:30–20:00 · Sáb 9:30–13:00\nAgenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9";
   }
 
-  /* ---- PREGUNTAS SOBRE DOLOR O SEGURIDAD ---- */
+  /* ---- PREGUNTAS SOBRE DOLOR ---- */
   if (lower.includes("duele") || lower.includes("dolor") || lower.includes("seguro")) {
+    if (contextoUltimo === "depilacion") {
+      return "❄️ Es prácticamente indolora gracias al sistema de enfriamiento Sapphire y calibración clínica.";
+    }
     return "💆‍♀️ Son tratamientos cómodos y no invasivos. Solo puedes sentir un leve calor o una contracción suave según la tecnología aplicada.";
   }
 
-  /* ---- SALUDO GENERAL ---- */
+  /* ---- SALUDO ---- */
   if (["hola", "buenas", "saludos", "hey"].some(p => lower.startsWith(p))) {
     return "✨ Soy Zara de Body Elite. Qué gusto saludarte, cuéntame qué zona o tratamiento te gustaría mejorar o conseguir para orientarte mejor.";
   }
@@ -111,7 +94,7 @@ export function procesarMensaje(usuario, texto) {
 }
 
 /* =========================================================
-   5. RESPUESTAS CLÍNICAS Y COMERCIALES
+   3. RESPUESTAS CLÍNICAS Y COMERCIALES
    ========================================================= */
 function generarRespuesta(clave) {
   switch (clave) {
@@ -131,15 +114,18 @@ function generarRespuesta(clave) {
       return "💪 *Body Fitness* combina *EMS Sculptor* con radiofrecuencia para tonificar y mejorar el volumen muscular. Ideal para abdomen, brazos y glúteos.\n👉 Agenda tu sesión gratuita aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9";
     case "body tensor":
       return "✨ *Body Tensor* es un tratamiento reafirmante que mejora flacidez con radiofrecuencia y bioestimulación. Perfecto para abdomen, brazos o muslos.\n👉 Agenda tu sesión gratuita aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9";
+    case "depilacion":
+      return "💫 *Depilación Láser Diodo* clínica con tecnología Alexandrita triple onda. Elimina el vello desde la raíz sin dolor y es apta para todo tipo de piel.\n👉 Valores desde *$35.000 por zona/sesión*, con planes combinados según área (rostro, piernas, axilas o bikini).\nAgenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9";
+    case "limpieza facial":
+      return "💆‍♀️ *Limpieza Facial Full*: protocolo completo con vapor ozono, extracción profunda, alta frecuencia y máscara regeneradora. Mejora textura, controla grasa y previene acné.\nValor *$120.000 (6 sesiones)*. Incluye diagnóstico facial con IA.\n👉 Agenda aquí: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9";
     default:
       return "✨ Soy Zara de Body Elite. Cuéntame qué zona o tratamiento te gustaría mejorar para orientarte mejor.";
   }
 }
 
 /* =========================================================
-   6. RESPUESTA MODO INTERNO
+   4. RESPUESTA MODO INTERNO
    ========================================================= */
-function generarRespuestaInterna(texto) {
-  const contenido = texto.replace(/^zara\s*/i, "");
-  return `🧠 *MODO INTERNO - ANÁLISIS CLÍNICO Y COMERCIAL*\n\n${contenido}\n\n— Fin del modo interno —`;
+function generarRespuestaInterna(contenido) {
+  return `🧠 *MODO INTERNO – ANÁLISIS CLÍNICO Y COMERCIAL*\n\n${contenido.trim()}\n\n— Fin del modo interno —`;
 }
