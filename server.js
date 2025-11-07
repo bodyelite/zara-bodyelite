@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { procesarMensaje } from "./motor_respuesta.js";
+import { procesarMensaje } from "./motor_respuesta_v3.js";
 import { sendMessage } from "./sendMessage.js";
 
 const app = express();
@@ -42,5 +42,5 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log("Zara 2.1 corriendo en puerto", process.env.PORT || 3000);
+  console.log("Zara 3.0 corriendo en puerto", process.env.PORT || 3000);
 });
