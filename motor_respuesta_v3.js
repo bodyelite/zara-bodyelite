@@ -1,139 +1,76 @@
 import datos from "./base_conocimiento.js";
 const planes = datos.planes;
-const planes = datos.planes;
-import { guardarContexto, obtenerContexto } from "./memoria.js";
 
-/* =========================================================
-   MOTOR EMPÁTICO ZARA 3.1
-   Amplía subintención "consiste" y refuerza tono empático
-   ========================================================= */
-export function procesarMensaje(usuario, texto) {
-  if (!texto) return "✨ Soy Zara de Body Elite. Cuéntame qué zona o tratamiento te gustaría mejorar.";
-
-  const lower = texto.toLowerCase().trim();
+export async function generarRespuesta(mensaje) {
+  const texto = mensaje.toLowerCase().trim();
 
   // --- MODO INTERNO ---
-  if (lower.startsWith("zara")) {
-    const contenido = lower.replace(/^zara\s*/i, "");
-    return generarModoInterno(contenido);
+  if (texto.startsWith("zara")) {
+    const consulta = texto.replace("zara", "").trim();
+    return `🧠 *MODO INTERNO – ANÁLISIS CLÍNICO Y COMERCIAL*\n${consulta}\n\n— Fin del modo interno —`;
   }
 
-  // --- DETECCIÓN DE INTENCIÓN ---
-  const categoria = detectarCategoria(lower);
-  const subintencion = detectarSubintencion(lower);
-
-  // --- MEMORIA CONTEXTUAL ---
-  let contexto = obtenerContexto(usuario);
-  if (categoria) {
-    guardarContexto(usuario, categoria);
-    contexto = categoria;
+  // --- REGLAS FACIALES ---
+  if (texto.includes("cara") || texto.includes("rostro") || texto.includes("facial")) {
+    return `✨ Trabajamos tratamientos faciales como *Face Light, Face Smart, Face Elite* y *Full Face*.  
+Estos planes usan tecnología *HIFU 12D, Radiofrecuencia, Pink Glow* y *LED Therapy*, que estimulan colágeno y mejoran la firmeza.  
+💰 Valores desde $128.800 según el plan.  
+Agenda tu diagnóstico gratuito aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
   }
 
-  // --- RESPUESTAS EMPÁTICAS ---
-  if (categoria) return generarEmpatia(contexto);
-  if (subintencion && contexto) return generarDetalle(contexto, subintencion);
+  // --- REGLAS CORPORALES ---
+  if (
+    texto.includes("grasa") ||
+    texto.includes("abdomen") ||
+    texto.includes("piernas") ||
+    texto.includes("muslos") ||
+    texto.includes("poto") ||
+    texto.includes("glúteos") ||
+    texto.includes("celulitis") ||
+    texto.includes("flacidez")
+  ) {
+    return `🔥 Nuestros planes *Lipo* van desde *Lipo Focalizada Reductiva ($348.800)* hasta *Lipo Body Elite ($664.000)*.  
+Incluyen tecnologías *HIFU 12D, Cavitación y Radiofrecuencia*, que reducen grasa localizada y tensan la piel sin dolor ni reposo.  
+Agenda tu valoración gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
+  }
 
-  // --- UBICACIÓN / HORARIO ---
-  if (lower.includes("donde") || lower.includes("direccion") || lower.includes("ubicacion") || lower.includes("horario"))
-    return "📍 Estamos en *Av. Las Perdices Nº2990, Local 23, Peñalolén*.\n🕒 Lun–Vie 9:30–20:00 · Sáb 9:30–13:00.\nAgenda aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9";
+  // --- DEPILACIÓN ---
+  if (texto.includes("depil") || texto.includes("pelos") || texto.includes("axila")) {
+    return `💫 *Depilación Láser Diodo* con tecnología *Alexandrita Triple Onda*.  
+Elimina el vello desde la raíz sin dolor y es apta para todo tipo de piel.  
+💰 Desde $35.000 por zona/sesión, con descuentos en planes combinados.  
+Agenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
+  }
 
-  // --- SALUDO ---
-  if (["hola", "buenas", "saludos", "hey"].some(p => lower.startsWith(p)))
-    return "✨ ¡Hola! Soy Zara de Body Elite. Qué gusto saludarte. Cuéntame qué zona o tratamiento te gustaría mejorar para orientarte mejor.";
+  // --- DUELE / SENSACIÓN ---
+  if (texto.includes("duele") || texto.includes("dolor")) {
+    return `🩵 Todos nuestros tratamientos son *no invasivos y sin dolor*.  
+Solo puedes sentir una leve sensación térmica o contracción según la tecnología aplicada.  
+Agenda tu evaluación gratuita para conocer cuál se adapta mejor a ti 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
+  }
+
+  // --- PRECIO ---
+  if (texto.includes("cuánto") || texto.includes("vale") || texto.includes("precio")) {
+    return `💰 Los planes faciales comienzan desde *$120.000* y los corporales desde *$348.800*,  
+incluyen diagnóstico gratuito con IA y orientación clínica personalizada.  
+Agenda tu evaluación aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
+  }
+
+  // --- DIRECCIÓN ---
+  if (texto.includes("dónde están") || texto.includes("dirección") || texto.includes("ubicación")) {
+    return `📍 *Av. Las Perdices Nº2990, Local 23 – Peñalolén* (cerca de Av. Tobalaba).  
+🕓 Horario: Lun–Vie 9:30 a 20:00 / Sáb 9:30 a 13:00  
+Agenda tu cita gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
+  }
+
+  // --- SALUDO INICIAL ---
+  if (texto === "hola" || texto.startsWith("buen")) {
+    return `✨ Soy *Zara de Body Elite*. Qué gusto saludarte.  
+Cuéntame qué zona o tratamiento te gustaría mejorar para orientarte mejor.`;
+  }
 
   // --- FALLBACK EMPÁTICO ---
-  return "💛 Puedo orientarte según lo que quieras mejorar: grasa, piel, acné, vello o flacidez. Cuéntame un poco más y te ayudo a definir el mejor tratamiento.";
-}
-
-/* =========================================================
-   DETECTORES
-   ========================================================= */
-function detectarCategoria(t) {
-  if (/grasa|abdomen|cintura|rollito|muslo/.test(t)) return "lipo";
-  if (/gluteo|glúteo|poto|trasero|push/.test(t)) return "pushup";
-  if (/flacidez|reafirmar|tensor/.test(t)) return "bodytensor";
-  if (/facial|face|rostro/.test(t)) return "face";
-  if (/acne|manchas|espinillas/.test(t)) return "acne";
-  if (/limpieza/.test(t)) return "limpieza";
-  if (/vello|pelos|depil/.test(t)) return "depilacion";
-  return null;
-}
-
-function detectarSubintencion(t) {
-  if (/precio|vale|valor|cuánto/.test(t)) return "precio";
-  if (/sesion|sesiones|cada cuanto/.test(t)) return "sesiones";
-  if (/dura|minuto|tiempo/.test(t)) return "duracion";
-  if (/tecnolog|maquina/.test(t)) return "tecnologia";
-  if (/resultado/.test(t)) return "resultados";
-  if (/duele|dolor|seguro/.test(t)) return "dolor";
-  if (/consiste|funciona|trata|actua|mecanismo/.test(t)) return "consiste";
-  return null;
-}
-
-/* =========================================================
-   RESPUESTAS EMPÁTICAS Y DETALLE
-   ========================================================= */
-function generarEmpatia(categoria) {
-  const p = planes[categoria];
-  if (!p) return "✨ Cuéntame qué zona o tratamiento te gustaría mejorar.";
-
-  return `Entiendo perfectamente, ${p.descripcion}\nAgenda tu evaluación gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
-}
-
-function generarDetalle(categoria, tipo) {
-  const p = planes[categoria];
-  if (!p) return "Puedo orientarte si me indicas qué zona o plan te interesa.";
-
-  const d = p.detalle;
-  switch (tipo) {
-    case "precio":
-      return `💰 El valor de ${p.nombre} es ${p.precio}.`;
-    case "sesiones":
-      return `📅 ${d.sesiones}`;
-    case "duracion":
-      return `⏱️ Cada sesión dura aproximadamente ${d.duracion}.`;
-    case "tecnologia":
-      return `🔬 Utilizamos tecnologías como ${p.tecnologias.join(", ")}. ${d.tecnologia}`;
-    case "resultados":
-      return `✨ ${d.resultados}`;
-    case "dolor":
-      return "💆‍♀️ Son tratamientos cómodos y no invasivos. Solo podrías sentir calor o contracciones suaves. Lo ideal es que vengas a conocernos y resolver todas tus dudas.";
-    case "consiste":
-      return generarConsiste(categoria);
-    default:
-      return "Puedo darte más detalles si me indicas qué te gustaría saber: sesiones, duración, tecnología o resultados.";
-  }
-}
-
-/* =========================================================
-   BLOQUES DETALLADOS "EN QUÉ CONSISTE"
-   ========================================================= */
-function generarConsiste(categoria) {
-  switch (categoria) {
-    case "lipo":
-      return "💫 Nuestros protocolos Lipo combinan *HIFU 12D*, *Cavitación*, *Radiofrecuencia* y *EMS Sculptor*. Actúan sobre la grasa subcutánea, destruyen los adipocitos y tonifican el músculo sin dolor. Es ideal para abdomen, cintura o muslos. Los resultados se aprecian desde la tercera semana.";
-    case "pushup":
-      return "🍑 El tratamiento *Push Up Glúteos* combina *EMS Sculptor* y *Radiofrecuencia profunda*. El primero genera 20.000 contracciones musculares en 30 minutos, mientras la RF reafirma la piel y mejora la textura. Logra levantamiento y firmeza visibles sin cirugía.";
-    case "face":
-      return "💆‍♀️ Los planes *Face* utilizan *Pink Glow*, *Radiofrecuencia 12D* y *Toxina Botulínica clínica*. Estas tecnologías estimulan colágeno, mejoran luminosidad y suavizan arrugas dinámicas. Se adaptan según cada rostro y objetivo, buscando resultados naturales y progresivos.";
-    case "depilacion":
-      return "🌿 La *Depilación Láser Diodo Alexandrita* elimina el vello desde la raíz usando triple longitud de onda. El sistema de enfriamiento *Sapphire* evita molestias y protege la piel. Es segura, apta para todo tipo de piel y deja la zona suave desde la primera sesión.";
-    case "limpieza":
-      return "✨ La *Limpieza Facial Full* incluye vapor ozono, extracción profunda, alta frecuencia y máscara LED regeneradora. Limpia poros, controla grasa y revitaliza la piel sin irritar. Se recomienda cada 15 días en su primer ciclo.";
-    default:
-      return "Puedo contarte exactamente cómo funciona ese procedimiento en tu caso si me dices la zona que te interesa tratar.";
-  }
-}
-
-/* =========================================================
-   MODO INTERNO
-   ========================================================= */
-function generarModoInterno(contenido) {
-  const categoria = detectarCategoria(contenido);
-  const p = categoria ? planes[categoria] : null;
-  if (!p)
-    return `🧠 MODO INTERNO – ANÁLISIS CLÍNICO Y COMERCIAL\n\nNo se detectó plan asociado a: ${contenido}\n\n— Fin del modo interno —`;
-
-  const d = p.detalle;
-  return `🧠 MODO INTERNO – ANÁLISIS CLÍNICO Y COMERCIAL\n\n• Plan: ${p.nombre}\n• Precio: ${p.precio}\n• Tecnologías: ${p.tecnologias.join(", ")}\n• Sesiones: ${d.sesiones}\n• Duración: ${d.duracion}\n• Resultados: ${d.resultados}\n\n— Fin del modo interno —`;
+  return `💛 Disculpa, no logré entender tu pregunta,  
+pero estoy segura de que nuestras profesionales podrán resolver todas tus dudas durante la evaluación gratuita.  
+Agenda tu cita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`;
 }
