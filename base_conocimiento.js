@@ -1,19 +1,27 @@
 // ======================================================
-// BASE DE CONOCIMIENTO - BODY ELITE
-// Compatible con Node.js v22 en Render
+// BASE DE CONOCIMIENTO - BODY ELITE (versión local sin JSON externo)
 // ======================================================
 
-import fs from "fs";
-
-// Cargar archivo JSON con los planes
-const rawData = fs.readFileSync(new URL("./planesData.json", import.meta.url));
-const planesData = JSON.parse(rawData);
-
-// Exportar objeto principal
-export const planes = planesData;
+export const planes = [
+  { nombre: "Lipo Focalizada Reductiva", precio: 348800 },
+  { nombre: "Lipo Express", precio: 432000 },
+  { nombre: "Lipo Reductiva", precio: 480000 },
+  { nombre: "Lipo Body Elite", precio: 664000 },
+  { nombre: "Body Tensor", precio: 232000 },
+  { nombre: "Body Fitness", precio: 360000 },
+  { nombre: "Push Up", precio: 376000 },
+  { nombre: "Limpieza Facial Full", precio: 120000 },
+  { nombre: "RF Facial", precio: 60000 },
+  { nombre: "Face Light", precio: 128800 },
+  { nombre: "Face Smart", precio: 198400 },
+  { nombre: "Face Inicia", precio: 270400 },
+  { nombre: "Face Antiage", precio: 281600 },
+  { nombre: "Face Elite", precio: 358400 },
+  { nombre: "Full Face", precio: 584000 }
+];
 
 // ======================================================
-// ESTRUCTURA GENERAL DE RESPUESTAS CLÍNICAS Y COMERCIALES
+// RESPUESTAS CLÍNICAS Y COMERCIALES
 // ======================================================
 
 export const conocimientos = {
@@ -49,5 +57,7 @@ Agenda tu evaluación aquí 👉 https://agendamiento.reservo.cl/makereserva/age
 Agenda tu cita gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0NrxU8d7W64x5t2S6L4h9`
 };
 
-// Exportación final para motor_respuesta_v3.js
+// ======================================================
+// EXPORTACIÓN FINAL
+// ======================================================
 export default { planes, conocimientos };
