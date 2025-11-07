@@ -1,7 +1,7 @@
 import datos from "./base_conocimiento.js";
 const planes = datos.planes;
 
-export async function generarRespuesta(mensaje) {
+export async function procesarMensaje(usuario, mensaje) {
   const texto = mensaje.toLowerCase().trim();
 
   // --- MODO INTERNO ---

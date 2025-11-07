@@ -6,7 +6,6 @@ import { sendMessage } from "./sendMessage.js";
 const app = express();
 app.use(bodyParser.json());
 
-/* Verificación del webhook (GET) */
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -17,7 +16,6 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
-/* Recepción de mensajes (POST) */
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body?.entry?.[0];
@@ -30,7 +28,7 @@ app.post("/webhook", async (req, res) => {
 
     if (texto && usuario) {
       console.log("Mensaje recibido:", texto);
-      const respuesta = procesarMensaje(usuario, texto);
+      const respuesta = await procesarMensaje(usuario, texto);
       console.log("Respuesta generada:", respuesta);
       await sendMessage(usuario, respuesta);
     }
