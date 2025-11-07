@@ -1,5 +1,6 @@
 import datos from "./base_conocimiento.js";
 const planes = datos.planes;
+const planes = datos.planes;
 import { guardarContexto, obtenerContexto } from "./memoria.js";
 
 /* =========================================================
