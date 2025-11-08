@@ -9,7 +9,17 @@ export async function procesarMensaje(usuario, texto) {
   }
 
   const afirmativos = ["si", "sí", "claro", "perfecto", "dale", "quiero", "me interesa", "obvio", "por supuesto"];
-  const agendar = () => "✨ Recuerda que la evaluación es gratuita y sin compromiso. ¿Te ayudo a coordinar tu hora? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  const agendar = () =>
+    "✨ Recuerda que la evaluación es gratuita y sin compromiso. ¿Te ayudo a coordinar tu hora? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
+  // --- detección cruzada: si el usuario cambia de tema, actualiza contexto ---
+  if (texto.match(/grasa|guata|abdomen|gluteo|poto|cola|pierna|muslo|reducir|tonificar|levantar/)) {
+    memoria.guardarContexto(usuario, "corporal");
+  } else if (texto.match(/cara|facial|rostro|arruga|línea|rejuvenecer|tensar|iluminar|botox|toxina/)) {
+    memoria.guardarContexto(usuario, "facial");
+  } else if (texto.match(/depil|pelos|bikini|axila/)) {
+    memoria.guardarContexto(usuario, "depilacion");
+  }
 
   // --- saludo ---
   if (texto.includes("hola") || texto.includes("buenas") || texto.includes("zara")) {
@@ -26,26 +36,15 @@ export async function procesarMensaje(usuario, texto) {
     return "✨ Excelente. La evaluación es gratuita y te orientamos según tu presupuesto. " + agendar();
   }
 
-  // --- contextos principales ---
+  // --- corporales ---
   if (texto.match(/grasa|guata|abdomen|poto|pierna|muslo/)) {
     memoria.guardarContexto(usuario, "corporal");
     return "💪 Entiendo, muchas personas buscan mejorar esa zona. Trabajamos con HIFU 12D, Cavitación y Radiofrecuencia para reducir grasa y tensar piel. ¿Tu objetivo es reducir, tonificar o levantar?";
   }
 
-  if (texto.match(/cara|rostro|facial|arruga|línea/)) {
-    memoria.guardarContexto(usuario, "facial");
-    return "💆‍♀️ La zona facial responde excelente a HIFU 12D, Radiofrecuencia y Pink Glow, que estimulan colágeno y mejoran firmeza sin cirugía. ¿Tu objetivo es rejuvenecer, tensar o iluminar?";
-  }
-
-  if (texto.match(/depil|pelos|axila|bikini|pierna|gluteo/)) {
-    memoria.guardarContexto(usuario, "depilacion");
-    return "🌿 La Depilación Láser Diodo Triple Onda elimina el vello desde la raíz sin dolor. Planes desde $35 000 o $180 000 (6 sesiones bikini completo). ¿Quieres que te ayude a agendar tu diagnóstico gratuito?";
-  }
-
-  // --- corporales ---
-  if (texto.includes("reducir")) {
+  if (texto.match(/reducir/)) {
     memoria.guardarContexto(usuario, "corporal");
-    return "🔥 Perfecto. Para reducción usamos Lipo Body Elite o Lipo Express (HIFU 12D + Cavitación + RF). Resultados desde la primera sesión. Valor desde $432 000 CLP.\n" + agendar();
+    return "🔥 Para reducción usamos Lipo Body Elite o Lipo Express (HIFU 12D + Cavitación + RF). Resultados desde la primera sesión. Valor desde $432 000 CLP.\n" + agendar();
   }
 
   if (texto.match(/tonificar|definir/)) {
@@ -53,7 +52,7 @@ export async function procesarMensaje(usuario, texto) {
     return "💪 Para tonificar usamos EMS Sculptor + Radiofrecuencia, logrando 20 000 contracciones en 30 min. Ideal para abdomen, glúteos o piernas. Valor $360 000 CLP.\n" + agendar();
   }
 
-  if (texto.match(/levantar|gluteo|trasero|cola|push/)) {
+  if (texto.match(/levantar|gluteo|trasero|cola|push|poto/)) {
     memoria.guardarContexto(usuario, "corporal");
     return "🍑 Para levantar y dar forma trabajamos con Push Up Glúteos (EMS Sculptor + RF + HIFU tensor). Firmeza desde la primera sesión. Valor $376 000 CLP.\n" + agendar();
   }
@@ -64,6 +63,11 @@ export async function procesarMensaje(usuario, texto) {
   }
 
   // --- faciales ---
+  if (texto.match(/cara|rostro|facial|arruga|línea/)) {
+    memoria.guardarContexto(usuario, "facial");
+    return "💆‍♀️ La zona facial responde excelente a HIFU 12D, Radiofrecuencia y Pink Glow, que estimulan colágeno y mejoran firmeza sin cirugía. ¿Tu objetivo es rejuvenecer, tensar o iluminar?";
+  }
+
   if (texto.match(/rejuvenecer|rejuvenecimiento|más joven/)) {
     memoria.guardarContexto(usuario, "facial");
     return "🌸 Para rejuvenecimiento facial usamos Face Elite (HIFU 12D + Toxina + Pink Glow). Reafirma y suaviza arrugas profundas. Valor $358 400 CLP.\n" + agendar();
@@ -82,6 +86,12 @@ export async function procesarMensaje(usuario, texto) {
   if (texto.match(/botox|toxina/)) {
     memoria.guardarContexto(usuario, "facial");
     return "💉 La Toxina Botulínica Facial relaja los músculos responsables de las arrugas de expresión, dejando un aspecto natural y fresco. Valor desde $180 000 por zona. ¿Te interesa en frente, entrecejo o patas de gallo?";
+  }
+
+  // --- depilación ---
+  if (texto.match(/depil|pelos|axila|bikini/)) {
+    memoria.guardarContexto(usuario, "depilacion");
+    return "🌿 La Depilación Láser Diodo Triple Onda elimina el vello desde la raíz sin dolor. Planes desde $35 000 o $180 000 por 6 sesiones (bikini completo). ¿Quieres que te ayude a agendar tu diagnóstico gratuito?";
   }
 
   // --- coherencia de seguimiento por contexto ---
