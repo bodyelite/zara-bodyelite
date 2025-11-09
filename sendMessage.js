@@ -1,68 +1,57 @@
-import axios from "axios";
+import fetch from "node-fetch";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const IG_USER_ID = process.env.IG_USER_ID;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const IG_USER_ID = process.env.IG_USER_ID; // nuevo
 
-export async function sendMessage(recipientId, message, channel = "whatsapp") {
+// Envío de mensajes unificado para WhatsApp e Instagram
+export async function sendMessage(to, text, platform = "whatsapp") {
   try {
-    let url, payload, headers;
+    let url = "";
+    let body = {};
 
-    if (channel === "whatsapp") {
-      url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
-      payload = {
+    // ===== WhatsApp =====
+    if (platform === "whatsapp") {
+      url = `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`;
+      body = {
         messaging_product: "whatsapp",
-        to: recipientId,
+        to,
         type: "text",
-        text: { body: message }
+        text: { body: text },
       };
-      headers = {
+    }
+
+    // ===== Instagram =====
+    else if (platform === "instagram") {
+      url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
+      body = {
+        recipient: { id: to },
+        message: { text },
+      };
+    }
+
+    // Verificación
+    if (!url) throw new Error("URL de envío no definida");
+
+    console.log(`📤 Enviando mensaje ${platform.toUpperCase()} → ${to}: ${text}`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      };
-    }
-
-    else if (channel === "instagram") {
-      if (!IG_USER_ID) throw new Error("IG_USER_ID no definido en .env");
-      url = `https://graph.facebook.com/v17.0/${IG_USER_ID}/messages`;
-      payload = {
-        messaging_product: "instagram",
-        recipient: { id: recipientId },
-        message: { text: message }
-      };
-      headers = {
-        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      };
-    }
-
-    else if (channel === "messenger") {
-      url = "https://graph.facebook.com/v17.0/me/messages";
-      payload = {
-        messaging_type: "RESPONSE",
-        recipient: { id: recipientId },
-        message: { text: message }
-      };
-      headers = {
-        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      };
-    }
-
-    else {
-      throw new Error(`Canal no soportado: ${channel}`);
-    }
-
-    const res = await axios.post(url, payload, { headers });
-    console.log(`✅ Mensaje enviado por ${channel.toUpperCase()} → ${recipientId}`, res.data);
-  } catch (error) {
-    console.error("❌ Error al enviar mensaje IG/WSP:", {
-      url,
-      payload,
-      error: error.response?.data || error.message
+      },
+      body: JSON.stringify(body),
     });
+
+    const data = await response.json();
+    console.log("✅ Respuesta de Meta:", JSON.stringify(data, null, 2));
+
+    return data;
+  } catch (error) {
+    console.error("❌ Error en sendMessage:", error.message);
   }
 }
