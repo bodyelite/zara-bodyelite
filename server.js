@@ -35,28 +35,35 @@ app.post("/webhook", async (req, res) => {
     const body = req.body;
     console.log("📩 Webhook recibido:", JSON.stringify(body, null, 2));
 
-    if (body.object) {
-      const entry = body.entry && body.entry[0];
-      const changes = entry?.changes && entry.changes[0];
+    // ==== FORMATO WHATSAPP ====
+    if (body.object === "whatsapp_business_account") {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const msg = changes?.value?.messages?.[0];
 
-      if (changes?.value?.messages) {
-        const msg = changes.value.messages[0];
-        const from = msg.from || msg.id || "desconocido";
-        const text = msg.text?.body || msg.message || "(sin texto)";
-        const product = changes.value.messaging_product;
-
-        console.log(`💬 Mensaje recibido desde ${product}: ${from} → ${text}`);
-
-        if (product === "whatsapp" || product === "whatsapp_business") {
-          await handleMessage(from, text, "whatsapp");
-        } else if (product === "instagram" || product === "instagram_business") {
-          const sender = changes.value?.from?.id || msg.from || "IG_USER";
-          await handleMessage(sender, text, "instagram");
-        } else {
-          console.log("⚠️ Producto desconocido:", product);
-        }
+      if (msg) {
+        const from = msg.from;
+        const text = msg.text?.body || "(sin texto)";
+        console.log(`💬 WhatsApp ${from}: ${text}`);
+        await handleMessage(from, text, "whatsapp");
       }
     }
+
+    // ==== FORMATO INSTAGRAM (nuevo formato Graph API) ====
+    else if (body.object === "instagram") {
+      const entry = body.entry?.[0];
+      const messaging = entry?.messaging?.[0];
+
+      if (messaging) {
+        const sender = messaging.sender?.id || "IG_USER";
+        const text = messaging.message?.text || "(sin texto)";
+        console.log(`💬 Instagram ${sender}: ${text}`);
+        await handleMessage(sender, text, "instagram");
+      } else {
+        console.log("⚠️ Mensaje Instagram vacío o no reconocido");
+      }
+    }
+
     res.sendStatus(200);
   } catch (err) {
     console.error("❌ Error en webhook:", err);
@@ -66,12 +73,12 @@ app.post("/webhook", async (req, res) => {
 
 // ====== RUTA BASE ======
 app.get("/", (req, res) => {
-  res.status(200).send("Zara 3.0 corriendo (IG + WSP activos)");
+  res.status(200).send("Zara 3.1 corriendo (IG + WSP activos)");
 });
 
 // ====== INICIO SERVIDOR ======
 app.listen(PORT, () => {
-  console.log(`✅ Zara 3.0 escuchando en puerto ${PORT} (IG + WSP activos)`);
+  console.log(`✅ Zara 3.1 escuchando en puerto ${PORT} (IG + WSP activos)`);
   console.log("===========================================");
   console.log(`👉 Webhook activo: /webhook`);
   console.log(`🌐 URL pública: ${process.env.RENDER_EXTERNAL_URL || "Render local"}`);
