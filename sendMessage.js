@@ -1,17 +1,11 @@
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-
 dotenv.config();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-/**
- * Envía mensajes a WhatsApp o Instagram.
- * - WhatsApp usa el PHONE_NUMBER_ID
- * - Instagram usa el IG_USER_ID
- */
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
     let url, body;
@@ -30,8 +24,8 @@ export async function sendMessage(to, text, platform = "whatsapp") {
       url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
       body = {
         messaging_product: "instagram",
-        recipient: { id: String(to).trim() },
-        message: { text: text.trim() }
+        recipient: to,
+        text: { body: text }
       };
     }
 
@@ -47,12 +41,8 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     });
 
     const data = await res.json();
-
-    if (data.error) {
-      console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
-    } else {
-      console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
-    }
+    if (data.error) console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
+    else console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
   } catch (err) {
     console.error("❌ Error general en sendMessage:", err);
   }
