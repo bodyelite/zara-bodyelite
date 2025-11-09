@@ -6,6 +6,11 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
+/**
+ * Envía mensajes a WhatsApp o Instagram.
+ * WhatsApp usa el endpoint con PHONE_NUMBER_ID
+ * Instagram usa el endpoint universal me/messages
+ */
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
     let url, body;
@@ -21,11 +26,10 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     }
 
     if (platform === "instagram") {
-      url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
+      url = `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
       body = {
-        messaging_product: "instagram",
         recipient: { id: String(to).trim() },
-        text: { body: text }
+        message: { text: text.trim() }
       };
     }
 
@@ -41,8 +45,12 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     });
 
     const data = await res.json();
-    if (data.error) console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
-    else console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
+
+    if (data.error) {
+      console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
+    } else {
+      console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
+    }
   } catch (err) {
     console.error("❌ Error general en sendMessage:", err);
   }
