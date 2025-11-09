@@ -59,6 +59,10 @@ export async function sendMessage(recipientId, message, channel = "whatsapp") {
     const res = await axios.post(url, payload, { headers });
     console.log(`✅ Mensaje enviado por ${channel.toUpperCase()} → ${recipientId}`, res.data);
   } catch (error) {
-    console.error("❌ Error al enviar mensaje:", error.response?.data || error.message);
+    console.error("❌ Error al enviar mensaje IG/WSP:", {
+      url,
+      payload,
+      error: error.response?.data || error.message
+    });
   }
 }
