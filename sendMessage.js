@@ -8,13 +8,14 @@ const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
 /**
  * Envía mensajes a WhatsApp o Instagram.
- * WhatsApp usa el endpoint con PHONE_NUMBER_ID
- * Instagram usa el endpoint universal me/messages
+ * - WhatsApp → usa el endpoint con PHONE_NUMBER_ID
+ * - Instagram → usa el endpoint con IG_USER_ID
  */
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
     let url, body;
 
+    // WhatsApp
     if (platform === "whatsapp") {
       url = `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`;
       body = {
@@ -25,8 +26,9 @@ export async function sendMessage(to, text, platform = "whatsapp") {
       };
     }
 
+    // Instagram
     if (platform === "instagram") {
-      url = `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
+      url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
       body = {
         recipient: { id: String(to).trim() },
         message: { text: text.trim() }
