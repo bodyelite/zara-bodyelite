@@ -9,73 +9,53 @@ const app = express();
 app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PORT = process.env.PORT || 3000;
 
-// Verificación del webhook (Meta)
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-
-  if (mode && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente");
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
-  }
+  if (mode === "subscribe" && token === VERIFY_TOKEN) return res.status(200).send(challenge);
+  return res.sendStatus(403);
 });
 
-// Recepción de eventos (WhatsApp + Instagram)
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
 
-    // WhatsApp Business API
     if (body.object === "whatsapp_business_account") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const message = changes?.value?.messages?.[0];
-      if (message) {
-        const from = message.from;
-        const text = message.text?.body || "";
+      const msg = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      if (msg?.from && (msg.text?.body || msg.button?.text)) {
+        const from = msg.from;
+        const text = msg.text?.body || msg.button?.text || "";
         console.log(`📲 WhatsApp: ${from} → ${text}`);
         await handleMessage(text, from, "whatsapp");
       }
-    }
-
-    // Instagram Business
-    else if (body.object === "instagram") {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const message = changes?.value?.message || changes?.value?.text || "";
-      const from = changes?.value?.from?.id || "instagram_user";
-      if (message) {
-        console.log(`💬 Instagram: ${from} → ${message}`);
-        await handleMessage(message, from, "instagram");
+    } else if (body.object === "instagram") {
+      const changes = body.entry?.[0]?.changes?.[0];
+      const from = changes?.value?.from?.id;
+      const text = changes?.value?.message || changes?.value?.text || "";
+      if (from && text) {
+        console.log(`💬 Instagram: ${from} → ${text}`);
+        await handleMessage(text, from, "instagram");
       }
-    }
-
-    // Messenger (por compatibilidad futura)
-    else if (body.object === "page") {
-      const entry = body.entry?.[0];
-      const messaging = entry?.messaging?.[0];
-      const sender = messaging?.sender?.id;
-      const text = messaging?.message?.text;
-      if (text) {
-        console.log(`💭 Messenger: ${sender} → ${text}`);
-        await handleMessage(text, sender, "messenger");
+    } else if (body.object === "page") {
+      const evt = body.entry?.[0]?.messaging?.[0];
+      const from = evt?.sender?.id;
+      const text = evt?.message?.text || "";
+      if (from && text) {
+        console.log(`💭 Messenger: ${from} → ${text}`);
+        await handleMessage(text, from, "messenger");
       }
     }
 
     res.sendStatus(200);
-  } catch (error) {
-    console.error("❌ Error al procesar evento:", error);
+  } catch (e) {
+    console.error("❌ Error al procesar evento:", e);
     res.sendStatus(500);
   }
 });
 
-// Servidor activo
 app.listen(PORT, () => {
   console.log(`✅ Zara 3.0 escuchando en puerto ${PORT} (IG + WSP activos)`);
 });
