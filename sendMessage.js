@@ -24,7 +24,7 @@ export async function sendMessage(to, text, platform = "whatsapp") {
       url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
       body = {
         messaging_product: "instagram",
-        recipient: to,
+        recipient: { id: String(to).trim() },
         text: { body: text }
       };
     }
