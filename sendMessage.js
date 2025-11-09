@@ -1,23 +1,43 @@
-import fetch from "node-fetch";
+import axios from "axios";
+import dotenv from "dotenv";
 
-export async function sendMessage(to, message) {
+dotenv.config();
+
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+
+export async function sendMessage(recipientId, message, channel = "whatsapp") {
   try {
-    const url = `https://graph.facebook.com/v17.0/${process.env.PHONE_NUMBER_ID}/messages`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    let url, payload;
+
+    // WhatsApp
+    if (channel === "whatsapp") {
+      url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
+      payload = {
         messaging_product: "whatsapp",
-        to: to,
-        text: { body: message }
-      })
-    });
-    const data = await res.json();
-    console.log("Respuesta API:", data);
-  } catch (err) {
-    console.error("Error al enviar mensaje:", err);
+        to: recipientId,
+        type: "text",
+        text: { body: message },
+      };
+    }
+
+    // Instagram
+    else if (channel === "instagram") {
+      url = `https://graph.facebook.com/v17.0/${recipientId}/messages`;
+      payload = {
+        recipient: { id: recipientId },
+        message: { text: message },
+      };
+    }
+
+    const headers = {
+      Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+    };
+
+    await axios.post(url, payload, { headers });
+    console.log(`✅ Mensaje enviado por ${channel.toUpperCase()} → ${recipientId}`);
+  } catch (error) {
+    console.error("❌ Error al enviar mensaje:", error.response?.data || error.message);
   }
 }
