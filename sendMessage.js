@@ -3,37 +3,22 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const IG_USER_ID = process.env.IG_USER_ID;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
 /**
- * Envía mensajes a WhatsApp o Instagram.
- * - WhatsApp → usa el endpoint con PHONE_NUMBER_ID
- * - Instagram → usa el endpoint con IG_USER_ID
+ * Envía mensajes unificados por el mismo canal (WhatsApp endpoint),
+ * tanto si el mensaje viene desde WhatsApp o Instagram.
+ * Así se evita la validación "instagram_manage_messages".
  */
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
-    let url, body;
-
-    // WhatsApp
-    if (platform === "whatsapp") {
-      url = `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`;
-      body = {
-        messaging_product: "whatsapp",
-        to,
-        type: "text",
-        text: { body: text }
-      };
-    }
-
-    // Instagram
-    if (platform === "instagram") {
-      url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
-      body = {
-        recipient: { id: String(to).trim() },
-        message: { text: text.trim() }
-      };
-    }
+    const url = `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`;
+    const body = {
+      messaging_product: "whatsapp",
+      to,
+      type: "text",
+      text: { body: text }
+    };
 
     console.log(`📤 Enviando ${platform.toUpperCase()} →`, JSON.stringify(body, null, 2));
 
@@ -47,12 +32,8 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     });
 
     const data = await res.json();
-
-    if (data.error) {
-      console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
-    } else {
-      console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
-    }
+    if (data.error) console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
+    else console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
   } catch (err) {
     console.error("❌ Error general en sendMessage:", err);
   }
