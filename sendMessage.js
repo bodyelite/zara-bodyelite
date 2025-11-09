@@ -7,7 +7,7 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-// Envío de mensajes unificado para WhatsApp e Instagram
+// Envío de mensajes unificado
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
     let url = "";
@@ -28,13 +28,15 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     else if (platform === "instagram") {
       url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
       body = {
-        recipient: { id: to },
+        messaging_product: "instagram",
+        recipient: { id: String(to) },
         message: { text },
       };
     }
 
-    // Verificación
-    if (!url) throw new Error("URL de envío no definida");
+    // Validar datos
+    if (!url) throw new Error("URL no definida para la plataforma");
+    if (!to || typeof to !== "string") throw new Error("ID destinatario inválido");
 
     console.log(`📤 Enviando mensaje ${platform.toUpperCase()} → ${to}: ${text}`);
 
@@ -48,7 +50,12 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     });
 
     const data = await response.json();
-    console.log("✅ Respuesta de Meta:", JSON.stringify(data, null, 2));
+
+    if (data.error) {
+      console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
+    } else {
+      console.log("✅ Respuesta de Meta:", JSON.stringify(data, null, 2));
+    }
 
     return data;
   } catch (error) {
