@@ -2,7 +2,8 @@ import memoria from "./memoria.js";
 
 export async function procesarMensaje(usuario, texto) {
   texto = texto.toLowerCase().trim();
-  const contexto = memoria.obtenerContexto(usuario);
+  let contexto = memoria.obtenerContexto(usuario);
+
   if (!contexto) {
     const ultimo = memoria.obtenerUltimoTema(usuario);
     if (ultimo) memoria.guardarContexto(usuario, ultimo);
@@ -12,13 +13,16 @@ export async function procesarMensaje(usuario, texto) {
   const agendar = () =>
     "✨ Recuerda que la evaluación es gratuita y sin compromiso. ¿Te ayudo a coordinar tu hora? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-  // --- detección cruzada: si el usuario cambia de tema, actualiza contexto ---
+  // --- detección cruzada ---
   if (texto.match(/grasa|guata|abdomen|gluteo|poto|cola|pierna|muslo|reducir|tonificar|levantar/)) {
     memoria.guardarContexto(usuario, "corporal");
+    contexto = "corporal";
   } else if (texto.match(/cara|facial|rostro|arruga|línea|rejuvenecer|tensar|iluminar|botox|toxina/)) {
     memoria.guardarContexto(usuario, "facial");
+    contexto = "facial";
   } else if (texto.match(/depil|pelos|bikini|axila/)) {
     memoria.guardarContexto(usuario, "depilacion");
+    contexto = "depilacion";
   }
 
   // --- saludo ---
@@ -27,7 +31,7 @@ export async function procesarMensaje(usuario, texto) {
     return "✨ Soy Zara de Body Elite. Qué gusto saludarte. Cuéntame qué zona o tratamiento te gustaría mejorar y te orientaré con total honestidad clínica.";
   }
 
-  // --- afirmaciones generales ---
+  // --- afirmaciones ---
   if (afirmativos.some(p => texto.includes(p))) {
     const tema = memoria.obtenerContexto(usuario);
     if (tema === "facial") return "💆‍♀️ Me alegra. Puedo ayudarte a coordinar tu diagnóstico facial gratuito y ajustar el plan a tu piel. " + agendar();
@@ -94,7 +98,7 @@ export async function procesarMensaje(usuario, texto) {
     return "🌿 La Depilación Láser Diodo Triple Onda elimina el vello desde la raíz sin dolor. Planes desde $35 000 o $180 000 por 6 sesiones (bikini completo). ¿Quieres que te ayude a agendar tu diagnóstico gratuito?";
   }
 
-  // --- coherencia de seguimiento por contexto ---
+  // --- coherencia de seguimiento ---
   if (contexto === "facial" && texto.match(/caro|precio|vale/)) {
     return "🤍 Entiendo, los planes faciales usan HIFU 12D original y Pink Glow europeo, tecnologías de última generación con seguimiento profesional. Además, la evaluación es gratuita y podemos ajustar el plan a tu presupuesto.\n" + agendar();
   }
@@ -116,6 +120,6 @@ export async function procesarMensaje(usuario, texto) {
     return "📅 Excelente decisión. La evaluación es gratuita y sin compromiso. Reserva aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
   }
 
-  // --- fallback coherente ---
+  // --- fallback ---
   return "💛 Disculpa, no logré entender tu mensaje. Pero puedo ayudarte a encontrar el tratamiento más adecuado para ti. " + agendar();
 }
