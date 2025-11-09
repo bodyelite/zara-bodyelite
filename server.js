@@ -1,108 +1,83 @@
 import express from "express";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
-import { procesarMensaje } from "./motor_respuesta_v3.js";
+import dotenv from "dotenv";
+import { handleMessage } from "./zara_core_full_2_1.js";
+
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
-const PAGE_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PORT = process.env.PORT || 3000;
 
-/* ============================================================
-   VERIFICACIÓN DEL WEBHOOK (WhatsApp + Instagram)
-   ============================================================ */
+// Verificación del webhook (Meta)
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    return res.status(200).send(challenge);
+
+  if (mode && token === VERIFY_TOKEN) {
+    console.log("✅ Webhook verificado correctamente");
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
   }
-  return res.sendStatus(403);
 });
 
-/* ============================================================
-   RECEPCIÓN DE MENSAJES (unifica WhatsApp + Instagram)
-   ============================================================ */
+// Recepción de eventos (WhatsApp + Instagram)
 app.post("/webhook", async (req, res) => {
   try {
-    // Debug completo del evento
-    console.log("🧩 Webhook completo IG/WSP:", JSON.stringify(req.body, null, 2));
+    const body = req.body;
 
-    const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const value = changes?.value;
-    const message = value?.messages?.[0];
+    // WhatsApp Business API
+    if (body.object === "whatsapp_business_account") {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const message = changes?.value?.messages?.[0];
+      if (message) {
+        const from = message.from;
+        const text = message.text?.body || "";
+        console.log(`📲 WhatsApp: ${from} → ${text}`);
+        await handleMessage(text, from, "whatsapp");
+      }
+    }
 
-    if (!message) return res.sendStatus(200);
+    // Instagram Business
+    else if (body.object === "instagram") {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const message = changes?.value?.message || changes?.value?.text || "";
+      const from = changes?.value?.from?.id || "instagram_user";
+      if (message) {
+        console.log(`💬 Instagram: ${from} → ${message}`);
+        await handleMessage(message, from, "instagram");
+      }
+    }
 
-    const from = message.from;
-    const text =
-      message.text?.body ||
-      message.message?.text ||
-      message.message?.body ||
-      message.message ||
-      "";
-    const product =
-      message.messaging_product || value.messaging_product || "unknown";
+    // Messenger (por compatibilidad futura)
+    else if (body.object === "page") {
+      const entry = body.entry?.[0];
+      const messaging = entry?.messaging?.[0];
+      const sender = messaging?.sender?.id;
+      const text = messaging?.message?.text;
+      if (text) {
+        console.log(`💭 Messenger: ${sender} → ${text}`);
+        await handleMessage(text, sender, "messenger");
+      }
+    }
 
-    console.log(`📩 Mensaje recibido (${product}):`, text);
-
-    const respuesta = await procesarMensaje(from, text);
-    console.log("🤖 Respuesta generada:", respuesta);
-
-    await enviarMensaje(product, from, respuesta);
     res.sendStatus(200);
-  } catch (err) {
-    console.error("❌ Error en webhook:", err);
+  } catch (error) {
+    console.error("❌ Error al procesar evento:", error);
     res.sendStatus(500);
   }
 });
 
-/* ============================================================
-   ENVÍO UNIFICADO (WhatsApp + Instagram)
-   ============================================================ */
-async function enviarMensaje(product, to, text) {
-  try {
-    let url, body;
-
-    if (product === "whatsapp") {
-      url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
-      body = {
-        messaging_product: "whatsapp",
-        to,
-        text: { body: text },
-      };
-    } else {
-      // Envío para Instagram
-      url = `https://graph.facebook.com/v18.0/me/messages`;
-      body = {
-        recipient: { id: to },
-        message: { text },
-      };
-    }
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${PAGE_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-    console.log("📤 Respuesta API Meta:", data);
-  } catch (e) {
-    console.error("⚠️ Error enviando mensaje:", e);
-  }
-}
-
-/* ============================================================
-   SERVIDOR ACTIVO
-   ============================================================ */
+// Servidor activo
 app.listen(PORT, () => {
   console.log(`✅ Zara 3.0 escuchando en puerto ${PORT} (IG + WSP activos)`);
 });
+
+export default app;
