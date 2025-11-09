@@ -7,58 +7,45 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-// Envío de mensajes unificado
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
-    let url = "";
-    let body = {};
+    let url, body;
 
-    // ===== WhatsApp =====
     if (platform === "whatsapp") {
       url = `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`;
       body = {
         messaging_product: "whatsapp",
         to,
         type: "text",
-        text: { body: text },
+        text: { body: text }
       };
     }
 
-    // ===== Instagram =====
-    else if (platform === "instagram") {
-      url = `https://graph.facebook.com/v18.0/${IG_USER_ID}/messages`;
+    if (platform === "instagram") {
+      url = `https://graph.facebook.com/v18.0/me/messages`;
       body = {
         messaging_product: "instagram",
-        recipient: { id: String(to) },
-        message: { text },
+        recipient: { id: String(to).trim() },
+        message: { text: text.trim() }
       };
     }
 
-    // Validar datos
-    if (!url) throw new Error("URL no definida para la plataforma");
-    if (!to || typeof to !== "string") throw new Error("ID destinatario inválido");
+    console.log(`📤 Enviando ${platform.toUpperCase()} →`, JSON.stringify(body, null, 2));
 
-    console.log(`📤 Enviando mensaje ${platform.toUpperCase()} → ${to}: ${text}`);
-
-    const response = await fetch(url, {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body)
     });
 
-    const data = await response.json();
+    const data = await res.json();
+    if (data.error) console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
+    else console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
 
-    if (data.error) {
-      console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
-    } else {
-      console.log("✅ Respuesta de Meta:", JSON.stringify(data, null, 2));
-    }
-
-    return data;
-  } catch (error) {
-    console.error("❌ Error en sendMessage:", error.message);
+  } catch (err) {
+    console.error("❌ Error general en sendMessage:", err);
   }
 }
