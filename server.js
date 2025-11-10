@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import { sendMessage } from "./sendMessage.js";
-import { motor_respuesta } from "./motor_respuesta_v3.js";
+import { procesarMensaje as motor_respuesta } from "./motor_respuesta_v3.js";
 
 dotenv.config();
 const app = express();
@@ -33,7 +33,7 @@ app.post("/webhook", async (req, res) => {
 
           if (sender && message) {
             console.log(`📥 Mensaje recibido de ${sender}: ${message}`);
-            const respuesta = await motor_respuesta(message);
+            const respuesta = await motor_respuesta(sender, message);
             if (respuesta) {
               const plataforma = entry.id === process.env.IG_USER_ID ? "instagram" : "whatsapp";
               await sendMessage(sender, respuesta, plataforma);
