@@ -123,4 +123,3 @@ export async function procesarMensaje(usuario, texto) {
   // --- fallback ---
   return "💛 Disculpa, no logré entender tu mensaje. Pero puedo ayudarte a encontrar el tratamiento más adecuado para ti. " + agendar();
 }
-export { motor_respuesta };
