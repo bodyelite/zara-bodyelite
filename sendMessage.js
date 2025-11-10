@@ -4,21 +4,32 @@ dotenv.config();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const IG_USER_ID = process.env.IG_USER_ID;
 
 /**
- * Envía mensajes unificados por el mismo canal (WhatsApp endpoint),
- * tanto si el mensaje viene desde WhatsApp o Instagram.
- * Así se evita la validación "instagram_manage_messages".
+ * Envía mensajes por WhatsApp o Instagram usando el mismo token.
  */
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
-    const url = `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`;
-    const body = {
-      messaging_product: "whatsapp",
-      to,
-      type: "text",
-      text: { body: text }
-    };
+    let url;
+    let body;
+
+    if (platform === "instagram") {
+      url = `https://graph.facebook.com/v19.0/${IG_USER_ID}/messages`;
+      body = {
+        messaging_product: "instagram",
+        recipient: { id: to },
+        message: { text }
+      };
+    } else {
+      url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+      body = {
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: text }
+      };
+    }
 
     console.log(`📤 Enviando ${platform.toUpperCase()} →`, JSON.stringify(body, null, 2));
 
@@ -32,8 +43,11 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     });
 
     const data = await res.json();
-    if (data.error) console.error("❌ Error de Meta:", JSON.stringify(data.error, null, 2));
-    else console.log("✅ Respuesta Meta:", JSON.stringify(data, null, 2));
+    if (data.error) {
+      console.error("❌ Error Meta:", JSON.stringify(data.error, null, 2));
+    } else {
+      console.log("✅ Enviado correctamente:", JSON.stringify(data, null, 2));
+    }
   } catch (err) {
     console.error("❌ Error general en sendMessage:", err);
   }

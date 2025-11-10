@@ -33,6 +33,7 @@ app.post("/webhook", async (req, res) => {
     const body = req.body;
     console.log("📩 Webhook recibido:", JSON.stringify(body, null, 2));
 
+    // WhatsApp
     if (body.object === "whatsapp_business_account") {
       const msg = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
       if (msg) {
@@ -43,6 +44,7 @@ app.post("/webhook", async (req, res) => {
       }
     }
 
+    // Instagram
     else if (body.object === "instagram") {
       const messaging = body.entry?.[0]?.messaging?.[0];
       if (messaging) {
@@ -61,9 +63,9 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.status(200).send("Zara 3.2 corriendo (IG + WSP activos)");
+  res.status(200).send("✅ Zara IG + WSP operativos");
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Zara 3.2 escuchando en puerto ${PORT} (IG + WSP activos)`);
+  console.log(`🚀 Zara corriendo en puerto ${PORT} (IG + WSP activos)`);
 });
