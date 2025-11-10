@@ -4,10 +4,10 @@ dotenv.config();
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const IG_USER_ID = process.env.IG_USER_ID;
 
 /**
- * Envía mensajes por WhatsApp o Instagram usando el mismo token.
+ * Envía mensajes a WhatsApp e Instagram usando el token de página.
+ * Instagram ahora usa el endpoint /me/messages (no requiere "messaging_product").
  */
 export async function sendMessage(to, text, platform = "whatsapp") {
   try {
@@ -15,13 +15,14 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     let body;
 
     if (platform === "instagram") {
-      url = `https://graph.facebook.com/v19.0/${IG_USER_ID}/messages`;
+      // Envío vía página (Facebook Page token)
+      url = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
       body = {
-        messaging_product: "instagram",
         recipient: { id: to },
         message: { text }
       };
     } else {
+      // Envío WhatsApp (sin cambios)
       url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
       body = {
         messaging_product: "whatsapp",
@@ -35,10 +36,7 @@ export async function sendMessage(to, text, platform = "whatsapp") {
 
     const res = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
 
