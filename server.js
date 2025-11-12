@@ -8,7 +8,6 @@ app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-// Verificación Webhook
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -17,7 +16,6 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
-// Webhook principal
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
@@ -27,18 +25,13 @@ app.post("/webhook", async (req, res) => {
         for (const event of messaging) {
           const sender = event.sender?.id;
           const text = event.message?.text;
-
-          // Procesa solo mensajes de texto
           if (!sender || !text) continue;
 
-          // Detección robusta de plataforma:
-          // - WhatsApp: sender es número (8-15 dígitos, suele iniciar con código país)
-          // - IG/Messenger: sender es PSID (no es SOLO dígitos o no parece número telefónico)
-          const isWhatsApp = /^\d{8,15}$/.test(sender);
-          const plataforma = isWhatsApp ? "whatsapp" : "instagram";
+          // Detección fiable: IG si entry.id === IG_USER_ID; si no, WhatsApp
+          const isIG = String(entry.id) === String(process.env.IG_USER_ID);
+          const plataforma = isIG ? "instagram" : "whatsapp";
 
           console.log(`📥 ${plataforma.toUpperCase()} <- ${sender}: ${text}`);
-
           const respuesta = await motor_respuesta(sender, text);
           if (respuesta) await sendMessage(sender, respuesta, plataforma);
         }
@@ -51,6 +44,5 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
