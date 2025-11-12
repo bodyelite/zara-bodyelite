@@ -1,16 +1,13 @@
 import express from "express";
 import bodyParser from "body-parser";
-import dotenv from "dotenv";
 import { sendMessage } from "./sendMessage.js";
 import { procesarMensaje as motor_respuesta } from "./motor_respuesta_v3.js";
 
-dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-// --- VERIFICACIÓN DEL WEBHOOK ---
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -19,7 +16,6 @@ app.get("/webhook", (req, res) => {
   else res.sendStatus(403);
 });
 
-// --- WEBHOOK PRINCIPAL (WhatsApp + Instagram) ---
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
@@ -47,6 +43,5 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// --- SERVIDOR ACTIVO ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
