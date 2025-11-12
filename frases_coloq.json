@@ -1,0 +1,194 @@
+{
+  "meta": {
+    "version": "2025-11-12",
+    "descripcion": "Frases coloquiales + sinónimos por zona corporal/facial + intenciones y CTAs. Usado por motor_respuesta_v3."
+  },
+
+  "saludos": [
+    "¡Hola! ¿Cómo va?",
+    "¡Holaa! ¿Qué tal?",
+    "¡Qué gusto saludarte!",
+    "Bienvenido/a a Body Elite.",
+    "¡Hola! Estoy para ayudarte."
+  ],
+
+  "aperturas": [
+    "Cuéntame, ¿qué zona te gustaría mejorar?",
+    "¿Buscas reducir, reafirmar o rejuvenecer?",
+    "¿Tu objetivo es bajar centímetros, tonificar o mejorar piel?",
+    "Dime en una frase: zona + objetivo."
+  ],
+
+  "escucha_activa": [
+    "Te entiendo, es súper común.",
+    "Claro, lo vemos a diario en la clínica.",
+    "Perfecto, vamos paso a paso.",
+    "Bien, ya me hago una idea."
+  ],
+
+  "transiciones": [
+    "Voy al grano:",
+    "Te explico breve:",
+    "Rápido y claro:",
+    "Concretamos:"
+  ],
+
+  "beneficios_breves": [
+    "Sin cirugía, sin reposo.",
+    "Resultados desde la primera sesión.",
+    "Tecnología HIFU 12D, RF y EMS.",
+    "Plan personalizado tras evaluación."
+  ],
+
+  "cta": [
+    "¿Agendamos tu evaluación gratuita?",
+    "¿Te reservo una hora sin costo?",
+    "¿Prefieres mañana o pasado para evaluar sin compromiso?",
+    "Agenda aquí tu evaluación gratis."
+  ],
+
+  "cierres_suaves": [
+    "Quedo atento/a.",
+    "Te leo.",
+    "Cuando quieras seguimos."
+  ],
+
+  "antiduda": [
+    "Si te quedan dudas, las resolvemos en evaluación.",
+    "Tranquilo/a, lo definimos bien en la evaluación gratuita."
+  ],
+
+  "negativas_suaves": [
+    "Para no prometer sin ver, mejor evaluamos primero.",
+    "Lo confirmamos en evaluación y te doy el plan preciso."
+  ],
+
+  "repeticion_hola": [
+    "Estoy aquí, ¿qué zona te gustaría mejorar?",
+    "Te leo: ¿reducir, reafirmar o rejuvenecer?"
+  ],
+
+  "precio_minimo_insumo": [
+    "Para toxina usamos el valor del plan más conveniente que la incluye.",
+    "Tomamos el precio mínimo del plan que trae ese insumo."
+  ],
+
+  "intenciones": {
+    "reducir": ["reducir", "bajar", "disminuir", "sacar", "achicar", "quemar grasa", "perder", "definir", "marcar"],
+    "reafirmar": ["reafirmar", "tensar", "levantar", "tonificar", "compactar", "endurecer"],
+    "rejuvenecer": ["rejuvenecer", "mejorar piel", "antiage", "arrugas", "líneas", "flacidez facial", "luminosidad"],
+    "depilar": ["depilar", "depilación", "láser", "quitar vello", "pelitos", "full body", "axila", "bikini", "piernas"]
+  },
+
+  "zonas_corporales": {
+    "abdomen": ["abdomen", "guata", "panza", "estómago", "barriga", "vientre", "zona media"],
+    "cintura": ["cintura", "flancos", "llantitas", "laterales", "caderas", "oblicuos"],
+    "espalda_superior": ["espalda alta", "espalda superior", "grasa del sostén", "rollito espalda"],
+    "espalda_inferior": ["espalda baja", "zona lumbar"],
+    "brazos": ["brazos", "tríceps", "alas de murciélago", "brazos flácidos"],
+    "gluteos": ["glúteos", "cola", "trasero", "pompas", "potito", "nalgas"],
+    "piernas_completo": ["piernas", "piernas completas", "full piernas"],
+    "muslos_internos": ["muslos internos", "entrepierna", "aductores", "muslos por dentro"],
+    "muslos_externos": ["muslos externos", "cartucheras", "caderas externas"],
+    "rodillas": ["rodillas", "grasa rodilla"],
+    "pantorrillas": ["pantorrillas", "gemelos", "batatas"],
+    "pecho_axilar": ["pecho axilar", "axilar anterior", "grasa del sostén adelante"],
+    "papada_cuello": ["papada", "submentón", "cuello", "doble mentón"],
+    "zona_intima": ["pubis", "monte de venus", "ingle externa"],
+    "flacidez_general": ["flacidez", "piel suelta", "piel blanda"]
+  },
+
+  "zonas_faciales": {
+    "full_face": ["rostro completo", "full face", "toda la cara"],
+    "frente": ["frente", "líneas de expresión frente"],
+    "entrecejo": ["entrecejo", "ceño"],
+    "ojeras": ["ojeras", "bajo ojos", "bolsas"],
+    "patas_gallo": ["patas de gallo", "arrugas ojos"],
+    "mejillas": ["mejillas", "pómulos", "surco nasogeniano", "líneas de marioneta"],
+    "labios": ["código de barras", "arrugas labio", "contorno labial"],
+    "mandibula": ["mandíbula", "marcación mandibular", "ángulo mandibular", "jawline"],
+    "nariz": ["nariz", "poros nariz"],
+    "papada_cuello": ["papada", "cuello", "submentón"]
+  },
+
+  "zonas_depilacion": {
+    "axila": ["axila", "axilas"],
+    "bikini": ["bikini", "rebaje", "línea bikini"],
+    "pierna_completa": ["piernas completas", "full piernas"],
+    "pierna_media": ["medias piernas", "pierna media"],
+    "muslo": ["muslos", "muslo completo"],
+    "brazo": ["brazos", "antebrazos", "brazo completo"],
+    "espalda": ["espalda", "espalda completa", "espalda alta", "espalda baja"],
+    "pecho": ["pecho", "tórax"],
+    "abdomen": ["abdomen", "vientre"],
+    "gluteo": ["glúteos", "cola"],
+    "rostro": ["bozo", "mentón", "patillas", "pómulos", "ceja (contorno)"]
+  },
+
+  "disparadores": {
+    "hola": ["hola", "holaa", "holaaa", "buenas", "buen día", "buenas tardes", "buenas noches", "qué tal"],
+    "precio": ["precio", "valor", "cuánto sale", "cuánto vale", "tarifa", "cuesta"],
+    "agendar": ["agendar", "agenda", "reservar", "reserva", "cita", "hora"],
+    "promos": ["promo", "promoción", "descuento", "oferta", "2x1", "pack"],
+    "dolor": ["duele", "dolor", "molesta", "sin dolor"],
+    "sesiones": ["sesiones", "cuántas sesiones", "frecuencia", "cada cuánto"],
+    "contraindicaciones": ["contraindicaciones", "apto", "no puedo", "embarazo", "marcapasos"],
+    "tecnologia": ["hifu", "12d", "radiofrecuencia", "rf", "cavitación", "ems", "escultura", "laser", "diode", "alejandrita"]
+  },
+
+  "campanias_ig": {
+    "lipo_express_verano": [
+      "lipo express verano",
+      "un verano sin",
+      "verano sin polera",
+      "verano sin complejos"
+    ],
+    "push_up_gluteos": [
+      "push up glúteos",
+      "levantar glúteos",
+      "cola firme"
+    ],
+    "face_elite": [
+      "face elite",
+      "antiage premium",
+      "rejuvenecer rostro"
+    ],
+    "depilacion_full": [
+      "depilación full",
+      "full depilación",
+      "láser full body"
+    ]
+  },
+
+  "plantillas_respuesta": {
+    "encuadre": [
+      "Para ayudarte bien, dime: ¿reducir, reafirmar o rejuvenecer? y la zona.",
+      "Vamos directo: objetivo (reducir/reafirmar/rejuvenecer) + zona."
+    ],
+    "precio_generico": [
+      "Prefiero no adivinar precios sin ver tu caso. Tras la evaluación gratuita te doy el plan exacto con su valor.",
+      "Según la zona y objetivo cambia el plan. Evaluamos gratis y te entrego precio cerrado."
+    ],
+    "depilacion_derivacion": [
+      "Para depilación trabajamos con planes oficiales por zonas. Te ayudo a elegir el más conveniente tras una evaluación breve (sin costo)."
+    ],
+    "agenda_cta": [
+      "¿Te reservo una evaluación gratuita y sin compromiso?",
+      "Si te parece, agendamos ahora tu evaluación sin costo."
+    ],
+    "enlace_cta_oculto": [
+      "Agenda aquí tu evaluación gratuita"
+    ]
+  },
+
+  "cooldown": {
+    "segundos": 25,
+    "palabras_hola": ["hola", "holaa", "holaaa", "buenas"]
+  },
+
+  "estilo": {
+    "tono": "cercano, directo, profesional",
+    "emojis": "máx. 1 por mensaje",
+    "max_respuestas_por_evento": 1
+  }
+}
