@@ -11,7 +11,7 @@ const estado = {
 };
 
 /* --------------------------------------------------
-   NORMALIZAR TEXTO (CORREGIDO)
+   NORMALIZAR TEXTO
 -------------------------------------------------- */
 function normalizar(txt) {
   return txt
@@ -24,7 +24,7 @@ function normalizar(txt) {
 }
 
 /* --------------------------------------------------
-   DICCIONARIO COLOQUIAL FIJO (INDENDIENTE DEL OTRO)
+   DICCIONARIO COLOQUIAL
 -------------------------------------------------- */
 const zonasColoquiales = {
   abdomen: [
@@ -60,7 +60,7 @@ const zonasColoquiales = {
 };
 
 /* --------------------------------------------------
-   DETECTAR ZONA (CORREGIDO)
+   DETECTAR ZONA COLOQUIAL
 -------------------------------------------------- */
 function detectarZonaColoquial(texto) {
   const t = normalizar(texto);
@@ -78,9 +78,9 @@ function detectarZonaColoquial(texto) {
 }
 
 /* --------------------------------------------------
-   MATCHSCORE (CORREGIDO Y LOGS)
+   MATCHSCORE (solo respaldo para fallback)
 -------------------------------------------------- */
-const MIN_SCORE = 0.12;
+const MIN_SCORE = 0.05;
 
 function matchScore(texto) {
   const t = normalizar(texto);
@@ -101,19 +101,23 @@ function matchScore(texto) {
 }
 
 /* --------------------------------------------------
-   DETECCIÓN DE INTENCIÓN (CORREGIDA)
+   DETECCIÓN DE INTENCIÓN
 -------------------------------------------------- */
 function detectIntent(texto) {
   const t = normalizar(texto);
 
+  // 1) Zona coloquial primero
   const zonaCol = detectarZonaColoquial(t);
   if (zonaCol) return { tipo: "zona", zona: zonaCol };
 
+  // 2) Depilación
   if (t.includes("depil")) return { tipo: "depilacion" };
 
+  // 3) Postparto
   if (t.includes("postparto") || t.includes("post parto"))
     return { tipo: "postparto" };
 
+  // 4) Precio, ubicación, consiste
   for (const p of diccionario.intents.precio)
     if (t.includes(p)) return { tipo: "precio" };
 
@@ -123,6 +127,10 @@ function detectIntent(texto) {
   for (const c of diccionario.intents.consiste)
     if (t.includes(c)) return { tipo: "consiste" };
 
+  // 5) Objetivos (incluyendo “firmeza” como tonificar)
+  if (t.includes("firmeza"))
+    return { tipo: "objetivo", objetivo: "tonificar" };
+
   for (const obj in diccionario.objetivos)
     for (const k of diccionario.objetivos[obj])
       if (t.includes(k)) return { tipo: "objetivo", objetivo: obj };
@@ -131,7 +139,7 @@ function detectIntent(texto) {
 }
 
 /* --------------------------------------------------
-   PLANTILLAS (PROFESIONALES Y SUAVIZADAS)
+   PLANTILLAS
 -------------------------------------------------- */
 
 function saludoInicial() {
@@ -191,7 +199,7 @@ function plantillaObjetivo(objetivo) {
 }
 
 /* CONSISTE */
-function plantillaConsiste(zona) {
+function plantillaConsiste() {
   return "Usamos tecnologías como HIFU 12D, cavitación, radiofrecuencia o Pro Sculpt según la zona, para reducir volumen y mejorar firmeza. ¿Quieres tu evaluación gratuita?";
 }
 
@@ -240,17 +248,19 @@ function manejarTelefono(texto) {
 }
 
 /* --------------------------------------------------
-   MOTOR PRINCIPAL (CORREGIDO + LOGS)
+   MOTOR PRINCIPAL
 -------------------------------------------------- */
 export async function procesarMensaje(usuario, texto) {
   const t = normalizar(texto);
   console.log("DEBUG: mensaje normalizado:", t);
 
+  // 1) Saludo inicial
   if (estado.primeraInteraccion) {
     estado.primeraInteraccion = false;
     return saludoInicial();
   }
 
+  // 2) Manejo de teléfono después de 2 intentos de agenda
   if (estado.intentosAgenda >= 2 && /\d/.test(t)) {
     const out = manejarTelefono(texto);
     if (typeof out === "string") return out;
@@ -266,19 +276,25 @@ export async function procesarMensaje(usuario, texto) {
     return out.usuario;
   }
 
-  const score = matchScore(t);
-  if (score < MIN_SCORE) {
-    console.log("DEBUG: score insuficiente → fallback");
-    return fallback();
-  }
-
+  // 3) Intento de entender la intención PRIMERO
   const intent = detectIntent(t);
   console.log("DEBUG: intent →", intent);
 
-  if (!intent) return fallback();
+  // 4) Si no hay intención clara, usamos score para decidir fallback
+  if (!intent) {
+    const score = matchScore(t);
+    if (score < MIN_SCORE) {
+      console.log("DEBUG: score insuficiente → fallback");
+      return fallback();
+    }
+    // Si el score pasa pero no hay intent claro igual usamos fallback suave
+    return fallback();
+  }
 
+  // Si hubo intención, reseteamos contador de agenda
   estado.intentosAgenda = 0;
 
+  // 5) Ruteo por tipo de intención
   if (intent.tipo === "depilacion")
     return plantillaDepilacion();
 
