@@ -60,7 +60,7 @@ const zonasColoquiales = {
 };
 
 /* --------------------------------------------------
-   DETECTAR ZONA COLOQUIAL
+   DETECTAR ZONA
 -------------------------------------------------- */
 function detectarZonaColoquial(texto) {
   const t = normalizar(texto);
@@ -78,7 +78,7 @@ function detectarZonaColoquial(texto) {
 }
 
 /* --------------------------------------------------
-   MATCHSCORE (solo respaldo para fallback)
+   MATCHSCORE – respaldo para fallback
 -------------------------------------------------- */
 const MIN_SCORE = 0.05;
 
@@ -106,18 +106,18 @@ function matchScore(texto) {
 function detectIntent(texto) {
   const t = normalizar(texto);
 
-  // 1) Zona coloquial primero
+  // Zona
   const zonaCol = detectarZonaColoquial(t);
   if (zonaCol) return { tipo: "zona", zona: zonaCol };
 
-  // 2) Depilación
+  // Depilación
   if (t.includes("depil")) return { tipo: "depilacion" };
 
-  // 3) Postparto
+  // Postparto
   if (t.includes("postparto") || t.includes("post parto"))
     return { tipo: "postparto" };
 
-  // 4) Precio, ubicación, consiste
+  // Precio / ubicación / consiste
   for (const p of diccionario.intents.precio)
     if (t.includes(p)) return { tipo: "precio" };
 
@@ -127,7 +127,7 @@ function detectIntent(texto) {
   for (const c of diccionario.intents.consiste)
     if (t.includes(c)) return { tipo: "consiste" };
 
-  // 5) Objetivos (incluyendo “firmeza” como tonificar)
+  // Objetivos
   if (t.includes("firmeza"))
     return { tipo: "objetivo", objetivo: "tonificar" };
 
@@ -139,78 +139,108 @@ function detectIntent(texto) {
 }
 
 /* --------------------------------------------------
-   PLANTILLAS
+   LINK DE AGENDA
+-------------------------------------------------- */
+const linkAgenda =
+  "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
+/* --------------------------------------------------
+   PLANTILLAS Tono C humano
 -------------------------------------------------- */
 
 function saludoInicial() {
-  return "Hola, soy Zara, parte del equipo de Body Elite. Estoy aquí para ayudarte a encontrar tu mejor versión y orientarte según lo que quieras mejorar. Cuéntame, ¿qué zona o aspecto te gustaría trabajar?";
+  return "Hola, soy Zara, parte del equipo de Body Elite 🤍. Estoy aquí para ayudarte a encontrar tu mejor versión y orientarte según lo que quieras mejorar. Cuéntame, ¿qué zona o aspecto te gustaría trabajar?";
 }
 
-/* DEPILACIÓN */
+/* DEPILACIÓN – sin intención → sin link */
 function plantillaDepilacion() {
   estado.ultimaZona = "depilacion";
-  return "Trabajamos depilación láser con tecnología moderna. Todos los planes incluyen **6 sesiones** y los precios parten desde **$153.600**. El valor final depende de tu zona específica, que definimos juntas en la evaluación gratuita. ¿Quieres que te deje tu evaluación?";
+  return "Perfecto, trabajamos depilación láser con tecnología moderna y muy segura 🤍. Todos los planes incluyen **6 sesiones** y los valores parten desde **$153.600**.\n\nEl valor exacto depende de tu zona y lo definimos juntas en tu evaluación gratuita (40 minutos, y es un regalo 🎁). ¿Quieres que te deje tu hora?";
 }
 
+/* DEPILACIÓN – precio → con link */
 function plantillaDepilacionPrecio() {
-  return "Nuestros planes de depilación parten desde **$153.600 por 6 sesiones**. El valor final depende de si tu zona es pequeña, mediana, grande o full. Todo se confirma en tu evaluación gratuita. ¿Te la dejo agendada?";
+  return (
+    "Nuestros planes de depilación parten desde **$153.600 por 6 sesiones** 🤍. El valor final depende si tu zona es pequeña, mediana, grande o full.\n\n" +
+    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    linkAgenda
+  );
 }
 
-/* POSTPARTO */
+/* POSTPARTO → con link */
 function plantillaPostparto() {
   estado.ultimaZona = "abdomen";
-  return "El postparto suele dejar flacidez y piel suelta en el abdomen. Trabajamos esta zona con HIFU 12D, cavitación y radiofrecuencia para reducir y tensar de forma progresiva. La evaluación gratuita nos permite ver tu punto de partida. ¿Quieres que te la deje agendada?";
+  return (
+    "Entiendo, después del postparto es muy común que el abdomen quede más suelto o con menor firmeza 🤍. Trabajamos esta zona con HIFU 12D, cavitación y radiofrecuencia para mejorar contorno y tonicidad.\n\n" +
+    "Tu evaluación gratuita dura 40 minutos y revisamos tu caso a fondo. Puedes reservar aquí:\n" +
+    linkAgenda
+  );
 }
 
-/* ZONA SUAVIZADA */
+/* ZONAS → con link */
 function plantillaZona(zona) {
-  const t = {
+  const textos = {
     abdomen:
-      "En abdomen trabajamos reducción y tensado con HIFU 12D, cavitación y radiofrecuencia.",
+      "En abdomen podemos ayudarte a reducir volumen y tensar la piel con HIFU 12D, cavitación y radiofrecuencia.",
     gluteos:
-      "En glúteos podemos trabajar levantamiento, forma y firmeza con Pro Sculpt.",
+      "En glúteos trabajamos levantamiento, firmeza y mejor forma con Pro Sculpt 🤍.",
     muslos:
-      "En muslos trabajamos reducción de contorno, celulitis y firmeza con cavitación y radiofrecuencia.",
+      "En muslos mejoramos contorno, celulitis y firmeza con cavitación y radiofrecuencia.",
     papada:
-      "En papada usamos HIFU 12D focalizado para reducir grasa y tensar el contorno.",
+      "En papada usamos HIFU 12D focalizado para reducir y tensar el contorno.",
     patas_de_gallo:
-      "En contorno de ojos trabajamos suavizado y firmeza con radiofrecuencia focalizada.",
+      "En el contorno de ojos trabajamos suavizado y firmeza con radiofrecuencia focalizada.",
     brazos:
-      "En brazos se puede mejorar firmeza y definición con radiofrecuencia profunda y Pro Sculpt.",
+      "En brazos podemos mejorar firmeza y definición con radiofrecuencia profunda y Pro Sculpt.",
     espalda:
-      "En espalda se trabaja reducción de volumen y tensado con cavitación y radiofrecuencia.",
+      "En espalda abordamos reducción de volumen y tensado con cavitación y radiofrecuencia.",
     cintura:
-      "En cintura y flancos podemos trabajar reducción y tensado con cavitación y radiofrecuencia."
+      "En cintura y flancos trabajamos reducción y tensado con cavitación y radiofrecuencia."
   };
 
-  return `${t[zona] || "Podemos trabajar esa zona con tecnología avanzada."} ¿Quieres enfocarte más en reducción o firmeza?`;
+  return (
+    `${textos[zona] || "Podemos trabajar muy bien esa zona con nuestra tecnología 🤍."}\n\n` +
+    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    linkAgenda
+  );
 }
 
-/* OBJETIVOS */
+/* OBJETIVOS → con link */
 function plantillaObjetivo(objetivo) {
-  const m = {
+  const mensaje = {
     reducir: "reducción de contorno",
     tonificar: "mayor firmeza",
     tensar: "tensado de piel",
     antiage: "rejuvenecimiento"
   };
 
-  return `Perfecto, podemos trabajar la ${m[objetivo] || objetivo}. La evaluación gratuita nos ayuda a definir tu punto de partida y tu plan exacto. ¿Quieres que te deje agendada?`;
+  return (
+    `Perfecto, podemos trabajar la ${mensaje[objetivo] || objetivo} 🤍.\n\n` +
+    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    linkAgenda
+  );
 }
 
-/* CONSISTE */
+/* CONSISTE → con link */
 function plantillaConsiste() {
-  return "Usamos tecnologías como HIFU 12D, cavitación, radiofrecuencia o Pro Sculpt según la zona, para reducir volumen y mejorar firmeza. ¿Quieres tu evaluación gratuita?";
+  return (
+    "Usamos tecnologías como HIFU 12D, cavitación, radiofrecuencia o Pro Sculpt según tu caso 🤍. Esto ayuda a reducir volumen, mejorar firmeza y definir contorno.\n\n" +
+    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    linkAgenda
+  );
 }
 
-/* UBICACIÓN */
+/* UBICACIÓN – sin intención → sin link */
 function plantillaUbicacion() {
-  return "Estamos en Av. Las Perdices 2990, Local 23, Peñalolén. Horario Lun–Vie 9:30–20:00, Sáb 9:30–13:00. ¿Quieres agendar tu evaluación gratuita?";
+  return (
+    "Estamos en **Av. Las Perdices 2990, Local 23, Peñalolén** 🤍.\nHorario: Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n\n" +
+    "¿Te dejo tu evaluación gratuita?"
+  );
 }
 
-/* PRECIO */
+/* PRECIO → con link */
 function plantillaPrecio(zona) {
-  const p = {
+  const precios = {
     abdomen: "Lipo Express ($432.000)",
     muslos: "Lipo Reductiva ($480.000)",
     gluteos: "Push Up ($376.000)",
@@ -221,30 +251,24 @@ function plantillaPrecio(zona) {
     cintura: "Lipo Express ($432.000)"
   };
 
-  return `El plan recomendado para esa zona es ${p[zona] || "el correspondiente"}. Validamos todo juntas en tu evaluación gratuita. ¿Quieres agendarla?`;
+  const plan = precios[zona] || "el tratamiento indicado para tu caso";
+
+  return (
+    `El plan recomendado para esa zona es **${plan}** 🤍.\n\n` +
+    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    linkAgenda
+  );
 }
 
-/* FALLBACK */
+/* FALLBACK HUMANO (sin intención) */
 function fallback() {
   estado.intentosAgenda++;
 
   if (estado.intentosAgenda >= 2) {
-    return "Si te resulta más cómodo, una de nuestras profesionales puede llamarte para orientarte mejor y resolver tus dudas. ¿Quieres que te llamen?";
+    return "Si prefieres, una de nuestras profesionales puede llamarte para orientarte mejor y resolver tus dudas 🤍. ¿Quieres que te llamen?";
   }
 
-  return "Disculpa, no logré entender bien tu mensaje. En la evaluación gratuita nuestras profesionales pueden orientarte mejor. ¿Quieres que la agende para ti?";
-}
-
-/* MANEJO TELÉFONO */
-function manejarTelefono(texto) {
-  const numero = texto.match(/\+?\d+/g);
-  if (!numero)
-    return "¿Podrías confirmarme tu número para que podamos llamarte?";
-
-  return {
-    interno: `Nueva solicitud de llamada:\nNúmero del paciente: ${numero[0]}\nZona: ${estado.ultimaZona}\nObjetivo: ${estado.ultimoObjetivo || "no indicado"}`,
-    usuario: "Listo, ya envié tu número al equipo. Te van a contactar en breve."
-  };
+  return "Disculpa, no logré interpretar bien tu mensaje. En tu evaluación gratuita (40 min) una especialista puede explicarte todo paso a paso 🤍. ¿Quieres que te deje la hora?";
 }
 
 /* --------------------------------------------------
@@ -254,13 +278,11 @@ export async function procesarMensaje(usuario, texto) {
   const t = normalizar(texto);
   console.log("DEBUG: mensaje normalizado:", t);
 
-  // 1) Saludo inicial
   if (estado.primeraInteraccion) {
     estado.primeraInteraccion = false;
     return saludoInicial();
   }
 
-  // 2) Manejo de teléfono después de 2 intentos de agenda
   if (estado.intentosAgenda >= 2 && /\d/.test(t)) {
     const out = manejarTelefono(texto);
     if (typeof out === "string") return out;
@@ -276,30 +298,23 @@ export async function procesarMensaje(usuario, texto) {
     return out.usuario;
   }
 
-  // 3) Intento de entender la intención PRIMERO
   const intent = detectIntent(t);
   console.log("DEBUG: intent →", intent);
 
-  // 4) Si no hay intención clara, usamos score para decidir fallback
   if (!intent) {
     const score = matchScore(t);
     if (score < MIN_SCORE) {
       console.log("DEBUG: score insuficiente → fallback");
       return fallback();
     }
-    // Si el score pasa pero no hay intent claro igual usamos fallback suave
     return fallback();
   }
 
-  // Si hubo intención, reseteamos contador de agenda
   estado.intentosAgenda = 0;
 
-  // 5) Ruteo por tipo de intención
-  if (intent.tipo === "depilacion")
-    return plantillaDepilacion();
+  if (intent.tipo === "depilacion") return plantillaDepilacion();
 
-  if (intent.tipo === "postparto")
-    return plantillaPostparto();
+  if (intent.tipo === "postparto") return plantillaPostparto();
 
   if (intent.tipo === "precio") {
     if (estado.ultimaZona === "depilacion")
@@ -307,11 +322,9 @@ export async function procesarMensaje(usuario, texto) {
     return plantillaPrecio(estado.ultimaZona);
   }
 
-  if (intent.tipo === "ubicacion")
-    return plantillaUbicacion();
+  if (intent.tipo === "ubicacion") return plantillaUbicacion();
 
-  if (intent.tipo === "consiste")
-    return plantillaConsiste(estado.ultimaZona);
+  if (intent.tipo === "consiste") return plantillaConsiste();
 
   if (intent.tipo === "zona") {
     estado.ultimaZona = intent.zona;
@@ -324,4 +337,18 @@ export async function procesarMensaje(usuario, texto) {
   }
 
   return fallback();
+}
+
+/* --------------------------------------------------
+   TELÉFONO
+-------------------------------------------------- */
+function manejarTelefono(texto) {
+  const numero = texto.match(/\+?\d+/g);
+  if (!numero)
+    return "¿Podrías confirmarme tu número para que podamos llamarte?";
+
+  return {
+    interno: `Nueva solicitud de llamada:\nNúmero del paciente: ${numero[0]}\nZona: ${estado.ultimaZona}\nObjetivo: ${estado.ultimoObjetivo || "no indicado"}`,
+    usuario: "Listo, ya envié tu número al equipo. Te van a contactar en breve 🤍."
+  };
 }
