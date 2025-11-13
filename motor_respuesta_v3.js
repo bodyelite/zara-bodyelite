@@ -60,7 +60,7 @@ const zonasColoquiales = {
 };
 
 /* --------------------------------------------------
-   DETECTAR ZONA
+   DETECTAR ZONA COLOQUIAL
 -------------------------------------------------- */
 function detectarZonaColoquial(texto) {
   const t = normalizar(texto);
@@ -78,7 +78,7 @@ function detectarZonaColoquial(texto) {
 }
 
 /* --------------------------------------------------
-   MATCHSCORE – respaldo para fallback
+   MATCHSCORE (respaldo)
 -------------------------------------------------- */
 const MIN_SCORE = 0.05;
 
@@ -101,23 +101,82 @@ function matchScore(texto) {
 }
 
 /* --------------------------------------------------
-   DETECCIÓN DE INTENCIÓN
+   NUEVOS INTENTS HUMANOS
+-------------------------------------------------- */
+function intentDolor(t) {
+  return (
+    t.includes("duele") ||
+    t.includes("dolor") ||
+    t.includes("miedo") ||
+    t.includes("asusta") ||
+    t.includes("molesta") ||
+    t.includes("arde")
+  );
+}
+
+function intentPrecioJustificacion(t) {
+  return (
+    t.includes("caro") ||
+    t.includes("costoso") ||
+    t.includes("por que tan caro") ||
+    t.includes("vale la pena") ||
+    t.includes("muy caro")
+  );
+}
+
+function intentEfectividad(t) {
+  return (
+    t.includes("funciona") ||
+    t.includes("real") ||
+    t.includes("sirve") ||
+    t.includes("de verdad") ||
+    t.includes("efectivo") ||
+    t.includes("efectividad")
+  );
+}
+
+function intentResultados(t) {
+  return (
+    t.includes("cuanto se ven") ||
+    t.includes("cuando se ven") ||
+    t.includes("cuanto tarda") ||
+    t.includes("cuanto demora") ||
+    t.includes("cuanto me demoro") ||
+    t.includes("cuando noto") ||
+    t.includes("resultados")
+  );
+}
+
+function intentMasInfo(t) {
+  return (
+    t.includes("cuentame mas") ||
+    t.includes("explicame") ||
+    t.includes("quiero saber mas") ||
+    t.includes("como es") ||
+    t.includes("como funciona")
+  );
+}
+
+/* --------------------------------------------------
+   DETECCIÓN DE INTENCIÓN PRINCIPAL
 -------------------------------------------------- */
 function detectIntent(texto) {
   const t = normalizar(texto);
 
-  // Zona
+  if (intentDolor(t)) return { tipo: "dolor" };
+  if (intentPrecioJustificacion(t)) return { tipo: "precioJustificacion" };
+  if (intentEfectividad(t)) return { tipo: "efectividad" };
+  if (intentResultados(t)) return { tipo: "resultados" };
+  if (intentMasInfo(t)) return { tipo: "masInfo" };
+
   const zonaCol = detectarZonaColoquial(t);
   if (zonaCol) return { tipo: "zona", zona: zonaCol };
 
-  // Depilación
   if (t.includes("depil")) return { tipo: "depilacion" };
 
-  // Postparto
   if (t.includes("postparto") || t.includes("post parto"))
     return { tipo: "postparto" };
 
-  // Precio / ubicación / consiste
   for (const p of diccionario.intents.precio)
     if (t.includes(p)) return { tipo: "precio" };
 
@@ -127,7 +186,6 @@ function detectIntent(texto) {
   for (const c of diccionario.intents.consiste)
     if (t.includes(c)) return { tipo: "consiste" };
 
-  // Objetivos
   if (t.includes("firmeza"))
     return { tipo: "objetivo", objetivo: "tonificar" };
 
@@ -139,73 +197,124 @@ function detectIntent(texto) {
 }
 
 /* --------------------------------------------------
-   LINK DE AGENDA
+   LINK AGENDA
 -------------------------------------------------- */
 const linkAgenda =
   "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
 /* --------------------------------------------------
-   PLANTILLAS Tono C humano
+   PLANTILLAS Tono A
 -------------------------------------------------- */
 
 function saludoInicial() {
-  return "Hola, soy Zara, parte del equipo de Body Elite 🤍. Estoy aquí para ayudarte a encontrar tu mejor versión y orientarte según lo que quieras mejorar. Cuéntame, ¿qué zona o aspecto te gustaría trabajar?";
+  return "Hola! Soy Zara, parte del equipo de Body Elite ✨🤍. Estoy aquí para ayudarte a encontrar tu mejor versión con total honestidad clínica. Cuéntame, ¿qué zona te gustaría mejorar?";
 }
 
-/* DEPILACIÓN – sin intención → sin link */
-function plantillaDepilacion() {
-  estado.ultimaZona = "depilacion";
-  return "Perfecto, trabajamos depilación láser con tecnología moderna y muy segura 🤍. Todos los planes incluyen **6 sesiones** y los valores parten desde **$153.600**.\n\nEl valor exacto depende de tu zona y lo definimos juntas en tu evaluación gratuita (40 minutos, y es un regalo 🎁). ¿Quieres que te deje tu hora?";
-}
-
-/* DEPILACIÓN – precio → con link */
-function plantillaDepilacionPrecio() {
+/* ------------------ DOLOR ------------------ */
+function plantillaDolor() {
   return (
-    "Nuestros planes de depilación parten desde **$153.600 por 6 sesiones** 🤍. El valor final depende si tu zona es pequeña, mediana, grande o full.\n\n" +
-    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
-    linkAgenda
+    "No te preocupes 🙈🤍. Nuestros tratamientos **no duelen**. Puedes sentir un **calorcito suave** o pequeñas **contracciones musculares** (como un apretón simpático), pero nada invasivo ni molesto.\n\n" +
+    "En tu evaluación gratuita (40 min) una especialista te muestra exactamente cómo se siente para que estés tranquila 🌼.\n" +
+    "¿Quieres que te deje tu hora?"
   );
 }
 
-/* POSTPARTO → con link */
-function plantillaPostparto() {
-  estado.ultimaZona = "abdomen";
+/* ------------------ PRECIO JUSTIFICACIÓN ------------------ */
+function plantillaPrecioJustificacion() {
   return (
-    "Entiendo, después del postparto es muy común que el abdomen quede más suelto o con menor firmeza 🤍. Trabajamos esta zona con HIFU 12D, cavitación y radiofrecuencia para mejorar contorno y tonicidad.\n\n" +
-    "Tu evaluación gratuita dura 40 minutos y revisamos tu caso a fondo. Puedes reservar aquí:\n" +
-    linkAgenda
+    "Te entiendo totalmente 🤍. Los valores dependen de la tecnología incluida (HIFU 12D, RF profunda, Pro Sculpt) y del resultado que estás buscando.\n\n" +
+    "Lo bueno es que **ajustamos el plan a tu caso real**, para no darte sesiones de más ni de menos ✨.\n\n" +
+    "Si quieres, revisamos tu presupuesto y tu objetivo en tu evaluación gratuita. ¿Quieres que te deje la hora?"
   );
 }
 
-/* ZONAS → con link */
+/* ------------------ EFECTIVIDAD ------------------ */
+function plantillaEfectividad() {
+  return (
+    "Sí, funciona 🤍✨. Las tecnologías como HIFU 12D, cavitación, RF y Pro Sculpt tienen resultados progresivos y reales, incluso desde las primeras sesiones.\n\n" +
+    "En tu evaluación gratuita te explicamos exactamente qué resultado puedes esperar **tú**, según tu caso. ¿Quieres que te deje tu hora?"
+  );
+}
+
+/* ------------------ RESULTADOS / TIEMPO ------------------ */
+function plantillaResultados() {
+  return (
+    "La mayoría de las pacientes nota cambios desde la **primera o segunda sesión** 🌟.\n\n" +
+    "Puede ser menos volumen, más firmeza o mejor contorno según el tratamiento.\n\n" +
+    "En tu evaluación gratuita (40 min) vemos tu caso real y te damos un tiempo estimado honesto 🤍.\n" +
+    "¿Quieres que te deje tu hora?"
+  );
+}
+
+/* ------------------ MAS INFO ------------------ */
+function plantillaMasInfo() {
+  return (
+    "Claro, feliz te cuento más 🤍.\n\n" +
+    "– **Cavitación:** ayuda a romper grasa localizada.\n" +
+    "– **RF profunda:** tensa la piel y estimula colágeno.\n" +
+    "– **HIFU 12D:** afina contorno y da efecto lifting.\n" +
+    "– **Pro Sculpt:** tonifica y levanta músculo.\n\n" +
+    "En tu evaluación gratuita te explican cuál combina mejor contigo ✨.\n¿Quieres que te deje la hora?"
+  );
+}
+
+/* ------------------ ZONA ------------------ */
 function plantillaZona(zona) {
   const textos = {
     abdomen:
-      "En abdomen podemos ayudarte a reducir volumen y tensar la piel con HIFU 12D, cavitación y radiofrecuencia.",
+      "En abdomen podemos ayudarte a reducir volumen y tensar la piel con HIFU 12D, cavitación y radiofrecuencia 🤍.",
     gluteos:
-      "En glúteos trabajamos levantamiento, firmeza y mejor forma con Pro Sculpt 🤍.",
+      "En glúteos trabajamos levantamiento, firmeza y forma con Pro Sculpt ✨.",
     muslos:
-      "En muslos mejoramos contorno, celulitis y firmeza con cavitación y radiofrecuencia.",
+      "En muslos mejoramos contorno, celulitis y firmeza con cavitación y radiofrecuencia 🌼.",
     papada:
-      "En papada usamos HIFU 12D focalizado para reducir y tensar el contorno.",
+      "En papada usamos HIFU 12D focalizado para reducir y tensar el contorno del cuello ✨.",
     patas_de_gallo:
-      "En el contorno de ojos trabajamos suavizado y firmeza con radiofrecuencia focalizada.",
+      "En contorno de ojos suavizamos líneas y damos firmeza con radiofrecuencia focalizada 🤍.",
     brazos:
-      "En brazos podemos mejorar firmeza y definición con radiofrecuencia profunda y Pro Sculpt.",
+      "En brazos podemos mejorar firmeza y definición con RF profunda y Pro Sculpt 💛.",
     espalda:
-      "En espalda abordamos reducción de volumen y tensado con cavitación y radiofrecuencia.",
+      "En espalda trabajamos reducción de volumen y tensado con cavitación y radiofrecuencia.",
     cintura:
-      "En cintura y flancos trabajamos reducción y tensado con cavitación y radiofrecuencia."
+      "En cintura y flancos trabajamos reducción y tensado con cavitación y radiofrecuencia ✨."
   };
 
   return (
-    `${textos[zona] || "Podemos trabajar muy bien esa zona con nuestra tecnología 🤍."}\n\n` +
+    `${textos[zona] || "Podemos trabajar muy bien esa zona con nuestras tecnologías 🤍."}\n\n` +
     "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
     linkAgenda
   );
 }
 
-/* OBJETIVOS → con link */
+/* ------------------ DEPILACIÓN ------------------ */
+function plantillaDepilacion() {
+  estado.ultimaZona = "depilacion";
+  return (
+    "Perfecto 🤍. Trabajamos depilación láser con tecnología moderna y segura. Todos los planes incluyen **6 sesiones** y los valores parten desde **$153.600**.\n\n" +
+    "El valor exacto depende de tu zona, y lo definimos juntas en tu evaluación gratuita (40 min). ¿Quieres que te deje tu hora?"
+  );
+}
+
+function plantillaDepilacionPrecio() {
+  return (
+    "Los planes de depilación parten desde **$153.600 por 6 sesiones** 🤍.\n\n" +
+    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    linkAgenda
+  );
+}
+
+/* ------------------ POSTPARTO ------------------ */
+function plantillaPostparto() {
+  estado.ultimaZona = "abdomen";
+  return (
+    "Es súper común que después del postparto el abdomen quede más suelto o con menor firmeza 🤍.\n\n" +
+    "Usamos HIFU 12D, cavitación y RF para mejorar contorno y tonicidad 🌼.\n\n" +
+    "Puedes reservar tu evaluación gratuita aquí y revisamos tu caso con calma:\n" +
+    linkAgenda
+  );
+}
+
+/* ------------------ OBJETIVOS ------------------ */
 function plantillaObjetivo(objetivo) {
   const mensaje = {
     reducir: "reducción de contorno",
@@ -215,30 +324,31 @@ function plantillaObjetivo(objetivo) {
   };
 
   return (
-    `Perfecto, podemos trabajar la ${mensaje[objetivo] || objetivo} 🤍.\n\n` +
-    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    `Perfecto 🤍. Podemos trabajar la ${mensaje[objetivo] || objetivo}.\n\n` +
+    "Puedes reservar tu evaluación gratuita aquí:\n" +
     linkAgenda
   );
 }
 
-/* CONSISTE → con link */
+/* ------------------ CONSISTE ------------------ */
 function plantillaConsiste() {
   return (
-    "Usamos tecnologías como HIFU 12D, cavitación, radiofrecuencia o Pro Sculpt según tu caso 🤍. Esto ayuda a reducir volumen, mejorar firmeza y definir contorno.\n\n" +
+    "Usamos tecnologías como HIFU 12D, cavitación, radiofrecuencia o Pro Sculpt 🤍. Esto ayuda a reducir volumen, mejorar firmeza y definir contorno.\n\n" +
     "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
     linkAgenda
   );
 }
 
-/* UBICACIÓN – sin intención → sin link */
+/* ------------------ UBICACIÓN ------------------ */
 function plantillaUbicacion() {
   return (
-    "Estamos en **Av. Las Perdices 2990, Local 23, Peñalolén** 🤍.\nHorario: Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n\n" +
-    "¿Te dejo tu evaluación gratuita?"
+    "Estamos en **Av. Las Perdices 2990, Local 23, Peñalolén** 🤍.\n" +
+    "Horario: Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n\n" +
+    "¿Quieres que te deje tu evaluación gratuita?"
   );
 }
 
-/* PRECIO → con link */
+/* ------------------ PRECIOS ------------------ */
 function plantillaPrecio(zona) {
   const precios = {
     abdomen: "Lipo Express ($432.000)",
@@ -251,24 +361,44 @@ function plantillaPrecio(zona) {
     cintura: "Lipo Express ($432.000)"
   };
 
-  const plan = precios[zona] || "el tratamiento indicado para tu caso";
+  const plan = precios[zona] || "el plan recomendado según tu evaluación";
 
   return (
-    `El plan recomendado para esa zona es **${plan}** 🤍.\n\n` +
-    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
+    `El plan recomendado para esa zona es **${plan}** ✨🤍.\n\n` +
+    "Puedes reservar tu evaluación gratuita aquí:\n" +
     linkAgenda
   );
 }
 
-/* FALLBACK HUMANO (sin intención) */
+/* ------------------ FALLBACK ------------------ */
 function fallback() {
   estado.intentosAgenda++;
 
   if (estado.intentosAgenda >= 2) {
-    return "Si prefieres, una de nuestras profesionales puede llamarte para orientarte mejor y resolver tus dudas 🤍. ¿Quieres que te llamen?";
+    return (
+      "Si prefieres, una de nuestras profesionales puede llamarte para orientarte mejor 🤍.\n" +
+      "¿Quieres que te llamen?"
+    );
   }
 
-  return "Disculpa, no logré interpretar bien tu mensaje. En tu evaluación gratuita (40 min) una especialista puede explicarte todo paso a paso 🤍. ¿Quieres que te deje la hora?";
+  return (
+    "Disculpa, no logré interpretar bien tu mensaje 🙈. En tu evaluación gratuita (40 min) una especialista puede explicarte todo paso a paso 🤍.\n" +
+    "¿Quieres que te deje la hora?"
+  );
+}
+
+/* --------------------------------------------------
+   TELÉFONO
+-------------------------------------------------- */
+function manejarTelefono(texto) {
+  const numero = texto.match(/\+?\d+/g);
+  if (!numero)
+    return "¿Podrías confirmarme tu número para que podamos llamarte? 🤍";
+
+  return {
+    interno: `Nueva solicitud de llamada:\nNúmero del paciente: ${numero[0]}\nZona: ${estado.ultimaZona}\nObjetivo: ${estado.ultimoObjetivo || "no indicado"}`,
+    usuario: "Perfecto 🤍. Ya envié tu número al equipo, te van a contactar en breve."
+  };
 }
 
 /* --------------------------------------------------
@@ -276,7 +406,7 @@ function fallback() {
 -------------------------------------------------- */
 export async function procesarMensaje(usuario, texto) {
   const t = normalizar(texto);
-  console.log("DEBUG: mensaje normalizado:", t);
+  console.log("DEBUG:", t);
 
   if (estado.primeraInteraccion) {
     estado.primeraInteraccion = false;
@@ -303,52 +433,54 @@ export async function procesarMensaje(usuario, texto) {
 
   if (!intent) {
     const score = matchScore(t);
-    if (score < MIN_SCORE) {
-      console.log("DEBUG: score insuficiente → fallback");
-      return fallback();
-    }
+    if (score < MIN_SCORE) return fallback();
     return fallback();
   }
 
   estado.intentosAgenda = 0;
 
-  if (intent.tipo === "depilacion") return plantillaDepilacion();
+  switch (intent.tipo) {
+    case "dolor":
+      return plantillaDolor();
 
-  if (intent.tipo === "postparto") return plantillaPostparto();
+    case "precioJustificacion":
+      return plantillaPrecioJustificacion();
 
-  if (intent.tipo === "precio") {
-    if (estado.ultimaZona === "depilacion")
-      return plantillaDepilacionPrecio();
-    return plantillaPrecio(estado.ultimaZona);
+    case "efectividad":
+      return plantillaEfectividad();
+
+    case "resultados":
+      return plantillaResultados();
+
+    case "masInfo":
+      return plantillaMasInfo();
+
+    case "depilacion":
+      return plantillaDepilacion();
+
+    case "postparto":
+      return plantillaPostparto();
+
+    case "precio":
+      if (estado.ultimaZona === "depilacion")
+        return plantillaDepilacionPrecio();
+      return plantillaPrecio(estado.ultimaZona);
+
+    case "ubicacion":
+      return plantillaUbicacion();
+
+    case "consiste":
+      return plantillaConsiste();
+
+    case "zona":
+      estado.ultimaZona = intent.zona;
+      return plantillaZona(intent.zona);
+
+    case "objetivo":
+      estado.ultimoObjetivo = intent.objetivo;
+      return plantillaObjetivo(intent.objetivo);
+
+    default:
+      return fallback();
   }
-
-  if (intent.tipo === "ubicacion") return plantillaUbicacion();
-
-  if (intent.tipo === "consiste") return plantillaConsiste();
-
-  if (intent.tipo === "zona") {
-    estado.ultimaZona = intent.zona;
-    return plantillaZona(intent.zona);
-  }
-
-  if (intent.tipo === "objetivo") {
-    estado.ultimoObjetivo = intent.objetivo;
-    return plantillaObjetivo(intent.objetivo);
-  }
-
-  return fallback();
-}
-
-/* --------------------------------------------------
-   TELÉFONO
--------------------------------------------------- */
-function manejarTelefono(texto) {
-  const numero = texto.match(/\+?\d+/g);
-  if (!numero)
-    return "¿Podrías confirmarme tu número para que podamos llamarte?";
-
-  return {
-    interno: `Nueva solicitud de llamada:\nNúmero del paciente: ${numero[0]}\nZona: ${estado.ultimaZona}\nObjetivo: ${estado.ultimoObjetivo || "no indicado"}`,
-    usuario: "Listo, ya envié tu número al equipo. Te van a contactar en breve 🤍."
-  };
 }
