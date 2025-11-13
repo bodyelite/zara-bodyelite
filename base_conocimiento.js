@@ -61,3 +61,25 @@ Agenda tu cita gratuita aquí 👉 https://agendamiento.reservo.cl/makereserva/a
 // EXPORTACIÓN FINAL
 // ======================================================
 export default { planes, conocimientos };
+
+// --- Diccionario conversacional Zara (seguro, lectura-only) ---
+export const diccionario = {
+  zonas: {
+    muslos: ["muslo","muslos","piernas","pierna"],
+    gluteos: ["gluteo","glúteo","gluteos","glúteos","trasero","cola"],
+    abdomen: ["abdomen","guata","barriga","panza","estómago"],
+    papada: ["papada"],
+    patas_de_gallo: ["patas de gallo","arrugas ojos"]
+  },
+  intents: {
+    precio: ["precio","cuánto vale","cuanto vale","valor","caro","cuánto cuesta","cuanto cuesta"],
+    ubicacion: ["dónde están","donde estan","dirección","direccion","horarios","ubicación"],
+    consiste: ["qué es","que es","en qué consiste","en que consiste","qué incluye","que incluye"],
+    resultados: ["resultados","cuando se ven","garantía","efecto"]
+  },
+  objetivos: {
+    reducir: ["reducir","bajar","rebajar","disminuir","contorno"],
+    tonificar: ["tonificar","levantar","tensar","reafirmar","firmeza"],
+    antiage: ["antiage","arrugas","rejuvenecer","líneas finas"]
+  }
+};
