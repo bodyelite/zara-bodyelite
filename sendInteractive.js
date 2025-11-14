@@ -1,14 +1,26 @@
 // sendInteractive.js
-// Envío seguro de botones interactivos sin tocar server.js ni sendMessage.js
+// Versión compatible con Motor V6 y Meta v19.0
 import fetch from "node-fetch";
 
-export async function sendInteractive(to, platform) {
+/*
+  Firma correcta:
+  sendInteractive(to, contenido, urlAgenda, platform)
+
+  contenido = {
+    header: "texto opcional",
+    body: "texto del mensaje",
+    button: "Título del botón"
+  }
+*/
+
+export async function sendInteractive(to, contenido, urlAgenda, platform) {
   try {
     const url =
       platform === "instagram"
         ? "https://graph.facebook.com/v19.0/me/messages"
         : `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
 
+    // Construcción segura del botón para Meta
     const body = {
       messaging_product: platform === "instagram" ? "instagram" : "whatsapp",
       to,
@@ -16,21 +28,29 @@ export async function sendInteractive(to, platform) {
       interactive: {
         type: "button",
         body: {
-          text: "Puedes reservar tu evaluación gratuita aquí 🤍"
+          text: contenido.body || "Reserva tu evaluación gratuita 🤍"
         },
         action: {
           buttons: [
             {
               type: "cta_url",
-              url: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-              title: "Agendar ahora"
+              url: urlAgenda,
+              title: contenido.button || "Agendar ahora"
             }
           ]
         }
       }
     };
 
-    console.log("DEBUG (BUTTON): Enviando botón interactivo →", to);
+    // Opcional: header (solo si se envía)
+    if (contenido.header) {
+      body.interactive.header = {
+        type: "text",
+        text: contenido.header
+      };
+    }
+
+    console.log("DEBUG (BUTTON OUT):", JSON.stringify(body, null, 2));
 
     const res = await fetch(url, {
       method: "POST",
@@ -46,6 +66,6 @@ export async function sendInteractive(to, platform) {
 
     return data;
   } catch (e) {
-    console.error("ERROR BOTÓN:", e);
+    console.error("ERROR SEND INTERACTIVE:", e);
   }
 }
