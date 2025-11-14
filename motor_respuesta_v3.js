@@ -1,18 +1,23 @@
+// motor_respuesta_v6.js
+// Versión emocional + detección avanzada + botón de agenda
 import { diccionario } from "./base_conocimiento.js";
+import { sendInteractive } from "./sendInteractive.js";
+import { sendMessage } from "./sendMessage.js";
 
-/* --------------------------------------------------
-   ESTADO DEL MOTOR
--------------------------------------------------- */
+/* -----------------------------------------------
+   ESTADO DE CONVERSACIÓN
+------------------------------------------------- */
 const estado = {
   primeraInteraccion: true,
   ultimaZona: null,
   ultimoObjetivo: null,
-  intentosAgenda: 0
+  intentosAgenda: 0,
+  historial: []
 };
 
-/* --------------------------------------------------
+/* -----------------------------------------------
    NORMALIZAR TEXTO
--------------------------------------------------- */
+------------------------------------------------- */
 function normalizar(txt) {
   return txt
     .toLowerCase()
@@ -23,92 +28,60 @@ function normalizar(txt) {
     .trim();
 }
 
-/* --------------------------------------------------
-   DICCIONARIO COLOQUIAL
--------------------------------------------------- */
+/* -----------------------------------------------
+   ZONAS COLOQUIALES
+------------------------------------------------- */
 const zonasColoquiales = {
   abdomen: [
-    "abdomen","guata","wata","panza","barriga","estomago","rollo","rollitos",
-    "flotador","guaton","guatonera","vientre","pansa"
+    "abdomen","guata","panza","barriga","estomago","rollo","rollitos",
+    "flotador","vientre","guaton","guatonera"
   ],
   gluteos: [
-    "gluteo","gluteos","glutea","gluteas","trasero","poto","potito","culo","cola",
-    "colita","nalgas","nalga","pompas","pompis","booty","retaguardia"
+    "gluteos","gluteo","trasero","poto","potito","cola","colita","nalga",
+    "nalgas","booty","pompis","pompas"
   ],
   muslos: [
-    "muslo","muslos","pierna","piernas","entrepierna","muslitos","piernas gorditas"
+    "muslo","muslos","piernas","pierna","entrepierna","muslitos"
   ],
   papada: [
-    "papada","papadita","papaga","doble menton","bajo el menton","cuello bajo"
+    "papada","papadita","doble menton","bajo el menton"
   ],
   patas_de_gallo: [
-    "patas de gallo","patas gallo","patas de gallina","arrugas ojos",
-    "arrugas en los ojos","lineas al reir","arruguitas ojos","contorno de ojos"
+    "patas de gallo","arrugas ojos","lineas al reir","arruguitas"
   ],
   brazos: [
-    "brazo","brazos","alas de murcielago","bye bye","brazo flacido","brazos caidos",
-    "tricep","triceps","brazo suelto","brazo gordito"
+    "brazos","brazo","alas de murcielago","bye bye","tricep","triceps"
   ],
   espalda: [
-    "espalda","rollos espalda","gorditos espalda","michelines","rollos atras",
-    "espalda baja","espalda alta"
+    "espalda","rollos espalda","espalda baja","espalda alta"
   ],
   cintura: [
-    "cintura","flancos","llantitas","rollitos laterales","costados","flotadores",
-    "caderas anchas","los lados"
+    "cintura","flancos","costados","llantitas","rollos laterales"
   ]
 };
 
-/* --------------------------------------------------
+/* -----------------------------------------------
    DETECTAR ZONA COLOQUIAL
--------------------------------------------------- */
+------------------------------------------------- */
 function detectarZonaColoquial(texto) {
   const t = normalizar(texto);
-
   for (const zona in zonasColoquiales) {
     for (const palabra of zonasColoquiales[zona]) {
-      if (t.includes(palabra)) {
-        console.log("DEBUG: Zona detectada por coloquial →", zona);
-        return zona;
-      }
+      if (t.includes(palabra)) return zona;
     }
   }
-  console.log("DEBUG: Zona coloquial NO detectada");
   return null;
 }
 
-/* --------------------------------------------------
-   MATCHSCORE (respaldo)
--------------------------------------------------- */
-const MIN_SCORE = 0.05;
-
-function matchScore(texto) {
-  const t = normalizar(texto);
-  let puntos = 0;
-
-  for (const palabra of t.split(" ")) {
-    if (palabra.length > 4) puntos += 0.05;
-  }
-
-  for (const zona in zonasColoquiales) {
-    for (const palabra of zonasColoquiales[zona]) {
-      if (t.includes(palabra)) puntos += 1;
-    }
-  }
-
-  console.log("DEBUG: score =", puntos);
-  return puntos / 10;
-}
-
-/* --------------------------------------------------
-   NUEVOS INTENTS HUMANOS
--------------------------------------------------- */
+/* -----------------------------------------------
+   NLP INTENTS
+------------------------------------------------- */
 function intentDolor(t) {
   return (
     t.includes("duele") ||
     t.includes("dolor") ||
-    t.includes("miedo") ||
     t.includes("asusta") ||
+    t.includes("miedo") ||
     t.includes("molesta") ||
     t.includes("arde")
   );
@@ -118,9 +91,9 @@ function intentPrecioJustificacion(t) {
   return (
     t.includes("caro") ||
     t.includes("costoso") ||
-    t.includes("por que tan caro") ||
     t.includes("vale la pena") ||
-    t.includes("muy caro")
+    t.includes("muy caro") ||
+    t.includes("por que tan caro")
   );
 }
 
@@ -129,37 +102,36 @@ function intentEfectividad(t) {
     t.includes("funciona") ||
     t.includes("real") ||
     t.includes("sirve") ||
-    t.includes("de verdad") ||
-    t.includes("efectivo") ||
-    t.includes("efectividad")
+    t.includes("efectivo")
   );
 }
 
 function intentResultados(t) {
   return (
-    t.includes("cuanto se ven") ||
+    t.includes("cuanto") && t.includes("resultado") ||
     t.includes("cuando se ven") ||
-    t.includes("cuanto tarda") ||
-    t.includes("cuanto demora") ||
-    t.includes("cuanto me demoro") ||
     t.includes("cuando noto") ||
-    t.includes("resultados")
+    t.includes("cuanto se ve") ||
+    t.includes("demora") ||
+    t.includes("tiempo")
   );
 }
 
 function intentMasInfo(t) {
   return (
+    t.includes("mas informacion") ||
+    t.includes("dame mas") ||
     t.includes("cuentame mas") ||
     t.includes("explicame") ||
     t.includes("quiero saber mas") ||
-    t.includes("como es") ||
-    t.includes("como funciona")
+    t.includes("como funciona") ||
+    t.includes("como es")
   );
 }
 
-/* --------------------------------------------------
-   DETECCIÓN DE INTENCIÓN PRINCIPAL
--------------------------------------------------- */
+/* -----------------------------------------------
+   DETECTAR INTENT GENERAL
+------------------------------------------------- */
 function detectIntent(texto) {
   const t = normalizar(texto);
 
@@ -169,8 +141,8 @@ function detectIntent(texto) {
   if (intentResultados(t)) return { tipo: "resultados" };
   if (intentMasInfo(t)) return { tipo: "masInfo" };
 
-  const zonaCol = detectarZonaColoquial(t);
-  if (zonaCol) return { tipo: "zona", zona: zonaCol };
+  const zona = detectarZonaColoquial(t);
+  if (zona) return { tipo: "zona", zona };
 
   if (t.includes("depil")) return { tipo: "depilacion" };
 
@@ -186,8 +158,7 @@ function detectIntent(texto) {
   for (const c of diccionario.intents.consiste)
     if (t.includes(c)) return { tipo: "consiste" };
 
-  if (t.includes("firmeza"))
-    return { tipo: "objetivo", objetivo: "tonificar" };
+  if (t.includes("firmeza")) return { tipo: "objetivo", objetivo: "tonificar" };
 
   for (const obj in diccionario.objetivos)
     for (const k of diccionario.objetivos[obj])
@@ -196,291 +167,204 @@ function detectIntent(texto) {
   return null;
 }
 
-/* --------------------------------------------------
+/* -----------------------------------------------
    LINK AGENDA
--------------------------------------------------- */
+------------------------------------------------- */
 const linkAgenda =
   "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-/* --------------------------------------------------
-   PLANTILLAS Tono A
--------------------------------------------------- */
+/* -----------------------------------------------
+   RESPUESTAS HUMANAS EXTENDIDAS
+------------------------------------------------- */
 
 function saludoInicial() {
-  return "Hola! Soy Zara, parte del equipo de Body Elite ✨🤍. Estoy aquí para ayudarte a encontrar tu mejor versión con total honestidad clínica. Cuéntame, ¿qué zona te gustaría mejorar?";
+  return (
+    "Hola JC! Soy Zara ✨🤍 del equipo Body Elite. Estoy aquí para ayudarte a encontrar tu mejor versión sin presiones, con total honestidad clínica. " +
+    "Cuéntame, ¿qué zona o tratamiento quieres mejorar?"
+  );
 }
 
-/* ------------------ DOLOR ------------------ */
-function plantillaDolor() {
+function rDolor() {
   return (
-    "No te preocupes 🙈🤍. Nuestros tratamientos **no duelen**. Puedes sentir un **calorcito suave** o pequeñas **contracciones musculares** (como un apretón simpático), pero nada invasivo ni molesto.\n\n" +
-    "En tu evaluación gratuita (40 min) una especialista te muestra exactamente cómo se siente para que estés tranquila 🌼.\n" +
+    "No te preocupes 🙈🤍. Nuestros tratamientos **no duelen**. Se siente como un **calorcito suave** o **contracciones ligeras**, nada invasivo ni incómodo.\n\n" +
+    "En la evaluación gratuita (40 min) puedes probar cómo se siente, así quedas 100% tranquilo ✨.\n" +
+    "¿Quieres que te deje hora?"
+  );
+}
+
+function rPrecioJustificacion() {
+  return (
+    "Te entiendo totalmente 🤍. Los valores dependen de la tecnología (HIFU 12D, RF profunda o Pro Sculpt) y del resultado que buscas.\n\n" +
+    "Lo importante es que **no damos sesiones de más**. Ajustamos el plan a tu caso para que pagues solo lo necesario ✨.\n\n" +
+    "Si quieres, revisamos juntos tu objetivo y presupuesto en tu evaluación gratuita. ¿Quieres que te deje la hora?"
+  );
+}
+
+function rEfectividad() {
+  return (
+    "Sí, funciona 🤍✨. HIFU 12D, cavitación, RF y Pro Sculpt dan resultados progresivos incluso desde las primeras sesiones.\n\n" +
+    "En tu evaluación gratuita te mostramos exactamente qué resultado podrías esperar **tú** según tu cuerpo.\n" +
+    "¿Quieres reservar tu hora?"
+  );
+}
+
+function rResultados() {
+  return (
+    "Los primeros cambios suelen notarse desde la **primera o segunda sesión** 🌟.\n\n" +
+    "Depende de tu piel, tu objetivo y la zona. En la evaluación gratuita (40 min) medimos tu punto de partida y te damos un tiempo realista.\n" +
     "¿Quieres que te deje tu hora?"
   );
 }
 
-/* ------------------ PRECIO JUSTIFICACIÓN ------------------ */
-function plantillaPrecioJustificacion() {
+function rMasInfo() {
   return (
-    "Te entiendo totalmente 🤍. Los valores dependen de la tecnología incluida (HIFU 12D, RF profunda, Pro Sculpt) y del resultado que estás buscando.\n\n" +
-    "Lo bueno es que **ajustamos el plan a tu caso real**, para no darte sesiones de más ni de menos ✨.\n\n" +
-    "Si quieres, revisamos tu presupuesto y tu objetivo en tu evaluación gratuita. ¿Quieres que te deje la hora?"
+    "Feliz te cuento más JC 🤍.\n\n" +
+    "✨ **Cavitación:** rompe grasa localizada.\n" +
+    "✨ **Radiofrecuencia:** tensa piel y estimula colágeno.\n" +
+    "✨ **HIFU 12D:** define contorno y efecto lifting.\n" +
+    "✨ **Pro Sculpt:** tonifica y levanta músculo.\n\n" +
+    "Si quieres, en la evaluación gratuita te mostramos cuál se adapta mejor a tu objetivo.\n" +
+    "¿Quieres avanzar?"
   );
 }
 
-/* ------------------ EFECTIVIDAD ------------------ */
-function plantillaEfectividad() {
-  return (
-    "Sí, funciona 🤍✨. Las tecnologías como HIFU 12D, cavitación, RF y Pro Sculpt tienen resultados progresivos y reales, incluso desde las primeras sesiones.\n\n" +
-    "En tu evaluación gratuita te explicamos exactamente qué resultado puedes esperar **tú**, según tu caso. ¿Quieres que te deje tu hora?"
-  );
-}
-
-/* ------------------ RESULTADOS / TIEMPO ------------------ */
-function plantillaResultados() {
-  return (
-    "La mayoría de las pacientes nota cambios desde la **primera o segunda sesión** 🌟.\n\n" +
-    "Puede ser menos volumen, más firmeza o mejor contorno según el tratamiento.\n\n" +
-    "En tu evaluación gratuita (40 min) vemos tu caso real y te damos un tiempo estimado honesto 🤍.\n" +
-    "¿Quieres que te deje tu hora?"
-  );
-}
-
-/* ------------------ MAS INFO ------------------ */
-function plantillaMasInfo() {
-  return (
-    "Claro, feliz te cuento más 🤍.\n\n" +
-    "– **Cavitación:** ayuda a romper grasa localizada.\n" +
-    "– **RF profunda:** tensa la piel y estimula colágeno.\n" +
-    "– **HIFU 12D:** afina contorno y da efecto lifting.\n" +
-    "– **Pro Sculpt:** tonifica y levanta músculo.\n\n" +
-    "En tu evaluación gratuita te explican cuál combina mejor contigo ✨.\n¿Quieres que te deje la hora?"
-  );
-}
-
-/* ------------------ ZONA ------------------ */
-function plantillaZona(zona) {
+function rZona(z) {
   const textos = {
     abdomen:
-      "En abdomen podemos ayudarte a reducir volumen y tensar la piel con HIFU 12D, cavitación y radiofrecuencia 🤍.",
+      "En abdomen trabajamos reducción de volumen, contorno y firmeza con HIFU 12D, cavitación y RF 🤍.",
     gluteos:
-      "En glúteos trabajamos levantamiento, firmeza y forma con Pro Sculpt ✨.",
+      "En glúteos logramos levantamiento, forma y firmeza con Pro Sculpt ✨.",
     muslos:
-      "En muslos mejoramos contorno, celulitis y firmeza con cavitación y radiofrecuencia 🌼.",
+      "En muslos reducimos celulitis, mejoramos contorno y firmeza 🌼.",
     papada:
-      "En papada usamos HIFU 12D focalizado para reducir y tensar el contorno del cuello ✨.",
+      "En papada afinamos contorno y tensamos con HIFU 12D focalizado ✨.",
     patas_de_gallo:
-      "En contorno de ojos suavizamos líneas y damos firmeza con radiofrecuencia focalizada 🤍.",
+      "En contorno de ojos suavizamos líneas y rejuvenecemos con RF focalizada 🤍.",
     brazos:
-      "En brazos podemos mejorar firmeza y definición con RF profunda y Pro Sculpt 💛.",
+      "En brazos trabajamos firmeza, tonificación y tensado con RF profunda y Pro Sculpt 💛.",
     espalda:
-      "En espalda trabajamos reducción de volumen y tensado con cavitación y radiofrecuencia.",
+      "En espalda reducimos volumen y tensamos piel con cavitación + RF ✨.",
     cintura:
-      "En cintura y flancos trabajamos reducción y tensado con cavitación y radiofrecuencia ✨."
+      "En cintura y flancos afinamos contorno con cavitación y RF ❤️."
   };
 
-  return (
-    `${textos[zona] || "Podemos trabajar muy bien esa zona con nuestras tecnologías 🤍."}\n\n` +
-    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
-    linkAgenda
-  );
+  return textos[z] || "Podemos trabajar muy bien esa zona 🤍.";
 }
 
-/* ------------------ DEPILACIÓN ------------------ */
-function plantillaDepilacion() {
+function rDepilacion() {
   estado.ultimaZona = "depilacion";
   return (
-    "Perfecto 🤍. Trabajamos depilación láser con tecnología moderna y segura. Todos los planes incluyen **6 sesiones** y los valores parten desde **$153.600**.\n\n" +
-    "El valor exacto depende de tu zona, y lo definimos juntas en tu evaluación gratuita (40 min). ¿Quieres que te deje tu hora?"
+    "¡Perfecto JC! 🤍 Trabajamos depilación láser con equipos modernos y seguros. Todos los planes incluyen **6 sesiones** y parten desde **$153.600**.\n\n" +
+    "El valor exacto depende de tus zonas, y lo definimos en tu evaluación gratuita.\n" +
+    "¿Quieres reservar?"
   );
 }
 
-function plantillaDepilacionPrecio() {
-  return (
-    "Los planes de depilación parten desde **$153.600 por 6 sesiones** 🤍.\n\n" +
-    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
-    linkAgenda
-  );
-}
-
-/* ------------------ POSTPARTO ------------------ */
-function plantillaPostparto() {
-  estado.ultimaZona = "abdomen";
-  return (
-    "Es súper común que después del postparto el abdomen quede más suelto o con menor firmeza 🤍.\n\n" +
-    "Usamos HIFU 12D, cavitación y RF para mejorar contorno y tonicidad 🌼.\n\n" +
-    "Puedes reservar tu evaluación gratuita aquí y revisamos tu caso con calma:\n" +
-    linkAgenda
-  );
-}
-
-/* ------------------ OBJETIVOS ------------------ */
-function plantillaObjetivo(objetivo) {
-  const mensaje = {
-    reducir: "reducción de contorno",
-    tonificar: "mayor firmeza",
-    tensar: "tensado de piel",
-    antiage: "rejuvenecimiento"
-  };
-
-  return (
-    `Perfecto 🤍. Podemos trabajar la ${mensaje[objetivo] || objetivo}.\n\n` +
-    "Puedes reservar tu evaluación gratuita aquí:\n" +
-    linkAgenda
-  );
-}
-
-/* ------------------ CONSISTE ------------------ */
-function plantillaConsiste() {
-  return (
-    "Usamos tecnologías como HIFU 12D, cavitación, radiofrecuencia o Pro Sculpt 🤍. Esto ayuda a reducir volumen, mejorar firmeza y definir contorno.\n\n" +
-    "Si quieres avanzar, puedes reservar tu evaluación gratuita aquí:\n" +
-    linkAgenda
-  );
-}
-
-/* ------------------ UBICACIÓN ------------------ */
-function plantillaUbicacion() {
+function rUbicacion() {
   return (
     "Estamos en **Av. Las Perdices 2990, Local 23, Peñalolén** 🤍.\n" +
-    "Horario: Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n\n" +
-    "¿Quieres que te deje tu evaluación gratuita?"
+    "Horario: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.\n" +
+    "¿Quieres que vea disponibilidad para tu evaluación?"
   );
 }
 
-/* ------------------ PRECIOS ------------------ */
-function plantillaPrecio(zona) {
-  const precios = {
-    abdomen: "Lipo Express ($432.000)",
-    muslos: "Lipo Reductiva ($480.000)",
-    gluteos: "Push Up ($376.000)",
-    papada: "Lipo Papada (desde $60.000)",
-    patas_de_gallo: "Face Elite ($358.400)",
-    brazos: "Body Tensor ($232.000)",
-    espalda: "Lipo Reductiva ($480.000)",
-    cintura: "Lipo Express ($432.000)"
-  };
-
-  const plan = precios[zona] || "el plan recomendado según tu evaluación";
-
-  return (
-    `El plan recomendado para esa zona es **${plan}** ✨🤍.\n\n` +
-    "Puedes reservar tu evaluación gratuita aquí:\n" +
-    linkAgenda
-  );
+/* -----------------------------------------------
+   BOTÓN DE AGENDA
+------------------------------------------------- */
+async function enviarBotonAgenda(to, platform) {
+  return await sendInteractive(to, platform);
 }
 
-/* ------------------ FALLBACK ------------------ */
-function fallback() {
+/* -----------------------------------------------
+   FALLBACK HUMANO
+------------------------------------------------- */
+function fallbackHumano() {
   estado.intentosAgenda++;
 
   if (estado.intentosAgenda >= 2) {
     return (
-      "Si prefieres, una de nuestras profesionales puede llamarte para orientarte mejor 🤍.\n" +
-      "¿Quieres que te llamen?"
+      "Si quieres, uno de nuestros profesionales puede llamarte para aclarar todas tus dudas 🤍.\n" +
+      "¿Quieres dejar tu número?"
     );
   }
 
   return (
-    "Disculpa, no logré interpretar bien tu mensaje 🙈. En tu evaluación gratuita (40 min) una especialista puede explicarte todo paso a paso 🤍.\n" +
-    "¿Quieres que te deje la hora?"
+    "Disculpa JC, no logré interpretar bien tu mensaje 🙈. Pero en tu evaluación gratuita (40 min) te explicamos todo paso a paso 🤍.\n" +
+    "¿Quieres que te deje tu hora?"
   );
 }
 
-/* --------------------------------------------------
-   TELÉFONO
--------------------------------------------------- */
-function manejarTelefono(texto) {
-  const numero = texto.match(/\+?\d+/g);
-  if (!numero)
-    return "¿Podrías confirmarme tu número para que podamos llamarte? 🤍";
-
-  return {
-    interno: `Nueva solicitud de llamada:\nNúmero del paciente: ${numero[0]}\nZona: ${estado.ultimaZona}\nObjetivo: ${estado.ultimoObjetivo || "no indicado"}`,
-    usuario: "Perfecto 🤍. Ya envié tu número al equipo, te van a contactar en breve."
-  };
-}
-
-/* --------------------------------------------------
+/* -----------------------------------------------
    MOTOR PRINCIPAL
--------------------------------------------------- */
-export async function procesarMensaje(usuario, texto) {
+------------------------------------------------- */
+export async function procesarMensaje(usuario, texto, plataforma) {
   const t = normalizar(texto);
-  console.log("DEBUG:", t);
+  estado.historial.push(texto);
 
   if (estado.primeraInteraccion) {
     estado.primeraInteraccion = false;
     return saludoInicial();
   }
 
-  if (estado.intentosAgenda >= 2 && /\d/.test(t)) {
-    const out = manejarTelefono(texto);
-    if (typeof out === "string") return out;
-
-    await fetch("https://api.whatsapp.com/send", {
-      method: "POST",
-      body: JSON.stringify({
-        to: "+56983300262",
-        text: out.interno
-      })
-    });
-
-    return out.usuario;
-  }
-
   const intent = detectIntent(t);
-  console.log("DEBUG: intent →", intent);
 
-  if (!intent) {
-    const score = matchScore(t);
-    if (score < MIN_SCORE) return fallback();
-    return fallback();
-  }
+  if (!intent) return fallbackHumano();
 
   estado.intentosAgenda = 0;
 
   switch (intent.tipo) {
     case "dolor":
-      return plantillaDolor();
+      return rDolor();
 
     case "precioJustificacion":
-      return plantillaPrecioJustificacion();
+      return rPrecioJustificacion();
 
     case "efectividad":
-      return plantillaEfectividad();
+      return rEfectividad();
 
     case "resultados":
-      return plantillaResultados();
+      return rResultados();
 
     case "masInfo":
-      return plantillaMasInfo();
+      return rMasInfo();
 
     case "depilacion":
-      return plantillaDepilacion();
+      return rDepilacion();
 
     case "postparto":
-      return plantillaPostparto();
-
-    case "precio":
-      if (estado.ultimaZona === "depilacion")
-        return plantillaDepilacionPrecio();
-      return plantillaPrecio(estado.ultimaZona);
+      return (
+        "Después del postparto es muy común sentir la zona más suelta 🤍.\n\n" +
+        "Usamos HIFU 12D + RF para mejorar firmeza y contorno, siempre según tu caso.\n" +
+        "¿Quieres avanzar?"
+      );
 
     case "ubicacion":
-      return plantillaUbicacion();
+      return rUbicacion();
 
     case "consiste":
-      return plantillaConsiste();
+      return (
+        "Usamos HIFU 12D, cavitación, RF o Pro Sculpt según lo que quieras lograr 🤍.\n\n" +
+        "Si quieres, puedo mostrarte la opción exacta. ¿Quieres ver tu evaluación gratuita?"
+      );
 
     case "zona":
       estado.ultimaZona = intent.zona;
-      return plantillaZona(intent.zona);
+      return rZona(intent.zona) + "\n\n¿Quieres que revise tu evaluación?";
+
+    case "precio":
+      // si ya hay intención clara → botón
+      return await enviarBotonAgenda(usuario, plataforma);
 
     case "objetivo":
       estado.ultimoObjetivo = intent.objetivo;
-      return plantillaObjetivo(intent.objetivo);
+      return (
+        `Perfecto JC 🤍. Podemos trabajar ` +
+        intent.objetivo +
+        " según tu punto de partida.\n" +
+        "¿Quieres que revisemos tu evaluación?"
+      );
 
     default:
-      return fallback();
+      return fallbackHumano();
   }
 }
