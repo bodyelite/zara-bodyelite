@@ -349,7 +349,7 @@ export async function procesarMensaje(usuario, texto, plataforma) {
 
     case "zona":
       estado.ultimaZona = intent.zona;
-      return rZona(intent.zona) + "\n\n¿Quieres que revise tu evaluación?";
+      return rZona(intent.zona) + "";
 
     case "precio":
       return await enviarBotonAgenda(usuario, plataforma);
