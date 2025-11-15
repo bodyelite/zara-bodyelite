@@ -1,71 +1,50 @@
-// sendInteractive.js
-// Versión compatible con Motor V6 y Meta v19.0
+// sendInteractive.js – Versión final JC Premium (WhatsApp only)
 import fetch from "node-fetch";
 
-/*
-  Firma correcta:
-  sendInteractive(to, contenido, urlAgenda, platform)
-
-  contenido = {
-    header: "texto opcional",
-    body: "texto del mensaje",
-    button: "Título del botón"
-  }
-*/
-
-export async function sendInteractive(to, contenido, urlAgenda, platform) {
+export async function sendInteractive(to, contenido, urlAgenda) {
   try {
-    const url =
-      platform === "instagram"
-        ? "https://graph.facebook.com/v19.0/me/messages"
-        : `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
+    const numero = to.startsWith("+") ? to : `+${to}`;
 
-    // Construcción segura del botón para Meta
-    const body = {
-      messaging_product: platform === "instagram" ? "instagram" : "whatsapp",
-      to,
+    const payload = {
+      messaging_product: "whatsapp",
+      to: numero,
       type: "interactive",
       interactive: {
         type: "button",
         body: {
-          text: contenido.body || "Reserva tu evaluación gratuita 🤍"
+          text: contenido.body || "Agenda tu diagnóstico gratuito 🤍"
         },
         action: {
           buttons: [
             {
               type: "cta_url",
               url: urlAgenda,
-              title: contenido.button || "Agendar ahora"
+              title: contenido.button || "Agendar evaluación"
             }
           ]
         }
       }
     };
 
-    // Opcional: header (solo si se envía)
-    if (contenido.header) {
-      body.interactive.header = {
-        type: "text",
-        text: contenido.header
-      };
-    }
+    console.log("BOTÓN ENVIADO →", JSON.stringify(payload, null, 2));
 
-    console.log("DEBUG (BUTTON OUT):", JSON.stringify(body, null, 2));
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body)
-    });
+    const res = await fetch(
+      `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
 
     const data = await res.json();
-    console.log("DEBUG (BUTTON RESPONSE):", data);
+    console.log("RESPUESTA META →", data);
 
     return data;
-  } catch (e) {
-    console.error("ERROR SEND INTERACTIVE:", e);
+  } catch (err) {
+    console.error("ERROR EN BOTÓN →", err);
   }
 }
