@@ -1,4 +1,9 @@
 import memoria from "./memoria.js";
+import { sendInteractive } from "./sendInteractive.js";
+
+/* ============================================================
+   MOTOR PREMIUM – BODY ELITE (versión final JC)
+   ============================================================ */
 
 export async function procesarMensaje(usuario, texto) {
   if (!texto || typeof texto !== "string") return fallback(usuario);
@@ -14,207 +19,253 @@ export async function procesarMensaje(usuario, texto) {
   if (!contexto.estado) contexto.estado = {};
   if (!contexto.estado.agendaIntentos) contexto.estado.agendaIntentos = 0;
   if (!contexto.estado.llamadaOfrecida) contexto.estado.llamadaOfrecida = false;
-  if (!contexto.estado.numeroSolicitado) contexto.estado.numeroSolicitado = false;
 
   memoria.guardarMensaje(usuario, msg);
 
-  /* SALUDO */
+  /* ============================================================
+     SALUDO
+     ============================================================ */
   const saludos = ["hola", "holi", "hello", "consulta", "info", "buenas", "zara"];
   if (saludos.some(s => msg.includes(s))) {
-    return saludoInicial(usuario);
+    return saludoInicial();
   }
 
-  /* AFIRMACIONES */
+  /* ============================================================
+     AFIRMACIONES
+     ============================================================ */
   const afirmativos = ["si", "sí", "dale", "quiero", "ok", "listo", "perfecto"];
   if (afirmativos.some(a => msg === a || msg.includes(a))) {
     return manejarAfirmacion(usuario, contexto);
   }
 
-  /* ZONAS */
+  /* ============================================================
+     ZONAS
+     ============================================================ */
   const zonas = {
     "guata": "abdomen",
-    "guatita": "abdomen",
     "panza": "abdomen",
     "abdomen": "abdomen",
     "rollito": "abdomen",
-    "rollitos": "abdomen",
     "poto": "glúteos",
     "cola": "glúteos",
     "gluteo": "glúteos",
-    "glúteo": "glúteos",
-    "gluteos": "glúteos",
     "glúteos": "glúteos",
     "muslos": "muslos",
     "piernas": "piernas",
     "papada": "papada",
-    "barbilla": "papada",
-    "mentón": "papada",
-    "patas de gallo": "contorno ocular",
+    "menton": "papada",
     "arrugas": "rostro",
     "cara": "rostro"
   };
 
   for (const [coloq, zonaReal] of Object.entries(zonas)) {
     if (msg.includes(coloq)) {
-      memoria.guardarContexto(usuario, contexto);
-      return respuestaZona(usuario, contexto, zonaReal);
+      return await respuestaZona(usuario, contexto, zonaReal);
     }
   }
 
-  /* PRECIO */
+  /* ============================================================
+     DEPILACIÓN
+     ============================================================ */
+  if (msg.includes("depil") || msg.includes("rebaje") || msg.includes("axila") || msg.includes("pelos")) {
+    return await respuestaDepilacion(usuario, contexto);
+  }
+
+  /* ============================================================
+     PRECIO
+     ============================================================ */
   if (msg.includes("precio") || msg.includes("valor") || msg.includes("vale")) {
-    return respuestaPrecio(usuario, contexto);
+    return await respuestaPrecio(usuario, contexto);
   }
 
-  /* RESULTADOS */
-  if (msg.includes("resultado") || msg.includes("cambios") || msg.includes("cuando")) {
-    return respuestaResultados(usuario, contexto);
+  /* ============================================================
+     RESULTADOS
+     ============================================================ */
+  if (msg.includes("cuando") || msg.includes("result") || msg.includes("cambios")) {
+    return await respuestaResultados(usuario, contexto);
   }
 
-  /* DOLOR */
+  /* ============================================================
+     DOLOR
+     ============================================================ */
   if (msg.includes("duele") || msg.includes("dolor")) {
-    return respuestaDolor(usuario, contexto);
+    return await respuestaDolor(usuario, contexto);
   }
 
-  /* DEPILACIÓN */
-  if (msg.includes("depil") || msg.includes("pelos") || msg.includes("rebaje") || msg.includes("axila")) {
-    memoria.guardarContexto(usuario, contexto);
-    return respuestaDepilacion(usuario, contexto);
-  }
-
-  /* UBICACIÓN */
+  /* ============================================================
+     UBICACIÓN
+     ============================================================ */
   if (msg.includes("donde") || msg.includes("ubicacion") || msg.includes("direcc")) {
-    return "📍 Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén.\nHorarios Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n¿Quieres que agendemos tu diagnóstico gratuito?";
+    return "📍 Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén.\nLun–Vie 9:30–20:00, Sáb 9:30–13:00.\n\n¿Deseas agendar tu diagnóstico gratuito?";
   }
 
-  /* AGENDA */
-  if (msg.includes("agendar") || msg.includes("evaluacion") || msg.includes("reserva")) {
-    return botonAgenda();
-  }
-
-  /* FALLBACK */
-  return fallback(usuario, contexto);
+  return await fallback(usuario, contexto);
 }
 
-/* ====================== RESPUESTAS BASE ===================== */
-
+/* ============================================================
+   SALUDO FINAL JC
+   ============================================================ */
 function saludoInicial() {
-  return `Hola! Soy Zara ✨🤍 del equipo Body Elite.
-Estoy aquí para ayudarte con total honestidad clínica.
-Cuéntame, ¿qué zona te gustaría mejorar?`;
+  return (
+    "Hola 🤍 Soy Zara de Body Elite. " +
+    "Estoy aquí para ayudarte a sacar tu mejor versión. " +
+    "¿Qué zona te gustaría mejorar?"
+  );
 }
 
-function respuestaZona(usuario, contexto, zona) {
+/* ============================================================
+   RESPUESTAS POR ZONA
+   ============================================================ */
+
+async function respuestaZona(usuario, contexto, zona) {
   contexto.estado.agendaIntentos++;
 
   const textos = {
-    "abdomen": `En abdomen trabajamos 3 frentes ✨:
-• Reducción de grasa resistente con **HIFU 12D**
-• Modelado con **cavitación**
-• Firmeza con **radiofrecuencia**
-
-Funciona excelente para rollitos o “guatita”.`,
-    "glúteos": `En glúteos logramos **levantamiento, forma y firmeza** con Pro Sculpt 🍑.`,
-    "muslos": `En muslos trabajamos celulitis, contorno y firmeza con HIFU 12D + cavitación + RF.`,
-    "piernas": `En piernas mejoramos retención de líquido, celulitis y definición.`,
-    "papada": `En papada usamos **lipolítico facial + radiofrecuencia + HIFU focalizado** para reducir y tensar.`,
-    "contorno ocular": `Para contorno de ojos usamos Pink Glow + RF suave para suavizar líneas finas.`,
-    "rostro": `En rostro trabajamos firmeza y luminosidad con HIFU 12D, radiofrecuencia y Pink Glow (sin LED).`
+    abdomen: `En abdomen trabajamos reducción de grasa, retención de líquido y firmeza de la piel. Usamos **HIFU 12D**, **cavitación** y **radiofrecuencia**, que actúan sobre grasa profunda y textura de piel para lograr una zona más plana y compacta ✨.\n\nEl plan que mejor funciona en esta zona suele ser **Lipo Express**, desde **$432.000**.`,
+    "glúteos": `En glúteos buscamos levantar, proyectar y compactar el tejido. Usamos **EMS Pro Sculpt** y radiofrecuencia profunda para mejorar tono muscular, firmeza y forma 🍑.\n\nEl plan que más resultados entrega es **Push Up Glúteos**, desde **$376.000**.`,
+    muslos: `En muslos trabajamos celulitis, firmeza y contorno. Combinamos **HIFU 12D**, cavitación y radiofrecuencia para compactar piel y mejorar textura ✨.\n\nSegún el tipo de tejido, suele recomendarse **Body Tensor** desde **$232.000**.`,
+    piernas: `En piernas trabajamos retención de líquido, celulitis y contorno. Cavitación + radiofrecuencia ayudan a afinar y definir.\n\nDependiendo del objetivo, se combina con HIFU 12D.`,
+    papada: `En papada reducimos grasa submentoniana y tensamos piel con **lipolítico facial**, **radiofrecuencia** y **HIFU focalizado** ✨.\n\nLos resultados suelen iniciar desde la 2°–3° sesión.`,
+    rostro: `En rostro trabajamos firmeza, luminosidad y contorno. Según tu objetivo, se usa **HIFU 12D**, radiofrecuencia o **Pink Glow** (sin LED).`
   };
 
-  return textos[zona] + "\n\n" + decidirAgenda(contexto);
+  const texto = textos[zona] || "Puedo ayudarte a evaluar esa zona con tecnologías no invasivas.";
+
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
-function respuestaPrecio(usuario, contexto) {
+/* ============================================================
+   DEPILACIÓN
+   ============================================================ */
+async function respuestaDepilacion(usuario, contexto) {
   contexto.estado.agendaIntentos++;
-  return `El valor exacto depende de tu punto de partida 🤍.
-En tu evaluación gratuita una especialista te indica cuántas sesiones necesitas realmente.\n\n${decidirAgenda(contexto)}`;
+
+  const texto =
+    "Trabajamos depilación con láser diodo clínico **DL900**, que permite tratar vello claro y oscuro sin dolor significativo 🤍.\n\n" +
+    "Las zonas pequeñas comienzan **desde $25.600 por sesión**, y los planes se arman en 6 sesiones.";
+
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
-function respuestaResultados(usuario, contexto) {
+/* ============================================================
+   PRECIO GENÉRICO
+   ============================================================ */
+async function respuestaPrecio(usuario, contexto) {
   contexto.estado.agendaIntentos++;
-  return `Los primeros cambios suelen verse entre la 2° y 4° sesión, según metabolismo y firmeza inicial 🤍.\n\n${decidirAgenda(contexto)}`;
+
+  const texto =
+    "Los valores exactos dependen de tu punto de partida y del plan que realmente necesitas 🤍.\n" +
+    "Tu diagnóstico gratuito nos permite indicarte cuántas sesiones necesitas y el precio final más conveniente.";
+
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
-function respuestaDolor(usuario, contexto) {
+/* ============================================================
+   RESULTADOS
+   ============================================================ */
+async function respuestaResultados(usuario, contexto) {
   contexto.estado.agendaIntentos++;
-  return `Todas nuestras tecnologías son no invasivas 🤍.
-Puedes sentir calor profundo o vibración intensa, pero nada doloroso.\n\n${decidirAgenda(contexto)}`;
+
+  const texto =
+    "Los primeros cambios suelen verse entre la 2° y 4° sesión según metabolismo, tipo de tejido y nivel de firmeza inicial ✨.\n" +
+    "En el diagnóstico gratuito podemos proyectar tus resultados con mayor precisión.";
+
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
-function respuestaDepilacion(usuario, contexto) {
+/* ============================================================
+   DOLOR
+   ============================================================ */
+async function respuestaDolor(usuario, contexto) {
   contexto.estado.agendaIntentos++;
-  return `Nuestra depilación láser es diodo clínico modelo **DL900**, apto para vello claro y oscuro.
-Planes oficiales desde 6 sesiones según zona 🤍.\n\n${decidirAgenda(contexto)}`;
+
+  const texto =
+    "Todas nuestras tecnologías son no invasivas 🤍. Puedes sentir calor profundo o vibración intensa, pero nada doloroso.\n" +
+    "Se trabaja sin reposo y sin tiempos de recuperación.";
+
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
-/* ====================== AGENDA INTELIGENTE ===================== */
+/* ============================================================
+   AGENDA INTELIGENTE (Regla B)
+   ============================================================ */
 
-function decidirAgenda(contexto) {
-  contexto.estado.agendaIntentos++;
+async function construirRespuestaConAgenda(usuario, contexto, texto) {
+  const intentos = contexto.estado.agendaIntentos;
 
-  if (contexto.estado.agendaIntentos === 1) {
-    return "¿Quieres que te deje el link para tu evaluación gratuita?";
+  // INTENTO 1 → Pregunta
+  if (intentos === 1) {
+    return (
+      texto +
+      "\n\n¿Quieres que te deje el acceso para tu diagnóstico gratuito?"
+    );
   }
 
-  if (contexto.estado.agendaIntentos === 2 || contexto.estado.agendaIntentos === 3) {
-    return botonAgenda();
+  // INTENTO 2 y 3 → Botón
+  if (intentos === 2 || intentos === 3) {
+    await enviarBoton(usuario);
+    return texto;
   }
 
-  if (contexto.estado.agendaIntentos >= 4 && !contexto.estado.llamadaOfrecida) {
+  // INTENTO 4 → Botón + llamada
+  if (intentos >= 4 && !contexto.estado.llamadaOfrecida) {
     contexto.estado.llamadaOfrecida = true;
-    return botonAgenda() + `\n\nSi quieres, también puedo pedir que una profesional te llame 🙌.\n¿Quieres que coordine la llamada?`;
+    await enviarBoton(usuario);
+    return (
+      texto +
+      "\n\nSi prefieres, también puedo coordinar que una profesional te llame 🙌.\n¿Deseas la llamada?"
+    );
   }
 
-  return botonAgenda();
+  // Repeticiones posteriores
+  await enviarBoton(usuario);
+  return texto;
 }
 
-function botonAgenda() {
-  return `Agenda aquí tu diagnóstico gratuito 🤍:
-https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
+/* ============================================================
+   ENVÍO DE BOTÓN
+   ============================================================ */
+
+async function enviarBoton(usuario) {
+  await sendInteractive(
+    usuario,
+    {
+      body: "Reserva tu diagnóstico gratuito 🤍",
+      button: "Agendar evaluación"
+    },
+    "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+    "whatsapp"
+  );
 }
 
-/* ====================== LLAMADAS ===================== */
-
-function manejarAfirmacion(usuario, contexto) {
-  if (contexto.estado.llamadaOfrecida) {
-    return procesarLlamada();
-  }
-  return botonAgenda();
-}
-
-function procesarLlamada() {
-  if (dentroHorario()) {
-    return `Perfecto 🤍. Una profesional te llamará en unos minutos desde **+56 9 8330 0262**.`;
-  }
-
-  return `Nuestro horario de llamadas es:
-• Lun–Vie 09:30–19:00  
-• Sáb 09:30–14:00  
-
-Puedo dejar la llamada programada para el próximo horario 🙌.`;
-}
+/* ============================================================
+   LLAMADA Y HORARIO (Chile UTC-3)
+   ============================================================ */
 
 function dentroHorario() {
   const ahora = new Date();
-  const d = ahora.getDay();
-  const h = ahora.getHours();
-  const m = ahora.getMinutes();
+  const chile = new Date(ahora.getTime() - 3 * 3600 * 1000);
+
+  const d = chile.getDay();
+  const h = chile.getHours();
+  const m = chile.getMinutes();
 
   if (d === 0) return false;
   if (d === 6 && (h > 14 || (h === 14 && m > 0))) return false;
 
-  const mins = h * 60 + m;
-  const inicio = 9 * 60 + 30;
-  const fin = 19 * 60;
-
-  return mins >= inicio && mins <= fin;
+  const total = h * 60 + m;
+  return total >= 570 && total <= 1140; // 09:30–19:00
 }
 
-/* ====================== FALLBACK ===================== */
+/* ============================================================
+   FALLBACK PREMIUM
+   ============================================================ */
 
-function fallback(usuario, contexto = { estado: {} }) {
+async function fallback(usuario, contexto = { estado: {} }) {
   contexto.estado.agendaIntentos++;
-  return `Disculpa, no logré interpretar bien tu mensaje 🙈.
-En tu evaluación gratuita te guiamos paso a paso con honestidad clínica 🤍.\n\n${decidirAgenda(contexto)}`;
+  const texto =
+    "No estoy segura de haber entendido bien 🤍, pero puedo ayudarte a orientarte según tu objetivo.\n" +
+    "En tu diagnóstico gratuito te mostramos qué tecnología te conviene y cuántas sesiones necesitas.";
+
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
