@@ -1,19 +1,17 @@
 /* ===========================================================
-   motor_respuesta_v3.js — Versión clínica + comercial v3.1
-   Zara Body Elite — Motor completo, autónomo y transversal
+   motor_respuesta_v3.js — Motor Clínico + Comercial v3.1 Final
+   Zara Body Elite — Semántica Suave + Planes + Campañas por texto
    =========================================================== */
 
 import { leerMemoria, guardarMemoria } from "./memoria.js";
 
 // ===========================================================
-// ESTRUCTURA PRINCIPAL DEL MOTOR
+// PROCESADOR PRINCIPAL
 // ===========================================================
 
 export async function procesarMensaje(usuario, textoEntrada) {
   const memoria = leerMemoria(usuario) || {
-    ultima_zona: null,
     ultimo_plan: null,
-    ultimo_objetivo: null,
     intentosAgenda: 0,
   };
 
@@ -24,7 +22,7 @@ export async function procesarMensaje(usuario, textoEntrada) {
 }
 
 // ===========================================================
-// PALABRAS CLAVE — DETECCIÓN CLÍNICA
+// PALABRAS CLAVE — SEMÁNTICA SUAVE
 // ===========================================================
 
 const palabras = {
@@ -32,9 +30,12 @@ const palabras = {
   arrugas: ["arruga", "arrugas", "patas de gallo", "pata de gallo", "líneas", "lineas", "lineas de expresión", "expresión", "ceño", "entrecejo", "frente marcada"],
   flacidez_facial: ["flacidez", "flacida", "piel suelta", "rostro caído", "rostro caido", "contorno caído", "contorno caido", "descolgado"],
   papada: ["papada", "doble mentón", "doble menton", "mentón", "menton"],
-
   manchas: ["manchas", "manchitas", "melasma", "opaca", "opacidad", "luminosidad"],
   textura: ["textura", "poros", "poros abiertos", "piel áspera", "piel aspera"],
+  
+  // NUEVOS PLANES FACIALES
+  face_h12: ["face h12", "h12", "h 12"],
+  face_one: ["face one", "one"],
 
   // CORPORAL
   grasa_abdomen: ["abdomen", "guata", "guatita", "panza", "pansa", "rollito", "rollitos", "flotador", "cintura", "estomago", "estómago"],
@@ -48,31 +49,30 @@ const palabras = {
 
   // INTENCIONES
   funcionamiento: ["como funciona", "cómo funciona", "en qué consiste", "que máquinas usan", "qué maquinas usan", "maquina", "máquina"],
-  precio: ["precio", "vale", "cuesta", "caro", "valor", "barato", "cuanto sale", "cuánto sale", "cuanto vale"],
   sesiones: ["sesiones", "cuantas sesiones", "número de sesiones", "numero de sesiones"],
   resultados: ["resultados", "cuando se ven", "cuándo veo", "cuanto demora", "demora", "sirve", "vale la pena"],
   dolor: ["duele", "dolor", "molesta", "ardor", "incomodo"],
   ubicacion: ["donde están", "ubicación", "como llegar", "dirección", "donde quedan"],
-  agendar: ["agendar", "reservar", "quiero ir", "quiero agendar", "link", "pasame el link", "quiero hora", "agenda"],
+  agendar: ["agendar", "reservar", "quiero ir", "quiero agendar", "link", "pasame el link", "quiero hora", "agenda", "agendo"],
 };
 
 // ===========================================================
-// UTILIDADES
+// UTILIDADES GENERALES
 // ===========================================================
 
 const match = (texto, lista) => lista.some((w) => texto.includes(w));
 
-// CTA inteligente
+// CTA LÓGICA
 function CTA_ofrecer() {
-  return "Si quieres, puedo dejarte aquí el acceso para agendar tu diagnóstico gratuito. Es sin costo.";
+  return "¿Quieres que te deje el acceso para agendar tu diagnóstico gratuito? Es sin costo.";
 }
 
 function CTA_enviar() {
-  return "Aquí tienes el enlace directo para reservar tu diagnóstico gratuito:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  return "Aquí tienes el acceso directo para agendar tu diagnóstico gratuito:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 }
 
 function CTA_llamada() {
-  return "Si te acomoda más, puedo coordinar que una profesional te llame en horario laboral para ayudarte a elegir tu hora. ¿Quieres que te contacten?";
+  return "Si prefieres, también puedo pedir que una profesional te llame en horario laboral para ayudarte a elegir tu hora. ¿Quieres que lo coordinemos?";
 }
 
 
@@ -81,38 +81,39 @@ function CTA_llamada() {
 // ===========================================================
 
 function recomendarPlanCorporal(texto) {
-  // GRASA ABDOMINAL / ROLLITOS
+
+  // ABDOMEN / ROLLITOS / CINTURA — LIPO EXPRESS
   if (match(texto, palabras.grasa_abdomen)) {
     return {
       plan: "Lipo Express",
       precio: 432000,
       descripcion: `
-Para abdomen, guatita o rollitos, el plan que mejores resultados entrega es **Lipo Express**.
+El **Plan Lipo Express** está pensado para reducir volumen en abdomen, cintura y rollitos de forma rápida y visible.
 
-Trabaja tres tecnologías combinadas:
+Trabajamos tres tecnologías combinadas:
 • **HIFU 12D** para grasa profunda resistente  
-• **Cavitación** para romper adipocitos  
-• **Radiofrecuencia médica** para firmeza
+• **Cavitación médica** para romper adipocitos  
+• **Radiofrecuencia profunda** para firmeza y contorno  
 
-Te ayuda a reducir volumen, definir contorno y mejorar la firmeza al mismo tiempo.
+Es ideal si buscas resultados desde las primeras sesiones, especialmente en zonas donde la grasa cuesta más en bajar.  
 `
     };
   }
 
-  // GRASA EN PIERNAS / CARTUCHERAS
+  // PIERNAS / MUSLOS / CARTUCHERAS — LIPO FOCALIZADA
   if (match(texto, palabras.grasa_cuerpo)) {
     return {
       plan: "Lipo Focalizada Reductiva",
       precio: 348800,
       descripcion: `
-Para grasa localizada en piernas, muslos o cartucheras, se indica **Lipo Focalizada Reductiva**.
+El **Plan Lipo Focalizada Reductiva** es perfecto para trabajar **piernas, muslos y cartucheras**, donde suele haber retención y grasa localizada.
 
-Combina:
-• **Cavitación** para romper adipocitos  
+Incluye:
+• **Cavitación médica** para adipocitos  
 • **Radiofrecuencia profunda** para firmeza  
-• **Drenaje** si hay retención
+• Drenaje si hay retención  
 
-Es ideal cuando hay volumen o celulitis.
+Mejora contorno, celulitis y volumen al mismo tiempo.  
 `
     };
   }
@@ -123,60 +124,66 @@ Es ideal cuando hay volumen o celulitis.
       plan: "Lipo Focalizada Reductiva",
       precio: 348800,
       descripcion: `
-Para brazos con volumen o flacidez leve, el tratamiento indicado es **Lipo Focalizada Reductiva**.
+Para brazos con volumen o flacidez leve, trabajamos con **Lipo Focalizada Reductiva**.
 
 Incluye:
 • Cavitación  
-• Radiofrecuencia médica  
-• Trabajo específico en firmeza y contorno del brazo
+• Radiofrecuencia profunda  
+• Trabajo específico para contorno del brazo  
+
+Ideal para afinar y mejorar firmeza.  
 `
     };
   }
 
-  // GLÚTEOS
-  if (match(texto, palabras.gluteos)) {
+  // FLACIDEZ CORPORAL — BODY TENSOR
+  if (texto.includes("flacidez") || texto.includes("flácida") || texto.includes("flacida")) {
     return {
-      plan: "Push Up Glúteos",
-      precio: 376000,
+      plan: "Body Tensor",
+      precio: 232000,
       descripcion: `
-Para levantar, dar forma y mejorar la proyección de glúteos, se utiliza **Push Up Glúteos**.
+El **Plan Body Tensor** está diseñado específicamente para **flacidez corporal**.
 
 Incluye:
-• **EMS Pro Sculpt** (contracciones profundas)  
-• **Radiofrecuencia profunda** para firmeza  
-• Modelado según la caída o forma que quieras lograr
+• **Radiofrecuencia médica profunda** para tensado  
+• **EMS Sculptor** para tono muscular  
+• Protocolos de retracción de piel  
+
+Ideal si buscas firmeza y mejor caída del tejido.  
 `
     };
   }
 
-  // TONO MUSCULAR / MARCACIÓN
+  // TONO MUSCULAR / MARCACIÓN — BODY FITNESS
   if (match(texto, palabras.tono)) {
     return {
       plan: "Body Fitness",
       precio: 360000,
       descripcion: `
-Para tonificar, marcar o fortalecer la zona, trabajamos con **Body Fitness**.
+El **Plan Body Fitness** trabaja **tono, definición y fortalecimiento muscular**.
 
 Incluye:
-• **EMS Sculptor** (20.000 contracciones por sesión)  
-• Rutina personalizada según objetivo  
-• Firmeza + tono muscular
+• **EMS Sculptor** con 20.000 contracciones por sesión  
+• Protocolos de musculación no invasiva  
+• Trabajo personalizado según objetivo (marcación, abdomen firme, glúteo más tonificado)  
 `
     };
   }
 
-  // FLACIDEZ CORPORAL
-  if (texto.includes("flacidez") || texto.includes("flácido") || texto.includes("flacida")) {
+  // GLÚTEOS / LEVANTAR / FORMA — PUSH UP
+  if (match(texto, palabras.gluteos)) {
     return {
-      plan: "Body Tensor",
-      precio: 232000,
+      plan: "Push Up Glúteos",
+      precio: 376000,
       descripcion: `
-Para flacidez corporal, el tratamiento más efectivo es **Body Tensor**.
+El **Plan Push Up Glúteos** está enfocado en levantar, afirmar y mejorar la forma del glúteo sin cirugía.
 
-Trabajamos:
-• Radiofrecuencia médica profunda  
-• EMS para tonificar  
-• Enfocado en firmeza y retracción de piel
+Incluye:
+• **EMS Pro Sculpt** (20.000 contracciones profundas)  
+• **Radiofrecuencia médica** para firmeza  
+• Trabajo según caída, simetría y forma que quieras lograr  
+
+Excelente para proyección, firmeza y levantamiento natural.  
 `
     };
   }
@@ -191,99 +198,156 @@ Trabajamos:
 
 function recomendarPlanFacial(texto) {
 
-  // ARRUGAS / LÍNEAS — Face Antiage como principal
+  // ARRUGAS / PATAS DE GALLO / LÍNEAS — FACE ANTIAGE
   if (match(texto, palabras.arrugas)) {
     return {
       plan: "Face Antiage",
       precio: 281600,
       descripcion: `
-Para arrugas, patas de gallo o líneas de expresión, lo más efectivo es **Face Antiage**.
+El **Plan Face Antiage** está diseñado para suavizar arrugas, patas de gallo, líneas de expresión y rasgos de cansancio.
 
 Incluye:
-• **Toxina** cuando es clínicamente necesaria  
+• **Toxina** cuando es clínicamente indicada  
 • **Radiofrecuencia médica** para firmeza  
-• **Pink Glow** para luminosidad y textura  
-• Trabajo integral en frente, patas de gallo y entrecejo
+• **Pink Glow** para textura y luminosidad  
+• Trabajo en frente, entrecejo y contorno de ojos  
 
-Es el tratamiento más completo para suavizar líneas y mejorar la calidad de la piel.
+Da un aspecto más descansado, suave y rejuvenecido.
 
-Según tu evaluación, también revisamos si **Face Elite** sería alternativa si hay más flacidez.
+En tu evaluación revisamos si **Face Elite** sería mejor alternativa si además hay flacidez.  
 `
     };
   }
 
-  // FLACIDEZ FACIAL — Face Elite
+  // FLACIDEZ FACIAL / CONTORNO CAÍDO — FACE ELITE
   if (match(texto, palabras.flacidez_facial)) {
     return {
       plan: "Face Elite",
       precio: 358400,
       descripcion: `
-Para firmeza, contorno y efecto lifting sin cirugía, el plan más completo es **Face Elite**.
+El **Plan Face Elite** es el más completo para **lifting, firmeza y contorno facial**, sin cirugía.
 
 Incluye:
-• **HIFU 12D facial** para tensar capas profundas  
+• **HIFU 12D facial** para tensado profundo (capa SMAS)  
 • **Radiofrecuencia médica** para colágeno  
 • **Pink Glow** para textura y luminosidad  
 
-Es ideal para contorno caído, mejillas sin firmeza o pérdida de estructura facial.
+Ideal para contorno marcado, mejillas caídas, mandíbula menos definida o sensación de “rostro cansado”.
 
-Si además tienes líneas de expresión marcadas, en la evaluación vemos si **Face Antiage** es mejor alternativa.
+Si además hay líneas marcadas, revisamos si **Face Antiage** es mejor para complementar.  
 `
     };
   }
 
-  // PAPADA — plan especializado
+  // PAPADA / DOBLE MENTÓN — FACE PAPADA
   if (match(texto, palabras.papada)) {
     return {
       plan: "Face Papada",
       precio: 198400,
       descripcion: `
-Para papada trabajamos el plan **Face Papada**, enfocado en reducir volumen y afinar contorno facial.
+El **Plan Face Papada** trabaja la zona submentón para reducir volumen y definir el contorno inferior del rostro.
 
 Incluye:
-• **HIFU 12D submentón**  
-• **Lipolítico facial**  
-• Radiofrecuencia para firmeza  
+• **HIFU 12D submentón** para grasa profunda  
+• **Lipolítico facial** para adiposidad localizada  
+• **Radiofrecuencia médica** para firmeza  
 
-Es ideal para perfilar el rostro y disminuir el doble mentón.
+Ideal cuando hay doble mentón o pérdida de definición mandibular.  
 `
     };
   }
 
-  // MANCHAS / OPACIDAD — Face Smart
+  // MANCHAS / OPACIDAD — FACE SMART
   if (match(texto, palabras.manchas)) {
     return {
       plan: "Face Smart",
       precio: 198400,
       descripcion: `
-Para manchas, opacidad o tono disparejo, utilizamos **Face Smart**.
+El **Plan Face Smart** está orientado a **manchas, tono disparejo y piel opaca**.
 
 Incluye:
-• **Pink Glow** (antioxidantes + péptidos)  
+• **Pink Glow** (péptidos + antioxidantes)  
 • **Limpieza profunda**  
-• **Radiofrecuencia médica**  
-• Tratamiento personalizado según tipo de mancha
+• **Radiofrecuencia suave**  
+• Protocolos para uniformar tono y aclarar zonas comprometidas  
 
-El resultado es una piel más luminosa, pareja y saludable.
+Ideal para piel apagada o con manchas recientes.  
 `
     };
   }
 
-  // TEXTURA / POROS — Face Light
+  // TEXTURA / POROS / ASPECTO IRREGULAR — FACE LIGHT
   if (match(texto, palabras.textura)) {
     return {
       plan: "Face Light",
       precio: 128800,
       descripcion: `
-Para textura, poros abiertos o piel áspera, trabajamos con **Face Light**.
+El **Plan Face Light** está enfocado en **textura, poros abiertos y suavidad general**.
 
 Incluye:
 • Limpieza profunda  
 • Radiofrecuencia suave  
-• Pink Glow para mejorar luminosidad y suavidad  
-• Hidratación profunda
+• **Pink Glow** para mejorar luminosidad  
+• Hidratación profunda  
 
-Ideal para mejorar la calidad superficial de la piel.
+Deja la piel más lisa, suave y pareja.  
+`
+    };
+  }
+
+  // NUEVO — FACE H12
+  if (match(texto, palabras.face_h12)) {
+    return {
+      plan: "Face H12",
+      precio: 270400,
+      descripcion: `
+El **Plan Face H12** combina **HIFU 12D facial** con un protocolo de reafirmación profunda.
+
+Incluye:
+• HIFU 12D por capas  
+• Radiofrecuencia médica  
+• Pink Glow  
+• Enfoque en mejillas, surcos y contorno inferior  
+
+Ideal cuando buscas un lifting más profundo y progresivo.  
+`
+    };
+  }
+
+  // NUEVO — FACE ONE (rápido y visible)
+  if (match(texto, palabras.face_one)) {
+    return {
+      plan: "Face One",
+      precio: 128800,
+      descripcion: `
+El **Plan Face One** es un tratamiento rápido, enfocado en dar un efecto visible en una sesión.
+
+Incluye:
+• Radiofrecuencia médica  
+• Pink Glow  
+• Protocolos de hidratación y firmeza inmediata  
+
+Ideal para eventos, fotos o cuando buscas un efecto inmediato.  
+`
+    };
+  }
+
+  // DETECCIÓN DIRECTA SI LA PERSONA MENCIONA "Full Face"
+  if (texto.includes("full face")) {
+    return {
+      plan: "Full Face",
+      precio: 584000,
+      descripcion: `
+El **Plan Full Face** es un rejuvenecimiento facial integral que trabaja **todo el rostro** con protocolos avanzados.
+
+Incluye:
+• HIFU 12D en zonas clave  
+• Radiofrecuencia médica  
+• Pink Glow  
+• Hidratación y textura  
+• Protocolos complementarios según flacidez y arrugas  
+
+Ideal si buscas un cambio global, firmeza, contorno y piel más luminosa.  
 `
     };
   }
@@ -293,23 +357,23 @@ Ideal para mejorar la calidad superficial de la piel.
 
 
 // ===========================================================
-// REGLAS CLÍNICAS — DEPILACIÓN
+// REGLAS — DEPILACIÓN
 // ===========================================================
 
 function recomendarDepilacion(texto) {
   if (match(texto, palabras.depilacion)) {
     return {
-      plan: "Depilación Láser",
+      plan: "Depilación Láser DL900",
       precio: 153600,
       descripcion: `
-En depilación trabajamos con **láser diodo DL900**, seguro para distintos fototipos.
+Trabajamos con **láser diodo DL900**, seguro para distintos fototipos.
 
 • Sesiones cada **15 días**  
-• Zonas pequeñas, medianas o grandes  
 • Muy tolerable (sensación cálida)  
 • Resultados progresivos por ciclo de crecimiento  
+• Ideal para axila, rebaje, piernas, brazos y zona facial  
 
-En tu evaluación vemos la zona exacta que quieres trabajar y el plan ideal.
+En tu evaluación vemos la zona exacta y el plan ideal para ti.
 `
     };
   }
@@ -317,7 +381,7 @@ En tu evaluación vemos la zona exacta que quieres trabajar y el plan ideal.
 }
 
 // ===========================================================
-// RESPUESTAS GENERALES (funcionamiento, sesiones, dolor…)
+// RESPUESTAS GENERALES SEGÚN INTENCIÓN
 // ===========================================================
 
 function respuestaFuncionamiento() {
@@ -325,10 +389,10 @@ function respuestaFuncionamiento() {
 Trabajamos con tecnologías clínicas reales como:
 
 • **HIFU 12D** para grasa profunda o firmeza  
-• **Cavitación** para adipocitos  
+• **Cavitación médica** para adipocitos  
 • **Radiofrecuencia médica** para colágeno  
-• **EMS Sculptor** para tono muscular  
-• **Pink Glow** para luminosidad  
+• **EMS Sculptor** para tonificación muscular  
+• **Pink Glow** para textura y luminosidad  
 • **Lipolítico facial/corporal** cuando se requiere  
 
 Cada persona es distinta, por eso ajustamos el plan en tu diagnóstico gratuito.
@@ -339,9 +403,9 @@ ${CTA_ofrecer()}
 
 function respuestaSesiones() {
   return `
-La cantidad de sesiones depende del estado de tu tejido (firmeza, grasa, retención o arrugas).
+La cantidad de sesiones depende del estado de tu piel o tejido (firmeza, grasa, retención o arrugas).
 
-En la evaluación te damos un número real y un plan ajustado a ti.
+En la evaluación te damos un número real y un plan ajustado exactamente a tus objetivos.
 
 ${CTA_ofrecer()}
 `;
@@ -349,7 +413,7 @@ ${CTA_ofrecer()}
 
 function respuestaResultados() {
   return `
-Los resultados suelen verse desde la **3° o 4° sesión**, dependiendo de tu retención, metabolismo y firmeza.
+Los resultados suelen verse desde la **3° o 4° sesión**, dependiendo del metabolismo, retención y firmeza inicial.
 
 ${CTA_ofrecer()}
 `;
@@ -361,8 +425,9 @@ Los tratamientos son muy tolerables:
 
 • HIFU → calor profundo  
 • Cavitación → vibración  
-• RF → calor agradable  
+• Radiofrecuencia → calor agradable  
 • EMS → contracciones controladas  
+• Láser depilación DL900 → leve calor  
 
 Todo es seguro y sin reposo posterior.
 
@@ -379,35 +444,81 @@ ${CTA_ofrecer()}
 }
 
 // ===========================================================
-// MOTOR PRINCIPAL DE RESPUESTA
+// DETECCIÓN DE CAMPAÑAS POR TEXTO — “Plan X”
+// ===========================================================
+
+function detectarCampaña(texto) {
+  const t = texto.toLowerCase();
+
+  const planes = [
+    "push up",
+    "lipo express",
+    "lipo focalizada",
+    "lipo reductiva",
+    "body tensor",
+    "body fitness",
+    "face elite",
+    "face antiage",
+    "face smart",
+    "face light",
+    "face papada",
+    "face h12",
+    "face one",
+    "full face",
+    "depilación",
+    "depilacion",
+  ];
+
+  for (const p of planes) {
+    if (t.includes(`plan ${p}`) || t.includes(p)) return p;
+  }
+
+  return null;
+}
+
+// ===========================================================
+// MOTOR PRINCIPAL
 // ===========================================================
 
 function generarRespuesta(usuario, texto, memoria) {
   const t = texto.toLowerCase();
 
-  // ============================
-  // 1) INTENCIÓN DE AGENDAR
-  // ============================
-  if (match(t, palabras.agendar)) {
+  // ================
+  // 1. CAMPAÑA DETECTADA (Plan X)
+  // ================
+  const campaña = detectarCampaña(t);
+
+  if (campaña) {
+    memoria.ultimo_plan = campaña;
+
+    return describirPlanDirecto(campaña) + `
+
+${CTA_ofrecer()}`;
+  }
+
+  // ================
+  // 2. INTENCIÓN DE AGENDAR
+  // ================
+  if (match(t, palabras.agendar) || t === "sí" || t === "si" || t === "ok" || t === "dale") {
     memoria.intentosAgenda++;
 
-    // 4to intento → ofrecer llamada
+    // 4° intento → ofrecer llamada
     if (memoria.intentosAgenda === 4) {
       return CTA_llamada();
     }
 
-    // desde el 2º intento → enviar CTA directo
+    // desde el 2° intento → enviar botón automáticamente
     if (memoria.intentosAgenda > 1) {
       return CTA_enviar();
     }
 
-    // primer intento → ofrecer CTA
+    // primer intento → solo ofrecer
     return CTA_ofrecer();
   }
 
-  // ============================
-  // 2) REGLAS CLÍNICAS FACIALES
-  // ============================
+  // ================
+  // 3. REGLAS FACIALES
+  // ================
   const facial = recomendarPlanFacial(t);
   if (facial) {
     memoria.ultimo_plan = facial.plan;
@@ -421,9 +532,9 @@ ${CTA_ofrecer()}
 `;
   }
 
-  // ============================
-  // 3) REGLAS CLÍNICAS CORPORALES
-  // ============================
+  // ================
+  // 4. REGLAS CORPORALES
+  // ================
   const corporal = recomendarPlanCorporal(t);
   if (corporal) {
     memoria.ultimo_plan = corporal.plan;
@@ -437,9 +548,9 @@ ${CTA_ofrecer()}
 `;
   }
 
-  // ============================
-  // 4) REGLAS DEPILACIÓN
-  // ============================
+  // ================
+  // 5. REGLAS DEPILACIÓN
+  // ================
   const dep = recomendarDepilacion(t);
   if (dep) {
     memoria.ultimo_plan = dep.plan;
@@ -453,34 +564,61 @@ ${CTA_ofrecer()}
 `;
   }
 
-  // ============================
-  // 5) INTENCIONES GENERALES
-  // ============================
-
+  // ================
+  // 6. INTENCIONES SECUNDARIAS
+  // ================
   if (match(t, palabras.funcionamiento)) return respuestaFuncionamiento();
-  if (match(t, palabras.precio)) return CTA_ofrecer();
   if (match(t, palabras.sesiones)) return respuestaSesiones();
   if (match(t, palabras.resultados)) return respuestaResultados();
   if (match(t, palabras.dolor)) return respuestaDolor();
   if (match(t, palabras.ubicacion)) return respuestaUbicacion();
 
-  // ============================
-  // 6) CONTINUIDAD SI YA EXISTE PLAN
-  // ============================
+  // ================
+  // 7. CONTINUIDAD POR PLAN PREVIO
+  // ================
   if (memoria.ultimo_plan) {
     return `
-¿Quieres que revisemos cuántas sesiones y qué resultados podrías esperar con **${memoria.ultimo_plan}**?
+Si quieres, puedo contarte más sobre **${memoria.ultimo_plan}**, ya sea resultados, sesiones o funcionamiento.
 
 ${CTA_ofrecer()}
 `;
   }
 
-  // ============================
-  // 7) FALLBACK (pregunta abierta)
-  // ============================
+  // ================
+  // 8. FALLBACK INTELIGENTE
+  // ================
   return `
-Soy Zara del equipo Body Elite 🤍  
-Cuéntame, ¿qué zona o qué cambio te gustaría mejorar?
+Disculpa, no logré entenderte bien 🤍  
+Para ayudarte mejor, cuéntame qué quieres mejorar: **volumen, flacidez, arrugas, papada o depilación**.
 `;
+}
+
+// ===========================================================
+// DESCRIPTOR DIRECTO PARA CAMPAÑAS (Plan X)
+// ===========================================================
+
+function describirPlanDirecto(plan) {
+  const texto = plan.toLowerCase();
+
+  // Reutiliza los descriptores exactos del motor
+  if (texto.includes("push up")) return recomendarPlanCorporal("glúteos").descripcion;
+  if (texto.includes("lipo express")) return recomendarPlanCorporal("abdomen").descripcion;
+  if (texto.includes("lipo focalizada")) return recomendarPlanCorporal("piernas").descripcion;
+  if (texto.includes("lipo reductiva")) return recomendarPlanCorporal("piernas celulitis retencion").descripcion;
+  if (texto.includes("body tensor")) return recomendarPlanCorporal("flacidez").descripcion;
+  if (texto.includes("body fitness")) return recomendarPlanCorporal("marcación").descripcion;
+
+  if (texto.includes("face elite")) return recomendarPlanFacial("rostro caído").descripcion;
+  if (texto.includes("face antiage")) return recomendarPlanFacial("arrugas").descripcion;
+  if (texto.includes("face smart")) return recomendarPlanFacial("manchas").descripcion;
+  if (texto.includes("face light")) return recomendarPlanFacial("textura").descripcion;
+  if (texto.includes("face papada")) return recomendarPlanFacial("papada").descripcion;
+  if (texto.includes("face h12")) return recomendarPlanFacial("h12").descripcion;
+  if (texto.includes("face one")) return recomendarPlanFacial("one").descripcion;
+  if (texto.includes("full face")) return recomendarPlanFacial("full face").descripcion;
+
+  if (texto.includes("depilación") || texto.includes("depilacion")) return recomendarDepilacion("depilar").descripcion;
+
+  return "";
 }
 
