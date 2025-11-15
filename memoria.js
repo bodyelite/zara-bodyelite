@@ -1,42 +1,48 @@
-const memoriaUsuarios = new Map();
+// memoria.js – Versión estable para Zara 2.1
+// Ahora expone leerMemoria / guardarMemoria para el motor nuevo.
+
+let memoriaGlobal = {}; 
+let historialConversacion = {};
 
 export default {
   guardarContexto(usuario, contexto) {
-    if (!memoriaUsuarios.has(usuario)) memoriaUsuarios.set(usuario, {});
-    const data = memoriaUsuarios.get(usuario);
-    data.contexto = contexto;
-    data.ultimoTema = contexto;
-    memoriaUsuarios.set(usuario, data);
+    memoriaGlobal[usuario] = contexto;
   },
 
   obtenerContexto(usuario) {
-    const data = memoriaUsuarios.get(usuario);
-    return data ? data.contexto : null;
+    return memoriaGlobal[usuario] || null;
   },
 
   obtenerUltimoTema(usuario) {
-    const data = memoriaUsuarios.get(usuario);
-    return data ? data.ultimoTema : null;
+    return memoriaGlobal[usuario]?.ultimoTema || null;
   },
 
   limpiarContexto(usuario) {
-    if (memoriaUsuarios.has(usuario)) {
-      delete memoriaUsuarios.get(usuario).contexto;
-    }
+    delete memoriaGlobal[usuario];
   },
 
   guardarMensaje(usuario, mensaje) {
-    if (!memoriaUsuarios.has(usuario)) memoriaUsuarios.set(usuario, {});
-    const data = memoriaUsuarios.get(usuario);
-    if (!data.historial) data.historial = [];
-    data.historial.push(mensaje.trim());
-    if (data.historial.length > 5) data.historial.shift();
-    memoriaUsuarios.set(usuario, data);
+    if (!historialConversacion[usuario]) {
+      historialConversacion[usuario] = [];
+    }
+    historialConversacion[usuario].push(mensaje);
   },
 
   obtenerHistorial(usuario) {
-    const data = memoriaUsuarios.get(usuario);
-    if (!data || !data.historial) return "";
-    return data.historial.join(" ");
+    return historialConversacion[usuario] || [];
   }
 };
+
+// ===============================================
+// FUNCIONES QUE NECESITA EL MOTOR NUEVO
+// ===============================================
+
+// Leer memoria del usuario (wrapper)
+export function leerMemoria(usuario) {
+  return memoriaGlobal[usuario] || null;
+}
+
+// Guardar memoria del usuario (wrapper)
+export function guardarMemoria(usuario, datos) {
+  memoriaGlobal[usuario] = datos;
+}
