@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { procesarMensaje } from "./motor_respuesta_v7.js";
+import { procesarMensaje } from "./motor_respuesta_v7.1.js";
 import { sendMessage } from "./sendMessage.js";
 
 const app = express();
