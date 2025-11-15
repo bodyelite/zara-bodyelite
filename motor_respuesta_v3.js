@@ -1,370 +1,137 @@
-// motor_respuesta_v6.js
-// Versión emocional + detección avanzada + botón de agenda
-import { diccionario } from "./base_conocimiento.js";
-import { sendInteractive } from "./sendInteractive.js";
-import { sendMessage } from "./sendMessage.js";
+import memoria from "./memoria.js";
 
-/* -----------------------------------------------
-   ESTADO DE CONVERSACIÓN
-------------------------------------------------- */
-const estado = {
-  primeraInteraccion: true,
-  ultimaZona: null,
-  ultimoObjetivo: null,
-  intentosAgenda: 0,
-  historial: []
-};
-
-/* -----------------------------------------------
-   NORMALIZAR TEXTO
-------------------------------------------------- */
-function normalizar(txt) {
-  return txt
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9ñáéíóúü\s]/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/* -----------------------------------------------
-   ZONAS COLOQUIALES
-------------------------------------------------- */
-const zonasColoquiales = {
-  abdomen: [
-    "abdomen","guata","panza","barriga","estomago","rollo","rollitos",
-    "flotador","vientre","guaton","guatonera"
-  ],
-  gluteos: [
-    "gluteos","gluteo","trasero","poto","potito","cola","colita","nalga",
-    "nalgas","booty","pompis","pompas"
-  ],
-  muslos: [
-    "muslo","muslos","piernas","pierna","entrepierna","muslitos"
-  ],
-  papada: [
-    "papada","papadita","doble menton","bajo el menton"
-  ],
-  patas_de_gallo: [
-    "patas de gallo","arrugas ojos","lineas al reir","arruguitas"
-  ],
-  brazos: [
-    "brazos","brazo","alas de murcielago","bye bye","tricep","triceps"
-  ],
-  espalda: [
-    "espalda","rollos espalda","espalda baja","espalda alta"
-  ],
-  cintura: [
-    "cintura","flancos","costados","llantitas","rollos laterales"
-  ]
-};
-
-/* -----------------------------------------------
-   DETECTAR ZONA COLOQUIAL
-------------------------------------------------- */
-function detectarZonaColoquial(texto) {
-  const t = normalizar(texto);
-  for (const zona in zonasColoquiales) {
-    for (const palabra of zonasColoquiales[zona]) {
-      if (t.includes(palabra)) return zona;
-    }
+// Normalizador de memoria antigua
+for (const num in memoria) {
+  if (typeof memoria[num] === "string") {
+    memoria[num] = {
+      historial: [memoria[num]],
+      agendaIntentos: 0,
+      ultimaInteraccion: Date.now(),
+      estado: null
+    };
   }
-  return null;
 }
 
-/* -----------------------------------------------
-   NLP INTENTS
-------------------------------------------------- */
-function intentDolor(t) {
-  return (
-    t.includes("duele") ||
-    t.includes("dolor") ||
-    t.includes("asusta") ||
-    t.includes("miedo") ||
-    t.includes("molesta") ||
-    t.includes("arde")
-  );
-}
+export async function procesarMensaje(usuario, texto) {
+  texto = texto.toLowerCase().trim();
+  let contexto = memoria.obtenerContexto(usuario);
 
-function intentPrecioJustificacion(t) {
-  return (
-    t.includes("caro") ||
-    t.includes("costoso") ||
-    t.includes("vale la pena") ||
-    t.includes("muy caro") ||
-    t.includes("por que tan caro")
-  );
-}
-
-function intentEfectividad(t) {
-  return (
-    t.includes("funciona") ||
-    t.includes("real") ||
-    t.includes("sirve") ||
-    t.includes("efectivo")
-  );
-}
-
-function intentResultados(t) {
-  return (
-    t.includes("cuanto") && t.includes("resultado") ||
-    t.includes("cuando se ven") ||
-    t.includes("cuando noto") ||
-    t.includes("cuanto se ve") ||
-    t.includes("demora") ||
-    t.includes("tiempo")
-  );
-}
-
-function intentMasInfo(t) {
-  return (
-    t.includes("mas informacion") ||
-    t.includes("dame mas") ||
-    t.includes("cuentame mas") ||
-    t.includes("explicame") ||
-    t.includes("quiero saber mas") ||
-    t.includes("como funciona") ||
-    t.includes("como es")
-  );
-}
-
-/* -----------------------------------------------
-   DETECTAR INTENT GENERAL
-------------------------------------------------- */
-function detectIntent(texto) {
-  const t = normalizar(texto);
-
-  if (intentDolor(t)) return { tipo: "dolor" };
-  if (intentPrecioJustificacion(t)) return { tipo: "precioJustificacion" };
-  if (intentEfectividad(t)) return { tipo: "efectividad" };
-  if (intentResultados(t)) return { tipo: "resultados" };
-  if (intentMasInfo(t)) return { tipo: "masInfo" };
-
-  const zona = detectarZonaColoquial(t);
-  if (zona) return { tipo: "zona", zona };
-
-  if (t.includes("depil")) return { tipo: "depilacion" };
-
-  if (t.includes("postparto") || t.includes("post parto"))
-    return { tipo: "postparto" };
-
-  for (const p of diccionario.intents.precio)
-    if (t.includes(p)) return { tipo: "precio" };
-
-  for (const u of diccionario.intents.ubicacion)
-    if (t.includes(u)) return { tipo: "ubicacion" };
-
-  for (const c of diccionario.intents.consiste)
-    if (t.includes(c)) return { tipo: "consiste" };
-
-  if (t.includes("firmeza")) return { tipo: "objetivo", objetivo: "tonificar" };
-
-  for (const obj in diccionario.objetivos)
-    for (const k of diccionario.objetivos[obj])
-      if (t.includes(k)) return { tipo: "objetivo", objetivo: obj };
-
-  return null;
-}
-
-/* -----------------------------------------------
-   LINK AGENDA
-------------------------------------------------- */
-const linkAgenda =
-  "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-
-/* -----------------------------------------------
-   RESPUESTAS HUMANAS EXTENDIDAS
-------------------------------------------------- */
-
-function saludoInicial() {
-  return (
-    "Hola JC! Soy Zara ✨🤍 del equipo Body Elite. Estoy aquí para ayudarte a encontrar tu mejor versión sin presiones, con total honestidad clínica. " +
-    "Cuéntame, ¿qué zona o tratamiento quieres mejorar?"
-  );
-}
-
-function rDolor() {
-  return (
-    "No te preocupes 🙈🤍. Nuestros tratamientos **no duelen**. Se siente como un **calorcito suave** o **contracciones ligeras**, nada invasivo ni incómodo.\n\n" +
-    "En la evaluación gratuita (40 min) puedes probar cómo se siente, así quedas 100% tranquilo ✨.\n" +
-    "¿Quieres que te deje hora?"
-  );
-}
-
-function rPrecioJustificacion() {
-  return (
-    "Te entiendo totalmente 🤍. Los valores dependen de la tecnología (HIFU 12D, RF profunda o Pro Sculpt) y del resultado que buscas.\n\n" +
-    "Lo importante es que **no damos sesiones de más**. Ajustamos el plan a tu caso para que pagues solo lo necesario ✨.\n\n" +
-    "Si quieres, revisamos juntos tu objetivo y presupuesto en tu evaluación gratuita. ¿Quieres que te deje la hora?"
-  );
-}
-
-function rEfectividad() {
-  return (
-    "Sí, funciona 🤍✨. HIFU 12D, cavitación, RF y Pro Sculpt dan resultados progresivos incluso desde las primeras sesiones.\n\n" +
-    "En tu evaluación gratuita te mostramos exactamente qué resultado podrías esperar **tú** según tu cuerpo.\n" +
-    "¿Quieres reservar tu hora?"
-  );
-}
-
-function rResultados() {
-  return (
-    "Los primeros cambios suelen notarse desde la **primera o segunda sesión** 🌟.\n\n" +
-    "Depende de tu piel, tu objetivo y la zona. En la evaluación gratuita (40 min) medimos tu punto de partida y te damos un tiempo realista.\n" +
-    "¿Quieres que te deje tu hora?"
-  );
-}
-
-function rMasInfo() {
-  return (
-    "Feliz te cuento más JC 🤍.\n\n" +
-    "✨ **Cavitación:** rompe grasa localizada.\n" +
-    "✨ **Radiofrecuencia:** tensa piel y estimula colágeno.\n" +
-    "✨ **HIFU 12D:** define contorno y efecto lifting.\n" +
-    "✨ **Pro Sculpt:** tonifica y levanta músculo.\n\n" +
-    "Si quieres, en la evaluación gratuita te mostramos cuál se adapta mejor a tu objetivo.\n" +
-    "¿Quieres avanzar?"
-  );
-}
-
-function rZona(z) {
-  const textos = {
-    abdomen:
-      "En abdomen trabajamos reducción de volumen, contorno y firmeza con HIFU 12D, cavitación y RF 🤍.",
-    gluteos:
-      "En glúteos logramos levantamiento, forma y firmeza con Pro Sculpt ✨.",
-    muslos:
-      "En muslos reducimos celulitis, mejoramos contorno y firmeza 🌼.",
-    papada:
-      "En papada afinamos contorno y tensamos con HIFU 12D focalizado ✨.",
-    patas_de_gallo:
-      "En contorno de ojos suavizamos líneas y rejuvenecemos con RF focalizada 🤍.",
-    brazos:
-      "En brazos trabajamos firmeza, tonificación y tensado con RF profunda y Pro Sculpt 💛.",
-    espalda:
-      "En espalda reducimos volumen y tensamos piel con cavitación + RF ✨.",
-    cintura:
-      "En cintura y flancos afinamos contorno con cavitación y RF ❤️."
-  };
-
-  return textos[z] || "Podemos trabajar muy bien esa zona 🤍.";
-}
-
-function rDepilacion() {
-  estado.ultimaZona = "depilacion";
-  return (
-    "¡Perfecto JC! 🤍 Trabajamos depilación láser con equipos modernos y seguros. Todos los planes incluyen **6 sesiones** y parten desde **$153.600**.\n\n" +
-    "El valor exacto depende de tus zonas, y lo definimos en tu evaluación gratuita.\n" +
-    "¿Quieres reservar?"
-  );
-}
-
-function rUbicacion() {
-  return (
-    "Estamos en **Av. Las Perdices 2990, Local 23, Peñalolén** 🤍.\n" +
-    "Horario: Lun–Vie 9:30–20:00 / Sáb 9:30–13:00.\n" +
-    "¿Quieres que vea disponibilidad para tu evaluación?"
-  );
-}
-
-/* -----------------------------------------------
-   BOTÓN DE AGENDA
-------------------------------------------------- */
-async function enviarBotonAgenda(to, platform) {
-  return await sendInteractive(to, platform);
-}
-
-/* -----------------------------------------------
-   FALLBACK HUMANO
-------------------------------------------------- */
-function fallbackHumano() {
-  estado.intentosAgenda++;
-
-  if (estado.intentosAgenda >= 2) {
-    return (
-      "Si quieres, uno de nuestros profesionales puede llamarte para aclarar todas tus dudas 🤍.\n" +
-      "¿Quieres dejar tu número?"
-    );
+  if (!contexto) {
+    const ultimo = memoria.obtenerUltimoTema(usuario);
+    if (ultimo) memoria.guardarContexto(usuario, ultimo);
   }
 
-  return (
-    "Disculpa JC, no logré interpretar bien tu mensaje 🙈. Pero en tu evaluación gratuita (40 min) te explicamos todo paso a paso 🤍.\n" +
-    "¿Quieres que te deje tu hora?"
-  );
-}
+  const afirmativos = ["si", "sí", "claro", "perfecto", "dale", "quiero", "me interesa", "obvio", "por supuesto"];
+  const agendar = () =>
+    "✨ Recuerda que la evaluación es gratuita y sin compromiso. ¿Te ayudo a coordinar tu hora? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-/* -----------------------------------------------
-   MOTOR PRINCIPAL
-------------------------------------------------- */
-export async function procesarMensaje(usuario, texto, plataforma) {
-  const t = normalizar(texto);
-  estado.historial.push(texto);
-
-  if (estado.primeraInteraccion) {
-    estado.primeraInteraccion = false;
-    return saludoInicial();
+  // --- detección cruzada ---
+  if (texto.match(/grasa|guata|abdomen|gluteo|poto|cola|pierna|muslo|reducir|tonificar|levantar/)) {
+    memoria.guardarContexto(usuario, "corporal");
+    contexto = "corporal";
+  } else if (texto.match(/cara|facial|rostro|arruga|línea|rejuvenecer|tensar|iluminar|botox|toxina/)) {
+    memoria.guardarContexto(usuario, "facial");
+    contexto = "facial";
+  } else if (texto.match(/depil|pelos|bikini|axila/)) {
+    memoria.guardarContexto(usuario, "depilacion");
+    contexto = "depilacion";
   }
 
-  const intent = detectIntent(t);
-
-  if (!intent) return fallbackHumano();
-
-  estado.intentosAgenda = 0;
-
-  switch (intent.tipo) {
-    case "dolor":
-      return rDolor();
-
-    case "precioJustificacion":
-      return rPrecioJustificacion();
-
-    case "efectividad":
-      return rEfectividad();
-
-    case "resultados":
-      return rResultados();
-
-    case "masInfo":
-      return rMasInfo();
-
-    case "depilacion":
-      return rDepilacion();
-
-    case "postparto":
-      return (
-        "Después del postparto es muy común sentir la zona más suelta 🤍.\n\n" +
-        "Usamos HIFU 12D + RF para mejorar firmeza y contorno, siempre según tu caso.\n" +
-        "¿Quieres avanzar?"
-      );
-
-    case "ubicacion":
-      return rUbicacion();
-
-    case "consiste":
-      return (
-        "Usamos HIFU 12D, cavitación, RF o Pro Sculpt según lo que quieras lograr 🤍.\n\n" +
-        "Si quieres, puedo mostrarte la opción exacta. ¿Quieres ver tu evaluación gratuita?"
-      );
-
-    case "zona":
-      estado.ultimaZona = intent.zona;
-      return rZona(intent.zona) + "\n\n¿Quieres que revise tu evaluación?";
-
-    case "precio":
-      // si ya hay intención clara → botón
-      return await enviarBotonAgenda(usuario, plataforma);
-
-    case "objetivo":
-      estado.ultimoObjetivo = intent.objetivo;
-      return (
-        `Perfecto JC 🤍. Podemos trabajar ` +
-        intent.objetivo +
-        " según tu punto de partida.\n" +
-        "¿Quieres que revisemos tu evaluación?"
-      );
-
-    default:
-      return fallbackHumano();
+  // --- saludo ---
+  if (texto.includes("hola") || texto.includes("buenas") || texto.includes("zara")) {
+    memoria.guardarContexto(usuario, "inicio");
+    return "✨ Soy Zara de Body Elite. Qué gusto saludarte. Cuéntame qué zona o tratamiento te gustaría mejorar y te orientaré con total honestidad clínica.";
   }
+
+  // --- afirmaciones ---
+  if (afirmativos.some(p => texto.includes(p))) {
+    const tema = memoria.obtenerContexto(usuario);
+    if (tema === "facial") return "💆‍♀️ Me alegra. Puedo ayudarte a coordinar tu diagnóstico facial gratuito y ajustar el plan a tu piel. " + agendar();
+    if (tema === "corporal") return "💪 Perfecto, puedo ayudarte a reservar tu evaluación corporal sin costo. " + agendar();
+    if (tema === "depilacion") return "🌿 Genial, la depilación láser es muy efectiva. ¿Te ayudo a reservar tu cita gratuita? " + agendar();
+    return "✨ Excelente. La evaluación es gratuita y te orientamos según tu presupuesto. " + agendar();
+  }
+
+  // --- corporales ---
+  if (texto.match(/grasa|guata|abdomen|poto|pierna|muslo/)) {
+    memoria.guardarContexto(usuario, "corporal");
+    return "💪 Entiendo, muchas personas buscan mejorar esa zona. Trabajamos con HIFU 12D, Cavitación y Radiofrecuencia para reducir grasa y tensar piel. ¿Tu objetivo es reducir, tonificar o levantar?";
+  }
+
+  if (texto.match(/reducir/)) {
+    memoria.guardarContexto(usuario, "corporal");
+    return "🔥 Para reducción usamos Lipo Body Elite o Lipo Express (HIFU 12D + Cavitación + RF). Resultados desde la primera sesión. Valor desde $432 000 CLP.\n" + agendar();
+  }
+
+  if (texto.match(/tonificar|definir/)) {
+    memoria.guardarContexto(usuario, "corporal");
+    return "💪 Para tonificar usamos EMS Sculptor + Radiofrecuencia, logrando 20 000 contracciones en 30 min. Ideal para abdomen, glúteos o piernas. Valor $360 000 CLP.\n" + agendar();
+  }
+
+  if (texto.match(/levantar|gluteo|trasero|cola|push|poto/)) {
+    memoria.guardarContexto(usuario, "corporal");
+    return "🍑 Para levantar y dar forma trabajamos con Push Up Glúteos (EMS Sculptor + RF + HIFU tensor). Firmeza desde la primera sesión. Valor $376 000 CLP.\n" + agendar();
+  }
+
+  if (texto.match(/reafirmar|firme|post parto/)) {
+    memoria.guardarContexto(usuario, "corporal");
+    return "✨ Para reafirmar usamos Body Tensor o Body Fitness (HIFU 12D + RF tensor + EMS Sculptor). Ideal tras bajada de peso o embarazo. Valor $232 000 CLP.\n" + agendar();
+  }
+
+  // --- faciales ---
+  if (texto.match(/cara|rostro|facial|arruga|línea/)) {
+    memoria.guardarContexto(usuario, "facial");
+    return "💆‍♀️ La zona facial responde excelente a HIFU 12D, Radiofrecuencia y Pink Glow, que estimulan colágeno y mejoran firmeza sin cirugía. ¿Tu objetivo es rejuvenecer, tensar o iluminar?";
+  }
+
+  if (texto.match(/rejuvenecer|rejuvenecimiento|más joven/)) {
+    memoria.guardarContexto(usuario, "facial");
+    return "🌸 Para rejuvenecimiento facial usamos Face Elite (HIFU 12D + Toxina + Pink Glow). Reafirma y suaviza arrugas profundas. Valor $358 400 CLP.\n" + agendar();
+  }
+
+  if (texto.match(/tensar|firmeza|flacidez/)) {
+    memoria.guardarContexto(usuario, "facial");
+    return "💫 Para tensar usamos HIFU focalizado + Radiofrecuencia facial. Mejora la firmeza sin dolor ni reposo. Valor $281 600 CLP.\n" + agendar();
+  }
+
+  if (texto.match(/iluminar|manchas|glow/)) {
+    memoria.guardarContexto(usuario, "facial");
+    return "✨ Para luminosidad trabajamos con Pink Glow y LED Therapy. Aporta vitalidad e hidratación. Valor $198 400 CLP.\n" + agendar();
+  }
+
+  if (texto.match(/botox|toxina/)) {
+    memoria.guardarContexto(usuario, "facial");
+    return "💉 La Toxina Botulínica Facial relaja los músculos responsables de las arrugas de expresión, dejando un aspecto natural y fresco. Valor desde $180 000 por zona. ¿Te interesa en frente, entrecejo o patas de gallo?";
+  }
+
+  // --- depilación ---
+  if (texto.match(/depil|pelos|axila|bikini/)) {
+    memoria.guardarContexto(usuario, "depilacion");
+    return "🌿 La Depilación Láser Diodo Triple Onda elimina el vello desde la raíz sin dolor. Planes desde $35 000 o $180 000 por 6 sesiones (bikini completo). ¿Quieres que te ayude a agendar tu diagnóstico gratuito?";
+  }
+
+  // --- coherencia de seguimiento ---
+  if (contexto === "facial" && texto.match(/caro|precio|vale/)) {
+    return "🤍 Entiendo, los planes faciales usan HIFU 12D original y Pink Glow europeo, tecnologías de última generación con seguimiento profesional. Además, la evaluación es gratuita y podemos ajustar el plan a tu presupuesto.\n" + agendar();
+  }
+
+  if (contexto === "corporal" && texto.match(/caro|precio|vale/)) {
+    return "💪 Entiendo, los planes corporales usan equipos HIFU 12D y EMS Sculptor clínicos. La evaluación es gratuita y podemos ver alternativas más acotadas o por zona específica.\n" + agendar();
+  }
+
+  // --- preguntas comunes ---
+  if (texto.match(/funciona|como es|en que consiste/)) {
+    return "⚙️ Todos nuestros tratamientos usan tecnología no invasiva (HIFU 12D, Cavitación, Radiofrecuencia, EMS Sculptor). Actúan sobre grasa, piel y músculo sin dolor ni reposo. " + agendar();
+  }
+
+  if (texto.match(/donde|ubicacion|direcci/)) {
+    return "📍 Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén. Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00. Puedes agendar aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  }
+
+  if (texto.match(/agendar|reserva|evaluacion/)) {
+    return "📅 Excelente decisión. La evaluación es gratuita y sin compromiso. Reserva aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  }
+
+  // --- fallback ---
+  return "💛 Disculpa, no logré entender tu mensaje. Pero puedo ayudarte a encontrar el tratamiento más adecuado para ti. " + agendar();
 }
