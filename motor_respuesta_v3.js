@@ -1,239 +1,279 @@
 // ======================================================
-// motor_respuesta_v3_final.js – ZARA DEFINITIVA
-// Tonalidad femenina, CTA inteligente, 4º intento → llamada.
-// Detecta TODO: corporal, facial, depilación.
+// motor_respuesta_v3.js  (versión final v4)
+// Zara Body Elite – Motor clínico + comercial
 // ======================================================
 
 import { leerMemoria, guardarMemoria } from "./memoria.js";
 
 // ======================================================
-// FUNCIÓN PRINCIPAL PARA SERVER.JS
+// FUNCIÓN PRINCIPAL
 // ======================================================
 export async function procesarMensaje(usuario, textoEntrada) {
   const memoria = leerMemoria(usuario) || {
     ultima_zona: null,
     ultimo_plan: null,
     ultimo_objetivo: null,
-    intentosAgenda: 0
+    intentosAgenda: 0,
   };
 
   const respuesta = generarRespuesta(usuario, textoEntrada, memoria);
-
   guardarMemoria(usuario, memoria);
 
   return respuesta;
 }
 
 // ======================================================
-// LISTAS DE DETECCIÓN DE ZONAS Y LENGUAJE REAL
+// DETECTORES DE PALABRAS
 // ======================================================
 
-const zonas = {
-  abdomen: [
-    "abdomen","abdómen","abd","panza","pansa","barriga","vientre",
-    "guata","guatita","guatita baja","rollo","rollito","llanta","llantita",
-    "flotador","flotadorcito","cintura","zona abdominal"
+const keywords = {
+  arrugas: [
+    "arruga", "arrugas", "patas de gallo", "líneas", "lineas", "lineas de expresión",
+    "expresión", "expresion", "ceño", "entrecejo", "frente marcada"
   ],
-  gluteos: [
-    "gluteo","glúteo","gluteos","glúteos","glutes","gluts","poto","potito",
-    "colita","trasero","nalgas","pompas","gluteo caido","levantar gluteo",
-    "levantar poto","push up","aumento no quirurgico","proyección"
+  flacidez_facial: [
+    "flacidez", "flacida", "piel suelta", "rostro caído", "papada leve",
+    "contorno caído", "descolgado"
   ],
-  piernas: [
-    "pierna","piernas","muslo","muslos","muslito","muslitos","cartuchera",
-    "cartucheras","chaparreras","entrepierna","celulitis","retención piernas",
-    "muslo interno","muslo externo","muslo caido"
+  papada: ["papada", "doble mentón", "menton", "mentón"],
+  manchas: ["manchas", "manchita", "melasma", "opaca", "opacidad", "luminosidad"],
+  textura: ["textura", "poros", "poros abiertos", "piel áspera"],
+  grasa_abdomen: [
+    "abdomen","abomen","guata","guatita","panza","pansa","rollito","rollitos","llanta",
+    "rollo","flotador","cintura","estómago","estomago"
   ],
-  brazos: [
-    "brazo","brazos","bracito","bracitos","brazos gordos","brazos gorditos",
-    "brazo flacido","ala de murcielago","brazo suelto","brazo caido"
+  grasa_cuerpo: [
+    "piernas","muslos","cartuchera","cartucheras","pierna","muslo","muslito","celulitis","retención"
   ],
-  espalda: [
-    "espalda","espalda baja","rollo espalda","flancos","laterales","cintura lateral"
-  ],
-  rostro: [
-    "rostro","cara","piel","cachete","cachetes","mejilla","papada","menton",
-    "papada","mandibula","lineas","arrugas","arruguitas","patas de gallo",
-    "afinar rostro","contorno facial","doble menton"
-  ],
-  depilacion: [
-    "depilacion","depilación","depilar","depilarme","laser","láser",
-    "pelos","pelito","vello","vellos","rebaje","axila","axilas",
-    "pierna completa","bozo","pecho","espalda","zona intima"
-  ]
+  brazos: ["brazo","brazos","ala de murcielago","murciélago"],
+  gluteos: ["glúteos","gluteos","poto","colita","nalgas","gluteo caído","levantar"],
+  tono_muscular: ["marcación","marcar","tonificar","tono","tonificar abdomen","musculo"],
+  depilacion: ["depilar","depilación","depilacion","pelo","pelos","vello","vellos","laser","láser"],
+  botox: ["botox","toxina","toxina botulinica","antiarrugas","botulinica","botulínica"],
+  funcionamiento: ["cómo funciona","como funciona","en qué consiste","en que consiste","qué máquina","que máquina","maquinas"],
+  precio: ["precio","vale","cuesta","caro","barato","valor","cuánto sale","cuanto sale"],
+  sesiones: ["sesiones","cuantas sesiones","número de sesiones","numero de sesiones"],
+  resultados: ["resultados","cuando se ven","cuándo veo","demora","cuanto demora","vale la pena","sirve"],
+  dolor: ["duele","dolor","molesta","ardor","incomodo"],
+  ubicacion: ["donde están","ubicación","como llegar","direccion","dirección","donde quedan"],
+  agendar: ["agendar","reservar","quiero ir","quiero agendar","link","pasame el link","agendo","agenda"]
 };
 
 // ======================================================
-// PLANES OFICIALES POR ZONA
+// PLANES Y REGLAS CLÍNICAS
 // ======================================================
-const planes = {
-  abdomen: { nombre: "Lipo Express", precio: 432000 },
-  gluteos: { nombre: "Push Up Glúteos", precio: 376000 },
-  piernas: { nombre: "Body Tensor", precio: 232000 },
-  brazos: { nombre: "Lipo Focalizada Reductiva", precio: 348800 },
-  rostro: { nombre: "Face Elite", precio: 358400 },
-  papada: { nombre: "Face Papada", precio: 198400 },
-  depilacion: { nombre: "Depilación Láser", precio: 153600 }
-};
+function recomendarPlan(texto) {
+  texto = texto.toLowerCase();
 
-// ======================================================
-// DETECTAR ZONA
-// ======================================================
-function detectarZona(texto) {
-  const t = texto.toLowerCase();
-
-  for (const zona in zonas) {
-    if (zonas[zona].some(w => t.includes(w))) {
-      return zona;
-    }
+  // ARRUGAS → Face Antiage (principal) + Face Elite alternativa
+  if (match(texto, keywords.arrugas)) {
+    return {
+      principal: "Face Antiage",
+      precio: 281600,
+      alternativa: "Face Elite",
+      texto: `Para arrugas, líneas de expresión o patas de gallo, el plan que mejores resultados entrega es **Face Antiage**, porque incluye toxina botulínica cuando corresponde y trabaja firmeza al mismo tiempo.  
+En tu evaluación también revisamos si **Face Elite** puede ser alternativa según el nivel de flacidez y tejido.`
+    };
   }
+
+  // FLACIDEZ FACIAL → Face Elite (principal)
+  if (match(texto, keywords.flacidez_facial)) {
+    return {
+      principal: "Face Elite",
+      precio: 358400,
+      alternativa: "Face Antiage",
+      texto: `Para firmeza y contorno del rostro, **Face Elite** es el plan más completo, porque combina HIFU 12D facial, radiofrecuencia médica y Pink Glow.  
+Si además hubiesen arrugas marcadas, se evalúa complementar con **Face Antiage**.`
+    };
+  }
+
+  // PAPADA
+  if (match(texto, keywords.papada)) {
+    return {
+      principal: "Face Papada",
+      precio: 198400,
+      texto: `Para papada trabajamos **HIFU 12D facial** + **lipolítico** para afinar contorno.`
+    };
+  }
+
+  // MANCHAS / TEXTURA → Face Smart
+  if (match(texto, keywords.manchas) || match(texto, keywords.textura)) {
+    return {
+      principal: "Face Smart",
+      precio: 198400,
+      texto: `Para manchas, opacidad o textura irregular, **Face Smart** combina Pink Glow, RF médica y limpieza profunda.`
+    };
+  }
+
+  // ABDOMEN / ROLLITOS → Lipo Express
+  if (match(texto, keywords.grasa_abdomen)) {
+    return {
+      principal: "Lipo Express",
+      precio: 432000,
+      texto: `Para abdomen y rollitos, **Lipo Express** combina HIFU 12D, cavitación y radiofrecuencia para reducción, firmeza y modelado.`
+    };
+  }
+
+  // PIERNAS / CELULITIS → Body Tensor
+  if (match(texto, keywords.grasa_cuerpo)) {
+    return {
+      principal: "Body Tensor",
+      precio: 232000,
+      texto: `Para firmeza y retención en piernas o muslos, **Body Tensor** trabaja RF profunda + EMS.`
+    };
+  }
+
+  // BRAZOS
+  if (match(texto, keywords.brazos)) {
+    return {
+      principal: "Lipo Focalizada Reductiva",
+      precio: 348800,
+      texto: `Para brazos sueltos o con grasa localizada, **Lipo Focalizada Reductiva** trabaja cavitación + RF firmeza.`
+    };
+  }
+
+  // GLÚTEOS
+  if (match(texto, keywords.gluteos)) {
+    return {
+      principal: "Push Up Glúteos",
+      precio: 376000,
+      texto: `Para levantar y dar forma a glúteos, **Push Up** combina EMS Pro Sculpt + RF profunda.`
+    };
+  }
+
+  // TONO MUSCULAR
+  if (match(texto, keywords.tono_muscular)) {
+    return {
+      principal: "Body Fitness",
+      precio: 360000,
+      texto: `Para tono muscular, marcación o fuerza, **Body Fitness** trabaja con EMS Sculptor (20.000 contracciones por sesión).`
+    };
+  }
+
+  // DEPILACIÓN
+  if (match(texto, keywords.depilacion)) {
+    return {
+      principal: "Depilación Láser",
+      precio: 153600,
+      texto: `En depilación usamos láser DL900 (diodo), sesiones cada 15 días. Funciona en zonas pequeñas, medianas o grandes.`
+    };
+  }
+
   return null;
 }
 
 // ======================================================
-// INTENCIONES DE CONVERSACIÓN
+// UTILIDADES
 // ======================================================
-const intencion = {
-  precio: ["precio","vale","cuesta","caro","valor","cuánto sale","cuanto sale","cuanto cuesta"],
-  sesiones: ["sesiones","cuantas sesiones","cantidad de sesiones","numero de sesiones"],
-  resultados: ["resultados","cuando se ven","cuándo veo","cuanto demora","demora mucho","sirve","funciona","vale la pena"],
-  dolor: ["duele","molesta","que se siente","ardor","incomodo","dolor"],
-  funcionamiento: ["como funciona","cómo funciona","que maquinas","qué máquinas","como trabajan","en que consiste"],
-  ubicacion: ["donde estan","ubicacion","como llegar","direccion","donde quedan","donde atienden"],
-  horario: ["horarios","atienden","hora hoy","trabajan sábado","trabajan domingo","a que hora"],
-  agendar: ["agendar","reservar","quiero ir","quiero agendar","dame el link","pasame el link","como agendo","quiero reservar","link"]
-};
-
-// ======================================================
-// RESPUESTAS COMERCIALES (Modo B suave, femenino)
-// ======================================================
-
-function CTA_suave() {
-  return "Si quieres, puedo dejarte aquí el acceso para tu diagnóstico gratuito 🤍.";
+function match(texto, lista) {
+  return lista.some((w) => texto.includes(w));
 }
 
-function CTA_llamada() {
-  return "Tal vez sería más cómodo para ti que te llamemos directamente 🤍. ¿Quieres que una de nuestras profesionales te contacte y te ayude a coordinar tu diagnóstico?";
+function CTA() {
+  return "Si quieres, puedo dejarte aquí el acceso para reservar tu diagnóstico gratuito 🤍.";
 }
 
-function resp_precio(plan) {
-  return `
-Entiendo totalmente tu duda, preciosa 🤍. Te lo explico clarito:
-
-El valor parte desde ahí porque trabajamos tecnologías clínicas como **HIFU 12D**, cavitación y **Pro Sculpt**, que actúan en profundidad real y entregan cambios visibles y mantenibles ✨.
-
-Cada cuerpo es distinto en grasa, firmeza y retención.  
-Por eso el valor exacto lo definimos juntas en tu diagnóstico gratuito.
-
-${CTA_suave()}
-  `;
-}
-
-function resp_sesiones() {
-  return `
-La cantidad exacta de sesiones depende de tu punto de partida.
-
-En el diagnóstico gratuito te evaluamos y te damos un número real, sin venderte de más ni de menos 🤍.
-
-${CTA_suave()}
-  `;
-}
-
-function resp_resultados() {
-  return `
-La mayoría empieza a notar cambios desde la **3ª o 4ª sesión**, dependiendo de tu retención, grasa y firmeza.
-
-En tu diagnóstico te mostramos tu proyección real 🤍.
-
-${CTA_suave()}
-  `;
-}
-
-function resp_funcionamiento(plan) {
-  return `
-Te cuento rapidito, hermosa 🤍:
-
-• **HIFU 12D** destruye grasa profunda.  
-• **Cavitación** rompe adipocitos.  
-• **Radiofrecuencia** tensa y mejora firmeza.  
-• **EMS Pro Sculpt** (si aplica) tonifica músculo profundo.
-
-Todo personalizado según tu tejido.
-
-${CTA_suave()}
-  `;
-}
-
-function resp_dolor() {
-  return `
-No duele 🤍.  
-Son tecnologías cálidas o vibrantes, muy tolerables y sin reposo.
-
-${CTA_suave()}
-  `;
-}
-
-function resp_ubicacion() {
-  return `
-Estamos en **Av. Las Perdices Nº2990, Local 23, Peñalolén** 🤍.
-
-${CTA_suave()}
-  `;
+function CTA_LLAMADA() {
+  return "Si te acomoda más, también podemos coordinar una llamada con una profesional para orientarte mejor. ¿Quieres que te contacten?";
 }
 
 // ======================================================
 // RESPUESTA PRINCIPAL
 // ======================================================
+
 function generarRespuesta(usuario, textoEntrada, memoria) {
   const t = textoEntrada.toLowerCase();
 
-  // 1. DETECTAR ZONA
-  const zona = detectarZona(t);
+  // ----- REGLA DE INTENCIÓN DE AGENDA -----
+  if (match(t, keywords.agendar)) {
+    memoria.intentosAgenda++;
+    if (memoria.intentosAgenda >= 4) return CTA_LLAMADA();
+    return CTA();
+  }
 
-  if (zona) {
-    memoria.ultima_zona = zona;
-    memoria.ultimo_plan = planes[zona].nombre;
+  // ----- RECOMENDACIÓN CLÍNICA -----
+  const plan = recomendarPlan(t);
+  if (plan) {
+    memoria.ultimo_plan = plan.principal;
+
+    const textoAlternativa = plan.alternativa
+      ? `  
+En la evaluación también revisamos si **${plan.alternativa}** sería alternativa según tu tejido.`
+      : "";
 
     return `
-Para ${zona} trabajamos con nuestro plan **${planes[zona].nombre}**, desde **$${planes[zona].precio.toLocaleString(
-      "es-CL"
-    )}**.
+${plan.texto}${textoAlternativa}
 
-Es ideal para mejorar firmeza, contorno y retención según tu punto de partida 🤍.
+${CTA()}
+`;
+  }
 
-${CTA_suave()}
+  // ----- OTRAS INTENCIONES -----
+  if (match(t, keywords.funcionamiento)) {
+    return `
+Trabajamos con tecnologías clínicas reales como HIFU 12D, cavitación, radiofrecuencia médica, EMS Sculptor y Pink Glow.  
+Cada una actúa en una capa distinta del tejido para cambios visibles y seguros.
+
+${CTA()}
     `;
   }
 
-  // 2. DETECTAR INTENCIONES
-  if (intencion.precio.some(w => t.includes(w))) return resp_precio(memoria.ultimo_plan);
-  if (intencion.sesiones.some(w => t.includes(w))) return resp_sesiones();
-  if (intencion.resultados.some(w => t.includes(w))) return resp_resultados();
-  if (intencion.dolor.some(w => t.includes(w))) return resp_dolor();
-  if (intencion.funcionamiento.some(w => t.includes(w)))
-    return resp_funcionamiento(memoria.ultimo_plan);
-  if (intencion.ubicacion.some(w => t.includes(w))) return resp_ubicacion();
+  if (match(t, keywords.precio)) {
+    return `
+El valor exacto depende de lo que realmente necesitas según tu punto de partida.  
+En el diagnóstico gratuito revisamos tu caso y te damos un plan preciso, sin venderte sesiones de más.
 
-  // 3. AGENDA (CTA inteligente)
-  if (intencion.agendar.some(w => t.includes(w))) {
-    memoria.intentosAgenda++;
-
-    if (memoria.intentosAgenda >= 4) return CTA_llamada();
-    return CTA_suave();
+${CTA()}
+    `;
   }
 
-  // 4. CONTINUIDAD
+  if (match(t, keywords.sesiones)) {
+    return `
+El número de sesiones depende de tu firmeza, retención y grasa.  
+En la evaluación medimos tu punto de partida y te damos el número exacto.
+
+${CTA()}
+    `;
+  }
+
+  if (match(t, keywords.resultados)) {
+    return `
+La mayoría empieza a notar cambios entre la **3ª y la 4ª sesión**, según tejido, hábitos y retención.
+
+${CTA()}
+    `;
+  }
+
+  if (match(t, keywords.dolor)) {
+    return `
+Los tratamientos son muy tolerables. HIFU y RF generan calor agradable, cavitación es vibración, y EMS son contracciones controladas.
+
+${CTA()}
+    `;
+  }
+
+  if (match(t, keywords.ubicacion)) {
+    return `
+Estamos en **Av. Las Perdices Nº2990, Local 23, Peñalolén**.
+
+${CTA()}
+    `;
+  }
+
+  // ----- SI YA TIENE UN PLAN EN CONTEXTO -----
   if (memoria.ultimo_plan) {
     return `
-Puedo contarte más sobre *${memoria.ultimo_plan}* bonita 🤍.
-¿Quieres saber sobre sesiones, resultados o funcionamiento?
+Puedo contarte más sobre **${memoria.ultimo_plan}**.  
+¿Quieres saber sobre sesiones, resultados o cómo funciona?
+
+${CTA()}
     `;
   }
 
-  // 5. MENSAJE BASE
+  // ----- MENSAJE BASE -----
   return `
-Hola preciosa 🤍 Soy Zara de Body Elite.
-Estoy aquí para ayudarte a sacar tu mejor versión.
-¿Qué zona te gustaría mejorar?
-  `;
+Hola, soy Zara del equipo Body Elite 🤍.  
+Estoy aquí para ayudarte a encontrar el tratamiento más adecuado para ti.  
+¿Qué zona o qué cambio te gustaría mejorar?
+`;
 }
