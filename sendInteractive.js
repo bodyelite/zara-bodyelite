@@ -1,4 +1,4 @@
-// sendInteractive.js – Versión final JC Premium (WhatsApp only)
+// sendInteractive.js – CTA_URL WhatsApp v19.0
 import fetch from "node-fetch";
 
 export async function sendInteractive(to, contenido, urlAgenda) {
@@ -10,18 +10,19 @@ export async function sendInteractive(to, contenido, urlAgenda) {
       to: numero,
       type: "interactive",
       interactive: {
-        type: "button",
+        type: "cta_url",
+        header: {
+          type: "text",
+          text: "Diagnóstico gratuito"
+        },
         body: {
           text: contenido.body || "Agenda tu diagnóstico gratuito 🤍"
         },
         action: {
-          buttons: [
-            {
-              type: "cta_url",
-              url: urlAgenda,
-              title: contenido.button || "Agendar evaluación"
-            }
-          ]
+          name: "cta_url",
+          parameters: {
+            url: urlAgenda
+          }
         }
       }
     };
@@ -41,7 +42,7 @@ export async function sendInteractive(to, contenido, urlAgenda) {
     );
 
     const data = await res.json();
-    console.log("RESPUESTA META →", data);
+    console.log("RESPUESTA META →", JSON.stringify(data, null, 2));
 
     return data;
   } catch (err) {
