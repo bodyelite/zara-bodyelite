@@ -2,7 +2,7 @@ import memoria from "./memoria.js";
 import { sendInteractive } from "./sendInteractive.js";
 
 /* ============================================================
-   MOTOR ZARA JC PREMIUM – VERSIÓN FINAL
+   MOTOR ZARA JC PREMIUM – VERSIÓN FINAL CORREGIDA
    ============================================================ */
 
 export async function procesarMensaje(usuario, texto) {
@@ -26,15 +26,15 @@ export async function procesarMensaje(usuario, texto) {
   memoria.guardarMensaje(usuario, msg);
 
   /* ============================================================
-     SALUDO
+     SALUDO INICIAL
      ============================================================ */
   const saludos = ["hola", "holi", "hello", "consulta", "info", "buenas", "zara"];
-  if (saludos.some(s => msg.includes(s))) {
+  if (saludos.some(s => msg.startsWith(s))) {
     return saludoInicial();
   }
 
   /* ============================================================
-     AFIRMACIONES (“sí”, “quiero”, “ok”, "listo")
+     AFIRMACIONES (“sí”, “quiero”, “ok”)
      ============================================================ */
   const afirmativos = ["si", "sí", "quiero", "dale", "ok", "listo", "perfecto"];
   if (afirmativos.some(a => msg === a || msg.includes(a))) {
@@ -44,13 +44,13 @@ export async function procesarMensaje(usuario, texto) {
   /* ============================================================
      DETECTOR DE "CARO"
      ============================================================ */
-  const caroTriggers = ["caro", "carito", "carito?", "muy caro", "carísimo", "carisimo", "porque tan caro", "tan caro"];
+  const caroTriggers = ["caro", "carito", "muy caro", "carísimo", "carisimo", "porque tan caro", "tan caro"];
   if (caroTriggers.some(w => msg.includes(w))) {
     return await respuestaCaro(usuario, contexto);
   }
 
   /* ============================================================
-     ZONAS – DETECCIÓN SEMÁNTICA
+     ZONAS – DETECCIÓN
      ============================================================ */
   const zonas = {
     "guata": "abdomen",
@@ -58,6 +58,7 @@ export async function procesarMensaje(usuario, texto) {
     "abdomen": "abdomen",
     "rollito": "abdomen",
     "poto": "gluteos",
+    "trasero": "gluteos",
     "cola": "gluteos",
     "gluteo": "gluteos",
     "glúteo": "gluteos",
@@ -110,18 +111,22 @@ export async function procesarMensaje(usuario, texto) {
   /* ============================================================
      UBICACIÓN
      ============================================================ */
-  if (msg.includes("donde") || msg.includes("ubicacion") || msg.includes("direcc")) {
-    return "📍 Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén.\nLun–Vie 9:30–20:00, Sáb 9:30–13:00.\n\n¿Deseas agendar tu diagnóstico gratuito?";
+  if (msg.includes("donde") || msg.includes("ubic") || msg.includes("direcc")) {
+    return (
+      "📍 Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén.\n" +
+      "Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n\n" +
+      "¿Deseas agendar tu diagnóstico gratuito?"
+    );
   }
 
   /* ============================================================
-     FALLBACK
+     FALLBACK PREMIUM
      ============================================================ */
   return await fallback(usuario, contexto);
 }
 
 /* ============================================================
-   SALUDO OFICIAL ZARA
+   SALUDO OFICIAL
    ============================================================ */
 function saludoInicial() {
   return (
@@ -132,9 +137,8 @@ function saludoInicial() {
 }
 
 /* ============================================================
-   RESPUESTAS POR ZONA (con plan SIEMPRE)
+   RESPUESTA POR ZONA
    ============================================================ */
-
 async function respuestaZona(usuario, contexto, zona) {
   contexto.estado.agendaIntentos++;
   if (!contexto.zonasConsultadas.includes(zona)) contexto.zonasConsultadas.push(zona);
@@ -164,12 +168,14 @@ El plan más usado es **Body Tensor**, desde **$232.000**.
     piernas: `
 En piernas trabajamos retención de líquido, celulitis y definición con cavitación y radiofrecuencia.  
 Según el tejido, se puede integrar HIFU 12D para compactación.
+
+El plan recomendado es **Body Tensor**, desde **$232.000**.
 `,
 
     papada: `
 En papada trabajamos reducción de grasa submentoniana y tensado con **lipolítico facial**, radiofrecuencia y **HIFU focalizado** ✨.
 
-El plan recomendado es **Face Papada**, desde **$X** (según catálogo).
+El plan recomendado es **Face Papada**, desde **$X**.
 `,
 
     rostro: `
@@ -180,15 +186,12 @@ Los planes más usados son **Face Smart**, **Face Antiage** y **Face Elite**.
 `
   };
 
-  const texto = textos[zona] || "Puedo ayudarte a evaluar esa zona con tecnologías no invasivas.";
-
-  return await construirRespuestaConAgenda(usuario, contexto, texto.trim());
+  return await construirRespuestaConAgenda(usuario, contexto, textos[zona].trim());
 }
 
 /* ============================================================
-   DEPILACIÓN DL900
+   DEPILACIÓN
    ============================================================ */
-
 async function respuestaDepilacion(usuario, contexto) {
   contexto.estado.agendaIntentos++;
 
@@ -197,15 +200,14 @@ Trabajamos depilación con láser clínico **DL900**, apto para vello claro y os
 Las zonas pequeñas comienzan **desde $25.600 por sesión**, y los planes se arman en 6 sesiones.
 
 En tu evaluación revisamos si necesitas un plan más acotado o uno más completo.
-  `;
+  `.trim();
 
-  return await construirRespuestaConAgenda(usuario, contexto, texto.trim());
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
 /* ============================================================
-   PRECIO – RESPUESTA GENERAL
+   PRECIO
    ============================================================ */
-
 async function respuestaPrecio(usuario, contexto) {
   contexto.estado.agendaIntentos++;
 
@@ -214,15 +216,14 @@ Los valores dependen del plan y de lo que realmente necesita tu tejido 🤍.
 En tu diagnóstico gratuito definimos cuántas sesiones necesitas y el valor final más conveniente.
 
 Si buscas algo más acotado, en tu evaluación revisamos opciones que se adapten a tu objetivo 🤍.
-  `;
+  `.trim();
 
-  return await construirRespuestaConAgenda(usuario, contexto, texto.trim());
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
 /* ============================================================
    RESULTADOS
    ============================================================ */
-
 async function respuestaResultados(usuario, contexto) {
   contexto.estado.agendaIntentos++;
 
@@ -231,15 +232,14 @@ Los primeros cambios suelen verse entre la 2° y 4° sesión ✨.
 Depende del metabolismo, la retención de líquido y el nivel de firmeza inicial.
 
 En tu diagnóstico gratuito te mostramos la proyección real según tu tejido.
-  `;
+  `.trim();
 
-  return await construirRespuestaConAgenda(usuario, contexto, texto.trim());
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
 /* ============================================================
    DOLOR
    ============================================================ */
-
 async function respuestaDolor(usuario, contexto) {
   contexto.estado.agendaIntentos++;
 
@@ -248,15 +248,14 @@ Todas nuestras tecnologías son no invasivas 🤍.
 Puedes sentir calor profundo o vibración intensa, pero no dolor.
 
 No requiere reposo ni tiempos de recuperación.
-  `;
+  `.trim();
 
-  return await construirRespuestaConAgenda(usuario, contexto, texto.trim());
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
 /* ============================================================
-   PATRÓN GLOBAL “CARO”
+   RESPUESTA “CARO”
    ============================================================ */
-
 async function respuestaCaro(usuario, contexto) {
   contexto.estado.agendaIntentos++;
 
@@ -269,15 +268,14 @@ Cada persona llega con un nivel distinto de grasa, firmeza, retención o tono mu
 Por eso el plan exacto y el valor final se ajustan en tu diagnóstico gratuito.
 
 Si necesitas algo más acotado en precio, en tu evaluación revisamos opciones más económicas que se adapten a tu objetivo 🤍.
-  `;
+  `.trim();
 
-  return await construirRespuestaConAgenda(usuario, contexto, texto.trim());
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
 
 /* ============================================================
-   AGENDA INTELIGENTE (Regla JC)
+   AGENDA INTELIGENTE
    ============================================================ */
-
 async function construirRespuestaConAgenda(usuario, contexto, texto) {
   const intentos = contexto.estado.agendaIntentos;
 
@@ -298,7 +296,7 @@ async function construirRespuestaConAgenda(usuario, contexto, texto) {
     return texto;
   }
 
-  // Intento 4 → Botón + Llamada
+  // Intento 4 → Botón + llamada
   if (intentos >= 4 && !contexto.estado.llamadaOfrecida) {
     contexto.estado.llamadaOfrecida = true;
     await enviarBoton(usuario);
@@ -308,15 +306,14 @@ async function construirRespuestaConAgenda(usuario, contexto, texto) {
     );
   }
 
-  // Repeticiones
+  // Repeticiones posteriores
   await enviarBoton(usuario);
   return texto;
 }
 
 /* ============================================================
-   ENVÍO DE BOTÓN
+   ENVÍO DEL BOTÓN
    ============================================================ */
-
 async function enviarBoton(usuario) {
   await sendInteractive(
     usuario,
@@ -324,41 +321,20 @@ async function enviarBoton(usuario) {
       body: "Reserva tu diagnóstico gratuito 🤍",
       button: "Agendar evaluación"
     },
-    "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-    "whatsapp"
+    "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9"
   );
-}
-
-/* ============================================================
-   HORARIO CHILE UTC-3
-   ============================================================ */
-
-function dentroHorario() {
-  const ahora = new Date();
-  const chile = new Date(ahora.getTime() - 3 * 3600 * 1000);
-
-  const d = chile.getDay();
-  const h = chile.getHours();
-  const m = chile.getMinutes();
-
-  if (d === 0) return false;
-  if (d === 6 && (h > 14 || (h === 14 && m > 0))) return false;
-
-  const total = h * 60 + m;
-  return total >= 570 && total <= 1140;
 }
 
 /* ============================================================
    FALLBACK PREMIUM
    ============================================================ */
-
-async function fallback(usuario, contexto = { estado: {} }) {
+async function fallback(usuario, contexto) {
   contexto.estado.agendaIntentos++;
 
   const texto = `
 Puedo ayudarte a orientarte según tu objetivo 🤍.  
 Cuéntame qué zona te gustaría mejorar o qué cambio te gustaría conseguir.
-  `;
+  `.trim();
 
-  return await construirRespuestaConAgenda(usuario, contexto, texto.trim());
+  return await construirRespuestaConAgenda(usuario, contexto, texto);
 }
