@@ -1,7 +1,3 @@
-// ============================================================
-// Memoria contextual v1 - guarda últimos 5 mensajes por usuario
-// ============================================================
-
 const memoriaUsuarios = new Map();
 
 export default {
@@ -29,13 +25,12 @@ export default {
     }
   },
 
-  // --- NUEVO BLOQUE: HISTORIAL CONTEXTUAL ---
   guardarMensaje(usuario, mensaje) {
     if (!memoriaUsuarios.has(usuario)) memoriaUsuarios.set(usuario, {});
     const data = memoriaUsuarios.get(usuario);
     if (!data.historial) data.historial = [];
     data.historial.push(mensaje.trim());
-    if (data.historial.length > 5) data.historial.shift(); // mantener 5 mensajes
+    if (data.historial.length > 5) data.historial.shift();
     memoriaUsuarios.set(usuario, data);
   },
 

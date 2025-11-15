@@ -6,6 +6,7 @@ import { sendMessage } from "./sendMessage.js";
 const app = express();
 app.use(bodyParser.json());
 
+// VERIFICACIÓN WEBHOOK (META)
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -17,6 +18,7 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
+// RECEPCIÓN DE MENSAJES
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body?.entry?.[0];
@@ -67,6 +69,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+// SERVIDOR ACTIVO
 app.listen(process.env.PORT || 3000, () => {
   console.log("Zara 3.0 corriendo en puerto", process.env.PORT || 3000);
 });
