@@ -1,14 +1,11 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { procesarMensaje } from "./motor_respuesta_v7.1.js";
+import { procesarMensaje } from "./motor_respuesta_v3.js";
 import { sendMessage } from "./sendMessage.js";
 
 const app = express();
 app.use(bodyParser.json());
 
-/* ============================================================
-   VERIFICACIÓN WEBHOOK (META)
-   ============================================================ */
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -20,10 +17,6 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
-/* ============================================================
-   RECEPCIÓN DE MENSAJES
-   Compatibilidad con formato clásico y nuevo de WhatsApp
-   ============================================================ */
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body?.entry?.[0];
@@ -36,24 +29,15 @@ app.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // EXTRAER TEXTO (COMPATIBLE CON AMBOS FORMATOS)
     let texto = null;
 
-    // Formato clásico
-    if (msg?.text?.body) {
-      texto = msg.text.body;
-    }
+    if (msg?.text?.body) texto = msg.text.body;
+    if (!texto && msg?.message?.text?.body) texto = msg.message.text.body;
 
-    // Formato nuevo (message.text.body)
-    if (!texto && msg?.message?.text?.body) {
-      texto = msg.message.text.body;
-    }
-
-    // EXTRAER NÚMERO
     const usuario = msg?.from || null;
 
     if (!texto) {
-      console.log("No se encontró texto válido en el mensaje:", JSON.stringify(msg));
+      console.log("No se encontró texto válido:", JSON.stringify(msg));
       return res.sendStatus(200);
     }
 
@@ -65,7 +49,6 @@ app.post("/webhook", async (req, res) => {
     console.log("Mensaje recibido:", texto);
     console.log("Número:", usuario);
 
-    // PROCESAR MENSAJE CON EL MOTOR
     const respuesta = await procesarMensaje(usuario, texto);
     console.log("Respuesta generada:", respuesta);
 
@@ -74,7 +57,6 @@ app.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // ENVIAR MENSAJE HACIA WHATSAPP
     await sendMessage(usuario, respuesta, "whatsapp");
 
     return res.sendStatus(200);
@@ -85,10 +67,6 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-/* ============================================================
-   SERVIDOR ACTIVO
-   ============================================================ */
 app.listen(process.env.PORT || 3000, () => {
   console.log("Zara 3.0 corriendo en puerto", process.env.PORT || 3000);
 });
-//touch # para asegurar que git detecte el cambio

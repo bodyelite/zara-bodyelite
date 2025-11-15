@@ -1,137 +1,220 @@
 import memoria from "./memoria.js";
 
-// Normalizador de memoria antigua
-for (const num in memoria) {
-  if (typeof memoria[num] === "string") {
-    memoria[num] = {
-      historial: [memoria[num]],
-      agendaIntentos: 0,
-      ultimaInteraccion: Date.now(),
-      estado: null
-    };
-  }
-}
-
 export async function procesarMensaje(usuario, texto) {
-  texto = texto.toLowerCase().trim();
+  if (!texto || typeof texto !== "string") return fallback(usuario);
+
+  const msg = texto.toLowerCase().trim();
   let contexto = memoria.obtenerContexto(usuario);
 
   if (!contexto) {
-    const ultimo = memoria.obtenerUltimoTema(usuario);
-    if (ultimo) memoria.guardarContexto(usuario, ultimo);
+    contexto = { estado: {} };
+    memoria.guardarContexto(usuario, contexto);
   }
 
-  const afirmativos = ["si", "sí", "claro", "perfecto", "dale", "quiero", "me interesa", "obvio", "por supuesto"];
-  const agendar = () =>
-    "✨ Recuerda que la evaluación es gratuita y sin compromiso. ¿Te ayudo a coordinar tu hora? 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  if (!contexto.estado) contexto.estado = {};
+  if (!contexto.estado.agendaIntentos) contexto.estado.agendaIntentos = 0;
+  if (!contexto.estado.llamadaOfrecida) contexto.estado.llamadaOfrecida = false;
+  if (!contexto.estado.numeroSolicitado) contexto.estado.numeroSolicitado = false;
 
-  // --- detección cruzada ---
-  if (texto.match(/grasa|guata|abdomen|gluteo|poto|cola|pierna|muslo|reducir|tonificar|levantar/)) {
-    memoria.guardarContexto(usuario, "corporal");
-    contexto = "corporal";
-  } else if (texto.match(/cara|facial|rostro|arruga|línea|rejuvenecer|tensar|iluminar|botox|toxina/)) {
-    memoria.guardarContexto(usuario, "facial");
-    contexto = "facial";
-  } else if (texto.match(/depil|pelos|bikini|axila/)) {
-    memoria.guardarContexto(usuario, "depilacion");
-    contexto = "depilacion";
+  memoria.guardarMensaje(usuario, msg);
+
+  /* SALUDO */
+  const saludos = ["hola", "holi", "hello", "consulta", "info", "buenas", "zara"];
+  if (saludos.some(s => msg.includes(s))) {
+    return saludoInicial(usuario);
   }
 
-  // --- saludo ---
-  if (texto.includes("hola") || texto.includes("buenas") || texto.includes("zara")) {
-    memoria.guardarContexto(usuario, "inicio");
-    return "✨ Soy Zara de Body Elite. Qué gusto saludarte. Cuéntame qué zona o tratamiento te gustaría mejorar y te orientaré con total honestidad clínica.";
+  /* AFIRMACIONES */
+  const afirmativos = ["si", "sí", "dale", "quiero", "ok", "listo", "perfecto"];
+  if (afirmativos.some(a => msg === a || msg.includes(a))) {
+    return manejarAfirmacion(usuario, contexto);
   }
 
-  // --- afirmaciones ---
-  if (afirmativos.some(p => texto.includes(p))) {
-    const tema = memoria.obtenerContexto(usuario);
-    if (tema === "facial") return "💆‍♀️ Me alegra. Puedo ayudarte a coordinar tu diagnóstico facial gratuito y ajustar el plan a tu piel. " + agendar();
-    if (tema === "corporal") return "💪 Perfecto, puedo ayudarte a reservar tu evaluación corporal sin costo. " + agendar();
-    if (tema === "depilacion") return "🌿 Genial, la depilación láser es muy efectiva. ¿Te ayudo a reservar tu cita gratuita? " + agendar();
-    return "✨ Excelente. La evaluación es gratuita y te orientamos según tu presupuesto. " + agendar();
+  /* ZONAS */
+  const zonas = {
+    "guata": "abdomen",
+    "guatita": "abdomen",
+    "panza": "abdomen",
+    "abdomen": "abdomen",
+    "rollito": "abdomen",
+    "rollitos": "abdomen",
+    "poto": "glúteos",
+    "cola": "glúteos",
+    "gluteo": "glúteos",
+    "glúteo": "glúteos",
+    "gluteos": "glúteos",
+    "glúteos": "glúteos",
+    "muslos": "muslos",
+    "piernas": "piernas",
+    "papada": "papada",
+    "barbilla": "papada",
+    "mentón": "papada",
+    "patas de gallo": "contorno ocular",
+    "arrugas": "rostro",
+    "cara": "rostro"
+  };
+
+  for (const [coloq, zonaReal] of Object.entries(zonas)) {
+    if (msg.includes(coloq)) {
+      memoria.guardarContexto(usuario, contexto);
+      return respuestaZona(usuario, contexto, zonaReal);
+    }
   }
 
-  // --- corporales ---
-  if (texto.match(/grasa|guata|abdomen|poto|pierna|muslo/)) {
-    memoria.guardarContexto(usuario, "corporal");
-    return "💪 Entiendo, muchas personas buscan mejorar esa zona. Trabajamos con HIFU 12D, Cavitación y Radiofrecuencia para reducir grasa y tensar piel. ¿Tu objetivo es reducir, tonificar o levantar?";
+  /* PRECIO */
+  if (msg.includes("precio") || msg.includes("valor") || msg.includes("vale")) {
+    return respuestaPrecio(usuario, contexto);
   }
 
-  if (texto.match(/reducir/)) {
-    memoria.guardarContexto(usuario, "corporal");
-    return "🔥 Para reducción usamos Lipo Body Elite o Lipo Express (HIFU 12D + Cavitación + RF). Resultados desde la primera sesión. Valor desde $432 000 CLP.\n" + agendar();
+  /* RESULTADOS */
+  if (msg.includes("resultado") || msg.includes("cambios") || msg.includes("cuando")) {
+    return respuestaResultados(usuario, contexto);
   }
 
-  if (texto.match(/tonificar|definir/)) {
-    memoria.guardarContexto(usuario, "corporal");
-    return "💪 Para tonificar usamos EMS Sculptor + Radiofrecuencia, logrando 20 000 contracciones en 30 min. Ideal para abdomen, glúteos o piernas. Valor $360 000 CLP.\n" + agendar();
+  /* DOLOR */
+  if (msg.includes("duele") || msg.includes("dolor")) {
+    return respuestaDolor(usuario, contexto);
   }
 
-  if (texto.match(/levantar|gluteo|trasero|cola|push|poto/)) {
-    memoria.guardarContexto(usuario, "corporal");
-    return "🍑 Para levantar y dar forma trabajamos con Push Up Glúteos (EMS Sculptor + RF + HIFU tensor). Firmeza desde la primera sesión. Valor $376 000 CLP.\n" + agendar();
+  /* DEPILACIÓN */
+  if (msg.includes("depil") || msg.includes("pelos") || msg.includes("rebaje") || msg.includes("axila")) {
+    memoria.guardarContexto(usuario, contexto);
+    return respuestaDepilacion(usuario, contexto);
   }
 
-  if (texto.match(/reafirmar|firme|post parto/)) {
-    memoria.guardarContexto(usuario, "corporal");
-    return "✨ Para reafirmar usamos Body Tensor o Body Fitness (HIFU 12D + RF tensor + EMS Sculptor). Ideal tras bajada de peso o embarazo. Valor $232 000 CLP.\n" + agendar();
+  /* UBICACIÓN */
+  if (msg.includes("donde") || msg.includes("ubicacion") || msg.includes("direcc")) {
+    return "📍 Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén.\nHorarios Lun–Vie 9:30–20:00, Sáb 9:30–13:00.\n¿Quieres que agendemos tu diagnóstico gratuito?";
   }
 
-  // --- faciales ---
-  if (texto.match(/cara|rostro|facial|arruga|línea/)) {
-    memoria.guardarContexto(usuario, "facial");
-    return "💆‍♀️ La zona facial responde excelente a HIFU 12D, Radiofrecuencia y Pink Glow, que estimulan colágeno y mejoran firmeza sin cirugía. ¿Tu objetivo es rejuvenecer, tensar o iluminar?";
+  /* AGENDA */
+  if (msg.includes("agendar") || msg.includes("evaluacion") || msg.includes("reserva")) {
+    return botonAgenda();
   }
 
-  if (texto.match(/rejuvenecer|rejuvenecimiento|más joven/)) {
-    memoria.guardarContexto(usuario, "facial");
-    return "🌸 Para rejuvenecimiento facial usamos Face Elite (HIFU 12D + Toxina + Pink Glow). Reafirma y suaviza arrugas profundas. Valor $358 400 CLP.\n" + agendar();
+  /* FALLBACK */
+  return fallback(usuario, contexto);
+}
+
+/* ====================== RESPUESTAS BASE ===================== */
+
+function saludoInicial() {
+  return `Hola! Soy Zara ✨🤍 del equipo Body Elite.
+Estoy aquí para ayudarte con total honestidad clínica.
+Cuéntame, ¿qué zona te gustaría mejorar?`;
+}
+
+function respuestaZona(usuario, contexto, zona) {
+  contexto.estado.agendaIntentos++;
+
+  const textos = {
+    "abdomen": `En abdomen trabajamos 3 frentes ✨:
+• Reducción de grasa resistente con **HIFU 12D**
+• Modelado con **cavitación**
+• Firmeza con **radiofrecuencia**
+
+Funciona excelente para rollitos o “guatita”.`,
+    "glúteos": `En glúteos logramos **levantamiento, forma y firmeza** con Pro Sculpt 🍑.`,
+    "muslos": `En muslos trabajamos celulitis, contorno y firmeza con HIFU 12D + cavitación + RF.`,
+    "piernas": `En piernas mejoramos retención de líquido, celulitis y definición.`,
+    "papada": `En papada usamos **lipolítico facial + radiofrecuencia + HIFU focalizado** para reducir y tensar.`,
+    "contorno ocular": `Para contorno de ojos usamos Pink Glow + RF suave para suavizar líneas finas.`,
+    "rostro": `En rostro trabajamos firmeza y luminosidad con HIFU 12D, radiofrecuencia y Pink Glow (sin LED).`
+  };
+
+  return textos[zona] + "\n\n" + decidirAgenda(contexto);
+}
+
+function respuestaPrecio(usuario, contexto) {
+  contexto.estado.agendaIntentos++;
+  return `El valor exacto depende de tu punto de partida 🤍.
+En tu evaluación gratuita una especialista te indica cuántas sesiones necesitas realmente.\n\n${decidirAgenda(contexto)}`;
+}
+
+function respuestaResultados(usuario, contexto) {
+  contexto.estado.agendaIntentos++;
+  return `Los primeros cambios suelen verse entre la 2° y 4° sesión, según metabolismo y firmeza inicial 🤍.\n\n${decidirAgenda(contexto)}`;
+}
+
+function respuestaDolor(usuario, contexto) {
+  contexto.estado.agendaIntentos++;
+  return `Todas nuestras tecnologías son no invasivas 🤍.
+Puedes sentir calor profundo o vibración intensa, pero nada doloroso.\n\n${decidirAgenda(contexto)}`;
+}
+
+function respuestaDepilacion(usuario, contexto) {
+  contexto.estado.agendaIntentos++;
+  return `Nuestra depilación láser es diodo clínico modelo **DL900**, apto para vello claro y oscuro.
+Planes oficiales desde 6 sesiones según zona 🤍.\n\n${decidirAgenda(contexto)}`;
+}
+
+/* ====================== AGENDA INTELIGENTE ===================== */
+
+function decidirAgenda(contexto) {
+  contexto.estado.agendaIntentos++;
+
+  if (contexto.estado.agendaIntentos === 1) {
+    return "¿Quieres que te deje el link para tu evaluación gratuita?";
   }
 
-  if (texto.match(/tensar|firmeza|flacidez/)) {
-    memoria.guardarContexto(usuario, "facial");
-    return "💫 Para tensar usamos HIFU focalizado + Radiofrecuencia facial. Mejora la firmeza sin dolor ni reposo. Valor $281 600 CLP.\n" + agendar();
+  if (contexto.estado.agendaIntentos === 2 || contexto.estado.agendaIntentos === 3) {
+    return botonAgenda();
   }
 
-  if (texto.match(/iluminar|manchas|glow/)) {
-    memoria.guardarContexto(usuario, "facial");
-    return "✨ Para luminosidad trabajamos con Pink Glow y LED Therapy. Aporta vitalidad e hidratación. Valor $198 400 CLP.\n" + agendar();
+  if (contexto.estado.agendaIntentos >= 4 && !contexto.estado.llamadaOfrecida) {
+    contexto.estado.llamadaOfrecida = true;
+    return botonAgenda() + `\n\nSi quieres, también puedo pedir que una profesional te llame 🙌.\n¿Quieres que coordine la llamada?`;
   }
 
-  if (texto.match(/botox|toxina/)) {
-    memoria.guardarContexto(usuario, "facial");
-    return "💉 La Toxina Botulínica Facial relaja los músculos responsables de las arrugas de expresión, dejando un aspecto natural y fresco. Valor desde $180 000 por zona. ¿Te interesa en frente, entrecejo o patas de gallo?";
+  return botonAgenda();
+}
+
+function botonAgenda() {
+  return `Agenda aquí tu diagnóstico gratuito 🤍:
+https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9`;
+}
+
+/* ====================== LLAMADAS ===================== */
+
+function manejarAfirmacion(usuario, contexto) {
+  if (contexto.estado.llamadaOfrecida) {
+    return procesarLlamada();
+  }
+  return botonAgenda();
+}
+
+function procesarLlamada() {
+  if (dentroHorario()) {
+    return `Perfecto 🤍. Una profesional te llamará en unos minutos desde **+56 9 8330 0262**.`;
   }
 
-  // --- depilación ---
-  if (texto.match(/depil|pelos|axila|bikini/)) {
-    memoria.guardarContexto(usuario, "depilacion");
-    return "🌿 La Depilación Láser Diodo Triple Onda elimina el vello desde la raíz sin dolor. Planes desde $35 000 o $180 000 por 6 sesiones (bikini completo). ¿Quieres que te ayude a agendar tu diagnóstico gratuito?";
-  }
+  return `Nuestro horario de llamadas es:
+• Lun–Vie 09:30–19:00  
+• Sáb 09:30–14:00  
 
-  // --- coherencia de seguimiento ---
-  if (contexto === "facial" && texto.match(/caro|precio|vale/)) {
-    return "🤍 Entiendo, los planes faciales usan HIFU 12D original y Pink Glow europeo, tecnologías de última generación con seguimiento profesional. Además, la evaluación es gratuita y podemos ajustar el plan a tu presupuesto.\n" + agendar();
-  }
+Puedo dejar la llamada programada para el próximo horario 🙌.`;
+}
 
-  if (contexto === "corporal" && texto.match(/caro|precio|vale/)) {
-    return "💪 Entiendo, los planes corporales usan equipos HIFU 12D y EMS Sculptor clínicos. La evaluación es gratuita y podemos ver alternativas más acotadas o por zona específica.\n" + agendar();
-  }
+function dentroHorario() {
+  const ahora = new Date();
+  const d = ahora.getDay();
+  const h = ahora.getHours();
+  const m = ahora.getMinutes();
 
-  // --- preguntas comunes ---
-  if (texto.match(/funciona|como es|en que consiste/)) {
-    return "⚙️ Todos nuestros tratamientos usan tecnología no invasiva (HIFU 12D, Cavitación, Radiofrecuencia, EMS Sculptor). Actúan sobre grasa, piel y músculo sin dolor ni reposo. " + agendar();
-  }
+  if (d === 0) return false;
+  if (d === 6 && (h > 14 || (h === 14 && m > 0))) return false;
 
-  if (texto.match(/donde|ubicacion|direcci/)) {
-    return "📍 Estamos en Av. Las Perdices Nº 2990, Local 23, Peñalolén. Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00. Puedes agendar aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  }
+  const mins = h * 60 + m;
+  const inicio = 9 * 60 + 30;
+  const fin = 19 * 60;
 
-  if (texto.match(/agendar|reserva|evaluacion/)) {
-    return "📅 Excelente decisión. La evaluación es gratuita y sin compromiso. Reserva aquí 👉 https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-  }
+  return mins >= inicio && mins <= fin;
+}
 
-  // --- fallback ---
-  return "💛 Disculpa, no logré entender tu mensaje. Pero puedo ayudarte a encontrar el tratamiento más adecuado para ti. " + agendar();
+/* ====================== FALLBACK ===================== */
+
+function fallback(usuario, contexto = { estado: {} }) {
+  contexto.estado.agendaIntentos++;
+  return `Disculpa, no logré interpretar bien tu mensaje 🙈.
+En tu evaluación gratuita te guiamos paso a paso con honestidad clínica 🤍.\n\n${decidirAgenda(contexto)}`;
 }
