@@ -1,46 +1,72 @@
-// sendMessage.js – Versión final JC Premium (WhatsApp only)
+// ============================================================
+// sendMessage.js – Envío de texto WhatsApp + Instagram v19.0
+// ============================================================
+
 import fetch from "node-fetch";
 
-export async function sendMessage(to, text) {
+/*
+  Uso:
+  sendMessage(to, text, platform)
+
+  platform = "whatsapp" | "instagram"
+*/
+
+export async function sendMessage(to, text, platform) {
   try {
-    if (!to || typeof to !== "string") {
-      console.error("Número inválido:", to);
-      return;
+    if (!to || !text) {
+      console.error("sendMessage: parámetros inválidos", { to, text });
+      return null;
     }
 
     const numero = to.startsWith("+") ? to : `+${to}`;
 
-    if (!text || typeof text !== "string") {
-      console.error("Texto inválido enviado a sendMessage:", text);
-      return;
+    let url = "";
+    let payload = {};
+
+    // ============================================================
+    // WHATSAPP
+    // ============================================================
+    if (platform === "whatsapp") {
+      url = `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
+
+      payload = {
+        messaging_product: "whatsapp",
+        to: numero,
+        type: "text",
+        text: { body: text }
+      };
     }
 
-    const payload = {
-      messaging_product: "whatsapp",
-      to: numero,
-      type: "text",
-      text: { body: text }
-    };
+    // ============================================================
+    // INSTAGRAM DM
+    // ============================================================
+    else if (platform === "instagram") {
+      url = `https://graph.facebook.com/v19.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`;
 
-    console.log("ENVIANDO TEXTO →", JSON.stringify(payload, null, 2));
+      payload = {
+        recipient: { id: to },
+        message: { text }
+      };
+    }
 
-    const res = await fetch(
-      `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      }
-    );
+    console.log("ENVIANDO MENSAJE →", JSON.stringify(payload, null, 2));
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
 
     const data = await res.json();
     console.log("RESPUESTA META →", JSON.stringify(data, null, 2));
 
     return data;
+
   } catch (err) {
     console.error("ERROR EN sendMessage →", err);
+    return null;
   }
 }

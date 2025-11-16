@@ -1,48 +1,53 @@
-// memoria.js – Versión estable para Zara 2.1
-// Ahora expone leerMemoria / guardarMemoria para el motor nuevo.
+// ============================================================
+// memoria.js – Versión Final Zara 2.1
+// Memoria en RAM por usuario
+// ============================================================
 
-let memoriaGlobal = {}; 
-let historialConversacion = {};
+// Memoria principal por usuario
+let memoriaUsuarios = {};
 
+// Historial de mensajes (opcional, usado por monitor si lo necesitas)
+let historialUsuarios = {};
+
+
+// ============================================================
+// WRAPPERS QUE USA EL MOTOR v3
+// ============================================================
+
+// Leer memoria
+export function leerMemoria(usuario) {
+  return memoriaUsuarios[usuario] || null;
+}
+
+// Guardar memoria
+export function guardarMemoria(usuario, datos) {
+  memoriaUsuarios[usuario] = datos;
+}
+
+
+// ============================================================
+// SISTEMA DE CONTEXTO AMPLIADO (OPCIONAL)
+// Mantiene historial si deseas usarlo después
+// ============================================================
 export default {
   guardarContexto(usuario, contexto) {
-    memoriaGlobal[usuario] = contexto;
+    memoriaUsuarios[usuario] = contexto;
   },
 
   obtenerContexto(usuario) {
-    return memoriaGlobal[usuario] || null;
-  },
-
-  obtenerUltimoTema(usuario) {
-    return memoriaGlobal[usuario]?.ultimoTema || null;
+    return memoriaUsuarios[usuario] || null;
   },
 
   limpiarContexto(usuario) {
-    delete memoriaGlobal[usuario];
+    delete memoriaUsuarios[usuario];
   },
 
   guardarMensaje(usuario, mensaje) {
-    if (!historialConversacion[usuario]) {
-      historialConversacion[usuario] = [];
-    }
-    historialConversacion[usuario].push(mensaje);
+    if (!historialUsuarios[usuario]) historialUsuarios[usuario] = [];
+    historialUsuarios[usuario].push(mensaje);
   },
 
   obtenerHistorial(usuario) {
-    return historialConversacion[usuario] || [];
+    return historialUsuarios[usuario] || [];
   }
 };
-
-// ===============================================
-// FUNCIONES QUE NECESITA EL MOTOR NUEVO
-// ===============================================
-
-// Leer memoria del usuario (wrapper)
-export function leerMemoria(usuario) {
-  return memoriaGlobal[usuario] || null;
-}
-
-// Guardar memoria del usuario (wrapper)
-export function guardarMemoria(usuario, datos) {
-  memoriaGlobal[usuario] = datos;
-}

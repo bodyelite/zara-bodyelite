@@ -1,59 +1,75 @@
+// ============================================================
+// motor_respuesta_v3.js – Versión Final Zara 2.1
+// Clínico + Comercial + Empático + Campañas + Agenda
+// ============================================================
+
 import { leerMemoria, guardarMemoria } from "./memoria.js";
 
-export async function procesarMensaje(usuario, textoEntrada) {
-  const memoria = leerMemoria(usuario) || {
-    ultimo_plan: null,
-    intentosAgenda: 0
-  };
-
-  const respuesta = generarRespuesta(usuario, textoEntrada, memoria);
-
-  guardarMemoria(usuario, memoria);
-  return respuesta;
-}
-
+// ============================================================
+// PALABRAS CLAVE Y FRASES COLOQUIALES
+// ============================================================
 const palabras = {
-  arrugas: ["arruga","arrugas","patas de gallo","pata de gallo","líneas","lineas","lineas de expresión","expresión","ceño","entrecejo","frente marcada"],
-  flacidez_facial: ["flacidez","flacida","piel suelta","rostro caído","rostro caido","contorno caído","contorno caido","descolgado"],
-  papada: ["papada","doble mentón","doble menton","mentón","menton"],
-  manchas: ["manchas","manchitas","melasma","opaca","opacidad","luminosidad"],
-  textura: ["textura","poros","poros abiertos","piel áspera","piel aspera"],
+  arrugas: ["arruga","arrugas","patas de gallo","pata de gallo","líneas","lineas","lineas de expresión","expresión","ceño","entrecejo","frente marcada","patitas","lineas finas","ojeras marcadas"],
+  flacidez_facial: ["flacidez","flacida","piel suelta","rostro caído","rostro caido","contorno caído","contorno caido","descolgado","cachetes sueltos"],
+  papada: ["papada","doble mentón","doble menton","mentón","menton","submenton"],
+  manchas: ["manchas","manchitas","melasma","opaca","opacidad","luminosidad","tono disparejo"],
+  textura: ["textura","poros","poros abiertos","piel áspera","piel aspera","asperezas"],
   face_h12: ["face h12","h12","h 12"],
   face_one: ["face one","one"],
-  grasa_abdomen: ["abdomen","guata","guatita","panza","pansa","rollito","rollitos","flotador","cintura","estomago","estómago"],
-  grasa_cuerpo: ["piernas","pierna","muslo","muslos","cartuchera","cartucheras","celulitis","retención","retencion"],
-  brazos: ["brazo","brazos","ala de murcielago","murcielago"],
-  gluteos: ["glúteo","gluteo","glúteos","gluteos","poto","colita","nalgas","levantar","gluteo caido","glúteo caído"],
-  tono: ["marcación","marcacion","marcar","tonificar","tono","ems","músculo","musculo"],
-  depilacion: ["depilar","depilación","depilacion","pelo","pelos","vello","vellos","rebaje","axila","pierna completa","laser","láser"],
-  funcionamiento: ["como funciona","cómo funciona","en qué consiste","que máquinas usan","qué maquinas usan","maquina","máquina"],
-  sesiones: ["sesiones","cuantas sesiones","número de sesiones","numero de sesiones"],
-  resultados: ["resultados","cuando se ven","cuándo veo","cuanto demora","demora","sirve","vale la pena"],
-  dolor: ["duele","dolor","molesta","ardor","incomodo"],
-  ubicacion: ["donde están","ubicación","como llegar","dirección","donde quedan"],
-  agendar: ["agendar","reservar","quiero ir","quiero agendar","link","pasame el link","quiero hora","agenda","agendo"]
+  grasa_abdomen: ["abdomen","guata","guatita","panza","pansa","rollito","rollitos","flotador","cintura","estomago","estómago","barriga","faja natural"],
+  grasa_cuerpo: ["piernas","pierna","muslo","muslos","cartuchera","cartucheras","celulitis","retención","retencion","aductores","muslos laterales"],
+  brazos: ["brazo","brazos","ala de murcielago","murcielago","brazito","brazitos"],
+  gluteos: ["glúteo","gluteo","glúteos","gluteos","poto","colita","nalgas","levantar","gluteo caido","glúteo caído","gluteo","gluteos"],
+  tono: ["marcación","marcacion","marcar","tonificar","tono","ems","músculo","musculo","musculatura","definir"],
+  depilacion: ["depilar","depilación","depilacion","pelo","pelos","vello","vellos","rebaje","axila","pierna completa","laser","láser","depilado"],
+  funcionamiento: ["como funciona","cómo funciona","en qué consiste","que máquinas usan","qué maquinas usan","maquina","máquina","que usan","qué usan"],
+  sesiones: ["sesiones","cuantas sesiones","número de sesiones","numero de sesiones","frecuencia"],
+  resultados: ["resultados","cuando se ven","cuándo veo","cuanto demora","demora","sirve","vale la pena","cuando noto"],
+  dolor: ["duele","dolor","molesta","ardor","incomodo","sensación"],
+  ubicacion: ["donde están","ubicación","como llegar","dirección","donde quedan","ubicacion"],
+  agendar: ["agendar","reservar","quiero ir","quiero agendar","link","pasame el link","quiero hora","agenda","agendo","quiero reservar","quiero mi hora","dame tu agenda"],
 };
 
+// ============================================================
+// UTILIDADES
+// ============================================================
 const match = (texto, lista) => lista.some((w) => texto.includes(w));
 
 function CTA_ofrecer() {
-  return "¿Quieres que te deje el acceso para agendar tu diagnóstico gratuito?";
+  return {
+    tipo: "texto",
+    texto: "¿Quieres que te deje el acceso para agendar tu diagnóstico gratuito? 🤍",
+    estadoNuevo: null
+  };
 }
 
 function CTA_enviar() {
-  return "Aquí tienes tu acceso directo para agendar tu diagnóstico gratuito:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+  return {
+    tipo: "boton",
+    body: "Aquí tienes tu acceso directo al diagnóstico gratuito 🤍",
+    button: "Agendar ahora",
+    urlAgenda: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
+    estadoNuevo: null
+  };
 }
 
 function CTA_llamada() {
-  return "Si prefieres, puedo pedir que una profesional te llame en horario laboral para ayudarte con tu hora. ¿Quieres que lo coordinemos?";
+  return {
+    tipo: "texto",
+    texto: "Si prefieres, puedo pedir que una profesional te llame en horario laboral para ayudarte con tu hora. ¿Quieres que lo coordinemos? ☎️",
+    estadoNuevo: null
+  };
 }
 
+// ============================================================
+// PLANES → RESPUESTAS TÉCNICAS + COMERCIALES
+// ============================================================
 function recomendarPlanCorporal(texto) {
   if (match(texto, palabras.grasa_abdomen)) {
     return {
       plan: "Lipo Express",
       precio: 432000,
-      descripcion: "Lipo Express reduce abdomen y cintura. • HIFU 12D • Cavitación • Radiofrecuencia profunda. Resultados rápidos."
+      desc: "Reduce abdomen y rollitos rápido con HIFU 12D, Cavitación y Radiofrecuencia profunda. Resultados desde las primeras semanas."
     };
   }
 
@@ -61,7 +77,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Lipo Focalizada Reductiva",
       precio: 348800,
-      descripcion: "Lipo Focalizada para piernas o cartucheras. • Cavitación • Radiofrecuencia • Drenaje. Mejora volumen y celulitis."
+      desc: "Reduce piernas/cartucheras con Cavitación + Radiofrecuencia + drenaje. Mejora volumen y celulitis."
     };
   }
 
@@ -69,7 +85,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Lipo Focalizada Reductiva",
       precio: 348800,
-      descripcion: "Tratamiento para brazos. • Cavitación • Radiofrecuencia. Afina y define."
+      desc: "Afina y define brazos con Cavitación + Radiofrecuencia médica."
     };
   }
 
@@ -77,7 +93,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Body Tensor",
       precio: 232000,
-      descripcion: "Body Tensor para firmeza corporal. • Radiofrecuencia médica • EMS Sculptor. Mejora caída del tejido."
+      desc: "Reafirma tejido corporal con Radiofrecuencia médica + EMS Sculptor."
     };
   }
 
@@ -85,7 +101,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Body Fitness",
       precio: 360000,
-      descripcion: "Body Fitness para tono y marcación. • EMS Sculptor 20.000 contracciones."
+      desc: "Define y tonifica con EMS Sculptor (20.000 contracciones por sesión)."
     };
   }
 
@@ -93,7 +109,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Push Up Glúteos",
       precio: 376000,
-      descripcion: "Push Up levanta y da forma al glúteo. • EMS Pro Sculpt • Radiofrecuencia."
+      desc: "Levanta y da volumen con EMS Pro Sculpt + Radiofrecuencia compactante."
     };
   }
 
@@ -105,7 +121,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Antiage",
       precio: 281600,
-      descripcion: "Face Antiage suaviza arrugas y líneas. • Toxina • Radiofrecuencia • Pink Glow."
+      desc: "Suaviza arrugas con Toxina, RF médica y Pink Glow regenerativo."
     };
   }
 
@@ -113,7 +129,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Elite",
       precio: 358400,
-      descripcion: "Face Elite lifting y firmeza. • HIFU 12D • Radiofrecuencia • Pink Glow."
+      desc: "Lifting no invasivo con HIFU 12D + RF + Pink Glow."
     };
   }
 
@@ -121,7 +137,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Papada",
       precio: 198400,
-      descripcion: "Face Papada reduce doble mentón. • HIFU 12D • Lipolítico • Radiofrecuencia."
+      desc: "Reduce papada con HIFU 12D + Lipolítico + RF médica."
     };
   }
 
@@ -129,7 +145,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Smart",
       precio: 198400,
-      descripcion: "Face Smart mejora manchas y tono. • Pink Glow • Limpieza profunda • RF suave."
+      desc: "Aclara manchas y mejora el tono con Pink Glow + limpieza profunda."
     };
   }
 
@@ -137,7 +153,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Light",
       precio: 128800,
-      descripcion: "Face Light mejora textura y poros. • Limpieza profunda • RF suave • Pink Glow."
+      desc: "Mejora textura y poros con limpieza profesional + RF suave + Pink Glow."
     };
   }
 
@@ -145,7 +161,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face H12",
       precio: 270400,
-      descripcion: "Face H12 lifting profundo. • HIFU 12D facial • Radiofrecuencia • Pink Glow."
+      desc: "HIFU 12D facial + RF + Pink Glow para lifting profundo."
     };
   }
 
@@ -153,7 +169,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face One",
       precio: 128800,
-      descripcion: "Face One efecto inmediato. • RF médica • Pink Glow. Ideal para eventos."
+      desc: "Efecto inmediato con RF médica + Pink Glow. Ideal eventos."
     };
   }
 
@@ -161,7 +177,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Full Face",
       precio: 584000,
-      descripcion: "Full Face rejuvenecimiento completo. • HIFU 12D • Radiofrecuencia • Pink Glow."
+      desc: "Rejuvenecimiento completo con HIFU 12D + RF médica + Pink Glow."
     };
   }
 
@@ -173,14 +189,16 @@ function recomendarDepilacion(texto) {
     return {
       plan: "Depilación Láser DL900",
       precio: 153600,
-      descripcion: "Láser DL900. • Sesiones cada 15 días • Sensación cálida • Resultados progresivos."
+      desc: "Láser diodo DL900. Sesiones cada 15 días, sensación cálida, resultados progresivos."
     };
   }
   return null;
 }
 
+// ============================================================
+// DETECTAR CAMPAÑA
+// ============================================================
 function detectarCampaña(texto) {
-  const t = texto.toLowerCase();
   const planes = [
     "push up","lipo express","lipo focalizada","lipo reductiva",
     "body tensor","body fitness","face elite","face antiage",
@@ -188,73 +206,131 @@ function detectarCampaña(texto) {
     "face one","full face","depilación","depilacion"
   ];
 
+  const t = texto.toLowerCase();
   for (const p of planes) {
     if (t.includes(`plan ${p}`) || t.includes(p)) return p;
   }
   return null;
 }
 
-function generarRespuesta(usuario, texto, memoria) {
-  const t = texto.toLowerCase().trim();
-  const quiereAgendar =
-    match(t, palabras.agendar) ||
-    ["si","sí","ok","dale","agenda","quiero","hagamos","agendo","perfecto"].includes(t);
+function describirCampaña(plan) {
+  const p = plan.toLowerCase();
 
-  if (quiereAgendar) {
-    memoria.intentosAgenda++;
-    if (memoria.intentosAgenda === 4) return CTA_llamada();
-    if (memoria.intentosAgenda > 1) return CTA_enviar();
-    return CTA_ofrecer();
-  }
+  if (p.includes("push up")) return recomendarPlanCorporal("gluteos").desc;
+  if (p.includes("lipo express")) return recomendarPlanCorporal("abdomen").desc;
+  if (p.includes("lipo focalizada")) return recomendarPlanCorporal("piernas").desc;
+  if (p.includes("lipo reductiva")) return recomendarPlanCorporal("piernas celulitis").desc;
+  if (p.includes("body tensor")) return recomendarPlanCorporal("flacidez").desc;
+  if (p.includes("body fitness")) return recomendarPlanCorporal("marcación").desc;
+  if (p.includes("face elite")) return recomendarPlanFacial("rostro caido").desc;
+  if (p.includes("face antiage")) return recomendarPlanFacial("arrugas").desc;
+  if (p.includes("face smart")) return recomendarPlanFacial("manchas").desc;
+  if (p.includes("face light")) return recomendarPlanFacial("textura").desc;
+  if (p.includes("face papada")) return recomendarPlanFacial("papada").desc;
+  if (p.includes("face h12")) return recomendarPlanFacial("h12").desc;
+  if (p.includes("face one")) return recomendarPlanFacial("one").desc;
+  if (p.includes("full face")) return recomendarPlanFacial("full face").desc;
+  if (p.includes("depilacion") || p.includes("depilación")) return recomendarDepilacion("depilar").desc;
 
-  const camp = detectarCampaña(t);
-  if (camp) {
-    memoria.ultimo_plan = camp;
-    return describirPlanDirecto(camp) +
-      "\n\n¿Quieres que te deje el acceso para tu diagnóstico gratuito?";
-  }
-
-  const facial = recomendarPlanFacial(t);
-  if (facial) {
-    memoria.ultimo_plan = facial.plan;
-    return `${facial.descripcion}\n\nValor desde: $${facial.precio.toLocaleString("es-CL")}\n¿Quieres que te deje el acceso para agendar tu diagnóstico gratuito?`;
-  }
-
-  const corp = recomendarPlanCorporal(t);
-  if (corp) {
-    memoria.ultimo_plan = corp.plan;
-    return `${corp.descripcion}\n\nValor desde: $${corp.precio.toLocaleString("es-CL")}\n¿Quieres que te deje el acceso para agendar tu diagnóstico gratuito?`;
-  }
-
-  const dep = recomendarDepilacion(t);
-  if (dep) {
-    memoria.ultimo_plan = dep.plan;
-    return `${dep.descripcion}\n\nValor desde: $${dep.precio.toLocaleString("es-CL")}\n¿Quieres que te deje el acceso para agendar tu diagnóstico gratuito?`;
-  }
-
-  if (memoria.ultimo_plan) {
-    return `Puedo contarte más sobre ${memoria.ultimo_plan}. ¿Quieres que te deje el acceso a tu diagnóstico gratuito?`;
-  }
-
-  return "No logré entenderte bien. ¿Quieres trabajar volumen, flacidez, arrugas, papada o depilación?";
+  return "Es un plan muy solicitado por sus resultados rápidos y visibles.";
 }
 
-function describirPlanDirecto(plan) {
-  const t = plan.toLowerCase();
-  if (t.includes("push up")) return recomendarPlanCorporal("gluteos").descripcion;
-  if (t.includes("lipo express")) return recomendarPlanCorporal("abdomen").descripcion;
-  if (t.includes("lipo focalizada")) return recomendarPlanCorporal("piernas").descripcion;
-  if (t.includes("lipo reductiva")) return recomendarPlanCorporal("piernas celulitis retencion").descripcion;
-  if (t.includes("body tensor")) return recomendarPlanCorporal("flacidez").descripcion;
-  if (t.includes("body fitness")) return recomendarPlanCorporal("marcación").descripcion;
-  if (t.includes("face elite")) return recomendarPlanFacial("rostro caído").descripcion;
-  if (t.includes("face antiage")) return recomendarPlanFacial("arrugas").descripcion;
-  if (t.includes("face smart")) return recomendarPlanFacial("manchas").descripcion;
-  if (t.includes("face light")) return recomendarPlanFacial("textura").descripcion;
-  if (t.includes("face papada")) return recomendarPlanFacial("papada").descripcion;
-  if (t.includes("face h12")) return recomendarPlanFacial("h12").descripcion;
-  if (t.includes("face one")) return recomendarPlanFacial("one").descripcion;
-  if (t.includes("full face")) return recomendarPlanFacial("full face").descripcion;
-  if (t.includes("depilacion") || t.includes("depilación")) return recomendarDepilacion("depilar").descripcion;
-  return "";
+// ============================================================
+// MOTOR PRINCIPAL
+// ============================================================
+export async function procesarMensaje(usuario, texto, memoria) {
+  const t = texto.toLowerCase().trim();
+
+  const mem = memoria || {
+    ultimo_plan: null,
+    intentosAgenda: 0
+  };
+
+  // AGENDAR
+  const quiereAgendar =
+    match(t, palabras.agendar) ||
+    ["si","sí","ok","dale","agenda","quiero","hagamos","perfecto","ya","sí quiero"].includes(t);
+
+  if (quiereAgendar) {
+    mem.intentosAgenda++;
+
+    if (mem.intentosAgenda === 1) return { ...CTA_ofrecer(), estadoNuevo: mem };
+    if (mem.intentosAgenda === 2 || mem.intentosAgenda === 3) return { ...CTA_enviar(), estadoNuevo: mem };
+    if (mem.intentosAgenda >= 4) return { ...CTA_llamada(), estadoNuevo: mem };
+  }
+
+  // CAMPAÑA
+  const camp = detectarCampaña(t);
+  if (camp) {
+    mem.ultimo_plan = camp;
+
+    return {
+      tipo: "texto",
+      texto:
+        `¡Qué bueno tenerte por aquí! Veo que vienes desde nuestra campaña del **${camp}** 💛\n\n` +
+        `${describirCampaña(camp)}\n\n` +
+        `¿Quieres que te deje tu acceso al diagnóstico gratuito para ver cuántas sesiones necesitas?`,
+      estadoNuevo: mem
+    };
+  }
+
+  // FACIAL
+  const facial = recomendarPlanFacial(t);
+  if (facial) {
+    mem.ultimo_plan = facial.plan;
+    return {
+      tipo: "texto",
+      texto:
+        `${facial.desc}\n\n` +
+        `Valor desde: $${facial.precio.toLocaleString("es-CL")}\n` +
+        `¿Quieres que te deje el acceso para tu diagnóstico gratuito?`,
+      estadoNuevo: mem
+    };
+  }
+
+  // CORPORAL
+  const corporal = recomendarPlanCorporal(t);
+  if (corporal) {
+    mem.ultimo_plan = corporal.plan;
+    return {
+      tipo: "texto",
+      texto:
+        `${corporal.desc}\n\n` +
+        `Valor desde: $${corporal.precio.toLocaleString("es-CL")}\n` +
+        `¿Quieres que te deje el acceso al diagnóstico gratuito?`,
+      estadoNuevo: mem
+    };
+  }
+
+  // DEPILACIÓN
+  const dep = recomendarDepilacion(t);
+  if (dep) {
+    mem.ultimo_plan = dep.plan;
+    return {
+      tipo: "texto",
+      texto:
+        `${dep.desc}\n\nValor desde: $${dep.precio.toLocaleString("es-CL")}\n` +
+        `¿Quieres que te deje el acceso para el diagnóstico gratuito?`,
+      estadoNuevo: mem
+    };
+  }
+
+  // YA HUBO PLAN
+  if (mem.ultimo_plan) {
+    return {
+      tipo: "texto",
+      texto:
+        `Puedo contarte más sobre **${mem.ultimo_plan}**. ` +
+        `¿Quieres tu acceso al diagnóstico gratuito para ver cuántas sesiones necesitas?`,
+      estadoNuevo: mem
+    };
+  }
+
+  // DEFAULT
+  return {
+    tipo: "texto",
+    texto:
+      "No me quedó claro lo que deseas trabajar. ¿Quieres mejorar volumen, flacidez, arrugas, papada o depilación? 🤍",
+    estadoNuevo: mem
+  };
 }
