@@ -2,8 +2,8 @@ import express from "express";
 import fetch from "node-fetch";
 import { procesarMensaje } from "./motor_respuesta_v3.js";
 import { leerMemoria, guardarMemoria } from "./memoria.js";
-import sendMessage from "./sendMessage.js";
-import { sendInteractive } from "./sendInteractive.js";   // ✔ FIX FINAL
+import { sendMessage } from "./sendMessage.js";        // ✔ FIX
+import { sendInteractive } from "./sendInteractive.js"; // ✔ FIX
 
 const app = express();
 app.use(express.json());
