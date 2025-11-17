@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { procesarMensaje } from "./motor_respuesta_v3.js";
 import { leerMemoria, guardarMemoria } from "./memoria.js";
 import sendMessage from "./sendMessage.js";
-import sendInteractive from "./sendInteractive.js";
+import { sendInteractive } from "./sendInteractive.js";   // ✔ FIX FINAL
 
 const app = express();
 app.use(express.json());
@@ -40,9 +40,6 @@ app.post("/webhook", async (req, res) => {
     const entry = req.body.entry?.[0];
     if (!entry) return res.sendStatus(200);
 
-    // ======================================================
-    // 📌 DETECTAR CANAL
-    // ======================================================
     const isIG = String(entry.id) === String(IG_USER_ID);
     const platform = isIG ? "instagram" : "whatsapp";
 
@@ -66,15 +63,11 @@ app.post("/webhook", async (req, res) => {
       console.log("👤 De:", from);
       console.log("💬 Texto:", texto);
 
-      // Memoria por número
       const memoria = leerMemoria(from);
-
-      // Motor
       const respuesta = await procesarMensaje(from, texto, memoria);
 
       if (respuesta.estadoNuevo) guardarMemoria(from, respuesta.estadoNuevo);
 
-      // Enviar
       if (respuesta.tipo === "boton") {
         await sendInteractive(from, respuesta, "whatsapp");
       } else {
