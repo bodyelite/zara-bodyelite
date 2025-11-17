@@ -1,9 +1,3 @@
-// ============================================================
-// server.js – Zara 2.1 (final y estable)
-// Compatible con motor_respuesta_v3.js (que devuelve OBJETOS)
-// WhatsApp + Instagram – Meta Graph v19.0
-// ============================================================
-
 import express from "express";
 import fetch from "node-fetch";
 
@@ -16,10 +10,11 @@ const app = express();
 app.use(express.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const PAGE_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const PHONE_ID = process.env.PHONE_NUMBER_ID;
 const IG_USER_ID = process.env.IG_USER_ID;
 
+// --------------------------------------
+// VERIFICACIÓN WEBHOOK
+// --------------------------------------
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -28,62 +23,49 @@ app.get("/webhook", (req, res) => {
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     return res.status(200).send(challenge);
   }
-
   return res.sendStatus(403);
 });
 
-function normalizarTexto(msg) {
-  let text = "";
-
+// --------------------------------------
+// NORMALIZAR TEXTO
+// --------------------------------------
+function extraerTexto(msg) {
   try {
-    if (msg.text?.body) text = msg.text.body;
-    else if (msg.message?.text?.body) text = msg.message.text.body;
-    else if (msg.message?.text) text = msg.message.text;
-    else if (msg.message?.body) text = msg.message.body;
-    else if (msg.body) text = msg.body;
-    else text = "";
-
-    text = String(text || "").trim();
+    return (
+      msg.text?.body ||
+      msg.message?.text?.body ||
+      msg.message?.text ||
+      msg.message?.body ||
+      msg.body ||
+      ""
+    ).toString().trim();
   } catch {
-    text = "";
+    return "";
   }
-
-  return text;
 }
 
+// --------------------------------------
+// MANEJO DE MENSAJES
+// --------------------------------------
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
     if (!entry) return res.sendStatus(200);
 
-    const changes = entry.changes?.[0];
-    const data = changes?.value;
-
     const isIG = String(entry.id) === String(IG_USER_ID);
     const platform = isIG ? "instagram" : "whatsapp";
 
-    const msg = data?.messages?.[0] ||
-                data?.messaging?.[0]?.message;
+    const msg =
+      entry.changes?.[0]?.value?.messages?.[0] ||
+      entry.changes?.[0]?.value?.messaging?.[0]?.message;
 
     if (!msg) return res.sendStatus(200);
 
     const from = msg.from || msg.sender?.id;
-    const text = normalizarTexto(msg);
+    const texto = extraerTexto(msg);
+    const memoria = leerMemoria(from);
 
-    console.log("\n=== MENSAJE ENTRANTE ===");
-    console.log("PLATAFORMA:", platform);
-    console.log("DE:", from);
-    console.log("TEXTO:", text);
-
-    const memoriaUsuario = leerMemoria(from);
-    const respuesta = await procesarMensaje(from, text, memoriaUsuario);
-
-    console.log("→ Respuesta del motor:", respuesta);
-
-    if (!respuesta || typeof respuesta !== "object") {
-      console.error("Respuesta inválida del motor:", respuesta);
-      return res.sendStatus(200);
-    }
+    const respuesta = await procesarMensaje(from, texto, memoria);
 
     if (respuesta.estadoNuevo) guardarMemoria(from, respuesta.estadoNuevo);
 
@@ -94,14 +76,12 @@ app.post("/webhook", async (req, res) => {
     }
 
     return res.sendStatus(200);
-
-  } catch (err) {
-    console.error("ERROR WEBHOOK:", err);
+  } catch (e) {
+    console.error("ERROR WEBHOOK:", e);
     return res.sendStatus(500);
   }
 });
 
+// --------------------------------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Zara corriendo en puerto:", PORT);
-});
+app.listen(PORT, () => console.log("Zara lista en puerto:", PORT));

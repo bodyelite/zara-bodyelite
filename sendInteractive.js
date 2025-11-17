@@ -1,97 +1,61 @@
-// ============================================================
-// sendInteractive.js – Botón CTA WhatsApp (v19.0)
-// Compatible con server.js y motor v3
-// ============================================================
-
 import fetch from "node-fetch";
 
-/*
-  Uso esperado desde server.js:
+const PAGE_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const PHONE_ID = process.env.PHONE_NUMBER_ID;
 
-    await sendInteractive(to, respuesta, platform);
-
-  Donde "respuesta" contiene:
-    - body: texto cuerpo del botón
-    - button: texto del botón
-    - urlAgenda: URL completa
-*/
-
-export async function sendInteractive(to, contenido, platform) {
+// ------------------------------------
+// ENVIAR BOTÓN INTERACTIVO SEGÚN CANAL
+// ------------------------------------
+export async function sendInteractive(to, data, platform) {
   try {
-    const numero = to.startsWith("+") ? to : `+${to}`;
-
-    // ============================================================
-    // INSTAGRAM NO ADMITE BOTONES → fallback a TEXTO
-    // ============================================================
+    // IG no soporta botones → enviar texto con link
     if (platform === "instagram") {
-      console.log("IG no permite botones interactivos → enviando texto fallback");
+      const texto =
+        `${data.body}\n\n` +
+        `Reserva aquí: ${data.urlAgenda}`;
 
-      const fallback = `Aquí tienes tu acceso directo para agendar:\n${contenido.urlAgenda}`;
-      const payloadIG = {
+      const urlIG = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_TOKEN}`;
+      const bodyIG = {
         recipient: { id: to },
-        message: { text: fallback }
+        message: { text: texto }
       };
 
-      const urlIG = `https://graph.facebook.com/v19.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`;
-
-      console.log("ENVIANDO Fallback IG →", JSON.stringify(payloadIG, null, 2));
-
-      const resIG = await fetch(urlIG, {
+      await fetch(urlIG, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payloadIG)
+        body: JSON.stringify(bodyIG)
       });
 
-      const dataIG = await resIG.json();
-      console.log("RESPUESTA IG →", JSON.stringify(dataIG, null, 2));
-      return dataIG;
+      return;
     }
 
-    // ============================================================
-    // WHATSAPP CTA_URL BUTTON (FORMATO OFICIAL)
-    // ============================================================
-    const payload = {
+    // WHATSAPP → botón nativo
+    const url = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`;
+    const body = {
       messaging_product: "whatsapp",
-      to: numero,
+      to,
       type: "interactive",
       interactive: {
-        type: "cta_url",
-        header: {
-          type: "text",
-          text: "Diagnóstico gratuito"
-        },
-        body: {
-          text: contenido.body || "Agenda tu diagnóstico gratuito 🤍"
-        },
+        type: "button",
+        body: { text: data.body },
         action: {
-          name: "cta_url",
-          parameters: {
-            display_text: contenido.button || "Agendar evaluación",
-            url: contenido.urlAgenda
-          }
+          buttons: [
+            {
+              type: "url",
+              url: data.urlAgenda,
+              title: data.button
+            }
+          ]
         }
       }
     };
 
-    console.log("ENVIANDO BOTÓN →", JSON.stringify(payload, null, 2));
-
-    const url = `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
-    const res = await fetch(url, {
+    await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${PAGE_TOKEN}` },
+      body: JSON.stringify(body)
     });
-
-    const data = await res.json();
-    console.log("RESPUESTA WHATSAPP →", JSON.stringify(data, null, 2));
-
-    return data;
-
-  } catch (err) {
-    console.error("ERROR EN sendInteractive →", err);
-    return null;
+  } catch (error) {
+    console.error("Error al enviar botón:", error);
   }
 }

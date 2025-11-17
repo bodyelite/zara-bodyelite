@@ -1,53 +1,59 @@
-// ============================================================
-// memoria.js – Versión Final Zara 2.1
-// Memoria en RAM por usuario
-// ============================================================
+import fs from "fs";
 
-// Memoria principal por usuario
-let memoriaUsuarios = {};
+const ruta = "./memoria_db.json";
 
-// Historial de mensajes (opcional, usado por monitor si lo necesitas)
-let historialUsuarios = {};
-
-
-// ============================================================
-// WRAPPERS QUE USA EL MOTOR v3
-// ============================================================
-
-// Leer memoria
-export function leerMemoria(usuario) {
-  return memoriaUsuarios[usuario] || null;
-}
-
-// Guardar memoria
-export function guardarMemoria(usuario, datos) {
-  memoriaUsuarios[usuario] = datos;
-}
-
-
-// ============================================================
-// SISTEMA DE CONTEXTO AMPLIADO (OPCIONAL)
-// Mantiene historial si deseas usarlo después
-// ============================================================
-export default {
-  guardarContexto(usuario, contexto) {
-    memoriaUsuarios[usuario] = contexto;
-  },
-
-  obtenerContexto(usuario) {
-    return memoriaUsuarios[usuario] || null;
-  },
-
-  limpiarContexto(usuario) {
-    delete memoriaUsuarios[usuario];
-  },
-
-  guardarMensaje(usuario, mensaje) {
-    if (!historialUsuarios[usuario]) historialUsuarios[usuario] = [];
-    historialUsuarios[usuario].push(mensaje);
-  },
-
-  obtenerHistorial(usuario) {
-    return historialUsuarios[usuario] || [];
+// ------------------------------------------------------------
+// CARGAR MEMORIA COMPLETA
+// ------------------------------------------------------------
+function cargarDB() {
+  try {
+    if (!fs.existsSync(ruta)) return {};
+    const raw = fs.readFileSync(ruta, "utf-8");
+    return JSON.parse(raw || "{}");
+  } catch {
+    return {};
   }
-};
+}
+
+// ------------------------------------------------------------
+// GUARDAR MEMORIA COMPLETA
+// ------------------------------------------------------------
+function guardarDB(db) {
+  try {
+    fs.writeFileSync(ruta, JSON.stringify(db, null, 2));
+  } catch (error) {
+    console.error("Error guardando memoria:", error);
+  }
+}
+
+// ------------------------------------------------------------
+// LEER MEMORIA DE UN USUARIO
+// ------------------------------------------------------------
+export function leerMemoria(user) {
+  const db = cargarDB();
+
+  if (!db[user]) {
+    db[user] = {
+      zona: null,
+      ultimo_plan: null,
+      intentosAgenda: 0
+    };
+    guardarDB(db);
+  }
+
+  return db[user];
+}
+
+// ------------------------------------------------------------
+// GUARDAR MEMORIA DE UN USUARIO
+// ------------------------------------------------------------
+export function guardarMemoria(user, data) {
+  const db = cargarDB();
+
+  db[user] = {
+    ...db[user],
+    ...data
+  };
+
+  guardarDB(db);
+}

@@ -1,72 +1,40 @@
-// ============================================================
-// sendMessage.js – Envío de texto WhatsApp + Instagram v19.0
-// ============================================================
-
 import fetch from "node-fetch";
 
-/*
-  Uso:
-  sendMessage(to, text, platform)
+const PAGE_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const PHONE_ID = process.env.PHONE_NUMBER_ID;
 
-  platform = "whatsapp" | "instagram"
-*/
-
+// ------------------------------------
+// ENVIAR MENSAJE (Texto)
+// ------------------------------------
 export async function sendMessage(to, text, platform) {
   try {
-    if (!to || !text) {
-      console.error("sendMessage: parámetros inválidos", { to, text });
-      return null;
-    }
-
-    const numero = to.startsWith("+") ? to : `+${to}`;
-
     let url = "";
-    let payload = {};
+    let body = {};
 
-    // ============================================================
-    // WHATSAPP
-    // ============================================================
     if (platform === "whatsapp") {
-      url = `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
-
-      payload = {
+      // WhatsApp Business API
+      url = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`;
+      body = {
         messaging_product: "whatsapp",
-        to: numero,
+        to,
         type: "text",
         text: { body: text }
       };
-    }
-
-    // ============================================================
-    // INSTAGRAM DM
-    // ============================================================
-    else if (platform === "instagram") {
-      url = `https://graph.facebook.com/v19.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`;
-
-      payload = {
+    } else {
+      // Instagram / Messenger
+      url = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_TOKEN}`;
+      body = {
         recipient: { id: to },
         message: { text }
       };
     }
 
-    console.log("ENVIANDO MENSAJE →", JSON.stringify(payload, null, 2));
-
-    const res = await fetch(url, {
+    await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${PAGE_TOKEN}` },
+      body: JSON.stringify(body)
     });
-
-    const data = await res.json();
-    console.log("RESPUESTA META →", JSON.stringify(data, null, 2));
-
-    return data;
-
-  } catch (err) {
-    console.error("ERROR EN sendMessage →", err);
-    return null;
+  } catch (error) {
+    console.error("Error al enviar mensaje:", error);
   }
 }
