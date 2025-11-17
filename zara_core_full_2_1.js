@@ -6,17 +6,18 @@ import fetch from "node-fetch";
 dotenv.config();
 
 /**
- * Controla el flujo general:
+ * Flow real de Zara:
  *  - recibe mensaje desde server.js
- *  - obtiene respuesta desde motor_respuesta_v3
- *  - envía respuesta al usuario
- *  - registra interacción en el monitor
+ *  - envía al motor mínimo procesarMensaje(texto, plataforma)
+ *  - envía la respuesta al usuario
+ *  - registra en monitor
  */
 export async function handleMessage(from, text, channel) {
   try {
     console.log(`⚙️ handleMessage activado (${channel}) de ${from}: ${text}`);
 
-    const respuesta = await procesarMensaje(from, text);
+    // 🔥 CORREGIDO: el motor siempre recibe (texto, plataforma)
+    const respuesta = await procesarMensaje(text, channel);
 
     if (!respuesta || respuesta.trim() === "") {
       console.log("⚠️ Sin respuesta generada por motor, se omite envío");
@@ -32,7 +33,7 @@ export async function handleMessage(from, text, channel) {
 }
 
 /**
- * Envía datos al monitor (para dashboard en Render)
+ * Enviar registro al monitor
  */
 async function registrarEnMonitor(from, texto, respuesta, canal) {
   try {
