@@ -188,7 +188,7 @@ export async function procesarMensaje(texto, platform, userId = null, nombre = n
   // 3) MODO NORMAL – segundo mensaje en adelante
   //--------------------------------------------------
   // Saludo normal si no hay plan
-  if (modo === "normal" && !platDetectado) {
+  if (modo === "normal" && !planDetectado) {
     setUsuario(userId, { modo: "normal" });
     return saludoInicial();
   }
