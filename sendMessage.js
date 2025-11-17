@@ -1,52 +1,58 @@
 import fetch from "node-fetch";
-import dotenv from "dotenv";
-dotenv.config();
-
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
 /**
- * Envía mensajes a WhatsApp e Instagram usando el token de página.
- * Instagram ahora usa el endpoint /me/messages (no requiere "messaging_product").
+ * ENVÍA MENSAJES A WHATSAPP E INSTAGRAM
+ * Formato OFICIAL, mínimo y 100% válido por Meta.
  */
-export async function sendMessage(to, text, platform = "whatsapp") {
+export async function sendMessage(to, text, platform) {
   try {
-    let url;
-    let body;
+    let url = "";
+    let body = {};
 
-    if (platform === "instagram") {
-      // Envío vía página (Facebook Page token)
-      url = `https://graph.facebook.com/v19.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
-      body = {
-        recipient: { id: to },
-        message: { text }
-      };
-    } else {
-      // Envío WhatsApp (sin cambios)
-      url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
+    // WHATSAPP CLOUD API
+    if (platform === "whatsapp") {
+      url = `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
+
       body = {
         messaging_product: "whatsapp",
         to,
         type: "text",
-        text: { body: text }
+        text: {
+          preview_url: false,
+          body: text
+        }
       };
     }
 
-    console.log(`📤 Enviando ${platform.toUpperCase()} →`, JSON.stringify(body, null, 2));
+    // INSTAGRAM DM
+    if (platform === "instagram") {
+      url = `https://graph.facebook.com/v19.0/me/messages`;
 
-    const res = await fetch(url, {
+      body = {
+        recipient: { id: to },
+        message: { text }
+      };
+    }
+
+    console.log("📤 Enviando mensaje:", { url, platform, body });
+
+    const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(body)
     });
 
-    const data = await res.json();
-    if (data.error) {
-      console.error("❌ Error Meta:", JSON.stringify(data.error, null, 2));
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.log("❌ ERROR META:", data);
     } else {
-      console.log("✅ Enviado correctamente:", JSON.stringify(data, null, 2));
+      console.log("✅ Mensaje enviado:", data);
     }
-  } catch (err) {
-    console.error("❌ Error general en sendMessage:", err);
+  } catch (error) {
+    console.error("❌ Error crítico al enviar mensaje:", error);
   }
 }
