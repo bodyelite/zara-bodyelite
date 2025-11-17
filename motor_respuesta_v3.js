@@ -69,7 +69,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Lipo Express",
       precio: 432000,
-      desc: "Reduce abdomen y rollitos rápido con HIFU 12D, Cavitación y Radiofrecuencia profunda. Resultados desde las primeras semanas."
+      desc: "Lipo Express reduce abdomen y cintura con HIFU 12D, Cavitación y Radiofrecuencia profunda. Resultados desde las primeras semanas."
     };
   }
 
@@ -77,7 +77,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Lipo Focalizada Reductiva",
       precio: 348800,
-      desc: "Reduce piernas/cartucheras con Cavitación + Radiofrecuencia + drenaje. Mejora volumen y celulitis."
+      desc: "Lipo Focalizada Reductiva trabaja piernas y cartucheras con Cavitación + Radiofrecuencia + drenaje, mejorando volumen y celulitis."
     };
   }
 
@@ -85,7 +85,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Lipo Focalizada Reductiva",
       precio: 348800,
-      desc: "Afina y define brazos con Cavitación + Radiofrecuencia médica."
+      desc: "Para brazos afinamos y definimos con Cavitación + Radiofrecuencia médica."
     };
   }
 
@@ -93,7 +93,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Body Tensor",
       precio: 232000,
-      desc: "Reafirma tejido corporal con Radiofrecuencia médica + EMS Sculptor."
+      desc: "Body Tensor reafirma tejido corporal con Radiofrecuencia médica + EMS Sculptor."
     };
   }
 
@@ -101,7 +101,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Body Fitness",
       precio: 360000,
-      desc: "Define y tonifica con EMS Sculptor (20.000 contracciones por sesión)."
+      desc: "Body Fitness define y tonifica con EMS Sculptor (20.000 contracciones por sesión)."
     };
   }
 
@@ -109,7 +109,7 @@ function recomendarPlanCorporal(texto) {
     return {
       plan: "Push Up Glúteos",
       precio: 376000,
-      desc: "Levanta y da volumen con EMS Pro Sculpt + Radiofrecuencia compactante."
+      desc: "Push Up levanta y da volumen al glúteo con EMS Pro Sculpt + Radiofrecuencia compactante."
     };
   }
 
@@ -121,7 +121,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Antiage",
       precio: 281600,
-      desc: "Suaviza arrugas con Toxina, RF médica y Pink Glow regenerativo."
+      desc: "Face Antiage suaviza arrugas y líneas con Toxina, Radiofrecuencia médica y Pink Glow regenerativo."
     };
   }
 
@@ -129,7 +129,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Elite",
       precio: 358400,
-      desc: "Lifting no invasivo con HIFU 12D + RF + Pink Glow."
+      desc: "Face Elite da efecto lifting no invasivo con HIFU 12D + RF + Pink Glow."
     };
   }
 
@@ -137,7 +137,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Papada",
       precio: 198400,
-      desc: "Reduce papada con HIFU 12D + Lipolítico + RF médica."
+      desc: "Face Papada reduce papada y define contorno con HIFU 12D + lipolítico facial + RF médica."
     };
   }
 
@@ -145,7 +145,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Smart",
       precio: 198400,
-      desc: "Aclara manchas y mejora el tono con Pink Glow + limpieza profunda."
+      desc: "Face Smart aclara manchas y mejora el tono con Pink Glow + limpieza profunda."
     };
   }
 
@@ -153,7 +153,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face Light",
       precio: 128800,
-      desc: "Mejora textura y poros con limpieza profesional + RF suave + Pink Glow."
+      desc: "Face Light mejora textura y poros con limpieza profesional + RF suave + Pink Glow."
     };
   }
 
@@ -161,7 +161,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face H12",
       precio: 270400,
-      desc: "HIFU 12D facial + RF + Pink Glow para lifting profundo."
+      desc: "Face H12 combina HIFU 12D facial + RF + Pink Glow para lifting profundo."
     };
   }
 
@@ -169,7 +169,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Face One",
       precio: 128800,
-      desc: "Efecto inmediato con RF médica + Pink Glow. Ideal eventos."
+      desc: "Face One da efecto inmediato con RF médica + Pink Glow. Ideal cuando quieres verte mejor rápido."
     };
   }
 
@@ -177,7 +177,7 @@ function recomendarPlanFacial(texto) {
     return {
       plan: "Full Face",
       precio: 584000,
-      desc: "Rejuvenecimiento completo con HIFU 12D + RF médica + Pink Glow."
+      desc: "Full Face es un rejuvenecimiento completo con HIFU 12D + RF médica + Pink Glow."
     };
   }
 
@@ -189,7 +189,7 @@ function recomendarDepilacion(texto) {
     return {
       plan: "Depilación Láser DL900",
       precio: 153600,
-      desc: "Láser diodo DL900. Sesiones cada 15 días, sensación cálida, resultados progresivos."
+      desc: "Trabajamos con láser diodo DL900. Sesiones cada 15 días, sensación cálida y resultados progresivos sesión a sesión."
     };
   }
   return null;
@@ -239,14 +239,36 @@ function describirCampaña(plan) {
 // MOTOR PRINCIPAL
 // ============================================================
 export async function procesarMensaje(usuario, texto, memoria) {
-  const t = texto.toLowerCase().trim();
+  const t = (texto || "").toLowerCase().trim();
 
   const mem = memoria || {
     ultimo_plan: null,
     intentosAgenda: 0
   };
 
+  // ============================================================
+  // SALUDO / APERTURA
+  // ============================================================
+  const esSaludo =
+    t.includes("hola") ||
+    t.includes("buenas") ||
+    t.includes("holi") ||
+    t.includes("holaa") ||
+    t.includes("holaaa");
+
+  if (esSaludo && !mem.ultimo_plan) {
+    return {
+      tipo: "texto",
+      texto:
+        "¡Hola! Soy Zara de Body Elite 🤍\n" +
+        "Cuéntame con confianza, ¿qué parte te gustaría mejorar primero: rostro, abdomen, piernas, glúteos o depilación láser?",
+      estadoNuevo: mem
+    };
+  }
+
+  // ============================================================
   // AGENDAR
+  // ============================================================
   const quiereAgendar =
     match(t, palabras.agendar) ||
     ["si","sí","ok","dale","agenda","quiero","hagamos","perfecto","ya","sí quiero"].includes(t);
@@ -259,7 +281,9 @@ export async function procesarMensaje(usuario, texto, memoria) {
     if (mem.intentosAgenda >= 4) return { ...CTA_llamada(), estadoNuevo: mem };
   }
 
+  // ============================================================
   // CAMPAÑA
+  // ============================================================
   const camp = detectarCampaña(t);
   if (camp) {
     mem.ultimo_plan = camp;
@@ -274,7 +298,9 @@ export async function procesarMensaje(usuario, texto, memoria) {
     };
   }
 
+  // ============================================================
   // FACIAL
+  // ============================================================
   const facial = recomendarPlanFacial(t);
   if (facial) {
     mem.ultimo_plan = facial.plan;
@@ -288,7 +314,9 @@ export async function procesarMensaje(usuario, texto, memoria) {
     };
   }
 
+  // ============================================================
   // CORPORAL
+  // ============================================================
   const corporal = recomendarPlanCorporal(t);
   if (corporal) {
     mem.ultimo_plan = corporal.plan;
@@ -302,35 +330,42 @@ export async function procesarMensaje(usuario, texto, memoria) {
     };
   }
 
+  // ============================================================
   // DEPILACIÓN
+  // ============================================================
   const dep = recomendarDepilacion(t);
   if (dep) {
     mem.ultimo_plan = dep.plan;
     return {
       tipo: "texto",
       texto:
-        `${dep.desc}\n\nValor desde: $${dep.precio.toLocaleString("es-CL")}\n` +
+        `${dep.desc}\n\n` +
+        `Valor desde: $${dep.precio.toLocaleString("es-CL")}\n` +
         `¿Quieres que te deje el acceso para el diagnóstico gratuito?`,
       estadoNuevo: mem
     };
   }
 
-  // YA HUBO PLAN
+  // ============================================================
+  // YA HUBO PLAN ANTES
+  // ============================================================
   if (mem.ultimo_plan) {
     return {
       tipo: "texto",
       texto:
-        `Puedo contarte más sobre **${mem.ultimo_plan}**. ` +
-        `¿Quieres tu acceso al diagnóstico gratuito para ver cuántas sesiones necesitas?`,
+        `Puedo contarte más sobre **${mem.ultimo_plan}**.\n` +
+        `¿Te gustaría que veamos cuántas sesiones necesitas con un diagnóstico gratuito?`,
       estadoNuevo: mem
     };
   }
 
+  // ============================================================
   // DEFAULT
+  // ============================================================
   return {
     tipo: "texto",
     texto:
-      "No me quedó claro lo que deseas trabajar. ¿Quieres mejorar volumen, flacidez, arrugas, papada o depilación? 🤍",
+      "No me quedó claro lo que deseas trabajar. ¿Quieres mejorar volumen, flacidez, arrugas, papada o prefieres depilación láser? 🤍",
     estadoNuevo: mem
   };
 }
