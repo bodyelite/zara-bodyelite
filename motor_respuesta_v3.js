@@ -8,7 +8,7 @@ const NUMERO_INTERNO = "56937648536";
 // ----------------------------------------------
 // MEMORIA
 // ----------------------------------------------
-function cargar() {
+function cargarMemoria() {
   try {
     if (!fs.existsSync(MEMORIA_PATH)) return { usuarios: {} };
     return JSON.parse(fs.readFileSync(MEMORIA_PATH, "utf8"));
@@ -17,33 +17,35 @@ function cargar() {
   }
 }
 
-function guardar(data) {
+function guardarMemoria(data) {
   fs.writeFileSync(MEMORIA_PATH, JSON.stringify(data, null, 2));
 }
 
 function getUser(id) {
-  const mem = cargar();
+  const mem = cargarMemoria();
   if (!mem.usuarios[id]) {
     mem.usuarios[id] = {
       ultimoPlan: null,
       ultimoTema: null,
+      zonaDetectada: null,
       intentosAgenda: 0,
       esperandoNumero: false,
-      campañaUsada: false
+      campañaUsada: false,
+      turnos: 0
     };
-    guardar(mem);
+    guardarMemoria(mem);
   }
   return mem.usuarios[id];
 }
 
 function setUser(id, data) {
-  const mem = cargar();
+  const mem = cargarMemoria();
   mem.usuarios[id] = { ...mem.usuarios[id], ...data };
-  guardar(mem);
+  guardarMemoria(mem);
 }
 
 // ----------------------------------------------
-// PLANES Y DETECCIÓN
+// DETECCIÓN DE PLANES
 // ----------------------------------------------
 const PLANES = {
   "lipo express": "Lipo Express",
@@ -62,10 +64,10 @@ const PLANES = {
   "depil": "Depilación DL900",
   "láser": "Depilación DL900",
   "laser": "Depilación DL900",
-  "tonificar": "Body Fitness",
   "musculo": "Body Fitness",
   "músculo": "Body Fitness",
   "marcar": "Body Fitness",
+  "tonificar": "Body Fitness",
   "flacidez": "Body Tensor",
   "tensar": "Body Tensor"
 };
@@ -76,180 +78,222 @@ function detectarPlan(t) {
   return null;
 }
 
-function detectarIntencion(t) {
-  const x = t.toLowerCase();
-  if (x.includes("precio") || x.includes("vale") || x.includes("valor")) return "precio";
-  if (x.includes("sesiones") || x.includes("cuantas") || x.includes("cuántas")) return "sesiones";
-  if (x.includes("duele") || x.includes("dolor")) return "dolor";
-  if (x.includes("donde") || x.includes("ubic")) return "ubicacion";
-  if (x.includes("hola") || x.includes("buenas")) return "saludo";
+// ----------------------------------------------
+// DETECCIÓN INTENCIÓN
+// ----------------------------------------------
+function detectarIntencion(txt) {
+  const t = txt.toLowerCase();
+
+  if (
+    t.includes("como funciona") ||
+    t.includes("cómo funciona") ||
+    t.includes("funciona?") ||
+    t.includes("en que consiste") ||
+    t.includes("en qué consiste") ||
+    t.includes("como trabajan") ||
+    t.includes("cómo trabajan") ||
+    t.includes("como lo hacen") ||
+    t.includes("qué hace") ||
+    t.includes("qué hacen") ||
+    t.includes("funcionamiento")
+  ) return "explicacion";
+
+  if (t.includes("precio") || t.includes("vale") || t.includes("valor")) return "precio";
+
+  if (t.includes("sesiones") || t.includes("cuantas") || t.includes("cuántas")) return "sesiones";
+
+  if (t.includes("duele") || t.includes("dolor")) return "dolor";
+
+  if (t.includes("caro") || t.includes("por qué tan caro")) return "caro";
+
+  if (t.includes("donde") || t.includes("ubic") || t.includes("direc")) return "ubicacion";
+
+  if (t.includes("hola") || t.includes("buenas")) return "saludo";
+
   return "general";
 }
 
 // ----------------------------------------------
-// INFO CLÍNICA POR PLAN
+// RESÚMENES CLÍNICOS
 // ----------------------------------------------
 const INFO = {
   "Lipo Express": {
     precio: "$432.000",
     sesiones: "8–10",
-    dolor: "Es completamente tolerable 💙 Se siente un calorcito y vibración leve."
+    dolor: "Es muy tolerable 💙, se siente calor y vibración suave.",
+    comoFunciona: "La Lipo Express combina HIFU 12D para romper grasa profunda, cavitación para licuar adipocitos y radiofrecuencia para tensar piel. Reduce abdomen, cintura y espalda sin dolor significativo ✨.",
+    valorExplicado: "El valor se debe a la combinación de HIFU 12D real, cavitación certificada y radiofrecuencia profunda. Son sesiones largas, dirigidas y con resultados visibles en pocas semanas 💙."
   },
   "Lipo Body Elite": {
     precio: "$664.000",
     sesiones: "10–12",
-    dolor: "Nada doloroso ✨, es tecnología de ultrasonido y contracción muscular controlada."
+    dolor: "Es muy tolerable ✨.",
+    comoFunciona: "Trabaja HIFU 12D + EMS Sculptor + cavitación + RF. Reduce grasa, marca abdomen y compacta tejidos.",
+    valorExplicado: "Incluye HIFU 12D de alta precisión y EMS Sculptor real. Son tecnologías avanzadas que entregan resultados seguros y efectivos ✨."
   },
   "Push Up": {
     precio: "$376.000",
     sesiones: "8–10",
-    dolor: "No duele 🍑 Son contracciones intensas pero totalmente tolerables."
+    dolor: "Contracciones intensas pero no dolorosas 🍑.",
+    comoFunciona: "El Push Up combina Pro Sculpt (20.000 contracciones por sesión), HIFU 12D para firmeza profunda y Radiofrecuencia para compactar. Levanta, proyecta y define glúteo sin cirugía 🍑✨.",
+    valorExplicado: "Se debe a que usamos Pro Sculpt real + HIFU 12D auténtico + RF profunda, guiado por profesionales. Son tecnologías de alto rendimiento con resultados rápidos 💛."
   },
   "Face Elite": {
     precio: "$358.400",
     sesiones: "8–10",
-    dolor: "Sensación tibia y puntos sensibles, pero nada fuerte 💆‍♀️✨"
+    dolor: "Leve calor y puntos sensibles 💆‍♀️.",
+    comoFunciona: "HIFU 12D para firmeza, Pink Glow para regeneración y Radiofrecuencia para compactar y dar luminosidad.",
+    valorExplicado: "Usa HIFU 12D real, Pink Glow original y RF profesional. Es un protocolo avanzado que da firmeza y lifting natural ✨."
   },
   "Depilación DL900": {
-    precio: "planes desde $153.600",
-    sesiones: "6 por zona",
-    dolor: "Pinchacito leve en zonas sensibles, muy tolerable ⚡"
+    precio: "Planes desde $153.600",
+    sesiones: "6",
+    dolor: "Pinchacito leve ⚡.",
+    comoFunciona: "El DL900 es un láser diodo rápido, seguro y apto para piel latina. Debilita folículo desde raíz.",
+    valorExplicado: "El DL900 es un equipo profesional certificado con mejores resultados en menos sesiones."
   },
   "Body Fitness": {
     precio: "$360.000",
     sesiones: "6–8",
-    dolor: "Contracciones profundas tipo entrenamiento intenso 💪"
+    dolor: "No duele 💪.",
+    comoFunciona: "EMS Sculptor activa musculatura profunda para tonificar y marcar abdomen y glúteo.",
+    valorExplicado: "El EMS Sculptor real produce contracciones supramáximas que no se logran en gimnasio."
   },
   "Body Tensor": {
     precio: "$232.000",
     sesiones: "6–8",
-    dolor: "Calorcito profundo, 100% tolerable 💛"
+    dolor: "Calorcito profundo 💛.",
+    comoFunciona: "Radiofrecuencia profunda + tensores para mejorar flacidez en abdomen, brazos, piernas o papada.",
+    valorExplicado: "La RF profesional logra estímulo real de colágeno I–III y tensado visible."
   }
 };
 
 // ----------------------------------------------
 // PLANTILLAS
 // ----------------------------------------------
-function saludoInicial() {
-  return "💙 ¡Hola! Soy Zara de Body Elite ✨ Cuéntame, ¿qué zona te gustaría trabajar? abdomen, glúteos, piernas, rostro o depilación láser 🌟";
-}
-
-function campaña(plan) {
-  const msg = {
-    "Push Up": "🍑 El Push Up levanta y da volumen natural con Pro Sculpt + HIFU 12D + RF. Resultados desde las primeras semanas ✨",
-    "Lipo Express": "⚡ La Lipo Express reduce grasa localizada (abdomen/cintura/espalda) con HIFU 12D + cavitación + RF. Muy rápida y efectiva 💛",
-    "Lipo Body Elite": "💙 Lipo Body Elite combina HIFU 12D + EMS Sculptor + cavitación + RF. Es nuestro plan más completo.",
-    "Face Elite": "✨ Face Elite trabaja firmeza, contorno, arrugas y luminosidad con HIFU 12D + Pink Glow + RF.",
-    "Depilación DL900": "⚡ Láser DL900: rápido, seguro y sin dolor significativo. 6 sesiones por zona.",
-    "Body Fitness": "💪 Body Fitness tonifica y define con EMS Sculptor.",
-    "Body Tensor": "💛 Body Tensor trabaja flacidez en brazos, abdomen, piernas o papada."
-  };
-  return msg[plan] + "\n\n¿Te gustaría avanzar con este objetivo? 💙";
-}
-
 const UBICACION =
-  "📍 Estamos en Av. Las Perdices Nº2990, Local 23 (Peñalolén)\n🕐 Lun–Vie 9:30–20:00 • Sáb 9:30–13:00";
+"📍 Estamos en Av. Las Perdices Nº2990, Local 23 (Peñalolén)\n🕐 Lun–Vie 9:30–20:00 • Sáb 9:30–13:00";
+
+function saludoInicial() {
+  return "💙 ¡Hola! Soy Zara de Body Elite ✨ Cuéntame, ¿qué zona te gustaría trabajar? abdomen, glúteos, piernas, rostro o depilación.";
+}
+
+function plantillaCampaña(plan) {
+  const desc = {
+    "Push Up": "🍑 El Push Up levanta, da volumen y mejora firmeza combinando Pro Sculpt + HIFU 12D + Radiofrecuencia.",
+    "Lipo Express": "⚡ Lipo Express reduce grasa localizada en abdomen, cintura y espalda con HIFU 12D + cavitación + RF.",
+    "Lipo Body Elite": "💙 Lipo Body Elite es nuestro plan más completo para cintura-abdomen-espalda.",
+    "Face Elite": "✨ Face Elite mejora firmeza, contorno y luminosidad del rostro.",
+    "Depilación DL900": "⚡ Láser diodo DL900 seguro, rápido y efectivo.",
+    "Body Fitness": "💪 Tonificación profunda con EMS Sculptor.",
+    "Body Tensor": "💛 Tratamiento tensor para flacidez con RF profunda."
+  };
+  return desc[plan] + "\n\n¿Quieres revisar si eres candidata? 💙";
+}
 
 function intento1() {
-  return "Perfecto 💛 Cuéntame, ¿qué te gustaría mejorar: grasa localizada, flacidez, volumen, celulitis o depilación láser?";
+  return "Perfecto 💛 ¿Qué te gustaría mejorar hoy: grasa localizada, flacidez, volumen, celulitis o depilación láser?";
 }
 
 function link1() {
-  return `Si deseas avanzar, aquí tienes tu diagnóstico gratuito 💙\n${RESERVO_LINK}`;
+  return `Aquí tienes tu diagnóstico gratuito 💙\n${RESERVO_LINK}`;
 }
 
 function link2() {
-  return `Aquí tienes nuevamente el acceso al diagnóstico 💙\n${RESERVO_LINK}`;
+  return `Acceso directo al diagnóstico 💙\n${RESERVO_LINK}`;
 }
 
 function pedirLlamada() {
-  return "Si quieres, una profesional puede llamarte 💛 ¿Te gustaría que te llamemos? 📞✨";
+  return "Si quieres, una profesional puede llamarte directamente 💛 ¿Te gustaría que te llamen? 📞";
 }
 
 function pedirTelefono() {
-  return "Perfecto 💛 ¿Me compartes tu número de WhatsApp para coordinar la llamada? 📞";
+  return "Perfecto 💛 ¿Cuál es tu número de WhatsApp para coordinar la llamada?";
 }
 
-// ----------------------------------------------
-// ENVÍO INTERNO
-// ----------------------------------------------
 async function avisoInterno(id, nombre, numero, mensaje, plan) {
   const txt =
-    "📞 Nueva paciente solicita llamada.\n" +
-    `• Usuario: ${id}\n` +
-    `• Nombre: ${nombre ?? "No disponible"}\n` +
-    `• Número: ${numero}\n` +
-    `• Plan consultado: ${plan ?? "No detectado"}\n` +
-    `• Último mensaje: ${mensaje}`;
+`📞 Nueva paciente solicita llamada:
+• Usuario: ${id}
+• Nombre: ${nombre ?? "No disponible"}
+• Número: ${numero}
+• Plan consultado: ${plan ?? "No detectado"}
+• Último mensaje: ${mensaje}`;
 
   await sendMessage(NUMERO_INTERNO, txt, "whatsapp");
 }
 
 // ----------------------------------------------
-// PROCESAR MENSAJE
+// MOTOR PRINCIPAL
 // ----------------------------------------------
 export async function procesarMensaje(texto, plataforma, userId, nombre) {
   const t = texto.toLowerCase().trim();
   const u = getUser(userId);
+  setUser(userId, { turnos: u.turnos + 1 });
 
   const planDetectado = detectarPlan(t);
-  const intencion = detectarIntencion(t);
+  const int = detectarIntencion(t);
 
   // ------------------------------------------
-  // 1) Primer mensaje → campaña si detecta plan
+  // 1) Primer mensaje → campaña
   // ------------------------------------------
   if (!u.campañaUsada && planDetectado) {
     setUser(userId, {
       ultimoPlan: planDetectado,
-      campañaUsada: true,
-      ultimoTema: "campaña"
+      zonaDetectada: planDetectado,
+      campañaUsada: true
     });
-    return campaña(planDetectado);
+    return plantillaCampaña(planDetectado);
   }
 
   // ------------------------------------------
-  // 2) Esperando número para llamada
+  // 2) Esperando número
   // ------------------------------------------
   if (u.esperandoNumero) {
     const num = t.replace(/[^0-9]/g, "");
-    if (num.length < 8) return "Creo que el número está incompleto 💛 ¿Me lo envías de nuevo?";
+    if (num.length < 8) return "Parece que ese número está incompleto 💛 ¿Me lo envías nuevamente?";
     await avisoInterno(userId, nombre, num, texto, u.ultimoPlan);
     setUser(userId, { esperandoNumero: false });
     return "Perfecto 💛 Una profesional te contactará lo antes posible 📞✨";
   }
 
   // ------------------------------------------
-  // 3) Intenciones específicas (continuidad)
+  // 3) Intenciones técnicas
   // ------------------------------------------
-  if (intencion === "ubicacion") return UBICACION;
+  if (int === "explicacion" && u.ultimoPlan && INFO[u.ultimoPlan]) {
+    return INFO[u.ultimoPlan].comoFunciona;
+  }
 
-  if (intencion === "precio") {
-    if (u.ultimoPlan && INFO[u.ultimoPlan])
-      return `El valor de ${u.ultimoPlan} es ${INFO[u.ultimoPlan].precio} 💙\n¿Quieres que te deje tu acceso al diagnóstico gratuito? 💛`;
+  if (int === "caro" && u.ultimoPlan && INFO[u.ultimoPlan]) {
+    return INFO[u.ultimoPlan].valorExplicado;
+  }
+
+  if (int === "precio") {
+    if (u.ultimoPlan) return `El valor de ${u.ultimoPlan} es ${INFO[u.ultimoPlan].precio} 💙`;
     return "Para darte el valor exacto necesito saber qué zona quieres trabajar 💛";
   }
 
-  if (intencion === "sesiones") {
-    if (u.ultimoPlan && INFO[u.ultimoPlan])
-      return `En ${u.ultimoPlan} normalmente trabajamos ${INFO[u.ultimoPlan].sesiones} sesiones ✨`;
-    return "La cantidad de sesiones depende del plan y tu objetivo 💛 ¿Qué zona quieres trabajar?";
+  if (int === "sesiones") {
+    if (u.ultimoPlan) return `En ${u.ultimoPlan} trabajamos entre ${INFO[u.ultimoPlan].sesiones} sesiones ✨`;
+    return "La cantidad de sesiones depende del plan 💛 ¿Qué zona deseas trabajar?";
   }
 
-  if (intencion === "dolor") {
-    if (u.ultimoPlan && INFO[u.ultimoPlan])
-      return INFO[u.ultimoPlan].dolor;
-    return "Nuestros tratamientos no duelen 💙 ¿Qué plan te interesa?";
+  if (int === "dolor") {
+    if (u.ultimoPlan) return INFO[u.ultimoPlan].dolor;
+    return "Nuestros tratamientos son muy tolerables 💙 ¿Qué te gustaría trabajar?";
   }
 
+  if (int === "ubicacion") return UBICACION;
+
   // ------------------------------------------
-  // 4) Primer mensaje sin plan → saludo
+  // 4) Saludo inicial
   // ------------------------------------------
-  if (!u.ultimoPlan && intencion === "saludo") {
+  if (!u.ultimoPlan && int === "saludo") {
     return saludoInicial();
   }
 
   // ------------------------------------------
-  // 5) Flujo de agenda (3 intentos)
+  // 5) Flujo agenda
   // ------------------------------------------
   if (u.intentosAgenda === 0) {
     setUser(userId, { intentosAgenda: 1 });
@@ -279,8 +323,5 @@ export async function procesarMensaje(texto, plataforma, userId, nombre) {
     return link2();
   }
 
-  // ------------------------------------------
-  // Fallback conversacional
-  // ------------------------------------------
   return intento1();
 }
