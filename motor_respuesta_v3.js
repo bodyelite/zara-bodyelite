@@ -147,51 +147,52 @@ function detectarIntencion(msg) {
 
   return "general";
 }
+
 // ----------------------------------------------------
-// INFO CLÍNICA COMPLETA (estilo IG + explicación técnica)
+// INFO CLÍNICA
 // ----------------------------------------------------
 const INFO = {
   "Lipo Express": {
     como:
-      "💙 Trabajamos abdomen/cintura/espalda con **HIFU 12D real**, cavitación y radiofrecuencia. Son tecnologías que reducen grasa localizada, compactan tejido y mejoran el contorno sin dolor intenso.",
-    sesiones: "✨ Generalmente entre **8 y 10 sesiones**, según tu punto de partida.",
-    dolor: "Es muy tolerable 💛, sensación de calor suave.",
+      "💙 Trabajamos abdomen/cintura/espalda con **HIFU 12D real**, cavitación y radiofrecuencia. Reduce grasa localizada, compacta tejido y mejora el contorno de forma segura.",
+    sesiones: "✨ Generalmente **8–10 sesiones**, según tu punto de partida.",
+    dolor: "Muy tolerable 💛, sensación de calor suave.",
     precio: "$432.000"
   },
   "Push Up": {
     como:
-      "🍑 Le da **volumen y levantamiento real** al glúteo usando **Pro Sculpt (20.000 contracciones)** + HIFU 12D + radiofrecuencia. Mejora proyección, firmeza y redondez.",
+      "🍑 Levanta y da volumen natural usando **Pro Sculpt (20.000 contracciones)** + HIFU 12D + radiofrecuencia. Mejora proyección, firmeza y redondez.",
     sesiones: "✨ Normalmente **8–10 sesiones**.",
     dolor: "Contracciones intensas pero tolerables 💛.",
     precio: "$376.000"
   },
   "Face Elite": {
     como:
-      "💙 Combinamos **HIFU 12D**, Pink Glow y radiofrecuencia para firmeza, contorno facial, arrugas y definición del óvalo.",
+      "💙 HIFU 12D + Pink Glow + RF. Mejora firmeza, contorno facial, arrugas y óvalo.",
     sesiones: "✨ Habitualmente **8–10 sesiones**.",
     dolor: "Sensación tibia con puntos sensibles 💆‍♀️.",
     precio: "$358.400"
   },
   "Body Tensor": {
     como:
-      "💛 Radiofrecuencia profunda para **flacidez en abdomen, brazos, piernas y papada**. Reafirma y tensa tejido.",
-    sesiones: "✨ Generalmente **6–8 sesiones**.",
+      "💛 Radiofrecuencia profunda para flacidez en abdomen, brazos, piernas y papada.",
+    sesiones: "✨ **6–8 sesiones**.",
     dolor: "Calorcito profundo, muy tolerable.",
     precio: "$232.000"
   },
   "Body Fitness": {
     como:
-      "💪 Tonificación muscular con **EMS Sculptor** (contracciones supramáximas). Trabaja abdomen, glúteos, piernas.",
-    sesiones: "✨ Entre **6–8 sesiones**.",
-    dolor: "No duele, solo contracciones fuertes.",
+      "💪 Tonificación muscular con EMS Sculptor (contracciones supramáximas).",
+    sesiones: "✨ **6–8 sesiones**.",
+    dolor: "No duele, solo contracciones.",
     precio: "$360.000"
   },
   "Depilación DL900": {
     como:
-      "⚡ Láser diodo **DL900**: rápido, seguro y eficaz para eliminar vello desde la raíz.",
-    sesiones: "✨ 6 sesiones por zona.",
+      "⚡ Láser diodo DL900: rápido, seguro y eficaz para eliminar vello desde la raíz.",
+    sesiones: "✨ **6 sesiones** por zona.",
     dolor: "Pinchacito muy leve.",
-    precio: "Planes desde $153.600"
+    precio: "Desde $153.600"
   }
 };
 
@@ -209,21 +210,19 @@ function CTA() {
 }
 
 // ----------------------------------------------------
-// MOTOR PRINCIPAL — PROCESAMIENTO
+// MOTOR PRINCIPAL
 // ----------------------------------------------------
 export async function procesarMensaje(texto, remitente, plataforma) {
   const ahora = Date.now();
   const msg = texto.toLowerCase().trim();
   const u = getUser(remitente);
 
-  // Actualizar turno
+  // actualización turno
   setUser(remitente, { turnoConversacion: u.turnoConversacion + 1 });
 
   const minutos = (ahora - u.timestampUltimoMensaje) / 60000;
 
-  // ----------------------------------------------------
-  // RESET POR INACTIVIDAD + "hola"
-  // ----------------------------------------------------
+  // RESET por inactividad + hola
   if (msg.includes("hola") && minutos > 5) {
     setUser(remitente, {
       planBase: null,
@@ -238,17 +237,13 @@ export async function procesarMensaje(texto, remitente, plataforma) {
     return SALUDO;
   }
 
-  // ----------------------------------------------------
-  // PRIMER SALUDO (solo una vez)
-  // ----------------------------------------------------
+  // primer saludo
   if (!u.planBase && msg.includes("hola") && !u.ultimoSaludo) {
     setUser(remitente, { ultimoSaludo: true });
     return SALUDO;
   }
 
-  // ----------------------------------------------------
-  // 1. MODO CAMPAÑA (DETECCIÓN ESTRICTA)
-  // ----------------------------------------------------
+  // campaña estricta
   const planCampaña = detectarPlanCampania(msg);
   if (!u.modoCampania && planCampaña) {
     setUser(remitente, {
@@ -256,130 +251,97 @@ export async function procesarMensaje(texto, remitente, plataforma) {
       planBase: planCampaña,
       ultimoPlan: planCampaña
     });
-
     return `💙 ¡Perfecto! El plan *${planCampaña}* funciona así:\n${INFO[planCampaña].como}\n\n${CTA()}`;
   }
 
-  // ----------------------------------------------------
-  // 2. DETECCIÓN DE ZONA / CAMBIO DE TEMA
-  // ----------------------------------------------------
+  // zona detectada
   const zona = detectarZona(msg);
   if (zona) {
     setUser(remitente, {
       ultimoPlan: zona.plan,
       ultimaZona: zona.zona
     });
-
     return `${INFO[zona.plan].como}\n\n${CTA()}`;
   }
 
-// ----------------------------------------------------
-// 3. INTENCIONES (preguntas directas)
-// ----------------------------------------------------
-const intent = detectarIntencion(msg);
+  // intención
+  const intent = detectarIntencion(msg);
 
-// EXPLICAR TRATAMIENTO
-if (intent === "explica" && u.ultimoPlan) {
-  return `${INFO[u.ultimoPlan].como}\n\n${CTA()}`;
-}
+  if (intent === "explica" && u.ultimoPlan)
+    return `${INFO[u.ultimoPlan].como}\n\n${CTA()}`;
 
-// PRECIO
-if (intent === "precio" && u.ultimoPlan) {
-  return `💙 El valor de *${u.ultimoPlan}* es **${INFO[u.ultimoPlan].precio}**.\n\n${CTA()}`;
-}
+  if (intent === "precio" && u.ultimoPlan)
+    return `💙 El valor de *${u.ultimoPlan}* es **${INFO[u.ultimoPlan].precio}**.\n\n${CTA()}`;
 
-// SESIONES
-if (intent === "sesiones" && u.ultimoPlan) {
-  return `✨ Generalmente son **${INFO[u.ultimoPlan].sesiones}**.\n\n${CTA()}`;
-}
+  if (intent === "sesiones" && u.ultimoPlan)
+    return `✨ Generalmente son **${INFO[u.ultimoPlan].sesiones}**.\n\n${CTA()}`;
 
-// DOLOR
-if (intent === "dolor" && u.ultimoPlan) {
-  return `${INFO[u.ultimoPlan].dolor}\n\n${CTA()}`;
-}
+  if (intent === "dolor" && u.ultimoPlan)
+    return `${INFO[u.ultimoPlan].dolor}\n\n${CTA()}`;
 
-// CARO
-if (intent === "caro" && u.ultimoPlan) {
-  return `💛 Entiendo totalmente. El precio incluye tecnologías reales (HIFU 12D, Cavitación, RF, Pro Sculpt, DL900) y profesionales certificadas.\n\n${CTA()}`;
-}
+  if (intent === "caro" && u.ultimoPlan)
+    return `💛 Entiendo totalmente. El precio incluye tecnologías reales y profesionales certificadas.\n\n${CTA()}`;
 
-// UBICACIÓN
-if (intent === "ubicacion") {
-  return UBICACION;
-}
+  if (intent === "ubicacion")
+    return UBICACION;
 
-// EMOCIONAL
-if (intent === "emocional") {
-  return `💛 Es súper normal sentir eso. Lo importante es tu punto de partida y trabajar contigo de forma segura.\n\n${CTA()}`;
-}
+  if (intent === "emocional")
+    return `💛 Es súper normal sentir eso. Lo importante es que trabajamos según tu punto de partida.\n\n${CTA()}`;
 
-// ----------------------------------------------------
-// 4. AGENDA INTELIGENTE (3 intentos)
-// ----------------------------------------------------
-//
-//  Intento 0 → pregunta objetivo
-//  Intento 1 → envío link embebido
-//  Intento 2 → link nuevamente
-//  Intento 3 → ofrece llamada
-//  Intento 4 → espera número
-//
-if (u.intentosAgenda === 0) {
-  setUser(remitente, { intentosAgenda: 1 });
-  return "💛 Cuéntame: ¿buscas reducción, firmeza, volumen, arrugas o depilación?";
-}
+  // AGENDA inteligente
+  if (u.intentosAgenda === 0) {
+    setUser(remitente, { intentosAgenda: 1 });
+    return "💛 Cuéntame: ¿buscas reducción, firmeza, volumen, arrugas o depilación?";
+  }
 
-if (u.intentosAgenda === 1) {
-  setUser(remitente, { intentosAgenda: 2 });
+  if (u.intentosAgenda === 1) {
+    setUser(remitente, { intentosAgenda: 2 });
+    return CTA();
+  }
+
+  if (u.intentosAgenda === 2) {
+    setUser(remitente, { intentosAgenda: 3 });
+    return `💙 Te dejo nuevamente tu acceso al diagnóstico: ${RESERVO}`;
+  }
+
+  if (u.intentosAgenda === 3) {
+    setUser(remitente, { intentosAgenda: 4 });
+    return "📞 Si quieres, una profesional puede llamarte directo 💛 ¿Quieres que coordinemos una llamada?";
+  }
+
+  // esperando número
+  if (u.intentosAgenda === 4) {
+    if (msg.includes("si") || msg.includes("sí") || msg.includes("dale") || msg.includes("ok")) {
+      setUser(remitente, { esperandoNumero: true });
+      return "Perfecto 💛 ¿Cuál es tu número de WhatsApp para coordinar la llamada?";
+    }
+    return CTA();
+  }
+
+  if (u.esperandoNumero) {
+    const numero = msg.replace(/[^0-9]/g, "");
+    if (numero.length < 8)
+      return "💛 Ese número parece incompleto ¿Me lo envías nuevamente?";
+
+    await sendMessage(
+      NUM_INTERNO,
+      `📞 Nueva solicitud de llamada:
+• Usuario: ${remitente}
+• Número: ${numero}
+• Último plan: ${u.planBase ?? u.ultimoPlan}
+• Mensaje: ${texto}`,
+      "whatsapp"
+    );
+
+    setUser(remitente, { esperandoNumero: false });
+
+    return "Listo 💛 Una profesional te llamará muy pronto.";
+  }
+
+  // fallback
   return CTA();
 }
 
-if (u.intentosAgenda === 2) {
-  setUser(remitente, { intentosAgenda: 3 });
-  return `💙 Te dejo nuevamente tu acceso directo al diagnóstico gratuito: ${RESERVO}`;
-}
-
-if (u.intentosAgenda === 3) {
-  setUser(remitente, { intentosAgenda: 4 });
-  return "📞 Si quieres, una profesional puede llamarte y ayudarte directo 💛 ¿Quieres que coordinemos una llamada?";
-}
-
 // ----------------------------------------------------
-// 5. ESPERANDO NÚMERO DEL PACIENTE
-// ----------------------------------------------------
-if (u.intentosAgenda === 4) {
-
-  if (msg.includes("si") || msg.includes("sí") || msg.includes("dale") || msg.includes("ok")) {
-    setUser(remitente, { esperandoNumero: true });
-    return "Perfecto 💛 ¿Cuál es tu número de WhatsApp para coordinar la llamada?";
-  }
-
-  return CTA();
-}
-
-if (u.esperandoNumero) {
-  const numero = msg.replace(/[^0-9]/g, "");
-
-  if (numero.length < 8) {
-    return "💛 Ese número parece incompleto ¿Me lo envías nuevamente?";
-  }
-
-  // Enviar aviso interno a tu número
-  await sendMessage(
-    NUM_INTERNO,
-    `📞 Nueva solicitud de llamada:\n• Usuario: ${remitente}\n• Número: ${numero}\n• Último plan: ${u.planBase ?? u.ultimoPlan}\n• Mensaje: ${texto}`,
-    "whatsapp"
-  );
-
-  setUser(remitente, { esperandoNumero: false });
-
-  return "Listo 💛 Una profesional te llamará muy pronto.";
-}
-
-// ----------------------------------------------------
-// 6. FALLBACK SUAVE
-// ----------------------------------------------------
-return CTA();
-
-// ----------------------------------------------------
-// FIN DEL ARCHIVO motor_respuesta_v3.js
+// FIN DEL ARCHIVO
 // ----------------------------------------------------
