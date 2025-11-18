@@ -222,7 +222,7 @@ export async function procesarMensaje(texto, remitente, plataforma) {
   }
 
   // ----------------------------------------------------
-  – INTENCIONES CLÍNICAS
+  // INTENCIONES CLÍNICAS
   // ----------------------------------------------------
   const intent = intencion(msg);
 
