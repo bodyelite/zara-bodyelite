@@ -3,307 +3,284 @@ import { sendMessage } from "./sendMessage.js";
 
 const MEMORIA_PATH = "./memoria.json";
 const RESERVO_LINK = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
-const NUMERO_INTERNO = "56937648536"; // número para avisos internos
+const NUMERO_INTERNO = "56937648536";
 
-//-------------------------------------------------------------
+// ----------------------------------------------
 // MEMORIA
-//-------------------------------------------------------------
-function cargarMemoria() {
+// ----------------------------------------------
+function cargar() {
   try {
-    if (!fs.existsSync(MEMORIA_PATH)) {
-      return { usuarios: {} };
-    }
-    const data = fs.readFileSync(MEMORIA_PATH, "utf8");
-    return JSON.parse(data);
+    if (!fs.existsSync(MEMORIA_PATH)) return { usuarios: {} };
+    return JSON.parse(fs.readFileSync(MEMORIA_PATH, "utf8"));
   } catch {
     return { usuarios: {} };
   }
 }
 
-function guardarMemoria(memoria) {
-  fs.writeFileSync(MEMORIA_PATH, JSON.stringify(memoria, null, 2));
+function guardar(data) {
+  fs.writeFileSync(MEMORIA_PATH, JSON.stringify(data, null, 2));
 }
 
-function getUsuario(id) {
-  const memoria = cargarMemoria();
-  if (!memoria.usuarios[id]) {
-    memoria.usuarios[id] = {
-      modo: "normal",
+function getUser(id) {
+  const mem = cargar();
+  if (!mem.usuarios[id]) {
+    mem.usuarios[id] = {
       ultimoPlan: null,
       ultimoTema: null,
       intentosAgenda: 0,
-      esperandoNumero: false
+      esperandoNumero: false,
+      campañaUsada: false
     };
-    guardarMemoria(memoria);
+    guardar(mem);
   }
-  return memoria.usuarios[id];
+  return mem.usuarios[id];
 }
 
-function setUsuario(id, data) {
-  const memoria = cargarMemoria();
-  memoria.usuarios[id] = { ...memoria.usuarios[id], ...data };
-  guardarMemoria(memoria);
+function setUser(id, data) {
+  const mem = cargar();
+  mem.usuarios[id] = { ...mem.usuarios[id], ...data };
+  guardar(mem);
 }
 
-//-------------------------------------------------------------
-// DETECCIÓN DE INTENCIÓN
-//-------------------------------------------------------------
-function detectarIntencion(t) {
-  if (t.includes("precio") || t.includes("vale") || t.includes("cuánto") || t.includes("valor"))
-    return "precio";
-
-  if (t.includes("duele") || t.includes("dolor"))
-    return "dolor";
-
-  if (t.includes("sesione"))
-    return "sesiones";
-
-  if (t.includes("donde") || t.includes("ubicación") || t.includes("esta"))
-    return "ubicacion";
-
-  if (t.includes("hola"))
-    return "saludo";
-
-  return "general";
-}
-
-//-------------------------------------------------------------
-// DETECCIÓN DE PLANES
-//-------------------------------------------------------------
-const PLANES_KEYWORDS = {
+// ----------------------------------------------
+// PLANES Y DETECCIÓN
+// ----------------------------------------------
+const PLANES = {
   "lipo express": "Lipo Express",
   "lipo body elite": "Lipo Body Elite",
-  "body elite": "Lipo Body Elite",
   "push up": "Push Up",
-  "poto": "Push Up",
   "gluteo": "Push Up",
   "glúteo": "Push Up",
   "gluteos": "Push Up",
   "glúteos": "Push Up",
+  "poto": "Push Up",
   "trasero": "Push Up",
   "face elite": "Face Elite",
-  "facial": "Face Elite",
   "antiage": "Face Elite",
+  "facial": "Face Elite",
   "rostro": "Face Elite",
   "depil": "Depilación DL900",
-  "laser": "Depilación DL900",
   "láser": "Depilación DL900",
-  "body fitness": "Body Fitness",
+  "laser": "Depilación DL900",
   "tonificar": "Body Fitness",
+  "musculo": "Body Fitness",
+  "músculo": "Body Fitness",
   "marcar": "Body Fitness",
-  "tensor": "Body Tensor",
-  "flacidez": "Body Tensor"
+  "flacidez": "Body Tensor",
+  "tensar": "Body Tensor"
 };
 
 function detectarPlan(t) {
-  for (const k in PLANES_KEYWORDS) {
-    if (t.includes(k)) return PLANES_KEYWORDS[k];
-  }
+  const x = t.toLowerCase();
+  for (const k in PLANES) if (x.includes(k)) return PLANES[k];
   return null;
 }
 
-//-------------------------------------------------------------
-// PLANES Y RESPUESTAS CLÍNICAS
-//-------------------------------------------------------------
-const PLANES = {
-  "Push Up": {
-    precio: "$376.000",
-    sesiones: "8–10 sesiones",
-    dolor: "No duele, pero sí sentirás contracciones intensas (no dolorosas).",
-    descripcion:
-      "El Push Up Glúteo levanta, proyecta y da forma natural usando Pro Sculpt, HIFU 12D y Radiofrecuencia 🍑✨."
-  },
+function detectarIntencion(t) {
+  const x = t.toLowerCase();
+  if (x.includes("precio") || x.includes("vale") || x.includes("valor")) return "precio";
+  if (x.includes("sesiones") || x.includes("cuantas") || x.includes("cuántas")) return "sesiones";
+  if (x.includes("duele") || x.includes("dolor")) return "dolor";
+  if (x.includes("donde") || x.includes("ubic")) return "ubicacion";
+  if (x.includes("hola") || x.includes("buenas")) return "saludo";
+  return "general";
+}
+
+// ----------------------------------------------
+// INFO CLÍNICA POR PLAN
+// ----------------------------------------------
+const INFO = {
   "Lipo Express": {
     precio: "$432.000",
-    sesiones: "8–10 sesiones",
-    dolor: "La cavitación puede sentirse tibia, pero no dolorosa.",
-    descripcion:
-      "Reduce grasa localizada en abdomen, cintura y espalda con HIFU 12D + cavitación + radiofrecuencia 💛."
+    sesiones: "8–10",
+    dolor: "Es completamente tolerable 💙 Se siente un calorcito y vibración leve."
   },
   "Lipo Body Elite": {
     precio: "$664.000",
-    sesiones: "10–12 sesiones",
-    dolor: "No duele, es un trabajo profundo de tecnología.",
-    descripcion:
-      "Define cintura, abdomen y espalda con HIFU 12D + EMS Sculptor + cavitación + RF 💙."
+    sesiones: "10–12",
+    dolor: "Nada doloroso ✨, es tecnología de ultrasonido y contracción muscular controlada."
+  },
+  "Push Up": {
+    precio: "$376.000",
+    sesiones: "8–10",
+    dolor: "No duele 🍑 Son contracciones intensas pero totalmente tolerables."
   },
   "Face Elite": {
     precio: "$358.400",
-    sesiones: "8–10 sesiones",
-    dolor: "No duele; puede sentirse calorcito agradable.",
-    descripcion:
-      "Rejuvenece, tensa y mejora contorno con HIFU 12D + Pink Glow + RF ✨."
+    sesiones: "8–10",
+    dolor: "Sensación tibia y puntos sensibles, pero nada fuerte 💆‍♀️✨"
   },
   "Depilación DL900": {
     precio: "planes desde $153.600",
-    sesiones: "6 sesiones por zona",
-    dolor: "Se siente un pinchacito leve, pero no dolor significativo.",
-    descripcion:
-      "Láser DL900 rápido y seguro, apto para pieles latinas ⚡."
+    sesiones: "6 por zona",
+    dolor: "Pinchacito leve en zonas sensibles, muy tolerable ⚡"
   },
   "Body Fitness": {
     precio: "$360.000",
-    sesiones: "6–8 sesiones",
-    dolor: "No duele, son contracciones profundas.",
-    descripcion:
-      "Tonifica, marca y define musculatura con EMS Sculptor 🔥."
+    sesiones: "6–8",
+    dolor: "Contracciones profundas tipo entrenamiento intenso 💪"
   },
   "Body Tensor": {
     precio: "$232.000",
-    sesiones: "6–8 sesiones",
-    dolor: "Puede sentirse calor, pero no dolor.",
-    descripcion:
-      "Mejora firmeza y flacidez en brazos, abdomen, piernas o papada 🌟."
+    sesiones: "6–8",
+    dolor: "Calorcito profundo, 100% tolerable 💛"
   }
 };
 
-//-------------------------------------------------------------
-// RESPUESTAS BASE
-//-------------------------------------------------------------
+// ----------------------------------------------
+// PLANTILLAS
+// ----------------------------------------------
 function saludoInicial() {
-  return "💙 ¡Hola! Soy Zara de Body Elite ✨ Cuéntame, ¿qué zona te gustaría mejorar? abdomen, glúteos, piernas, rostro o depilación láser 🌟";
+  return "💙 ¡Hola! Soy Zara de Body Elite ✨ Cuéntame, ¿qué zona te gustaría trabajar? abdomen, glúteos, piernas, rostro o depilación láser 🌟";
 }
 
-function plantillaCampaña(plan) {
-  return `${PLANES[plan].descripcion}\n\nSi quieres ver si eres candidata y cuántas sesiones necesitas, puedo dejarte tu diagnóstico gratuito 💙`;
+function campaña(plan) {
+  const msg = {
+    "Push Up": "🍑 El Push Up levanta y da volumen natural con Pro Sculpt + HIFU 12D + RF. Resultados desde las primeras semanas ✨",
+    "Lipo Express": "⚡ La Lipo Express reduce grasa localizada (abdomen/cintura/espalda) con HIFU 12D + cavitación + RF. Muy rápida y efectiva 💛",
+    "Lipo Body Elite": "💙 Lipo Body Elite combina HIFU 12D + EMS Sculptor + cavitación + RF. Es nuestro plan más completo.",
+    "Face Elite": "✨ Face Elite trabaja firmeza, contorno, arrugas y luminosidad con HIFU 12D + Pink Glow + RF.",
+    "Depilación DL900": "⚡ Láser DL900: rápido, seguro y sin dolor significativo. 6 sesiones por zona.",
+    "Body Fitness": "💪 Body Fitness tonifica y define con EMS Sculptor.",
+    "Body Tensor": "💛 Body Tensor trabaja flacidez en brazos, abdomen, piernas o papada."
+  };
+  return msg[plan] + "\n\n¿Te gustaría avanzar con este objetivo? 💙";
 }
 
-function plantillaNormal() {
+const UBICACION =
+  "📍 Estamos en Av. Las Perdices Nº2990, Local 23 (Peñalolén)\n🕐 Lun–Vie 9:30–20:00 • Sáb 9:30–13:00";
+
+function intento1() {
   return "Perfecto 💛 Cuéntame, ¿qué te gustaría mejorar: grasa localizada, flacidez, volumen, celulitis o depilación láser?";
 }
 
-function plantillaLink1() {
+function link1() {
   return `Si deseas avanzar, aquí tienes tu diagnóstico gratuito 💙\n${RESERVO_LINK}`;
 }
 
-function plantillaLink2() {
-  return `Aquí tienes nuevamente tu acceso directo al diagnóstico 💙\n${RESERVO_LINK}`;
+function link2() {
+  return `Aquí tienes nuevamente el acceso al diagnóstico 💙\n${RESERVO_LINK}`;
 }
 
-function plantillaLlamada() {
-  return "Si quieres, una de nuestras profesionales puede llamarte directamente para ayudarte 💛 ¿Te gustaría que te llamemos?";
+function pedirLlamada() {
+  return "Si quieres, una profesional puede llamarte 💛 ¿Te gustaría que te llamemos? 📞✨";
 }
 
 function pedirTelefono() {
   return "Perfecto 💛 ¿Me compartes tu número de WhatsApp para coordinar la llamada? 📞";
 }
 
-//-------------------------------------------------------------
+// ----------------------------------------------
 // ENVÍO INTERNO
-//-------------------------------------------------------------
-async function avisoInterno(userId, nombre, numero, ultimoPlan, ultimoMensaje) {
-  const texto =
+// ----------------------------------------------
+async function avisoInterno(id, nombre, numero, mensaje, plan) {
+  const txt =
     "📞 Nueva paciente solicita llamada.\n" +
-    `• Usuario: ${userId}\n` +
-    `• Nombre IG/WS: ${nombre ?? "No disponible"}\n` +
-    `• Número entregado: ${numero}\n` +
-    `• Tratamiento consultado: ${ultimoPlan ?? "No detectado"}\n` +
-    `• Último mensaje: ${ultimoMensaje}`;
+    `• Usuario: ${id}\n` +
+    `• Nombre: ${nombre ?? "No disponible"}\n` +
+    `• Número: ${numero}\n` +
+    `• Plan consultado: ${plan ?? "No detectado"}\n` +
+    `• Último mensaje: ${mensaje}`;
 
-  await sendMessage(NUMERO_INTERNO, texto, "whatsapp");
+  await sendMessage(NUMERO_INTERNO, txt, "whatsapp");
 }
 
-//-------------------------------------------------------------
-// MOTOR PRINCIPAL
-//-------------------------------------------------------------
+// ----------------------------------------------
+// PROCESAR MENSAJE
+// ----------------------------------------------
 export async function procesarMensaje(texto, plataforma, userId, nombre) {
   const t = texto.toLowerCase().trim();
-  const intencion = detectarIntencion(t);
+  const u = getUser(userId);
+
   const planDetectado = detectarPlan(t);
+  const intencion = detectarIntencion(t);
 
-  let usuario = getUsuario(userId);
-
-  //-------------------------------------------------------------
-  // PEDIR NÚMERO
-  //-------------------------------------------------------------
-  if (usuario.esperandoNumero) {
-    const numero = t.replace(/[^0-9]/g, "");
-    if (numero.length < 8)
-      return "Creo que ese número está incompleto 💛 ¿Me lo envías nuevamente?";
-
-    await avisoInterno(userId, nombre, numero, usuario.ultimoPlan, texto);
-    setUsuario(userId, { esperandoNumero: false });
-    return "¡Perfecto! 💛 Una profesional te contactará lo antes posible 📞✨";
-  }
-
-  //-------------------------------------------------------------
-  // MODO CAMPAÑA (solo primer mensaje)
-  //-------------------------------------------------------------
-  if (usuario.modo === "normal" && planDetectado) {
-    setUsuario(userId, {
-      modo: "post_campaña",
+  // ------------------------------------------
+  // 1) Primer mensaje → campaña si detecta plan
+  // ------------------------------------------
+  if (!u.campañaUsada && planDetectado) {
+    setUser(userId, {
       ultimoPlan: planDetectado,
-      ultimoTema: "plan"
+      campañaUsada: true,
+      ultimoTema: "campaña"
     });
-    return plantillaCampaña(planDetectado);
+    return campaña(planDetectado);
   }
 
-  //-------------------------------------------------------------
-  // INTENCIONES CONTEXTUALES
-  //-------------------------------------------------------------
-  if (intencion === "ubicacion")
-    return "📍 Estamos en Av. Las Perdices Nº2990, Local 23 (Peñalolén). Horarios: Lun–Vie 9:30–20:00, Sáb 9:30–13:00 💙";
+  // ------------------------------------------
+  // 2) Esperando número para llamada
+  // ------------------------------------------
+  if (u.esperandoNumero) {
+    const num = t.replace(/[^0-9]/g, "");
+    if (num.length < 8) return "Creo que el número está incompleto 💛 ¿Me lo envías de nuevo?";
+    await avisoInterno(userId, nombre, num, texto, u.ultimoPlan);
+    setUser(userId, { esperandoNumero: false });
+    return "Perfecto 💛 Una profesional te contactará lo antes posible 📞✨";
+  }
+
+  // ------------------------------------------
+  // 3) Intenciones específicas (continuidad)
+  // ------------------------------------------
+  if (intencion === "ubicacion") return UBICACION;
 
   if (intencion === "precio") {
-    if (usuario.ultimoPlan)
-      return `El valor de ${usuario.ultimoPlan} es ${PLANES[usuario.ultimoPlan].precio} 💙`;
-
-    return "Para darte el valor exacto necesito saber qué zona quieres trabajar 💛 abdomen, glúteos, piernas, rostro o depilación láser?";
+    if (u.ultimoPlan && INFO[u.ultimoPlan])
+      return `El valor de ${u.ultimoPlan} es ${INFO[u.ultimoPlan].precio} 💙\n¿Quieres que te deje tu acceso al diagnóstico gratuito? 💛`;
+    return "Para darte el valor exacto necesito saber qué zona quieres trabajar 💛";
   }
 
   if (intencion === "sesiones") {
-    if (usuario.ultimoPlan)
-      return `En ${usuario.ultimoPlan}, normalmente trabajamos ${PLANES[usuario.ultimoPlan].sesiones} ✨`;
-
-    return "Depende del tratamiento y de tu caso 💛 Cuéntame, ¿qué zona te gustaría trabajar?";
+    if (u.ultimoPlan && INFO[u.ultimoPlan])
+      return `En ${u.ultimoPlan} normalmente trabajamos ${INFO[u.ultimoPlan].sesiones} sesiones ✨`;
+    return "La cantidad de sesiones depende del plan y tu objetivo 💛 ¿Qué zona quieres trabajar?";
   }
 
   if (intencion === "dolor") {
-    if (usuario.ultimoPlan)
-      return PLANES[usuario.ultimoPlan].dolor + " ✨";
-
-    return "Depende del tratamiento 💛 Si me dices qué zona te gustaría mejorar, te explico exactamente cómo se siente.";
+    if (u.ultimoPlan && INFO[u.ultimoPlan])
+      return INFO[u.ultimoPlan].dolor;
+    return "Nuestros tratamientos no duelen 💙 ¿Qué plan te interesa?";
   }
 
-  //-------------------------------------------------------------
-  // SALUDO
-  //-------------------------------------------------------------
-  if (intencion === "saludo" && usuario.modo === "normal")
+  // ------------------------------------------
+  // 4) Primer mensaje sin plan → saludo
+  // ------------------------------------------
+  if (!u.ultimoPlan && intencion === "saludo") {
     return saludoInicial();
-
-  //-------------------------------------------------------------
-  // FLUJO AGENDA (3 intentos)
-  //-------------------------------------------------------------
-  if (usuario.intentosAgenda === 0) {
-    setUsuario(userId, { intentosAgenda: 1 });
-    return plantillaNormal();
   }
 
-  if (usuario.intentosAgenda === 1) {
-    setUsuario(userId, { intentosAgenda: 2 });
-    return plantillaLink1();
+  // ------------------------------------------
+  // 5) Flujo de agenda (3 intentos)
+  // ------------------------------------------
+  if (u.intentosAgenda === 0) {
+    setUser(userId, { intentosAgenda: 1 });
+    return intento1();
   }
 
-  if (usuario.intentosAgenda === 2) {
-    setUsuario(userId, { intentosAgenda: 3 });
-    return plantillaLink2();
+  if (u.intentosAgenda === 1) {
+    setUser(userId, { intentosAgenda: 2 });
+    return link1();
   }
 
-  if (usuario.intentosAgenda === 3) {
-    setUsuario(userId, { intentosAgenda: 4 });
-    return plantillaLlamada();
+  if (u.intentosAgenda === 2) {
+    setUser(userId, { intentosAgenda: 3 });
+    return link2();
   }
 
-  if (usuario.intentosAgenda === 4) {
+  if (u.intentosAgenda === 3) {
+    setUser(userId, { intentosAgenda: 4 });
+    return pedirLlamada();
+  }
+
+  if (u.intentosAgenda === 4) {
     if (t.includes("si") || t.includes("sí") || t.includes("ok") || t.includes("dale")) {
-      setUsuario(userId, { esperandoNumero: true });
+      setUser(userId, { esperandoNumero: true });
       return pedirTelefono();
     }
-    return plantillaLink2();
+    return link2();
   }
 
-  //-------------------------------------------------------------
-  // FALLBACK GENERAL
-  //-------------------------------------------------------------
-  return plantillaNormal();
+  // ------------------------------------------
+  // Fallback conversacional
+  // ------------------------------------------
+  return intento1();
 }
