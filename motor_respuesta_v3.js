@@ -1,16 +1,12 @@
 /* ============================================================
-   MOTOR DE RESPUESTA ZARA v3 – MASTER BODY ELITE
-   Compatible con Zara 2.1
-   Incluye:
-   - Todos los tratamientos corporales
-   - Todos los faciales
-   - Depilación DL900 completa
-   - Sinónimos reales
-   - Listado de planes por zona (Opción B)
+   MOTOR DE RESPUESTA ZARA v3 – MASTER BODY ELITE (IG Friendly)
+   Compatible con Zara 2.1 (IG + WSP)
+   - Detecta zona/problema clínico
+   - Plan principal + alternativa automática
+   - Textos cortos IG-friendly
    - Campañas
-   - Flujo agenda + contador + llamado
-   - IG + WhatsApp
-   - Emojis mínimos
+   - Memoria por cliente
+   - Agenda + contador + llamado
    ============================================================ */
 
 import fs from "fs";
@@ -32,8 +28,9 @@ function guardarMemoria() {
 }
 
 /* ============================================================
-   HELPER
+   HELPERS
 ============================================================ */
+
 function n(t) {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -51,187 +48,143 @@ function necesitaLlamado(numero) {
 }
 
 async function notificar(numeroCliente, ultimoMensaje) {
-  const msg = `📣 Solicitud de llamado:\n• Número: ${numeroCliente}\n• Último mensaje: ${ultimoMensaje}`;
+  const msg = `📣 Solicitud de llamado\n• ${numeroCliente}\n• Último mensaje: ${ultimoMensaje}`;
   await sendMessage("+56983300262", msg, "whatsapp");
   await sendMessage("+56937648536", msg, "whatsapp");
 }
 
 /* ============================================================
-   LISTADO COMPLETO DE PLANES
+   SELECCIÓN CLÍNICA: PLAN PRINCIPAL + ALTERNATIVA
 ============================================================ */
 
-const PLANES_FACIALES = [
-  {
-    nombre: "Limpieza Facial Full",
-    precio: 120000,
-    aplica: ["limpieza", "poros", "espinillas", "acné"],
-    desc: "Limpieza profunda + extracción + aparatología suave. ✨"
-  },
-  {
-    nombre: "RF Facial",
-    precio: 60000,
-    aplica: ["flacidez", "contorno", "pómulos"],
-    desc: "Radiofrecuencia para tensado y firmeza facial."
-  },
-  {
-    nombre: "Face Light",
-    precio: 128800,
-    aplica: ["manchas", "luminosidad", "tono"],
-    desc: "Luz, brillo y tono parejo."
-  },
-  {
-    nombre: "Face Smart",
-    precio: 198400,
-    aplica: ["primeras arrugas", "textura", "rejuvenecer"],
-    desc: "Plan integral suave + aparatología combinada."
-  },
-  {
-    nombre: "Face Inicia",
-    precio: 270400,
-    aplica: ["rejuvenecer", "primeras líneas", "tono"],
-    desc: "Mejora textura, tono y líneas finas."
-  },
-  {
-    nombre: "Face Antiage",
-    precio: 281600,
-    aplica: ["arrugas", "líneas", "frente", "patas de gallo", "ceño"],
-    desc: "Rejuvenecimiento profundo para arrugas. ✨"
-  },
-  {
-    nombre: "Face Elite",
-    precio: 358400,
-    aplica: ["arrugas", "flacidez facial", "contorno", "lifting"],
-    desc: "Lifting no quirúrgico + firmeza avanzada."
-  },
-  {
-    nombre: "Full Face",
-    precio: 584000,
-    aplica: ["todo el rostro", "resultado global"],
-    desc: "Plan completo para firmeza, arrugas y textura."
-  },
-  {
-    nombre: "Face Papada",
-    precio: null,
-    aplica: ["papada", "contorno", "debajo del mentón"],
-    desc: "Reducción de papada + tensado profundo."
-  },
-  {
-    nombre: "Face One",
-    precio: null,
-    aplica: ["tono", "arrugas", "líneas", "lifting"],
-    desc: "Tratamiento focal + rejuvenecimiento exprés."
-  },
-  {
-    nombre: "Face H12",
-    precio: null,
-    aplica: ["lifting", "firmeza profunda"],
-    desc: "HIFU 12D específico para rostro."
-  },
-];
-
-const PLANES_CORPORALES = [
-  {
-    nombre: "Lipo Focalizada Reductiva",
-    precio: 348800,
-    aplica: ["abdomen", "cintura", "rollos", "rebaje", "llantas"],
-    desc: "HIFU 12D + cavitación para reducir zonas específicas."
-  },
-  {
-    nombre: "Lipo Express",
-    precio: 432000,
-    aplica: ["abdomen", "cintura", "espalda", "bajar", "rebaje"],
-    desc: "Reducción rápida abdomen/cintura/espalda. 🔥"
-  },
-  {
-    nombre: "Lipo Reductiva",
-    precio: 480000,
-    aplica: ["abdomen", "cintura", "volumen"],
-    desc: "HIFU 12D + RF + cavitación para moldeamiento real."
-  },
-  {
-    nombre: "Lipo Body Elite",
-    precio: 664000,
-    aplica: ["abdomen", "cintura", "espalda completa"],
-    desc: "Reducción y moldeamiento premium."
-  },
-  {
-    nombre: "Body Tensor",
-    precio: 232000,
-    aplica: ["flacidez", "piernas", "brazos", "papada"],
-    desc: "RF profunda para firmeza y tensado."
-  },
-  {
-    nombre: "Body Fitness",
-    precio: 360000,
-    aplica: ["glúteos", "tonificar", "musculo", "piernas"],
-    desc: "EMS Sculptor (20.000 contracciones) + RF compactante."
-  },
-  {
-    nombre: "Push Up",
-    precio: 376000,
-    aplica: ["glúteos", "poto", "volumen"],
-    desc: "Volumen + proyección con ProSculpt + HIFU 12D."
-  },
-];
-
-const PLANES_DEPILACION = [
-  { nombre: "Depilación Inicia", precio: 153600, aplica: ["depi", "vello"] },
-  { nombre: "Depilación Summer Elite", precio: 192000, aplica: ["depi"] },
-  { nombre: "Depilación Zona Pequeña", precio: 192000, aplica: ["depi"] },
-  { nombre: "Depilación Midle", precio: 192000, aplica: ["depi"] },
-  { nombre: "Depilación Zona Mediana", precio: 240000, aplica: ["depi"] },
-  { nombre: "Depilación Full", precio: 259200, aplica: ["depi"] },
-  { nombre: "Depilación Zona Grande", precio: 288000, aplica: ["depi"] },
-];
-
-/* ============================================================
-   DETECCIÓN DE ZONA Y LISTA DE PLANES (OPCIÓN B)
-============================================================ */
-
-function planesPorZona(texto) {
+function seleccionarPlan(texto) {
   const t = n(texto);
 
+  /* ---------------- ABDOMEN ---------------- */
+  if (
+    t.includes("guata") ||
+    t.includes("abdomen") ||
+    t.includes("cintura") ||
+    t.includes("rebaje") ||
+    t.includes("rollo") ||
+    t.includes("llanta") ||
+    t.includes("bajar")
+  ) {
+    // principal
+    const principal = {
+      nombre: "Lipo Express",
+      precio: 432000,
+      desc:
+        "Reduce abdomen, cintura y espalda con HIFU 12D + cavitación + RF.",
+    };
+
+    // alternativa clínica
+    let alternativa = { nombre: "Lipo Reductiva", precio: 480000 };
+    if (t.includes("rollo chico") || t.includes("pequeño"))
+      alternativa = { nombre: "Lipo Focalizada Reductiva", precio: 348800 };
+    if (t.includes("flacidez"))
+      alternativa = { nombre: "Lipo Body Elite", precio: 664000 };
+
+    return { principal, alternativa };
+  }
+
+  /* ---------------- ARRUGAS / ROSTRO ---------------- */
   if (
     t.includes("arruga") ||
     t.includes("linea") ||
     t.includes("frente") ||
     t.includes("ceño") ||
-    t.includes("papada") ||
-    t.includes("mancha") ||
-    t.includes("luminosidad") ||
-    t.includes("glow") ||
+    t.includes("pata de gallo") ||
     t.includes("ojera") ||
-    t.includes("bolsa") ||
-    t.includes("flacidez facial") ||
-    t.includes("rostro") ||
-    t.includes("cara")
+    t.includes("bolsa")
   ) {
-    return PLANES_FACIALES;
+    const principal = {
+      nombre: "Face Antiage",
+      precio: 281600,
+      desc: "Reduce líneas, frente, ceño y patas de gallo con HIFU 12D + RF.",
+    };
+    const alternativa = {
+      nombre: "Face Elite",
+      precio: 358400,
+      desc: "",
+    };
+
+    return { principal, alternativa };
   }
 
+  /* ---------------- PAPADA ---------------- */
+  if (t.includes("papada") || t.includes("menton")) {
+    const principal = {
+      nombre: "Face Papada",
+      precio: null,
+      desc: "Reducción + tensado del contorno con HIFU 12D/RF.",
+    };
+
+    // alternativa elegida por criterio clínico según grasa
+    let alternativa = { nombre: "Lipolítico Facial", precio: null };
+
+    if (t.includes("flacidez"))
+      alternativa = { nombre: "Face Elite", precio: 358400 };
+
+    return { principal, alternativa };
+  }
+
+  /* ---------------- GLÚTEOS ---------------- */
   if (
-    t.includes("abdomen") ||
-    t.includes("cintura") ||
-    t.includes("espalda") ||
-    t.includes("rollo") ||
-    t.includes("rebaje") ||
-    t.includes("guata") ||
-    t.includes("bajar") ||
-    t.includes("piernas") ||
-    t.includes("brazos") ||
-    t.includes("muslo")
+    t.includes("glute") ||
+    t.includes("poto") ||
+    t.includes("volumen") ||
+    t.includes("trasero")
   ) {
-    return PLANES_CORPORALES;
+    const principal = {
+      nombre: "Push Up",
+      precio: 376000,
+      desc: "Volumen + proyección con ProSculpt + HIFU 12D.",
+    };
+
+    const alternativa = {
+      nombre: "Body Fitness",
+      precio: 360000,
+      desc: "",
+    };
+
+    return { principal, alternativa };
   }
 
-  if (t.includes("depi") || t.includes("laser")) {
-    return PLANES_DEPILACION;
+  /* ---------------- PIERNAS / BRAZOS ---------------- */
+  if (
+    t.includes("pierna") ||
+    t.includes("brazo") ||
+    t.includes("muslo") ||
+    t.includes("flacidez")
+  ) {
+    const principal = {
+      nombre: "Body Tensor",
+      precio: 232000,
+      desc: "RF profunda para firmeza en piernas/brazos.",
+    };
+
+    const alternativa = {
+      nombre: "Body Fitness",
+      precio: 360000,
+    };
+
+    return { principal, alternativa };
   }
 
-  if (t.includes("glute") || t.includes("poto") || t.includes("volumen")) {
-    return PLANES_CORPORALES.filter((p) =>
-      ["Push Up", "Body Fitness"].includes(p.nombre)
-    );
+  /* ---------------- DEPILACIÓN ---------------- */
+  if (t.includes("depi") || t.includes("laser") || t.includes("vello")) {
+    const principal = {
+      nombre: "Depilación Full (DL900)",
+      precio: 259200,
+      desc: "Láser diodo de alta potencia DL900.",
+    };
+    const alternativa = {
+      nombre: "Depilación Zona Mediana",
+      precio: 240000,
+    };
+
+    return { principal, alternativa };
   }
 
   return null;
@@ -245,7 +198,7 @@ function saludoIG() {
   return `💙 ¡Hola! Soy Zara de Body Elite. ¿Qué zona deseas mejorar? abdomen, glúteos, rostro o depilación ✨`;
 }
 function saludoWSP() {
-  return `💙 ¡Hola! Soy Zara. ¿Qué zona quieres trabajar? abdomen, glúteos, rostro o depilación.`;
+  return `💙 ¡Hola! Soy Zara. ¿Qué zona deseas trabajar? abdomen, glúteos, rostro o depilación.`;
 }
 
 /* ============================================================
@@ -256,46 +209,49 @@ export async function procesarMensaje(texto, numero, plataforma) {
   const t = n(texto);
   const esIG = plataforma === "instagram";
 
-  if (!memoria[numero])
-    memoria[numero] = { agendas: 0, campaña: null };
+  if (!memoria[numero]) memoria[numero] = { agendas: 0, campaña: null };
 
-  /* 1. Saludos */
+  /* SALUDOS */
   if (
     t.startsWith("hola") ||
     t.startsWith("holi") ||
-    t.includes("buenas")
+    t.includes("buenas") ||
+    t === "hi"
   ) {
     return esIG ? saludoIG() : saludoWSP();
   }
 
-  /* 2. Detección por zona (OPCIÓN B) */
-  const lista = planesPorZona(texto);
-  if (lista) {
-    let msg = `✨ Estos son los planes recomendados:\n`;
-    lista.forEach((p) => {
-      msg += `\n• *${p.nombre}* – ${p.precio ? "$" + p.precio.toLocaleString("es-CL") : "según zona"}\n  ${p.desc}`;
-    });
-    msg += `\n\n💙 Agenda tu diagnóstico gratuito aquí:\n${LINK}`;
+  /* ZONA / PROBLEMA → PLAN PRINCIPAL + ALTERNATIVA */
+  const plan = seleccionarPlan(texto);
+  if (plan) {
+    const p = plan.principal;
+    const a = plan.alternativa;
+
+    let msg = `✨ El plan más recomendado es **${p.nombre}**.\n${p.desc ? p.desc + "\n" : ""}`;
+
+    msg += `\nComo alternativa, también puede aplicar **${a.nombre}**.`;
+
+    msg += `\n\n💙 En tu evaluación definimos cuál se ajusta mejor a tus necesidades.`;
+    msg += `\nAgenda aquí tu diagnóstico gratuito:\n${LINK}`;
     return msg;
   }
 
-  /* 3. Precios */
-  if (t.includes("precio") || t.includes("cuanto vale")) {
-    return `Los valores dependen de la zona y el plan ✨\nAquí puedes agendar tu diagnóstico gratuito:\n${LINK}`;
+  /* PREGUNTA POR PRECIO */
+  if (t.includes("precio") || t.includes("valor") || t.includes("cuanto vale")) {
+    return `Los valores dependen del plan y la zona ✨\nAgenda tu diagnóstico para ver tu caso:\n${LINK}`;
   }
 
-  /* 4. Llamado */
+  /* LLAMADO */
   if (t.includes("llamar") || t.includes("llamen")) {
     await notificar(numero, texto);
-    return `Perfecto 💙 Una profesional te llamará pronto.`;
+    return `Perfecto 💛 Una profesional te llamará pronto.`;
   }
 
-  /* 5. Entrega de número */
   if (t.includes("+56")) {
     await notificar(numero, texto);
-    return `Perfecto 💛 Ya envié tu número a una profesional.`;
+    return `Perfecto 💙 Ya envié tu número a una profesional.`;
   }
 
-  /* 6. Fallback */
+  /* FALLBACK */
   return `💙 Cuéntame qué deseas mejorar: abdomen, glúteos, rostro o depilación.`;
 }
