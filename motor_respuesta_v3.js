@@ -1,4 +1,4 @@
-import memoria from "./memoria_usuarios.json" assert { type: "json" };
+import memoria from "./memoria_usuarios.json" with { type: "json" };
 
 const LINK = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
@@ -6,7 +6,7 @@ export function procesarMensaje(texto, numero, plataforma) {
   const t = texto.toLowerCase().trim();
 
   // ===============================
-  // 1. DETECCIÓN DE CAMPAÑAS (si el usuario parte con el nombre del plan)
+  // 1. DETECCIÓN DE CAMPAÑAS
   // ===============================
 
   const campañas = {
@@ -27,7 +27,7 @@ export function procesarMensaje(texto, numero, plataforma) {
     "face papada": "face papada",
     "papada": "face papada",
     "depilación": "depilacion",
-    "depilacion": "depilacion",
+    "depilacion": "depilacion"
   };
 
   for (const key in campañas) {
@@ -39,7 +39,7 @@ export function procesarMensaje(texto, numero, plataforma) {
   }
 
   // ===============================
-  // 2. DETECCIÓN POR ZONA / SÍNTOMA
+  // 2. DETECCIÓN POR ZONA
   // ===============================
 
   const zonas = [
@@ -62,7 +62,7 @@ export function procesarMensaje(texto, numero, plataforma) {
   }
 
   // ===============================
-  // 3. DETECCIÓN DE PRECIO
+  // 3. PRECIO
   // ===============================
 
   const palabrasPrecio = ["precio", "cuánto vale", "cuanto vale", "valor", "vale", "cuanto sale", "cuánto sale"];
@@ -74,7 +74,7 @@ export function procesarMensaje(texto, numero, plataforma) {
   }
 
   // ===============================
-  // 4. DETECCIÓN DE EXPLICACIÓN / “EN QUÉ CONSISTE”
+  // 4. EXPLICACIÓN
   // ===============================
 
   const triggersExplicacion = [
@@ -108,13 +108,15 @@ export function procesarMensaje(texto, numero, plataforma) {
   return `💙 Cuéntame qué deseas mejorar: abdomen, glúteos, rostro o depilación.`;
 }
 
+
+
 // =====================================================
-// FUNCIONES DE RESPUESTA
+// RESPUESTAS POR PLAN
 // =====================================================
 
 function responderPlan(plan) {
   const respuestas = {
-    "lipo express": `✨ El plan más recomendado es **Lipo Express**.\nReduce abdomen, cintura y espalda con HIFU 12D + cavitación + RF.\n\nEn la evaluación definimos cuál opción se ajusta mejor a ti.\nAgenda aquí:\n${LINK}`,
+    "lipo express": `✨ El plan más recomendado es **Lipo Express**.\nReduce abdomen, cintura y espalda con HIFU 12D + cavitación + RF.\n\nComo alternativa también puede aplicar **Lipo Reductiva**.\nAgenda aquí:\n${LINK}`,
     "lipo reductiva": `✨ Plan **Lipo Reductiva**.\nMoldeamiento real con HIFU 12D + RF + cavitación.\nAgenda aquí:\n${LINK}`,
     "lipo focalizada reductiva": `✨ **Lipo Focalizada Reductiva**.\nPara rollos pequeños con cavitación + RF.\nAgenda aquí:\n${LINK}`,
     "lipo body elite": `✨ **Lipo Body Elite**.\nReducción + tensado premium con HIFU 12D.\nAgenda aquí:\n${LINK}`,
@@ -130,6 +132,7 @@ function responderPlan(plan) {
 
   return respuestas[plan] || `Agenda tu diagnóstico aquí:\n${LINK}`;
 }
+
 
 function responderPrecio(plan) {
   const precios = {
@@ -159,12 +162,13 @@ function responderPrecio(plan) {
   return `Los valores dependen del plan y la zona.\nAgenda tu evaluación aquí:\n${LINK}`;
 }
 
+
 function responderExplicacion(plan) {
   const explic = {
     "lipo express": `✨ **Lipo Express** trabaja abdomen, cintura y espalda con:\n• HIFU 12D (grasa profunda)\n• Cavitación (adipocitos)\n• RF (compactación)\nResultados 2–3 semanas.\nAgenda aquí:\n${LINK}`,
     "lipo reductiva": `✨ **Lipo Reductiva** moldea abdomen real usando:\n• HIFU 12D\n• RF\n• Cavitación\nAgenda aquí:\n${LINK}`,
-    "push up": `✨ **Push Up** da volumen real con:\n• ProSculpt (20.000 contracciones)\n• HIFU 12D para tensado\nResultados progresivos desde la 1° semana.\nAgenda aquí:\n${LINK}`,
-    "body tensor": `✨ **Body Tensor** tensa y mejora firmeza con radiofrecuencia profunda.\nAgenda aquí:\n${LINK}`,
+    "push up": `✨ **Push Up** da volumen real con:\n• ProSculpt (20.000 contracciones)\n• HIFU 12D para tensado\nResultados desde la 1° semana.\nAgenda aquí:\n${LINK}`, 
+    "body tensor": `✨ **Body Tensor** tensa y mejora firmeza con RF profunda.\nAgenda aquí:\n${LINK}`,
     "body fitness": `✨ **Body Fitness** tonifica glúteos, piernas o abdomen con ProSculpt + RF.\nAgenda aquí:\n${LINK}`,
     "face antiage": `✨ **Face Antiage** usa HIFU 12D + RF para arrugas, líneas y firmeza.\nAgenda aquí:\n${LINK}`,
     "face papada": `✨ **Face Papada** reduce grasa + tensa contorno con HIFU 12D.\nAgenda aquí:\n${LINK}`,
@@ -173,6 +177,7 @@ function responderExplicacion(plan) {
 
   return explic[plan] || `Agenda tu diagnóstico aquí:\n${LINK}`;
 }
+
 
 function capital(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
