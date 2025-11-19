@@ -26,13 +26,13 @@ app.post("/webhook", async (req, res) => {
     const entry = req.body.entry?.[0];
     if (!entry) return res.sendStatus(200);
 
-    // Detectar plataforma
+    // Plataforma
     const plataforma =
       String(entry.id) === String(process.env.IG_USER_ID)
         ? "instagram"
         : "whatsapp";
 
-    // WhatsApp Cloud API
+    // Mensaje
     const msg = entry.changes?.[0]?.value?.messages?.[0];
     if (!msg) return res.sendStatus(200);
 
@@ -47,8 +47,10 @@ app.post("/webhook", async (req, res) => {
 
     console.log(`📥 Mensaje recibido de ${from} (${plataforma}): ${texto}`);
 
-    // Procesar mensaje
-    const respuesta = await procesarMensaje(texto, plataforma);
+    // 🚨 CORRECCIÓN CRÍTICA:
+    // AHORA procesarMensaje recibe:
+    // (texto, numeroCliente, plataforma)
+    const respuesta = await procesarMensaje(texto, from, plataforma);
 
     if (respuesta) {
       await sendMessage(from, respuesta, plataforma);
