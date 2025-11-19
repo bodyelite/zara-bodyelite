@@ -227,6 +227,8 @@ export async function procesarMensaje(texto, numero, plataforma) {
     const p = plan.principal;
     memoria[numero].ultimoPlan = p.nombre;
     guardarMemoria();
+    memoria[numero].ultimoPlan = p.nombre;
+    guardarMemoria();
     const a = plan.alternativa;
 
     let msg = `✨ El plan más recomendado es **${p.nombre}**.\n${p.desc ? p.desc + "\n" : ""}`;
@@ -239,6 +241,26 @@ export async function procesarMensaje(texto, numero, plataforma) {
   }
 
   /* PREGUNTA POR PRECIO */
+    if (memoria[numero] && memoria[numero].ultimoPlan) {
+      const plan = memoria[numero].ultimoPlan.toLowerCase();
+      const preciosDesde = {
+        "lipo express": "$432.000",
+        "lipo reductiva": "$480.000",
+        "lipo focalizada reductiva": "$348.800",
+        "lipo body elite": "$664.000",
+        "face antiage": "$281.600",
+        "face elite": "$358.400",
+        "face papada": "según diagnóstico",
+        "lipolítico facial": "según diagnóstico",
+        "push up": "$376.000",
+        "body tensor": "$232.000",
+        "body fitness": "$360.000",
+        "depilación full (dl900)": "$259.200"
+      };
+      if (preciosDesde[plan]) {
+        return "El plan **" + memoria[numero].ultimoPlan + "** parte desde **" + preciosDesde[plan] + "** 💙\nAgenda aquí tu diagnóstico:\n" + LINK;
+      }
+    }
   if (t.includes("precio") || t.includes("valor") || t.includes("cuanto vale")) {
     return `Los valores dependen del plan y la zona ✨\nAgenda tu diagnóstico para ver tu caso:\n${LINK}`;
   }
