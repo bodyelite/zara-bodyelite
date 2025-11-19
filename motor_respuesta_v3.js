@@ -30,7 +30,6 @@ function guardarMemoria() {
 const LINK =
   "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
-// SALUDO IG
 const SALUDO =
   "💙 Hola! Soy Zara 💫 Cuéntame, ¿qué zona quieres mejorar? abdomen, glúteos, rostro o depilación.";
 
@@ -43,14 +42,12 @@ const frasesAbdomen = [
   "rollo",
   "rollos",
   "rollito",
-  "papada abdominal",
   "panza",
   "abdomen",
   "cintura",
   "bajar guata",
   "bajar panza",
   "bajar abdomen",
-  "hacer abdomen",
 ];
 
 const frasesGluteos = [
@@ -64,7 +61,6 @@ const frasesGluteos = [
   "levantar poto",
   "quiero poto",
   "dar volumen",
-  "más glúteo",
 ];
 
 const frasesRostro = [
@@ -74,8 +70,9 @@ const frasesRostro = [
   "frente",
   "patas de gallo",
   "surcos",
-  "codigo de barras",
   "codigo",
+  "código",
+  "codigo de barras",
   "ojeras",
   "flacidez facial",
 ];
@@ -87,13 +84,12 @@ const frasesPiernasBrazos = [
   "flacidez brazos",
   "brazos flácidos",
   "piernas flácidas",
-  "brazos caídos",
 ];
 
 const frasesDepilacion = ["depilacion", "depilación", "depilar", "laser", "láser"];
 
 // ===============================================================
-// TRIGGERS DE INTENCIÓN
+// TRIGGERS AVANZADOS
 // ===============================================================
 
 const triggersExplicacion = [
@@ -118,9 +114,6 @@ const triggersExplicacion = [
   "sirve",
   "vale la pena",
   "realmente sirve",
-  "que tal",
-  "cómo actúa",
-  "como actua",
 ];
 
 const triggersSesiones = [
@@ -141,13 +134,21 @@ const triggersPrecio = [
   "porque tan caro",
 ];
 
+// TRIGGER BOTOX — NUEVO
+const triggersBotox = [
+  "botox",
+  "toxina",
+  "toxina facial",
+  "ponen botox",
+  "aplican botox",
+  "botoks",
+];
+
 // ===============================================================
-// PLANES + PRECIOS + SESIONES + EXPLICACIÓN REAL
-// (Definidos según tu tabla oficial + protocolos cargados)
+// PLANES + PRECIOS + SESIONES + EXPLICACIÓN
 // ===============================================================
 
 const precios = {
-  // Corporales
   "lipo focalizada reductiva": 348800,
   "lipo express": 432000,
   "lipo reductiva": 480000,
@@ -156,7 +157,6 @@ const precios = {
   "body fitness": 360000,
   "push up": 376000,
 
-  // Faciales
   "limpieza facial full": 120000,
   "rf facial": 60000,
   "face light": 128800,
@@ -169,12 +169,10 @@ const precios = {
   "face one": 152000,
   "face papada": 128800,
 
-  // Depilación
   depilacion: 259200,
 };
 
 const sesiones = {
-  // Corporales
   "lipo express": "6–8 sesiones",
   "lipo reductiva": "8 sesiones",
   "lipo focalizada reductiva": "6 sesiones",
@@ -183,7 +181,6 @@ const sesiones = {
   "body fitness": "6 sesiones",
   "body tensor": "6 sesiones",
 
-  // Faciales
   "face h12": "3 sesiones",
   "face one": "5 sesiones",
   "face light": "3 sesiones",
@@ -194,64 +191,60 @@ const sesiones = {
   "full face": "6 sesiones",
   "face papada": "6 sesiones",
 
-  // Depilación
   depilacion: "6 sesiones",
 };
 
 const explicacion = {
-  // Corporales
   "lipo express":
-    "✨ **Lipo Express** reduce abdomen, cintura y espalda con HIFU 12D (grasa profunda) + cavitación (rompe adipocitos) + radiofrecuencia (compacta y tensa). Resultados desde 2–3 semanas.",
+    "✨ **Lipo Express** reduce abdomen, cintura y espalda con HIFU 12D + Cavitación + RF compactante.",
   "lipo reductiva":
-    "✨ **Lipo Reductiva** moldea abdomen completo con HIFU 12D + Cavitación + RF. Ideal cuando hay grasa + flacidez combinada.",
+    "✨ **Lipo Reductiva** moldea abdomen completo usando HIFU 12D + Cavitación + RF.",
   "lipo focalizada reductiva":
-    "✨ **Lipo Focalizada** trabaja rollos pequeños con cavitación + radiofrecuencia localizada.",
+    "✨ **Lipo Focalizada** trabaja rollos pequeños con cavitación + radiofrecuencia.",
   "lipo body elite":
-    "✨ **Lipo Body Elite** es un protocolo premium que combina reducción profunda + tensado con HIFU 12D y RF avanzada.",
+    "✨ **Lipo Body Elite** combina reducción profunda + tensado premium con HIFU 12D.",
   "body tensor":
-    "✨ **Body Tensor** tensa y mejora firmeza en piernas/brazos con radiofrecuencia profunda.",
+    "✨ **Body Tensor** tensa la piel de piernas/brazos con radiofrecuencia profunda.",
   "body fitness":
-    "✨ **Body Fitness** tonifica glúteos/piernas/abdomen con ProSculpt (20.000 contracciones) + RF compactante.",
+    "✨ **Body Fitness** tonifica glúteos/piernas con ProSculpt + RF.",
   "push up":
-    "✨ **Push Up** da volumen real al glúteo con ProSculpt (20.000 contracciones por sesión) + HIFU 12D para tensar y proyectar.",
+    "✨ **Push Up** da volumen real con ProSculpt (20.000 contracciones) + HIFU 12D tensado.",
 
-  // Faciales
   "limpieza facial full":
-    "✨ **Limpieza Facial Full**: limpieza profunda + extracción + aparatología suave.",
+    "✨ **Limpieza Facial Full** limpia en profundidad + extracción.",
   "rf facial":
-    "✨ **RF Facial** mejora firmeza, tono y textura con radiofrecuencia profunda.",
+    "✨ **RF Facial** mejora firmeza, textura y tono.",
   "face light":
-    "✨ **Face Light**: protocolo suave para textura, brillo y líneas finas.",
+    "✨ **Face Light** trabaja brillo + textura + líneas finas.",
   "face smart":
     "✨ **Face Smart** combina LFP + Pink Glow + RF + HIFU 12D suave.",
   "face inicia":
-    "✨ **Face Inicia** trabaja líneas, firmeza y luminosidad con un mix completo de RF + Pink Glow + HIFU 12D.",
+    "✨ **Face Inicia** trabaja arrugas, firmeza y luminosidad.",
   "face antiage":
-    "✨ **Face Antiage** suaviza arrugas, líneas y flacidez con HIFU 12D + radiofrecuencia + toxina ligera según necesidad.",
+    "✨ **Face Antiage** suaviza arrugas + líneas con HIFU 12D + RF.",
   "face elite":
-    "✨ **Face Elite** es un lifting no invasivo completo con HIFU 12D + Pink Glow + RF + Toxina según evaluación.",
+    "✨ **Face Elite** es un lifting no invasivo completo con HIFU 12D + RF + toxina según evaluación.",
   "full face":
-    "✨ **Full Face** combina controles faciales + RF + Pink Glow + Toxina + HIFU 12D en un protocolo integral.",
+    "✨ **Full Face** combina RF + Pink Glow + Toxina + HIFU 12D en un protocolo integral.",
   "face h12":
     "✨ **Face H12** es un lifting suave con HIFU 12D focal + RF.",
   "face one":
     "✨ **Face One** combina RF + HIFU 12D + Exosomas.",
   "face papada":
-    "✨ **Face Papada** reduce grasa + define contorno con HIFU 12D + Lipolítico facial.",
+    "✨ **Face Papada** reduce grasa + define contorno con HIFU 12D + lipolítico facial.",
 
-  // Depilación
   depilacion:
-    "✨ **Depilación Láser DL900** elimina el vello desde la raíz con tecnología diodo original, rápida y segura.",
+    "✨ **Depilación Láser DL900** elimina el vello desde la raíz con tecnología diodo original.",
 };
 
 // ===============================================================
-// DETECTAR PLAN SEGÚN EL MENSAJE
+// DETECTAR PLAN
 // ===============================================================
 
 function detectarPlan(msg) {
   msg = msg.toLowerCase();
 
-  // campañas: si el usuario parte diciendo "push up", "lipo express", etc.
+  // campañas
   for (const p of Object.keys(precios)) {
     if (msg.includes(p)) return p;
   }
@@ -272,20 +265,20 @@ function detectarPlan(msg) {
 
 function respPrecio(plan) {
   if (!precios[plan])
-    return `Los valores dependen del plan y la zona 💙\nAgenda aquí:\n${LINK}`;
+    return `Los valores dependen del plan 💙\nAgenda aquí:\n${LINK}`;
   return `El plan **${capital(plan)}** parte desde **$${precios[
     plan
   ].toLocaleString("es-CL")}** 💙\nAgenda aquí:\n${LINK}`;
 }
 
 function respSesiones(plan) {
-  return `El plan **${capital(plan)}** suele requerir **${
+  return `El plan **${capital(plan)}** suele necesitar **${
     sesiones[plan] || "sesiones según evaluación"
-  }**.\nEn tu diagnóstico vemos exactamente lo que necesitas 💙\nAgenda aquí:\n${LINK}`;
+  }**.\nEn tu diagnóstico vemos exactamente lo que necesitas 💙\nAgenda:\n${LINK}`;
 }
 
-function respDuele(plan) {
-  return `No duele 💙\nPuedes sentir calor o contracciones dependiendo del plan, pero nada doloroso.\nAgenda aquí:\n${LINK}`;
+function respDuele() {
+  return `No duele 💙\nPuedes sentir calor o contracciones según el plan, pero nada doloroso.\nAgenda aquí:\n${LINK}`;
 }
 
 function respExplic(plan) {
@@ -296,12 +289,16 @@ function respPlan(plan) {
   return `${explicacion[plan]}\n\nAgenda aquí:\n${LINK}`;
 }
 
+// RESPUESTA BOTOX — NUEVO
+function respBotox() {
+  return `💙 Sí, aplicamos toxina facial para arrugas de expresión.\nLa dosis exacta se define en tu evaluación.\n\nAgenda aquí:\n${LINK}`;
+}
+
 // ===============================================================
-// CONTROL DE LINKS Y LLAMADA
+// CONTROL LINKS + LLAMADA
 // ===============================================================
 
 function controlarLinks(numero) {
-  if (!memoria[numero]) memoria[numero] = {};
   if (!memoria[numero].links) memoria[numero].links = 0;
   memoria[numero].links++;
   guardarMemoria();
@@ -319,14 +316,18 @@ function controlarLinks(numero) {
 export function procesarMensaje(texto, numero, plataforma) {
   const msg = texto.toLowerCase().trim();
 
-  // Inicializar memoria del usuario
   if (!memoria[numero]) memoria[numero] = {};
 
-  // SALUDO ÚNICO
+  // SALUDO único
   if (!memoria[numero].saludo) {
     memoria[numero].saludo = true;
     guardarMemoria();
     return SALUDO;
+  }
+
+  // BOTOX — NUEVO
+  if (triggersBotox.some((x) => msg.includes(x))) {
+    return respBotox();
   }
 
   // PRECIO
@@ -340,13 +341,12 @@ export function procesarMensaje(texto, numero, plataforma) {
   if (triggersSesiones.some((x) => msg.includes(x))) {
     const plan = memoria[numero].plan;
     if (plan) return respSesiones(plan);
-    return `En el diagnóstico definimos cuántas necesitas 💙\nAgenda aquí:\n${LINK}`;
+    return `En tu diagnóstico vemos cuántas sesiones necesitas 💙\nAgenda aquí:\n${LINK}`;
   }
 
   // DUELE
   if (msg.includes("duele")) {
-    const plan = memoria[numero].plan;
-    return respDuele(plan);
+    return respDuele();
   }
 
   // EXPLICACIÓN
@@ -362,8 +362,8 @@ export function procesarMensaje(texto, numero, plataforma) {
     memoria[numero].plan = plan;
     guardarMemoria();
 
-    const ofertaLlamada = controlarLinks(numero);
-    if (ofertaLlamada) return ofertaLlamada;
+    const oferta = controlarLinks(numero);
+    if (oferta) return oferta;
 
     return respPlan(plan);
   }
@@ -373,9 +373,6 @@ export function procesarMensaje(texto, numero, plataforma) {
 }
 
 // ===============================================================
-// UTILS
-// ===============================================================
-
 function capital(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
