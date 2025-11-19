@@ -229,6 +229,8 @@ export async function procesarMensaje(texto, numero, plataforma) {
     guardarMemoria();
     memoria[numero].ultimoPlan = p.nombre;
     guardarMemoria();
+    memoria[numero].ultimoPlan = p.nombre;
+    guardarMemoria();
     const a = plan.alternativa;
 
     let msg = `✨ El plan más recomendado es **${p.nombre}**.\n${p.desc ? p.desc + "\n" : ""}`;
