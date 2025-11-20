@@ -3,6 +3,9 @@
 // Bloque 1/8
 
 export function procesarMensaje(texto, numero, plataforma) {
+  if (mensajeRepetido(texto, memoria[numero])) {
+    return "💙 Te leo, ¿quieres que revisemos tu diagnóstico gratuito?";
+  }
   // ANTI-REPETICION
   if (mensajeRepetido(texto, memoria[numero])) {
     return "💙 Te leo, ¿quieres que revisemos tu diagnóstico gratuito?";
@@ -348,14 +351,13 @@ responderBotox = function() {
 
 // ========== ANTI-REPETICIÓN ==========
 
+
+
+// ===== FUNCIÓN ANTI-REPETICIÓN CORREGIDA =====
+function mensajeRepetido(texto, mem) {
+  if (!mem) return false;
   if (mem.ultima_interaccion === texto) return true;
   mem.ultima_interaccion = texto;
-  guardarMem();
+  fs.writeFileSync(memoriaPath, JSON.stringify(memoria, null, 2));
   return false;
 }
-
-
-// ========== INTEGRAR ANTI-REPETICIÓN ==========
-
-}
-
