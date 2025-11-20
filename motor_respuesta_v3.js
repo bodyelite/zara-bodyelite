@@ -373,6 +373,28 @@ function esSaludoInicial(texto) {
 }
 
 function respuestaSaludo() {
+
+function despedidaSiCorresponde(texto, mem) {
+  const t = normalizar(texto);
+  const agradecimientos = [
+    "gracias","vale","perfecto","ok gracias","gracias zara","dale gracias","muchas gracias","super","súper","ya gracias"
+  ];
+  if (agradecimientos.some(x => t.includes(x)) && !mem.numero_pendiente && !mem.llamada_ofrecida) {
+    return `💙 Me alegra ayudarte.nSi quieres avanzar, aquí tienes tu diagnóstico gratuito para revisar tu caso con calma:nn${LINK}nnQuedo atenta a lo que necesites 😊`;
+  }
+  return null;
+}
+
+function despedidaSiCorresponde(texto, mem) {
+  const t = normalizar(texto);
+  const agradecimientos = [
+    "gracias","vale","perfecto","ok gracias","gracias zara","dale gracias","muchas gracias","super","súper","ya gracias"
+  ];
+  if (agradecimientos.some(x => t.includes(x)) && !mem.numero_pendiente && !mem.llamada_ofrecida) {
+    return `💙 Me alegra ayudarte.nSi quieres avanzar, aquí tienes tu diagnóstico gratuito para revisar tu caso con calma:nn${LINK}nnQuedo atenta a lo que necesites 😊`;
+  }
+  return null;
+}
   return `💙 Soy Zara de Body Elite.
 
 Cuéntame, ¿qué zona te gustaría trabajar? abdomen, glúteos, rostro, papada, piernas, brazos o depilación.`;
@@ -422,6 +444,8 @@ export function procesarMensaje(texto, numero, plataforma = "wsp") {
   const intencion = detectarIntencion(texto);
   const llamada = manejarFlujoLlamada(texto, mem);
   if (llamada) { guardarMemoria(); return llamada; }
+  if (despedida) { guardarMemoria(); return despedida; }
+  if (despedida) { guardarMemoria(); return despedida; }
 
   let respuestaBase = "";
 
@@ -492,10 +516,10 @@ function manejarFlujoLlamada(texto, mem) {
         `📞 Nueva solicitud de llamada:\nCliente: ${numeroCliente}\nMotivo: asistencia en tratamiento.`
       );
 
-      mem.numero_pendiente = false;
+      mem.numero_pendiente = false; mem.numero_cliente = numeroCliente;
       guardarMemoria();
 
-      return "Perfecto 💙 Una de nuestras profesionales te llamará en horario laboral.";
+      return "Perfecto 💙 Una de nuestras profesionales te llamará en horario laboral 💙 Cualquier cosita estaré por aquí para ayudarte 😊";
     }
   }
 
