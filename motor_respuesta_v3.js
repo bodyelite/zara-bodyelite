@@ -1,3 +1,4 @@
+import { sendMessage } from "./sendMessage.js";
 // motor_respuesta_v3.js — Versión limpia y estable Zara 2.1 (WSP + IG)
 // ESM module (import/export) compatible con server.js
 
@@ -419,6 +420,8 @@ export function procesarMensaje(texto, numero, plataforma = "wsp") {
 
   // Detectar intención
   const intencion = detectarIntencion(texto);
+  const llamada = manejarFlujoLlamada(texto, mem);
+  if (llamada) { guardarMemoria(); return llamada; }
 
   let respuestaBase = "";
 
@@ -449,3 +452,53 @@ Cuéntame qué deseas mejorar: abdomen, glúteos, rostro, papada, piernas, brazo
   guardarMemoria();
   return final;
 }
+// ====================== FLUJO COMPLETO DE LLAMADA (OPCIÓN 2) ======================
+
+function manejarFlujoLlamada(texto, mem) {
+  const t = normalizar(texto);
+
+  const confirmaciones = [
+    "si", "sí", "ok", "dale", "de acuerdo",
+    "llamame", "llámame", "quiero llamada",
+    "si quiero", "sí quiero", "hagamos la llamada",
+    "por favor llamen", "llamado"
+  ];
+
+  // Si Zara ya ofreció la llamada → confirmación
+  if (mem.llamada_ofrecida && !mem.numero_pendiente) {
+    if (confirmaciones.some(x => t.includes(x))) {
+      mem.numero_pendiente = true;
+      guardarMemoria();
+      return "Perfecto 💙 ¿Me compartes tu número para que te llamemos?";
+    }
+  }
+
+  // Si ya está pendiente el número → detectar número
+  if (mem.numero_pendiente) {
+    const numeroDetectado =
+      texto.match(/(\+?56\s?9\s?\d{4}\s?\d{4})/g) ||
+      texto.match(/(9\d{7,8})/g);
+
+    if (numeroDetectado) {
+      const numeroCliente = numeroDetectado[0].replace(/\s+/g, "");
+
+      sendMessage(
+        "+56983300262",
+        `📞 Nueva solicitud de llamada:\nCliente: ${numeroCliente}\nMotivo: asistencia en tratamiento.`
+      );
+
+      sendMessage(
+        "+56937648536",
+        `📞 Nueva solicitud de llamada:\nCliente: ${numeroCliente}\nMotivo: asistencia en tratamiento.`
+      );
+
+      mem.numero_pendiente = false;
+      guardarMemoria();
+
+      return "Perfecto 💙 Una de nuestras profesionales te llamará en horario laboral.";
+    }
+  }
+
+  return null;
+}
+
