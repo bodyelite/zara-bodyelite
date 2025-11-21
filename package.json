@@ -1,7 +1,7 @@
 {
   "name": "zara-bodyelite",
   "version": "2.1.0",
-  "description": "Motor conversacional Zara 2.1 para Body Elite (WhatsApp + Instagram)",
+  "description": "Motor conversacional Zara 2.1 para Body Elite (WhatsApp + IG)",
   "type": "module",
   "main": "server.js",
   "scripts": {

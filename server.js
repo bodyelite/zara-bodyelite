@@ -11,8 +11,11 @@ app.use(bodyParser.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_ID = process.env.PHONE_ID;
 
-// =============== VERIFICACION (GET) ===============
+// =======================================
+// VERIFICACION WEBHOOK (GET)
+// =======================================
 app.get("/webhook", (req, res) => {
   try {
     const mode = req.query["hub.mode"];
@@ -22,24 +25,22 @@ app.get("/webhook", (req, res) => {
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
       return res.status(200).send(challenge);
     } else {
-      return res.status(403).send("Invalid verify token");
+      return res.sendStatus(403);
     }
-  } catch (e) {
-    return res.status(500).send("Webhook verification error");
+  } catch {
+    return res.sendStatus(500);
   }
 });
 
-// =============== RECEPCION (POST) ===============
+// =======================================
+// RECEPCION DE MENSAJES (POST)
+// =======================================
 app.post("/webhook", async (req, res) => {
   try {
+    res.sendStatus(200); // responder inmediatamente
+
     const body = req.body;
-
-    // Confirmación inmediata
-    res.sendStatus(200);
-
-    if (!body || !body.entry || !body.entry[0] || !body.entry[0].changes) {
-      return;
-    }
+    if (!body.entry || !body.entry[0].changes) return;
 
     const changes = body.entry[0].changes;
 
@@ -50,10 +51,9 @@ app.post("/webhook", async (req, res) => {
       const from = message.from;
       const text = message.text ? message.text.body : null;
 
-      if (!text || !from) continue;
+      if (!from || !text) continue;
 
-      const plataforma = c.field === "messages" ? "wsp" : "ig";
-      const respuesta = procesarMensaje(text, from, plataforma);
+      const respuesta = procesarMensaje(text, from, "wsp");
 
       await enviarMensajeWhatsApp(from, respuesta);
     }
@@ -62,21 +62,23 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// =============== ENVIO DE MENSAJES ===============
-async function enviarMensajeWhatsApp(to, texto) {
+// =======================================
+// ENVIO DE MENSAJES
+// =======================================
+async function enviarMensajeWhatsApp(to, mensaje) {
   try {
-    const url = "https://graph.facebook.com/v17.0/" + process.env.PHONE_ID + "/messages";
+    const url = `https://graph.facebook.com/v17.0/${PHONE_ID}/messages`;
 
     const payload = {
       messaging_product: "whatsapp",
       to: to,
-      text: { body: texto }
+      text: { body: mensaje }
     };
 
     await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + WHATSAPP_TOKEN,
+        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
@@ -86,7 +88,9 @@ async function enviarMensajeWhatsApp(to, texto) {
   }
 }
 
-// =============== SERVIDOR ===============
+// =======================================
+// SERVIDOR
+// =======================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Servidor Zara activo en puerto " + PORT);
