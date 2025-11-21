@@ -2,14 +2,14 @@ import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
-import { procesarMensaje } from "./motor_respuesta_v3.js";
+import motor from "./motor_respuesta_v3.js";   // <── CAMBIO CLAVE
 
 dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
-// Usamos las MISMAS variables que ya tienes en Render y en tu .env
+// Variables desde Render
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
 });
 
 // ============================
-// Verificación de Webhook (GET)
+// Verificación Webhook (GET)
 // ============================
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
@@ -36,13 +36,12 @@ app.get("/webhook", (req, res) => {
 });
 
 // ============================
-// Webhook (POST) desde WhatsApp
+// Webhook WhatsApp (POST)
 // ============================
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
 
-    // Mismo chequeo que tu versión vieja
     if (body.object === "whatsapp_business_account") {
       const entry = body.entry?.[0];
       const changes = entry?.changes?.[0];
@@ -54,19 +53,19 @@ app.post("/webhook", async (req, res) => {
       if (texto && usuario) {
         console.log("MENSAJE RECIBIDO:", texto);
 
-        // Nuestro motor nuevo usa (texto, numero)
-        const respuesta = procesarMensaje(texto, usuario);
+        // Motor nuevo usa motor(texto, usuario)
+        const respuesta = motor(texto, usuario);
+
         console.log("RESPUESTA GENERADA:", respuesta);
 
         if (respuesta) {
           await enviarMensajeWhatsApp(usuario, respuesta);
         }
       }
-
       return res.sendStatus(200);
-    } else {
-      return res.sendStatus(404);
     }
+
+    return res.sendStatus(404);
   } catch (error) {
     console.error("Error en webhook:", error);
     return res.sendStatus(500);
