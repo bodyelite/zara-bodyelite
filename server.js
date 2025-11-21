@@ -13,9 +13,9 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.PHONE_ID;
 
-// =======================================
-// VERIFICACION WEBHOOK (GET)
-// =======================================
+// ======================================================
+// VERIFICACIÓN DEL WEBHOOK (GET)
+// ======================================================
 app.get("/webhook", (req, res) => {
   try {
     const mode = req.query["hub.mode"];
@@ -27,52 +27,76 @@ app.get("/webhook", (req, res) => {
     } else {
       return res.sendStatus(403);
     }
-  } catch {
+  } catch (err) {
+    console.error("ERROR en verificación:", err);
     return res.sendStatus(500);
   }
 });
 
-// =======================================
-// RECEPCION DE MENSAJES (POST)
-// =======================================
+// ======================================================
+// RECEPCIÓN DEL WEBHOOK (POST)
+// ======================================================
 app.post("/webhook", async (req, res) => {
   try {
-    res.sendStatus(200); // responder inmediatamente
+    // Meta necesita respuesta inmediata
+    res.sendStatus(200);
 
     const body = req.body;
-    if (!body.entry || !body.entry[0].changes) return;
+    if (!body.entry || !body.entry[0] || !body.entry[0].changes) return;
 
     const changes = body.entry[0].changes;
 
     for (const c of changes) {
-      if (!c.value || !c.value.messages) continue;
+      const value = c.value;
+      if (!value) continue;
 
-      const message = c.value.messages[0];
-      const from = message.from;
-      const text = message.text ? message.text.body : null;
+      // ======================================================
+      // NORMALIZACIÓN DE MENSAJES (Meta cambia formatos)
+      // ======================================================
+      const messages =
+        value.messages ||
+        value.message ||
+        value?.statuses ||
+        null;
 
-      if (!from || !text) continue;
+      if (!messages || !messages[0]) continue;
 
-      const respuesta = procesarMensaje(text, from, "wsp");
+      const msg = messages[0];
 
+      // SOLO PROCESAMOS MENSAJES DE USUARIO (no status ni delivery)
+      if (msg.type !== "text" && !msg.text) continue;
+
+      const from = msg.from;
+      const texto = msg.text ? msg.text.body : null;
+
+      if (!from || !texto) continue;
+
+      // ======================================================
+      // PROCESAR MENSAJE CON EL MOTOR
+      // ======================================================
+      const respuesta = procesarMensaje(texto, from, "wsp");
+
+      // ======================================================
+      // RESPONDER AL USUARIO
+      // ======================================================
       await enviarMensajeWhatsApp(from, respuesta);
     }
-  } catch (e) {
-    console.error("ERROR en webhook:", e);
+  } catch (err) {
+    console.error("ERROR en webhook:", err);
   }
 });
 
-// =======================================
-// ENVIO DE MENSAJES
-// =======================================
-async function enviarMensajeWhatsApp(to, mensaje) {
+// ======================================================
+// FUNCIÓN DE ENVÍO DE MENSAJES
+// ======================================================
+async function enviarMensajeWhatsApp(destino, texto) {
   try {
     const url = `https://graph.facebook.com/v17.0/${PHONE_ID}/messages`;
 
     const payload = {
       messaging_product: "whatsapp",
-      to: to,
-      text: { body: mensaje }
+      to: destino,
+      text: { body: texto }
     };
 
     await fetch(url, {
@@ -83,14 +107,14 @@ async function enviarMensajeWhatsApp(to, mensaje) {
       },
       body: JSON.stringify(payload)
     });
-  } catch (e) {
-    console.error("ERROR enviando mensaje:", e);
+  } catch (err) {
+    console.error("ERROR al enviar mensaje:", err);
   }
 }
 
-// =======================================
-// SERVIDOR
-// =======================================
+// ======================================================
+// LEVANTAR SERVIDOR
+// ======================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Servidor Zara activo en puerto " + PORT);
