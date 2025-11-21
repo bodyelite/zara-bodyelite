@@ -1,260 +1,159 @@
-// motor_respuesta_v3.js FINAL LIMPIO
-// Zara Body Elite v3.5 – Motor refinado completo
+// ============================
+// MOTOR DE RESPUESTAS ZARA V3
+// ============================
 
-import { sendMessage } from "./sendMessage.js";
-import fs from "fs";
-import path from "path";
-
-// =============== MEMORIA ===============
-const memoriaPath = path.resolve("./memoria_usuarios.json");
-let memoria = {};
-
-try {
-  const data = fs.readFileSync(memoriaPath, "utf8");
-  memoria = JSON.parse(data);
-} catch {
-  memoria = {};
+// CTA global
+function CTA() {
+  return "Reserva aquí tu diagnóstico gratuito:\nhttps://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
 }
 
-function guardarMemoria() {
-  fs.writeFileSync(memoriaPath, JSON.stringify(memoria, null, 2));
-}
-
-// =============== CTA ===============
-const LINK =
-  "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
-const CTA = () => `Reserva ahora:
-${LINK}`;
-
-// =============== PLANES ===============
-const PLANES = {
-  "lipo express": {
-    precio: 432000,
-    sesiones: "6–8 sesiones",
-    explicacion:
-      "Reduce grasa de abdomen, cintura y espalda con HIFU 12D + cavitación + radiofrecuencia compactante.",
-  },
-  "push up": {
-    precio: 376000,
-    sesiones: "6–8 sesiones",
-    explicacion:
-      "Levanta, afirma y proyecta glúteos con Pro Sculpt + HIFU 12D.",
-  },
-  "body fitness": {
-    precio: 360000,
-    sesiones: "6 sesiones",
-    explicacion:
-      "Tonifica piernas y glúteos con Pro Sculpt + radiofrecuencia compactante.",
-  },
-  "body tensor": {
-    precio: 232000,
-    sesiones: "6 sesiones",
-    explicacion:
-      "Tensa brazos y piernas con RF profunda + compactación.",
-  },
-  "face antiage": {
-    precio: 281600,
-    sesiones: "6 sesiones",
-    explicacion: "Reafirma y suaviza arrugas con HIFU 12D + radiofrecuencia.",
-  },
-  "face papada": {
-    precio: 313600,
-    sesiones: "6 sesiones",
-    explicacion: "Reduce grasa submentoniana con HIFU 12D.",
-  },
-  depilacion: {
-    precio: 259200,
-    sesiones: "6 sesiones",
-    explicacion:
-      "Depilación láser DL900, alta potencia y apto para vello fino y rubio claro.",
-  },
-};
-
-// =============== DETECCIÓN ===============
-const ZONAS = {
-  abdomen: ["abdomen", "guata", "panza", "rollo", "cintura", "espalda"],
-  gluteos: ["gluteo", "glúteo", "poto", "nalgas", "push up"],
-  papada: ["papada", "menton"],
-  arrugas: ["arrugas", "patas de gallo", "frente", "entrecejo"],
-  piernas: ["piernas", "muslos"],
-  brazos: ["brazos", "alas"],
-  depilacion: ["pelos", "vello", "depilacion", "laser"],
-};
-
-function norm(t) {
-  return t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-}
-
-function detectarZona(t) {
-  t = norm(t);
-  if (ZONAS.abdomen.some((x) => t.includes(x))) return "lipo express";
-  if (ZONAS.gluteos.some((x) => t.includes(x))) return "push up";
-  if (ZONAS.papada.some((x) => t.includes(x))) return "face papada";
-  if (ZONAS.arrugas.some((x) => t.includes(x))) return "face antiage";
-  if (ZONAS.piernas.some((x) => t.includes(x))) return "body tensor";
-  if (ZONAS.brazos.some((x) => t.includes(x))) return "body tensor";
-  if (ZONAS.depilacion.some((x) => t.includes(x))) return "depilacion";
-  return null;
-}
-
-function detectarCampania(t) {
-  t = norm(t);
-  return Object.keys(PLANES).find((p) => t.includes(p)) || null;
-}
-
-const INTENCIONES = {
-  explicacion: ["en que consiste", "como funciona", "que es"],
-  precio: ["precio", "valor", "cuanto vale", "cuanto cuesta"],
-  sesiones: ["cuantas sesiones", "duracion", "cuanto dura"],
-  dolor: ["duele", "dolor"],
-};
-
-function detectarIntencion(t) {
-  t = norm(t);
-  for (const key in INTENCIONES) {
-    if (INTENCIONES[key].some((x) => t.includes(x))) return key;
-  }
-  return null;
-}
-
-// =============== ANTI-REPETICION ===============
-function repetido(texto, mem) {
-  const t = norm(texto);
-  if (mem.ultima === t) return true;
-  mem.ultima = t;
-  return false;
-}
-
-// =============== LLAMADA ===============
-function manejarLlamada(texto, mem) {
-  const t = norm(texto);
-
-  if (mem.pidiendo_numero) {
-    const n =
-      texto.match(/(\+?56\s?9\s?\d{4}\s?\d{4})/) ||
-      texto.match(/(9\d{7,8})/);
-
-    if (n) {
-      const numero = n[0].replace(/\s+/g, "");
-      sendMessage("+56983300262", "Solicitud de llamada: " + numero);
-      sendMessage("+56937648536", "Solicitud de llamada: " + numero);
-      mem.pidiendo_numero = false;
-      guardarMemoria();
-      return "Perfecto. Te llamaremos en horario laboral.";
-    }
-  }
-
-  if (mem.ofrecer_llamada) {
-    if (["si", "sí", "dale", "ok", "llamame"].some((x) => t.includes(x))) {
-      mem.pidiendo_numero = true;
-      guardarMemoria();
-      return "¿Me compartes tu número?";
-    }
-  }
-
-  return null;
-}
-
-// =============== SALUDO ===============
-function esSaludo(t) {
-  return ["hola", "hola!", "buenas", "holaa"].includes(norm(t));
-}
-
-function saludo() {
+// Mensaje inicial (hola / saludo)
+function rSaludo() {
   return (
-    "💙 Soy Zara de Body Elite.
-
-¿En qué zona quieres trabajar? abdomen, glúteos, rostro, papada, piernas, brazos o depilación."
-  );
-}
-
-// =============== RESPUESTAS ===============
-function rExp(plan) {
-  return PLANES[plan].explicacion + "
-
-" + CTA();
-}
-function rPrecio(plan) {
-  return (
-    "El plan parte desde $" +
-    PLANES[plan].precio.toLocaleString("es-CL") +
-    ".
-
-" +
+    "💙 Soy Zara de Body Elite.\n" +
+    "¿En qué zona te gustaría trabajar? abdomen, glúteos, rostro, papada, piernas, brazos o depilación.\n\n" +
     CTA()
   );
 }
+
+// Planes
+const PLANES = {
+  "lipo express": {
+    descripcion:
+      "🔥 Lipo Express reduce abdomen, cintura y espalda con HIFU 12D + cavitación + radiofrecuencia compactante.",
+    sesiones: "Generalmente entre 4 y 8 sesiones dependiendo del punto de partida.",
+    precio: "Desde $432.000 el plan.",
+  },
+  "push up": {
+    descripcion:
+      "🍑 Push Up levanta, proyecta y reafirma glúteos con Pro Sculpt + HIFU 12D + radiofrecuencia.",
+    sesiones: "De 6 a 12 sesiones según firmeza y volumen.",
+    precio: "Planes desde $360.000.",
+  },
+  "body fitness": {
+    descripcion:
+      "💪 Body Fitness define cintura, abdomen y piernas con Pro Sculpt + cavitación + radiofrecuencia.",
+    sesiones: "Entre 6 y 10 sesiones.",
+    precio: "Planes desde $390.000.",
+  },
+};
+
+// Respuesta a “¿qué es…?” o “¿en qué consiste?”
+function rConsiste(plan) {
+  plan = plan.toLowerCase();
+  if (PLANES[plan]) {
+    return (
+      PLANES[plan].descripcion +
+      "\n\n" +
+      "¿Quieres que revisemos cuántas sesiones necesitas según tu caso?\n" +
+      CTA()
+    );
+  }
+  return null;
+}
+
+// Respuesta a precios
+function rPrecio(plan) {
+  plan = plan.toLowerCase();
+  if (PLANES[plan]) {
+    return (
+      PLANES[plan].precio +
+      "\n\n" +
+      "Para darte el valor exacto según tu cuerpo:\n" +
+      CTA()
+    );
+  }
+  return null;
+}
+
+// Respuesta sesiones
 function rSesiones(plan) {
-  return "Generalmente requiere " + PLANES[plan].sesiones + ".
-
-" + CTA();
+  plan = plan.toLowerCase();
+  if (PLANES[plan]) {
+    return (
+      PLANES[plan].sesiones +
+      "\n\n" +
+      "Lo más preciso es evaluarte con diagnóstico:\n" +
+      CTA()
+    );
+  }
+  return null;
 }
-function rDolor() {
-  return "No duele, solo se siente calor o vibración según la tecnología.
 
-" + CTA();
+// Depilación
+function rDepilacion(zona) {
+  return (
+    "⚡ La depilación láser funciona excelente en " +
+    zona +
+    ".\nUsamos tecnología SHR segura para todos los tipos de piel.\n\n" +
+    CTA()
+  );
 }
 
-// =============== MOTOR PRINCIPAL ===============
-export function procesarMensaje(texto, numero) {
-  if (!memoria[numero]) {
-    memoria[numero] = {
-      ultima: null,
-      plan: null,
-      links: 0,
-      ofrecer_llamada: false,
-      pidiendo_numero: false,
-    };
+// Motor principal
+export default function motor(texto) {
+  const t = texto.toLowerCase();
+
+  // SALUDO
+  if (t.includes("hola") || t.includes("buenas") || t.includes("holi")) {
+    return rSaludo();
   }
 
-  const mem = memoria[numero];
-
-  if (repetido(texto, mem)) {
-    guardarMemoria();
-    return "💙 Te entiendo.
-¿Quieres el link nuevamente?";
+  // PREGUNTAS GENERALES POR PLANES
+  if (t.includes("lipo express")) {
+    if (t.includes("cuánto") || t.includes("vale") || t.includes("precio")) {
+      return rPrecio("lipo express");
+    }
+    if (t.includes("sesion") || t.includes("sesiones") || t.includes("cuantas")) {
+      return rSesiones("lipo express");
+    }
+    if (t.includes("consiste") || t.includes("qué es") || t.includes("funciona")) {
+      return rConsiste("lipo express");
+    }
+    return rConsiste("lipo express");
   }
 
-  if (!mem.plan && esSaludo(texto)) {
-    guardarMemoria();
-    return saludo();
+  if (t.includes("push up")) {
+    if (t.includes("cuánto") || t.includes("vale") || t.includes("precio")) {
+      return rPrecio("push up");
+    }
+    if (t.includes("sesion") || t.includes("sesiones") || t.includes("cuantas")) {
+      return rSesiones("push up");
+    }
+    if (t.includes("consiste") || t.includes("qué es") || t.includes("funciona")) {
+      return rConsiste("push up");
+    }
+    return rConsiste("push up");
   }
 
-  let plan =
-    detectarCampania(texto) || detectarZona(texto) || mem.plan;
-
-  if (plan) mem.plan = plan;
-
-  const llamada = manejarLlamada(texto, mem);
-  if (llamada) {
-    guardarMemoria();
-    return llamada;
+  if (t.includes("body fitness")) {
+    if (t.includes("cuánto") || t.includes("vale") || t.includes("precio")) {
+      return rPrecio("body fitness");
+    }
+    if (t.includes("sesion") || t.includes("sesiones") || t.includes("cuantas")) {
+      return rSesiones("body fitness");
+    }
+    if (t.includes("consiste") || t.includes("qué es") || t.includes("funciona")) {
+      return rConsiste("body fitness");
+    }
+    return rConsiste("body fitness");
   }
 
-  const intencion = detectarIntencion(texto);
-
-  let r = "";
-
-  if (plan) {
-    if (intencion === "explicacion") r = rExp(plan);
-    else if (intencion === "precio") r = rPrecio(plan);
-    else if (intencion === "sesiones") r = rSesiones(plan);
-    else if (intencion === "dolor") r = rDolor();
-    else r = rExp(plan);
-  } else {
-    guardarMemoria();
-    return "💙 Para ayudarte mejor, dime la zona que deseas trabajar.";
+  // DEPILACIÓN
+  if (t.includes("depilación") || t.includes("depilacion") || t.includes("láser") || t.includes("laser")) {
+    let zona = "la zona que necesitas";
+    if (t.includes("pierna")) zona = "piernas";
+    if (t.includes("axila")) zona = "axilas";
+    if (t.includes("bikini")) zona = "bikini";
+    if (t.includes("brazo")) zona = "brazos";
+    if (t.includes("rostro") || t.includes("cara")) zona = "rostro";
+    return rDepilacion(zona);
   }
 
-  mem.links += 1;
-
-  if (mem.links >= 3 && !mem.ofrecer_llamada) {
-    mem.ofrecer_llamada = true;
-    r += "
-
-Si prefieres, puedo llamarte. ¿Quieres que te llame?";
-  }
-
-  guardarMemoria();
-  return r;
+  // FALLBACK
+  return (
+    "💬 No logré entender exactamente tu consulta, pero puedo ayudarte.\n" +
+    "¿Qué zona te gustaría mejorar?\n\n" +
+    CTA()
+  );
 }
