@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 import { procesarMensaje } from "./motor_respuesta_v3.js";
 
 dotenv.config();
@@ -9,13 +9,21 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
+// Usamos las MISMAS variables que ya tienes en Render y en tu .env
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_ID = process.env.PHONE_ID;
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-// ======================================================
-// VERIFICACIÓN DEL WEBHOOK
-// ======================================================
+// ============================
+// Endpoint básico para prueba
+// ============================
+app.get("/", (req, res) => {
+  res.status(200).send("Zara 2.1 corriendo en puerto 3000");
+});
+
+// ============================
+// Verificación de Webhook (GET)
+// ============================
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -27,72 +35,54 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
-// ======================================================
-// RECEPCIÓN DE MENSAJES (POST)
-// ======================================================
+// ============================
+// Webhook (POST) desde WhatsApp
+// ============================
 app.post("/webhook", async (req, res) => {
-  res.sendStatus(200);
-
   try {
-    const entry = req.body.entry?.[0];
-    const change = entry?.changes?.[0];
-    const value = change?.value;
-    if (!value) return;
+    const body = req.body;
 
-    // Meta cambia contenedores constantemente → normalizamos
-    const messages =
-      value.messages ||
-      value.message ||
-      value.text ||
-      value.interactive ||
-      value.button ||
-      null;
+    // Mismo chequeo que tu versión vieja
+    if (body.object === "whatsapp_business_account") {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const value = changes?.value;
+      const mensaje = value?.messages?.[0];
+      const texto = mensaje?.text?.body;
+      const usuario = mensaje?.from;
 
-    if (!messages || !messages[0]) return;
+      if (texto && usuario) {
+        console.log("MENSAJE RECIBIDO:", texto);
 
-    const msg = messages[0];
+        // Nuestro motor nuevo usa (texto, numero)
+        const respuesta = procesarMensaje(texto, usuario);
+        console.log("RESPUESTA GENERADA:", respuesta);
 
-    // ======================================================
-    // EXTRACCIÓN UNIVERSAL DE TEXTO
-    // ======================================================
-    const texto =
-      msg.text?.body ||                                        // Mensaje tradicional
-      msg.body ||                                              // Simple text
-      msg.interactive?.button_reply?.title ||                  // Botón
-      msg.interactive?.list_reply?.title ||                    // Lista
-      msg.button?.text ||                                      // Respuesta tipo botón
-      null;
+        if (respuesta) {
+          await enviarMensajeWhatsApp(usuario, respuesta);
+        }
+      }
 
-    if (!texto) return;
-
-    const from = msg.from;
-    if (!from) return;
-
-    console.log("MENSAJE RECIBIDO:", texto);
-
-    // PROCESAR
-    const respuesta = procesarMensaje(texto, from, "wsp");
-
-    // RESPONDER
-    await enviarMensajeWhatsApp(from, respuesta);
-
-  } catch (err) {
-    console.error("ERROR EN WEBHOOK:", err);
+      return res.sendStatus(200);
+    } else {
+      return res.sendStatus(404);
+    }
+  } catch (error) {
+    console.error("Error en webhook:", error);
+    return res.sendStatus(500);
   }
 });
 
-// ======================================================
-// ENVÍO DE MENSAJES
-// ======================================================
+// ============================
+// Envío de mensaje a WhatsApp
+// ============================
 async function enviarMensajeWhatsApp(to, body) {
   try {
-    const url = `https://graph.facebook.com/v17.0/${PHONE_ID}/messages`;
+    const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
 
     const payload = {
       messaging_product: "whatsapp",
-      recipient_type: "individual",
       to,
-      type: "text",
       text: { body: String(body) }
     };
 
@@ -101,18 +91,20 @@ async function enviarMensajeWhatsApp(to, body) {
     await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+        Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
     });
   } catch (err) {
-    console.error("ERROR AL ENVIAR:", err);
+    console.error("Error al enviar mensaje a WhatsApp:", err);
   }
 }
 
-// ======================================================
+// ============================
+// Levantar servidor
+// ============================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Servidor Zara activo en puerto", PORT);
+  console.log("✅ Zara 2.1 corriendo en puerto " + PORT);
 });
