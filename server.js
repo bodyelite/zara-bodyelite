@@ -60,7 +60,7 @@ app.post("/webhook", async (req, res) => {
       msg.body ||                                              // Simple text
       msg.interactive?.button_reply?.title ||                  // Botón
       msg.interactive?.list_reply?.title ||                    // Lista
-      msg.button?.text ||                                     // Respuesta tipo botón
+      msg.button?.text ||                                      // Respuesta tipo botón
       null;
 
     if (!texto) return;

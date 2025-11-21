@@ -12,8 +12,10 @@ export async function sendMessage(to, texto) {
 
     const payload = {
       messaging_product: "whatsapp",
+      recipient_type: "individual",
       to: to,
-      text: { body: texto }
+      type: "text",
+      text: { body: String(texto) }
     };
 
     await fetch(url, {
