@@ -1,58 +1,28 @@
 import fetch from "node-fetch";
 
-/**
- * ENVÍA MENSAJES A WHATSAPP E INSTAGRAM
- * Formato OFICIAL, mínimo y 100% válido por Meta.
- */
-export async function sendMessage(to, text, platform) {
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_ID = process.env.PHONE_ID;
+
+// Envia mensajes internos a los números administradores
+export async function sendMessage(to, texto) {
   try {
-    let url = "";
-    let body = {};
+    const url = "https://graph.facebook.com/v17.0/" + PHONE_ID + "/messages";
 
-    // WHATSAPP CLOUD API
-    if (platform === "whatsapp") {
-      url = `https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`;
+    const payload = {
+      messaging_product: "whatsapp",
+      to: to,
+      text: { body: texto }
+    };
 
-      body = {
-        messaging_product: "whatsapp",
-        to,
-        type: "text",
-        text: {
-          preview_url: false,
-          body: text
-        }
-      };
-    }
-
-    // INSTAGRAM DM
-    if (platform === "instagram") {
-      url = `https://graph.facebook.com/v19.0/me/messages`;
-
-      body = {
-        recipient: { id: to },
-        message: { text }
-      };
-    }
-
-    console.log("📤 Enviando mensaje:", { url, platform, body });
-
-    const response = await fetch(url, {
+    await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+        Authorization: "Bearer " + WHATSAPP_TOKEN,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(payload)
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.log("❌ ERROR META:", data);
-    } else {
-      console.log("✅ Mensaje enviado:", data);
-    }
-  } catch (error) {
-    console.error("❌ Error crítico al enviar mensaje:", error);
+  } catch (e) {
+    console.error("ERROR en sendMessage:", e);
   }
 }
