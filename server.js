@@ -28,7 +28,7 @@ app.get("/webhook", (req, res) => {
 });
 
 // ======================================================
-// RECEPCIÓN DE MENSAJES
+// RECEPCIÓN DE MENSAJES (POST)
 // ======================================================
 app.post("/webhook", async (req, res) => {
   res.sendStatus(200);
@@ -37,10 +37,9 @@ app.post("/webhook", async (req, res) => {
     const entry = req.body.entry?.[0];
     const change = entry?.changes?.[0];
     const value = change?.value;
-
     if (!value) return;
 
-    // Meta puede mandar mensajes en distintos campos
+    // Meta cambia contenedores constantemente → normalizamos
     const messages =
       value.messages ||
       value.message ||
@@ -53,12 +52,15 @@ app.post("/webhook", async (req, res) => {
 
     const msg = messages[0];
 
+    // ======================================================
     // EXTRACCIÓN UNIVERSAL DE TEXTO
+    // ======================================================
     const texto =
-      msg.text?.body ||
-      msg.interactive?.button_reply?.title ||
-      msg.interactive?.list_reply?.title ||
-      msg.button?.text ||
+      msg.text?.body ||                                        // Mensaje tradicional
+      msg.body ||                                              // Simple text
+      msg.interactive?.button_reply?.title ||                  // Botón
+      msg.interactive?.list_reply?.title ||                    // Lista
+      msg.button?.text ||                                     // Respuesta tipo botón
       null;
 
     if (!texto) return;
@@ -68,12 +70,14 @@ app.post("/webhook", async (req, res) => {
 
     console.log("MENSAJE RECIBIDO:", texto);
 
+    // PROCESAR
     const respuesta = procesarMensaje(texto, from, "wsp");
 
+    // RESPONDER
     await enviarMensajeWhatsApp(from, respuesta);
 
   } catch (err) {
-    console.error("ERROR webhook:", err);
+    console.error("ERROR EN WEBHOOK:", err);
   }
 });
 
@@ -86,8 +90,10 @@ async function enviarMensajeWhatsApp(to, body) {
 
     const payload = {
       messaging_product: "whatsapp",
+      recipient_type: "individual",
       to,
-      text: { body }
+      type: "text",
+      text: { body: String(body) }
     };
 
     console.log("RESPUESTA ENVIADA:", body);
@@ -100,8 +106,8 @@ async function enviarMensajeWhatsApp(to, body) {
       },
       body: JSON.stringify(payload)
     });
-  } catch (e) {
-    console.error("ERROR enviando mensaje:", e);
+  } catch (err) {
+    console.error("ERROR AL ENVIAR:", err);
   }
 }
 
