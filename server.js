@@ -14,90 +14,83 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.PHONE_ID;
 
 // ======================================================
-// VERIFICACIÓN DEL WEBHOOK (GET)
+// VERIFICACIÓN DEL WEBHOOK
 // ======================================================
 app.get("/webhook", (req, res) => {
-  try {
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      return res.status(200).send(challenge);
-    } else {
-      return res.sendStatus(403);
-    }
-  } catch (err) {
-    console.error("ERROR en verificación:", err);
-    return res.sendStatus(500);
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
   }
+  return res.sendStatus(403);
 });
 
 // ======================================================
-// RECEPCIÓN DEL WEBHOOK (POST)
+// RECEPCIÓN DE MENSAJES
 // ======================================================
 app.post("/webhook", async (req, res) => {
+  res.sendStatus(200);
+
   try {
-    // Meta necesita respuesta inmediata
-    res.sendStatus(200);
+    const entry = req.body.entry?.[0];
+    const change = entry?.changes?.[0];
+    const value = change?.value;
 
-    const body = req.body;
-    if (!body.entry || !body.entry[0] || !body.entry[0].changes) return;
+    if (!value) return;
 
-    const changes = body.entry[0].changes;
+    // Meta puede mandar mensajes en distintos campos
+    const messages =
+      value.messages ||
+      value.message ||
+      value.text ||
+      value.interactive ||
+      value.button ||
+      null;
 
-    for (const c of changes) {
-      const value = c.value;
-      if (!value) continue;
+    if (!messages || !messages[0]) return;
 
-      // ======================================================
-      // NORMALIZACIÓN DE MENSAJES (Meta cambia formatos)
-      // ======================================================
-      const messages =
-        value.messages ||
-        value.message ||
-        value?.statuses ||
-        null;
+    const msg = messages[0];
 
-      if (!messages || !messages[0]) continue;
+    // EXTRACCIÓN UNIVERSAL DE TEXTO
+    const texto =
+      msg.text?.body ||
+      msg.interactive?.button_reply?.title ||
+      msg.interactive?.list_reply?.title ||
+      msg.button?.text ||
+      null;
 
-      const msg = messages[0];
+    if (!texto) return;
 
-      // SOLO PROCESAMOS MENSAJES DE USUARIO (no status ni delivery)
-      if (msg.type !== "text" && !msg.text) continue;
+    const from = msg.from;
+    if (!from) return;
 
-      const from = msg.from;
-      const texto = msg.text ? msg.text.body : null;
+    console.log("MENSAJE RECIBIDO:", texto);
 
-      if (!from || !texto) continue;
+    const respuesta = procesarMensaje(texto, from, "wsp");
 
-      // ======================================================
-      // PROCESAR MENSAJE CON EL MOTOR
-      // ======================================================
-      const respuesta = procesarMensaje(texto, from, "wsp");
+    await enviarMensajeWhatsApp(from, respuesta);
 
-      // ======================================================
-      // RESPONDER AL USUARIO
-      // ======================================================
-      await enviarMensajeWhatsApp(from, respuesta);
-    }
   } catch (err) {
-    console.error("ERROR en webhook:", err);
+    console.error("ERROR webhook:", err);
   }
 });
 
 // ======================================================
-// FUNCIÓN DE ENVÍO DE MENSAJES
+// ENVÍO DE MENSAJES
 // ======================================================
-async function enviarMensajeWhatsApp(destino, texto) {
+async function enviarMensajeWhatsApp(to, body) {
   try {
     const url = `https://graph.facebook.com/v17.0/${PHONE_ID}/messages`;
 
     const payload = {
       messaging_product: "whatsapp",
-      to: destino,
-      text: { body: texto }
+      to,
+      text: { body }
     };
+
+    console.log("RESPUESTA ENVIADA:", body);
 
     await fetch(url, {
       method: "POST",
@@ -107,15 +100,13 @@ async function enviarMensajeWhatsApp(destino, texto) {
       },
       body: JSON.stringify(payload)
     });
-  } catch (err) {
-    console.error("ERROR al enviar mensaje:", err);
+  } catch (e) {
+    console.error("ERROR enviando mensaje:", e);
   }
 }
 
 // ======================================================
-// LEVANTAR SERVIDOR
-// ======================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Servidor Zara activo en puerto " + PORT);
+  console.log("Servidor Zara activo en puerto", PORT);
 });
