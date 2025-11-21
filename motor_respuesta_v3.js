@@ -1,16 +1,14 @@
-// motor_respuesta_v3.js FINAL
+// motor_respuesta_v3.js FINAL LIMPIO
 // Zara Body Elite v3.5 – Motor refinado completo
-// Generado automáticamente
 
-// =============== IMPORTS ===============
 import { sendMessage } from "./sendMessage.js";
 import fs from "fs";
 import path from "path";
 
 // =============== MEMORIA ===============
 const memoriaPath = path.resolve("./memoria_usuarios.json");
-
 let memoria = {};
+
 try {
   const data = fs.readFileSync(memoriaPath, "utf8");
   memoria = JSON.parse(data);
@@ -22,50 +20,54 @@ function guardarMemoria() {
   fs.writeFileSync(memoriaPath, JSON.stringify(memoria, null, 2));
 }
 
-// =============== CTA BOTÓN ===============
-const LINK = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
-function boton() {
-  return "Reserva ahora:
-" + LINK;
-}
+// =============== CTA ===============
+const LINK =
+  "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15wM0NrxU8d7W64x5t2S6L4h9";
+const CTA = () => `Reserva ahora:
+${LINK}`;
 
-// =============== PLANES Y PRECIOS ===============
+// =============== PLANES ===============
 const PLANES = {
   "lipo express": {
     precio: 432000,
     sesiones: "6–8 sesiones",
-    explicacion: "Reduce grasa de abdomen, cintura y espalda con HIFU 12D + cavitación + radiofrecuencia compactante."
+    explicacion:
+      "Reduce grasa de abdomen, cintura y espalda con HIFU 12D + cavitación + radiofrecuencia compactante.",
   },
   "push up": {
     precio: 376000,
     sesiones: "6–8 sesiones",
-    explicacion: "Levanta, afirma y proyecta glúteos con Pro Sculpt + HIFU 12D."
+    explicacion:
+      "Levanta, afirma y proyecta glúteos con Pro Sculpt + HIFU 12D.",
   },
   "body fitness": {
     precio: 360000,
     sesiones: "6 sesiones",
-    explicacion: "Tonifica piernas y glúteos con Pro Sculpt + radiofrecuencia compactante."
+    explicacion:
+      "Tonifica piernas y glúteos con Pro Sculpt + radiofrecuencia compactante.",
   },
   "body tensor": {
     precio: 232000,
     sesiones: "6 sesiones",
-    explicacion: "Tensa brazos y piernas con RF profunda + compactación."
+    explicacion:
+      "Tensa brazos y piernas con RF profunda + compactación.",
   },
   "face antiage": {
     precio: 281600,
     sesiones: "6 sesiones",
-    explicacion: "Reafirma y suaviza arrugas con HIFU 12D + radiofrecuencia."
+    explicacion: "Reafirma y suaviza arrugas con HIFU 12D + radiofrecuencia.",
   },
   "face papada": {
     precio: 313600,
     sesiones: "6 sesiones",
-    explicacion: "Reduce grasa submentoniana con HIFU 12D."
+    explicacion: "Reduce grasa submentoniana con HIFU 12D.",
   },
   depilacion: {
     precio: 259200,
     sesiones: "6 sesiones",
-    explicacion: "Depilación láser DL900, alta potencia y apto para vello fino y rubio claro."
-  }
+    explicacion:
+      "Depilación láser DL900, alta potencia y apto para vello fino y rubio claro.",
+  },
 };
 
 // =============== DETECCIÓN ===============
@@ -76,30 +78,28 @@ const ZONAS = {
   arrugas: ["arrugas", "patas de gallo", "frente", "entrecejo"],
   piernas: ["piernas", "muslos"],
   brazos: ["brazos", "alas"],
-  depilacion: ["pelos", "vello", "depilacion", "laser"]
+  depilacion: ["pelos", "vello", "depilacion", "laser"],
 };
 
 function norm(t) {
   return t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
-function detectarZona(texto) {
-  const t = norm(texto);
-  if (ZONAS.abdomen.some(x => t.includes(x))) return "lipo express";
-  if (ZONAS.gluteos.some(x => t.includes(x))) return "push up";
-  if (ZONAS.papada.some(x => t.includes(x))) return "face papada";
-  if (ZONAS.arrugas.some(x => t.includes(x))) return "face antiage";
-  if (ZONAS.piernas.some(x => t.includes(x))) return "body tensor";
-  if (ZONAS.brazos.some(x => t.includes(x))) return "body tensor";
-  if (ZONAS.depilacion.some(x => t.includes(x))) return "depilacion";
+function detectarZona(t) {
+  t = norm(t);
+  if (ZONAS.abdomen.some((x) => t.includes(x))) return "lipo express";
+  if (ZONAS.gluteos.some((x) => t.includes(x))) return "push up";
+  if (ZONAS.papada.some((x) => t.includes(x))) return "face papada";
+  if (ZONAS.arrugas.some((x) => t.includes(x))) return "face antiage";
+  if (ZONAS.piernas.some((x) => t.includes(x))) return "body tensor";
+  if (ZONAS.brazos.some((x) => t.includes(x))) return "body tensor";
+  if (ZONAS.depilacion.some((x) => t.includes(x))) return "depilacion";
   return null;
 }
 
-function detectarCampania(texto) {
-  const t = norm(texto);
-  const keys = Object.keys(PLANES);
-  for (const p of keys) if (t.includes(p)) return p;
-  return null;
+function detectarCampania(t) {
+  t = norm(t);
+  return Object.keys(PLANES).find((p) => t.includes(p)) || null;
 }
 
 const INTENCIONES = {
@@ -109,15 +109,15 @@ const INTENCIONES = {
   dolor: ["duele", "dolor"],
 };
 
-function detectarIntencion(texto) {
-  const t = norm(texto);
+function detectarIntencion(t) {
+  t = norm(t);
   for (const key in INTENCIONES) {
-    if (INTENCIONES[key].some(x => t.includes(x))) return key;
+    if (INTENCIONES[key].some((x) => t.includes(x))) return key;
   }
   return null;
 }
 
-// =============== ANTI REPETICION ===============
+// =============== ANTI-REPETICION ===============
 function repetido(texto, mem) {
   const t = norm(texto);
   if (mem.ultima === t) return true;
@@ -145,7 +145,7 @@ function manejarLlamada(texto, mem) {
   }
 
   if (mem.ofrecer_llamada) {
-    if (["si", "sí", "dale", "ok", "llamame"].some(x => t.includes(x))) {
+    if (["si", "sí", "dale", "ok", "llamame"].some((x) => t.includes(x))) {
       mem.pidiendo_numero = true;
       guardarMemoria();
       return "¿Me compartes tu número?";
@@ -155,43 +155,44 @@ function manejarLlamada(texto, mem) {
   return null;
 }
 
-// =============== RESPUESTAS ===============
-function rExp(plan) {
-  const p = PLANES[plan];
-  return p.explicacion + "
-
-" + boton();
-}
-
-function rPrecio(plan) {
-  const p = PLANES[plan];
-  return "El plan parte desde $" + p.precio.toLocaleString("es-CL") + ".
-
-" + boton();
-}
-
-function rSesiones(plan) {
-  const p = PLANES[plan];
-  return "Generalmente requiere " + p.sesiones + ".
-
-" + boton();
-}
-
-function rDolor() {
-  return "No duele, solo se siente calor o vibración según la tecnología.
-
-" + boton();
-}
-
 // =============== SALUDO ===============
-function esSaludo(texto) {
-  return ["hola", "buenas", "hola!", "holaa"].includes(norm(texto));
+function esSaludo(t) {
+  return ["hola", "hola!", "buenas", "holaa"].includes(norm(t));
 }
 
 function saludo() {
-  return "💙 Soy Zara de Body Elite.
+  return (
+    "💙 Soy Zara de Body Elite.
 
-¿En qué zona quieres trabajar? abdomen, glúteos, rostro, papada, piernas, brazos o depilación.";
+¿En qué zona quieres trabajar? abdomen, glúteos, rostro, papada, piernas, brazos o depilación."
+  );
+}
+
+// =============== RESPUESTAS ===============
+function rExp(plan) {
+  return PLANES[plan].explicacion + "
+
+" + CTA();
+}
+function rPrecio(plan) {
+  return (
+    "El plan parte desde $" +
+    PLANES[plan].precio.toLocaleString("es-CL") +
+    ".
+
+" +
+    CTA()
+  );
+}
+function rSesiones(plan) {
+  return "Generalmente requiere " + PLANES[plan].sesiones + ".
+
+" + CTA();
+}
+function rDolor() {
+  return "No duele, solo se siente calor o vibración según la tecnología.
+
+" + CTA();
 }
 
 // =============== MOTOR PRINCIPAL ===============
@@ -202,7 +203,7 @@ export function procesarMensaje(texto, numero) {
       plan: null,
       links: 0,
       ofrecer_llamada: false,
-      pidiendo_numero: false
+      pidiendo_numero: false,
     };
   }
 
@@ -220,9 +221,7 @@ export function procesarMensaje(texto, numero) {
   }
 
   let plan =
-    detectarCampania(texto) ||
-    detectarZona(texto) ||
-    mem.plan;
+    detectarCampania(texto) || detectarZona(texto) || mem.plan;
 
   if (plan) mem.plan = plan;
 
@@ -253,7 +252,7 @@ export function procesarMensaje(texto, numero) {
     mem.ofrecer_llamada = true;
     r += "
 
-Si prefieres, podemos llamarte. ¿Quieres que te llame?";
+Si prefieres, puedo llamarte. ¿Quieres que te llame?";
   }
 
   guardarMemoria();
