@@ -293,11 +293,9 @@ ${AGENDA}
 }
 
 // ======================================================
-// EXPORTACIÓN
+// EXPORTACIÓN CORRECTA — SOLO UNA
 // ======================================================
-function procesarMensaje(m) {
-  return motorZara(m);
-}
+
 export function procesarMensaje(mensaje) {
   return motorZara(mensaje);
 }
