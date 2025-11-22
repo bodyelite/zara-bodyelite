@@ -298,4 +298,6 @@ ${AGENDA}
 function procesarMensaje(m) {
   return motorZara(m);
 }
-module.exports = { procesarMensaje };
+export function procesarMensaje(mensaje) {
+  return motorZara(mensaje);
+}
