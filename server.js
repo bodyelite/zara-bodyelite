@@ -13,16 +13,16 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-// NUMEROS DE RECEPCION PARA ALERTAS
+// NÚMEROS QUE RECIBEN ALERTAS CUANDO UN PACIENTE ENTREGA TELÉFONO
 const RECEPCION = [
   "56983300262",
   "56937648536",
   "56931720760"
 ];
 
-// ---------------------------------------------
-// GET WEBHOOK
-// ---------------------------------------------
+// =======================================================
+// GET WEBHOOK (VERIFICACIÓN META)
+// =======================================================
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -31,12 +31,13 @@ app.get("/webhook", (req, res) => {
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     return res.status(200).send(challenge);
   }
+
   return res.sendStatus(403);
 });
 
-// ---------------------------------------------
-// POST WEBHOOK - MENSAJES DE WHATSAPP
-// ---------------------------------------------
+// =======================================================
+// POST WEBHOOK – RECEPCIÓN DE MENSAJES WHATSAPP
+// =======================================================
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
@@ -52,8 +53,8 @@ app.post("/webhook", async (req, res) => {
       if (texto && usuario) {
         console.log("MENSAJE RECIBIDO:", texto);
 
+        // GENERAR RESPUESTA CON EL MOTOR
         const respuesta = procesarMensaje(texto, usuario);
-
         console.log("RESPUESTA GENERADA:", respuesta);
 
         // ENVIAR RESPUESTA AL PACIENTE
@@ -61,15 +62,15 @@ app.post("/webhook", async (req, res) => {
           await enviarMensajeWhatsApp(usuario, respuesta);
         }
 
-        // DETECTAR SI EL CLIENTE ENTREGA NUMERO
-        if (/^\+?56|9\d{7,8}/.test(texto)) {
-          const alerta = "ALERTA ZARA: Paciente solicita llamada. Numero: " + texto;
+        // DETECTAR SI PACIENTE ENTREGA NÚMERO
+        if (/^(\+?56)?9\d{7,8}$/.test(texto.replace(/\s+/g, ""))) {
+          const alerta = "ALERTA ZARA: Paciente solicita llamada. Número: " + texto;
 
           for (const num of RECEPCION) {
             await enviarMensajeWhatsApp(num, alerta);
           }
 
-          console.log("ALERTA ENVIADA A RECEPCION:", RECEPCION);
+          console.log("ALERTA ENVIADA A RECEPCIÓN:", RECEPCION);
         }
       }
 
@@ -83,12 +84,12 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// ---------------------------------------------
-// FUNCION PARA ENVIAR MENSAJE VIA WHATSAPP
-// ---------------------------------------------
+// =======================================================
+// FUNCIÓN PARA ENVIAR MENSAJES WHATSAPP
+// =======================================================
 async function enviarMensajeWhatsApp(to, body) {
   try {
-    const url = "https://graph.facebook.com/v17.0/" + PHONE_NUMBER_ID + "/messages";
+    const url = `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`;
 
     const payload = {
       messaging_product: "whatsapp",
@@ -109,9 +110,9 @@ async function enviarMensajeWhatsApp(to, body) {
   }
 }
 
-// ---------------------------------------------
-// LEVANTAR SERVIDOR
-// ---------------------------------------------
+// =======================================================
+// INICIAR SERVIDOR
+// =======================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Servidor Zara corriendo en puerto " + PORT);
