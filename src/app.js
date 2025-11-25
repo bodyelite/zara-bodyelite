@@ -9,7 +9,7 @@ const usuariosPausados = {};
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
 
-// 👇 TU LINK DE IMAGEN DIRECTO
+// 👇 LINK VALIDADO DIRECTO
 const FOTO_RESULTADOS_URL = "https://i.ibb.co/PZqDzSm2/Ant-y-desp-Hombre.jpg"; 
 
 function extraerTelefono(texto) {
@@ -70,14 +70,12 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const mensajeLower = text.toLowerCase().trim();
 
-  // Comandos
   if (mensajeLower === "retomar" || mensajeLower === "zara on") { usuariosPausados[senderId] = false; await sendMessage(senderId, "🤖 Zara reactivada.", platform); return; }
   if (mensajeLower === "zara off" || mensajeLower === "silencio") { usuariosPausados[senderId] = true; return; }
   if (usuariosPausados[senderId]) return;
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
 
-  // Lead
   const posibleTelefono = extraerTelefono(text);
   if (posibleTelefono) {
     const alerta = `🚨 *LEAD DETECTADO* 🚨\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
@@ -88,30 +86,22 @@ export async function procesarEvento(entry) {
     return;
   }
 
-  // --- GENERAR RESPUESTA IA ---
   sesiones[senderId].push({ role: "user", content: text });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
-  // LOGICA FORZADA DE FOTO (Aquí está el arreglo) 📸
-  // Si la IA lo sugiere O el cliente pregunta explícitamente por fotos
+  // LÓGICA DE FOTO FORZADA
   const clientePideFoto = mensajeLower.includes("foto") || mensajeLower.includes("resultado") || mensajeLower.includes("antes y") || mensajeLower.includes("ver");
   const iaSugiereFoto = respuestaIA.includes("FOTO_RESULTADOS");
 
   if (iaSugiereFoto || clientePideFoto) {
-      // Limpiamos la clave secreta si la IA la escribió
-      const textoFinal = respuestaIA.replace("FOTO_RESULTADOS", "").trim();
+      const textoFinal = respuestaIA.replace("FOTO_RESULTADOS", "").trim() || "¡Mira estos resultados reales!";
+      console.log("📸 Intentando enviar foto...");
       
-      console.log(`📸 Enviando foto a ${senderId} (Trigger: ${clientePideFoto ? 'Cliente' : 'IA'})`);
-      
-      // 1. Enviamos el texto
-      await sendMessage(senderId, textoFinal, platform);
-      
-      // 2. Enviamos la foto (Forzado)
-      await sendMessage(senderId, "", platform, FOTO_RESULTADOS_URL);
+      // Enviar Solo Foto (Tarjeta) porque incluye texto y botón
+      await sendMessage(senderId, textoFinal, platform, FOTO_RESULTADOS_URL);
   } else {
-      // Respuesta normal sin foto
       await sendMessage(senderId, respuestaIA, platform);
   }
   
