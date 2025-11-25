@@ -13,12 +13,24 @@ app.get("/webhook", (req, res) => {
   } else { res.sendStatus(403); }
 });
 
-app.post("/webhook", async (req, res) => {
+app.post("/webhook", (req, res) => {
   try {
     const entry = req.body.entry?.[0];
-    if (entry) await procesarEvento(entry);
+    
+    // 🔥 SOLUCIÓN DUPLICADOS:
+    // Respondemos 200 OK inmediatamente a Meta, sin esperar a la IA.
     res.sendStatus(200);
-  } catch (e) { console.error(e); res.sendStatus(500); }
+
+    // Procesamos el mensaje en "segundo plano"
+    if (entry) {
+      procesarEvento(entry).catch(err => console.error("❌ Error procesando evento:", err));
+    }
+    
+  } catch (e) { 
+    console.error(e); 
+    // Si falló el parsing inicial, igual respondemos 200 para que no reintente
+    res.sendStatus(200); 
+  }
 });
 
 const PORT = process.env.PORT || 3000;
