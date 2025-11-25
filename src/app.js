@@ -2,8 +2,10 @@ import { sendMessage } from "./services/meta.js";
 import { generarRespuestaIA } from "./services/openai.js";
 import { NEGOCIO } from "../config/knowledge_base.js";
 
+// MEMORIAS VOLÁTILES
 const sesiones = {}; 
 const usuariosPausados = {}; 
+const mensajesProcesados = new Set(); // <--- NUEVO: Lista de mensajes ya respondidos
 
 function extraerTelefono(texto) {
   const match = texto.match(/\b(\+?56)?(\s?9)\s?\d{4}\s?\d{4}\b/); 
@@ -12,10 +14,9 @@ function extraerTelefono(texto) {
 
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
-  let senderId, text, senderName;
-  let isEcho = false; // Variable para detectar si soy yo mismo
+  let senderId, text, senderName, messageId;
 
-  // 1. EXTRACTOR DE DATOS SEGÚN PLATAFORMA
+  // 1. EXTRACTOR DE DATOS Y ID ÚNICO
   if (platform === "whatsapp") {
     const msg = entry.changes[0].value.messages?.[0];
     const contact = entry.changes[0].value.contacts?.[0];
@@ -23,31 +24,39 @@ export async function procesarEvento(entry) {
     senderId = msg.from;
     text = msg.text?.body;
     senderName = contact?.profile?.name || "Usuario";
-    // WhatsApp no suele enviar ecos por este webhook, pero por seguridad:
-    if (msg.id && !text) return; 
+    messageId = msg.id; // ID único de WhatsApp
   } else {
     // INSTAGRAM
     const msg = entry.messaging?.[0];
     if (!msg) return;
     
-    // 🚨 DETECTOR DE ECO (AQUÍ ESTÁ LA SOLUCIÓN)
-    if (msg.message?.is_echo) {
-      console.log("🔇 Ignorando mensaje propio (Eco de Instagram)");
-      return;
-    }
+    // Ignorar Ecos
+    if (msg.message?.is_echo) return;
 
     senderId = msg.sender.id;
     text = msg.message?.text;
     senderName = "Usuario IG";
+    messageId = msg.message?.mid; // ID único de Instagram
+  }
+
+  // 2. FILTRO DE DUPLICADOS (LA SOLUCIÓN CLAVE) 🛑
+  if (messageId && mensajesProcesados.has(messageId)) {
+    console.log(`🚫 Mensaje duplicado detectado (${messageId}). Ignorando.`);
+    return;
+  }
+  // Si es nuevo, lo guardamos en la lista
+  if (messageId) {
+    mensajesProcesados.add(messageId);
+    // Limpieza de memoria simple: si la lista es gigante, la vaciamos
+    if (mensajesProcesados.size > 1000) mensajesProcesados.clear();
   }
 
   if (!text) return;
   const mensajeLower = text.toLowerCase().trim();
 
-  // --- LOGS ---
-  console.log(`📩 De ${senderName} (${senderId}): ${text}`);
+  console.log(`📩 Procesando: ${text}`);
 
-  // --- COMANDOS DE CONTROL ---
+  // 3. COMANDOS DE CONTROL
   if (mensajeLower === "retomar" || mensajeLower === "zara on") {
     usuariosPausados[senderId] = false;
     await sendMessage(senderId, "🤖 Zara reactivada.", platform);
@@ -62,7 +71,7 @@ export async function procesarEvento(entry) {
 
   if (usuariosPausados[senderId]) return;
 
-  // --- LÓGICA AUTOMÁTICA ---
+  // 4. LÓGICA AUTOMÁTICA
   if (!sesiones[senderId]) sesiones[senderId] = [];
 
   // CAPTURA DE LEAD
