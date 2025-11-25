@@ -4,11 +4,12 @@ export const NEGOCIO = {
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
   ubicacion: "Av. Las Perdices Nº2990, Local 23 (Peñalolén). (Única sucursal)",
   horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
-  staff_alertas: ["56937648536", "56931720760", "56983300262"] 
+  // 💡 LISTA DE NÚMEROS A LOS QUE SE ENVIARÁ EL LEAD EN SIMULTÁNEO
+  staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"] 
 };
 
 export const TRATAMIENTOS = {
-  // --- CORPORALES (BASE EXCEL + FUNDAMENTO CLÍNICO) ---
+  // --- CORPORALES (BASE CLÍNICA COMPLETA) ---
   "lipo_body_elite": {
     nombre: "Lipo Body Elite (Pack Completo)",
     precio: "$664.000",
@@ -85,7 +86,6 @@ export const TRATAMIENTOS = {
     info: "Objetivo: Depilación láser rápida y segura para piel latina. Fundamento: Destruye el folículo sin dañar la piel.",
     dolor: "Pinchacito leve."
   },
-  // Se mantienen el resto de planes de depilación con el precio específico del Excel
   "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack de 6 sesiones (Zona 3).", dolor: "Pinchacito leve." },
   "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack de 6 sesiones (Láser 1).", dolor: "Leve." },
   "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Pack de 6 sesiones (Zona 2).", dolor: "Leve." }
