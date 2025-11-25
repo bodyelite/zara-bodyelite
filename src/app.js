@@ -2,10 +2,11 @@ import { sendMessage } from "./services/meta.js";
 import { generarRespuestaIA } from "./services/openai.js";
 import { NEGOCIO } from "../config/knowledge_base.js";
 
-// MEMORIAS VOLÁTILES
+// MEMORIA
 const sesiones = {}; 
 const usuariosPausados = {}; 
-const mensajesProcesados = new Set(); // <--- NUEVO: Lista de mensajes ya respondidos
+const mensajesProcesados = new Set(); 
+const ultimasRespuestas = {}; // <--- NUEVO: Candado de tiempo por usuario
 
 function extraerTelefono(texto) {
   const match = texto.match(/\b(\+?56)?(\s?9)\s?\d{4}\s?\d{4}\b/); 
@@ -16,7 +17,7 @@ export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let senderId, text, senderName, messageId;
 
-  // 1. EXTRACTOR DE DATOS Y ID ÚNICO
+  // 1. EXTRAER DATOS
   if (platform === "whatsapp") {
     const msg = entry.changes[0].value.messages?.[0];
     const contact = entry.changes[0].value.contacts?.[0];
@@ -24,39 +25,45 @@ export async function procesarEvento(entry) {
     senderId = msg.from;
     text = msg.text?.body;
     senderName = contact?.profile?.name || "Usuario";
-    messageId = msg.id; // ID único de WhatsApp
+    messageId = msg.id;
   } else {
     // INSTAGRAM
     const msg = entry.messaging?.[0];
     if (!msg) return;
-    
-    // Ignorar Ecos
-    if (msg.message?.is_echo) return;
+    if (msg.message?.is_echo) return; // Ignorar eco
 
     senderId = msg.sender.id;
     text = msg.message?.text;
     senderName = "Usuario IG";
-    messageId = msg.message?.mid; // ID único de Instagram
+    messageId = msg.message?.mid;
   }
 
-  // 2. FILTRO DE DUPLICADOS (LA SOLUCIÓN CLAVE) 🛑
-  if (messageId && mensajesProcesados.has(messageId)) {
-    console.log(`🚫 Mensaje duplicado detectado (${messageId}). Ignorando.`);
+  // 2. FILTRO DURO: ANTI-SPAM DE TIEMPO (10 Segundos)
+  const ahora = Date.now();
+  const ultimaVez = ultimasRespuestas[senderId] || 0;
+  
+  // Si le respondimos hace menos de 8 segundos, ignoramos cualquier cosa que llegue
+  if (ahora - ultimaVez < 8000) {
+    console.log(`🛡️ Bloqueando doble respuesta para ${senderId} (Candado activo)`);
     return;
   }
-  // Si es nuevo, lo guardamos en la lista
+
+  // 3. FILTRO DE ID (Capa extra de seguridad)
+  if (messageId && mensajesProcesados.has(messageId)) return;
   if (messageId) {
     mensajesProcesados.add(messageId);
-    // Limpieza de memoria simple: si la lista es gigante, la vaciamos
     if (mensajesProcesados.size > 1000) mensajesProcesados.clear();
   }
 
   if (!text) return;
-  const mensajeLower = text.toLowerCase().trim();
+  
+  // ACTIVAR EL CANDADO AHORA MISMO
+  ultimasRespuestas[senderId] = ahora;
 
+  const mensajeLower = text.toLowerCase().trim();
   console.log(`📩 Procesando: ${text}`);
 
-  // 3. COMANDOS DE CONTROL
+  // 4. COMANDOS
   if (mensajeLower === "retomar" || mensajeLower === "zara on") {
     usuariosPausados[senderId] = false;
     await sendMessage(senderId, "🤖 Zara reactivada.", platform);
@@ -71,14 +78,14 @@ export async function procesarEvento(entry) {
 
   if (usuariosPausados[senderId]) return;
 
-  // 4. LÓGICA AUTOMÁTICA
+  // 5. LÓGICA AUTOMÁTICA
   if (!sesiones[senderId]) sesiones[senderId] = [];
 
   // CAPTURA DE LEAD
   const posibleTelefono = extraerTelefono(text);
   if (posibleTelefono) {
     usuariosPausados[senderId] = true; 
-    const alerta = `🚨 *LEAD INSTAGRAM/WSP* 🚨\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
+    const alerta = `🚨 *LEAD DETECTADO* 🚨\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
     
     for (const numero of NEGOCIO.staff_alertas) {
       await sendMessage(numero, alerta, "whatsapp");
