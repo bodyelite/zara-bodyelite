@@ -9,7 +9,7 @@ const usuariosPausados = {};
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
 
-// 👇 TU LINK DE FOTO YA PUESTO AQUÍ 👇
+// 👇 TU LINK DE IMAGEN DIRECTO
 const FOTO_RESULTADOS_URL = "https://i.ibb.co/PZqDzSm2/Ant-y-desp-Hombre.jpg"; 
 
 function extraerTelefono(texto) {
@@ -34,10 +34,7 @@ export async function procesarEvento(entry) {
     else if (msg.type === "audio" || msg.type === "voice") {
       const mediaId = msg.audio?.id || msg.voice?.id;
       const rawUrl = await getWhatsAppMediaUrl(mediaId);
-      if (rawUrl) { 
-          audioUrl = rawUrl; 
-          downloadHeaders["Authorization"] = `Bearer ${process.env.PAGE_ACCESS_TOKEN}`; 
-      }
+      if (rawUrl) { audioUrl = rawUrl; downloadHeaders["Authorization"] = `Bearer ${process.env.PAGE_ACCESS_TOKEN}`; }
     }
   } else {
     const msg = entry.messaging?.[0];
@@ -73,12 +70,14 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const mensajeLower = text.toLowerCase().trim();
 
+  // Comandos
   if (mensajeLower === "retomar" || mensajeLower === "zara on") { usuariosPausados[senderId] = false; await sendMessage(senderId, "🤖 Zara reactivada.", platform); return; }
   if (mensajeLower === "zara off" || mensajeLower === "silencio") { usuariosPausados[senderId] = true; return; }
   if (usuariosPausados[senderId]) return;
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
 
+  // Lead
   const posibleTelefono = extraerTelefono(text);
   if (posibleTelefono) {
     const alerta = `🚨 *LEAD DETECTADO* 🚨\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
@@ -89,18 +88,30 @@ export async function procesarEvento(entry) {
     return;
   }
 
+  // --- GENERAR RESPUESTA IA ---
   sesiones[senderId].push({ role: "user", content: text });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
-  // LOGICA FOTO
-  if (respuestaIA.includes("FOTO_RESULTADOS")) {
+  // LOGICA FORZADA DE FOTO (Aquí está el arreglo) 📸
+  // Si la IA lo sugiere O el cliente pregunta explícitamente por fotos
+  const clientePideFoto = mensajeLower.includes("foto") || mensajeLower.includes("resultado") || mensajeLower.includes("antes y") || mensajeLower.includes("ver");
+  const iaSugiereFoto = respuestaIA.includes("FOTO_RESULTADOS");
+
+  if (iaSugiereFoto || clientePideFoto) {
+      // Limpiamos la clave secreta si la IA la escribió
       const textoFinal = respuestaIA.replace("FOTO_RESULTADOS", "").trim();
+      
+      console.log(`📸 Enviando foto a ${senderId} (Trigger: ${clientePideFoto ? 'Cliente' : 'IA'})`);
+      
+      // 1. Enviamos el texto
       await sendMessage(senderId, textoFinal, platform);
-      // Enviamos la foto real
+      
+      // 2. Enviamos la foto (Forzado)
       await sendMessage(senderId, "", platform, FOTO_RESULTADOS_URL);
   } else {
+      // Respuesta normal sin foto
       await sendMessage(senderId, respuestaIA, platform);
   }
   
