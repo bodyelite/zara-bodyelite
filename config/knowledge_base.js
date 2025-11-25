@@ -1,16 +1,24 @@
 export const NEGOCIO = {
   nombre: "Clínica Body Elite",
-  telefono_interno: "56937648536",
+  telefono_interno: "56937648536", 
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-  ubicacion: "Av. Las Perdices Nº2990, Local 23 (Peñalolén)",
-  horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00"
+  ubicacion: "Av. Las Perdices Nº2990, Local 23 (Peñalolén). (Única sucursal)",
+  horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
+  // ⬇️ AQUÍ PONES LOS NÚMEROS DE TU EQUIPO (Formato 569...)
+  staff_alertas: ["56937648536", "56900000000"] 
 };
 
 export const TRATAMIENTOS = {
+  "botox": {
+    nombre: "Botox (Toxina Botulínica)",
+    precio: "Sujeto a evaluación (aprox $200.000 - $290.000)",
+    info: "Aplicación de toxina botulínica para suavizar líneas de expresión y arrugas. Rostro descansado y rejuvenecido.",
+    dolor: "Pinchazo leve, muy rápido."
+  },
   "lipo_express": {
     nombre: "Lipo Express",
     precio: "$432.000",
-    info: "Pack reductor (8-10 sesiones). HIFU 12D + Cavitación + RF + Drenaje.",
+    info: "Pack reductor (8-10 sesiones). HIFU 12D + Cavitación + RF + Drenaje. Ideal para bajar grasa localizada.",
     dolor: "Calor leve y vibración."
   },
   "lipo_body_elite": {
@@ -34,7 +42,7 @@ export const TRATAMIENTOS = {
   "face_elite": {
     nombre: "Face Elite",
     precio: "$358.400",
-    info: "Rejuvenecimiento facial (8-10 sesiones). Efecto lifting sin cirugía.",
+    info: "Rejuvenecimiento facial (8-10 sesiones). Efecto lifting sin cirugía. (Complementable con Botox).",
     dolor: "Calor leve."
   },
   "depilacion": {
@@ -46,9 +54,17 @@ export const TRATAMIENTOS = {
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, asistente de Body Elite.
-1. Tono: Empático, femenino y profesional (usa emojis 💙, ✨).
-2. Da precios INMEDIATAMENTE si preguntan.
-3. Termina invitando a agendar: https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9
-4. Si preguntan lo mismo 3 veces, ofrece llamada humana.
+Eres Zara, la asistente virtual experta y vendedora de ${NEGOCIO.nombre}.
+UBICACIÓN: Tu ÚNICA dirección es ${NEGOCIO.ubicacion}. NO inventes otras sucursales.
+
+TUS OBJETIVOS:
+1. Informar precios y tratamientos (SÍ hacemos Botox/Toxina Botulínica).
+2. Cerrar la venta llevando a la agenda: ${NEGOCIO.agenda_link}
+3. DETECTAR FRUSTRACIÓN: Si notas que el cliente pregunta mucho y no agenda, o si lleva varias preguntas, OFRECE UNA LLAMADA: "Si prefieres, déjame tu número y una especialista te llama para explicarte mejor 💙".
+
+REGLAS:
+- Tono: Empático, femenino, usa emojis 💙✨.
+- Si preguntan "dónde están", da la dirección de Peñalolén exacta.
+- Si preguntan precios, dálos directo.
+- Si el cliente te da su número de teléfono, responde: "¡Perfecto! Ya le avisé a las chicas, te llamarán en breve 📞".
 `;
