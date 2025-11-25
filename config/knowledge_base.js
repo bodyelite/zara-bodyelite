@@ -11,101 +11,101 @@ export const TRATAMIENTOS = {
   "lipo_body_elite": {
     nombre: "Lipo Body Elite (Pack Completo)",
     precio: "$664.000",
-    info: "Nuestro plan más completo. Dura aprox 5 a 7 semanas. Incluye tecnología Full: RF, EMS Sculptor, Lipoláser y HIFU 12D.",
-    dolor: "Calor profundo y trabajo muscular intenso (pero tolerable)."
+    info: "Plan de 5 a 7 semanas. Incluye RF, EMS Sculptor, Lipoláser y HIFU 12D.",
+    dolor: "Trabajo muscular intenso (tolerable)."
   },
   "full_face": {
-    nombre: "Full Face (Rejuvenecimiento Total)",
+    nombre: "Full Face (Rejuvenecimiento)",
     precio: "$584.000",
-    info: "Tratamiento integral de aprox 4 semanas. Incluye TODO: Botox, Pink Glow, HIFU Facial y más.",
-    dolor: "Pinchazo leve y calorcito."
+    info: "4 semanas aprox. Incluye TODO: Botox, Pink Glow, HIFU Facial y más.",
+    dolor: "Pinchazo leve."
   },
   "lipo_reductiva": {
     nombre: "Lipo Reductiva",
     precio: "$480.000",
-    info: "Tratamiento intensivo de 4 a 6 semanas. Combina quemadores de grasa y reafirmantes.",
+    info: "4 a 6 semanas. Quemadores de grasa + reafirmantes.",
     dolor: "Calor y vibración."
   },
   "lipo_express": {
     nombre: "Lipo Express",
     precio: "$432.000",
-    info: "Plan rápido de 4 a 5 semanas. Ideal para reducir contorno y mejorar piel en poco tiempo. ✨",
-    dolor: "Calor leve y contracción."
+    info: "4 a 5 semanas. Reduce contorno y mejora piel rápido. ✨",
+    dolor: "Calor leve."
   },
   "push_up": {
     nombre: "Push Up Glúteos",
     precio: "$376.000",
-    info: "Levantamiento de glúteos (Efecto Gimnasio). Dura aprox 4 a 5 semanas. Usa ondas electromagnéticas potentes.",
-    dolor: "Se siente como haber hecho 1000 sentadillas (contracción fuerte)."
+    info: "Levantamiento de glúteos (Efecto Gimnasio). 4 a 5 semanas.",
+    dolor: "Como hacer 1000 sentadillas."
   },
   "body_fitness": {
-    nombre: "Body Fitness (Tonificación)",
+    nombre: "Body Fitness",
     precio: "$360.000",
-    info: "Plan de 4 semanas enfocado 100% en marcar músculo y tonificar.",
+    info: "4 semanas. Enfocado 100% en marcar músculo.",
     dolor: "Contracciones musculares."
   },
   "lipo_focalizada": {
-    nombre: "Lipo Focalizada Reductiva",
+    nombre: "Lipo Focalizada",
     precio: "$348.800",
-    info: "Tratamiento localizado de 3 a 4 semanas. Ataca directo la grasita difícil.",
-    dolor: "Pinchazo leve (lipolítico) y calor."
+    info: "3 a 4 semanas. Ataca directo la grasa localizada.",
+    dolor: "Pinchazo leve."
   },
   "lipo_papada": {
     nombre: "Lipo Papada",
     precio: "$313.600",
-    info: "Plan específico para perfilado de rostro. Dura aprox 3 semanas.",
-    dolor: "Pinchazo leve y calor."
+    info: "Perfilado de rostro. Aprox 3 semanas.",
+    dolor: "Pinchazo leve."
   },
   "body_tensor": {
-    nombre: "Body Tensor (Flacidez)",
+    nombre: "Body Tensor",
     precio: "$232.000",
-    info: "Plan de 3 a 4 semanas ideal para piernas o brazos que necesitan firmeza.",
-    dolor: "Muy agradable, calor suave."
+    info: "3 a 4 semanas. Firmeza para piernas o brazos.",
+    dolor: "Agradable."
   },
   "face_elite": {
     nombre: "Face Elite",
     precio: "$358.400",
-    info: "Pack de alto impacto (incluye Botox). Se realiza en aprox 3 a 4 semanas. Lifting sin cirugía.",
+    info: "3 a 4 semanas. Pack alto impacto con Botox. Lifting sin cirugía.",
     dolor: "Pinchazo leve."
   },
   "face_antiage": {
     nombre: "Face Antiage",
     precio: "$281.600",
-    info: "Tratamiento antiarrugas express (incluye Botox). Aprox 2 a 3 semanas.",
+    info: "Antiarrugas express con Botox. 2 a 3 semanas.",
     dolor: "Pinchazo leve."
   },
   "depilacion_grande": {
     nombre: "Depilación Zona Grande",
     precio: "$288.000",
-    info: "Pack de 6 sesiones (1 vez al mes). Olvídate de los pelos para siempre. 🙅‍♀️",
+    info: "Pack 6 sesiones. Olvídate de los pelos. 🙅‍♀️",
     dolor: "Pinchacito leve."
   },
   "depilacion_full": {
     nombre: "Depilación Full",
     precio: "$259.200",
-    info: "Pack de 6 sesiones mensuales (Láser 1).",
-    dolor: "Pinchacito leve."
+    info: "Pack 6 sesiones (Láser 1).",
+    dolor: "Leve."
   },
   "botox": {
-    nombre: "Botox (Toxina Botulínica)",
-    precio: "Desde $120.000 por zona / Pack 3 zonas $260.000 (Sujeto a evaluación)",
-    info: "Se realiza en 1 sesión (más control). Efecto en pocos días. Rostro descansado.",
-    dolor: "Pinchazo rápido y leve."
+    nombre: "Botox (Toxina)",
+    precio: "Desde $120.000/zona o Pack 3 zonas $260.000 (Evaluación)",
+    info: "1 sesión. Rostro descansado en pocos días.",
+    dolor: "Pinchazo rápido."
   }
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, la asistente virtual experta de ${NEGOCIO.nombre}.
+Eres Zara, experta estética de ${NEGOCIO.nombre}.
 UBICACIÓN: ${NEGOCIO.ubicacion}.
 
-PERSONALIDAD:
-- Tono: Cercano, amable y profesional. Usa emojis (✨, 💙, 🌿).
-- GÉNERO: Trata al usuario de forma NEUTRA (evita decir "hermosa", "linda", "amiga" a menos que el usuario te diga explícitamente que es mujer). Usa "Hola!", "¿Cómo estás?", "Te cuento que...".
-- Sé visual y entretenida, pero sin exceso de confianza.
+FORMATO DE RESPUESTA (ESTRICTO):
+1. **BREVEDAD:** Tus respuestas deben ser CORTAS y visuales (máximo 30-40 palabras). En celular la gente no lee textos largos.
+2. **FORMATO:** Usa listas cortas o párrafos de 2 líneas.
+3. **LINK:** El link de agenda va SIEMPRE al final, solo.
 
-REGLAS CLAVE:
-1. **Teléfono:** Si preguntan "¿dónde llamo?", di: "¡Nosotras te llamamos! 📲 Déjame tu número aquí y te contactamos enseguida".
-2. **Tiempos:** Habla siempre de semanas aproximadas (ej: "4 a 6 semanas"), no de número de procedimientos.
-3. **Anuncios:** Si el usuario llega preguntando por un tratamiento, véndeselo de inmediato.
-4. **Venta:** Cierra invitando a la evaluación gratis: ${NEGOCIO.agenda_link}
+REGLAS DE NEGOCIO:
+- Teléfono: "¡Nosotras te llamamos! 📲 Déjame tu número aquí".
+- Precios: Da el precio del PACK, no por sesión.
+- Anuncios: Si preguntan por un plan, véndeselo directo.
+- Link Agenda: ${NEGOCIO.agenda_link}
 `;

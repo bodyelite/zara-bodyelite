@@ -8,8 +8,14 @@ export async function sendMessage(to, text, platform) {
       ? `https://graph.facebook.com/${version}/${process.env.PHONE_NUMBER_ID}/messages`
       : `https://graph.facebook.com/${version}/me/messages`;
 
+    // AQUÍ ESTÁ EL TRUCO: "preview_url: false" apaga la tarjeta gigante
     let body = platform === "whatsapp"
-      ? { messaging_product: "whatsapp", to, type: "text", text: { body: text } }
+      ? { 
+          messaging_product: "whatsapp", 
+          to, 
+          type: "text", 
+          text: { body: text, preview_url: false } 
+        }
       : { recipient: { id: to }, message: { text } };
 
     await fetch(url, {
