@@ -12,42 +12,35 @@ export async function sendMessage(to, text, platform, imageUrl = null) {
 
     let body = {};
 
-    // CASO 1: ENVIAR FOTO (TARJETA)
+    // CASO 1: ENVIAR IMAGEN (MODO SIMPLE Y ROBUSTO)
     if (imageUrl) {
+        console.log(`📸 Enviando imagen a ${platform}: ${imageUrl}`);
+        
         if (platform === "instagram") {
-            // Usamos "Generic Template" que es más estable para negocios
+            // Enviar como adjunto de imagen simple (No plantilla)
             body = {
                 recipient: { id: to },
                 message: {
                     attachment: {
-                        type: "template",
-                        payload: {
-                            template_type: "generic",
-                            elements: [{
-                                title: "Resultados Reales Body Elite",
-                                image_url: imageUrl,
-                                subtitle: "Antes y Después (Lipo Express)",
-                                buttons: [{
-                                    type: "web_url",
-                                    url: LINK_AGENDA,
-                                    title: "📅 Quiero este cambio"
-                                }]
-                            }]
+                        type: "image",
+                        payload: { 
+                            url: imageUrl, 
+                            is_reusable: true 
                         }
                     }
                 }
             };
         } else {
-            // WhatsApp Image
+            // WhatsApp: Imagen estándar
             body = {
                 messaging_product: "whatsapp",
                 to: to,
                 type: "image",
-                image: { link: imageUrl, caption: text || "Resultados Reales ✨" }
+                image: { link: imageUrl, caption: "Resultados Reales Body Elite ✨" }
             };
         }
     } 
-    // CASO 2: TEXTO NORMAL
+    // CASO 2: ENVIAR TEXTO / BOTONES
     else {
         let textoLimpio = text;
         const incluyeAgenda = text.includes("AGENDA_AQUI_LINK") || text.includes("reservo.cl");
@@ -71,6 +64,7 @@ export async function sendMessage(to, text, platform, imageUrl = null) {
             };
         } else {
             if (textoLimpio.includes("AGENDA_AQUI_LINK")) textoLimpio = textoLimpio.replace("AGENDA_AQUI_LINK", LINK_AGENDA);
+            
             body = platform === "whatsapp"
                 ? { messaging_product: "whatsapp", to, type: "text", text: { body: textoLimpio, preview_url: false } }
                 : { recipient: { id: to }, message: { text: textoLimpio } };
@@ -83,10 +77,9 @@ export async function sendMessage(to, text, platform, imageUrl = null) {
         body: JSON.stringify(body)
     });
 
-    // LOG DE DEBUG (Para saber si falla)
-    const responseData = await response.json();
+    const data = await response.json();
     if (!response.ok) {
-        console.error("❌ ERROR META AL ENVIAR:", JSON.stringify(responseData));
+        console.error("❌ ERROR META:", JSON.stringify(data));
     } else {
         console.log("✅ Mensaje enviado OK");
     }
