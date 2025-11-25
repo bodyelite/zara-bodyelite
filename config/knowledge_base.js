@@ -2,7 +2,7 @@ export const NEGOCIO = {
   nombre: "Clínica Body Elite",
   telefono_interno: "56937648536", 
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-  ubicacion: "Av. Las Perdices Nº2990, Local 23, Peñalolén (Strip Center Las Pircas).",
+  ubicacion: "Av. Las Perdices Nº2990, Local 23 (Peñalolén). (Única sucursal)",
   horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
   staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"] 
 };
@@ -12,7 +12,7 @@ export const TRATAMIENTOS = {
   "lipo_body_elite": {
     nombre: "Lipo Body Elite (Pack Completo)",
     precio: "$664.000",
-    info: "🔥 Plan más completo (29 proced.) para reducir grasa, tonificar músculo y mejorar firmeza. Dura aprox 5-8 semanas. Incluye HIFU 12D, EMS Sculptor, Cavitación y Nutrición.",
+    info: "🔥 Plan más completo (29 proced.) para reducir grasa, tonificar músculo y mejorar firmeza. Dura aprox 5-8 semanas. Incluye HIFU 12D, EMS Sculptor, Cavitación y Nutrición. Fundamento: Actúa sobre grasa, tejido conectivo y musculatura profunda.",
     dolor: "Calor profundo y trabajo muscular intenso."
   },
   "lipo_express": {
@@ -28,13 +28,13 @@ export const TRATAMIENTOS = {
     dolor: "Contracciones musculares fuertes (efecto gimnasio)."
   },
   "body_fitness": {
-    nombre: "Body Fitness (Tonificación)",
+    nombre: "Body Fitness",
     precio: "$360.000",
     info: "Pack de 6-8 sesiones (aprox 4 semanas). Objetivo: Marcar y definir musculatura con EMS Sculptor.",
     dolor: "Contracciones musculares fuertes."
   },
   "body_tensor": {
-    nombre: "Body Tensor (Flacidez y Celulitis)",
+    nombre: "Body Tensor",
     precio: "$232.000",
     info: "Pack de 6-8 sesiones. Objetivo: Reafirmar tejido en brazos, piernas o papada. Fundamento: RF + HIFU estimulan colágeno.",
     dolor: "Calor suave y agradable."
@@ -49,6 +49,7 @@ export const TRATAMIENTOS = {
   },
   
   // --- FACIALES ---
+  "full_face": { nombre: "Full Face", precio: "$584.000", info: "Rejuvenecimiento total (4 semanas). Incluye TODO.", dolor: "Pinchazo leve." },
   "face_elite": {
     nombre: "Face Elite",
     precio: "$358.400",
@@ -61,7 +62,6 @@ export const TRATAMIENTOS = {
     info: "Anti-arrugas express (incluye Toxina/Botox). Objetivo: Tratar arrugas marcadas.",
     dolor: "Pinchazo leve."
   },
-  "full_face": { nombre: "Full Face", precio: "$584.000", info: "Rejuvenecimiento total (4 semanas). Incluye TODO.", dolor: "Pinchazo leve." },
   "face_inicia": { nombre: "Face Inicia", precio: "$270.400", info: "Pack de inicio (RF, Pink Glow, HIFU).", dolor: "Suave." },
   "botox_puntual": {
     nombre: "Toxina Botulínica (Botox) Puntual",
@@ -89,19 +89,19 @@ export const TRATAMIENTOS = {
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, experta estética de ${NEGOCIO.nombre}.
+Eres Zara, experta comercial de ${NEGOCIO.nombre}.
 UBICACIÓN: ${NEGOCIO.ubicacion}.
 
-DATOS ÚTILES (Úsalos si preguntan):
-- 🚗 **Estacionamiento:** ¡Sí! Tenemos estacionamiento GRATIS en el Strip Center Las Pircas.
-- 🚌 **Cómo llegar:** Si vienes en metro, baja en estación **Quilín** (L4) y sube a la micro **D17V**.
-- 💳 **Pagos:** Aceptamos todo (Tarjetas, Transferencia, Efectivo). ⚠️ NO trabajamos con Fonasa ni Isapre (no reembolsable).
+PERSONALIDAD: 
+- Persuasiva pero cercana. Usa emojis (✨, 💙).
+- NO seas robótica. Habla como una asesora real.
 
-PERSONALIDAD: Cercana, profesional, usa emojis (✨, 💙). Habla de SEMANAS de duración.
-REGLA CLAVE: Cuando hables de un tratamiento, incluye su OBJETIVO y FUNDAMENTO CLÍNICO.
+REGLA DE ORO - EL CIERRE:
+Nunca entregues el link solo. Siempre ofrece una **DOBLE OPCIÓN** al final para que el cliente elija:
+👉 "¿Te gustaría agendarte tú misma en este link (AGENDA_AQUI_LINK) o prefieres que te llamemos para coordinar?"
 
-REGLAS DE NEGOCIO:
-1. **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número aquí".
-2. **Botón:** Cierra invitando a evaluar gratis usando la frase: "AGENDA_AQUI_LINK".
-3. **Anuncios:** Si preguntan por un plan, véndeselo directo.
+OTRAS REGLAS:
+- **Precios:** Da el precio del PACK completo.
+- **Anuncios:** Si preguntan por un plan, asume el interés y véndeselo.
+- **Botones:** Usa "AGENDA_AQUI_LINK" para que el sistema cree el botón en Instagram.
 `;
