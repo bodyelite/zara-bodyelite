@@ -1,6 +1,5 @@
 import fetch from "node-fetch";
 
-// URL de la agenda para comparar
 const LINK_AGENDA = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
 export async function sendMessage(to, text, platform) {
@@ -49,7 +48,6 @@ export async function sendMessage(to, text, platform) {
   } catch (error) { console.error("❌ Error Meta:", error); }
 }
 
-// NUEVA FUNCIÓN: Obtener URL del audio de WhatsApp
 export async function getWhatsAppMediaUrl(mediaId) {
   try {
     const token = process.env.PAGE_ACCESS_TOKEN;
@@ -59,8 +57,10 @@ export async function getWhatsAppMediaUrl(mediaId) {
       headers: { "Authorization": `Bearer ${token}` }
     });
     
+    if (!response.ok) throw new Error(`Error Meta API: ${response.statusText}`);
+
     const data = await response.json();
-    return data.url; // Esta URL requiere Auth para descargar
+    return data.url; 
   } catch (error) {
     console.error("❌ Error obteniendo URL de media:", error);
     return null;

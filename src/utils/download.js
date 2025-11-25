@@ -5,8 +5,17 @@ import os from "os";
 
 export async function downloadFile(url, filename, headers = {}) {
   try {
-    const response = await fetch(url, { headers });
-    if (!response.ok) throw new Error(`Error descargando archivo: ${response.statusText}`);
+    console.log(`📥 Descargando desde: ${url.substring(0, 50)}...`);
+    
+    const response = await fetch(url, { 
+        headers: headers,
+        redirect: 'follow' // Importante para seguir la redirección de WhatsApp
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+    }
 
     const tempPath = path.join(os.tmpdir(), filename);
     const fileStream = fs.createWriteStream(tempPath);
@@ -17,9 +26,10 @@ export async function downloadFile(url, filename, headers = {}) {
       fileStream.on("finish", resolve);
     });
 
+    console.log("✅ Archivo guardado en:", tempPath);
     return tempPath;
   } catch (error) {
-    console.error("❌ Fallo en descarga:", error);
+    console.error("❌ Fallo crítico en descarga:", error.message);
     return null;
   }
 }
