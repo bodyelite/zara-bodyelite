@@ -1,5 +1,5 @@
 import fs from "fs";
-import { sendMessage } from "./services/meta.js";
+import { sendMessage, getWhatsAppMediaUrl } from "./services/meta.js";
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
 import { NEGOCIO } from "../config/knowledge_base.js";
@@ -18,8 +18,9 @@ function extraerTelefono(texto) {
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let senderId, text = "", senderName, messageId, audioUrl;
+  let downloadHeaders = {}; // Para WhatsApp necesitamos headers especiales
 
-  // 1. EXTRAER DATOS (AHORA CON SOPORTE DE AUDIO)
+  // 1. EXTRAER DATOS
   if (platform === "whatsapp") {
     const msg = entry.changes[0].value.messages?.[0];
     const contact = entry.changes[0].value.contacts?.[0];
@@ -29,13 +30,17 @@ export async function procesarEvento(entry) {
     senderName = contact?.profile?.name || "Usuario";
     messageId = msg.id;
 
-    // Detectar tipo de mensaje
+    // DETECCIÓN DE AUDIO WHATSAPP
     if (msg.type === "text") {
       text = msg.text.body;
     } else if (msg.type === "audio" || msg.type === "voice") {
-      // WhatsApp manda el ID del audio, hay que pedir la URL (complejo, dejémoslo para fase 2)
-      // Por ahora nos enfocamos en Instagram que manda la URL directa
-      text = "[Audio recibido - Funcionalidad en desarrollo para WhatsApp]";
+      const mediaId = msg.audio?.id || msg.voice?.id;
+      console.log("🎤 Audio WhatsApp detectado ID:", mediaId);
+      
+      // Obtenemos la URL real
+      audioUrl = await getWhatsAppMediaUrl(mediaId);
+      // WhatsApp requiere el token para descargar el archivo
+      downloadHeaders = { "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` };
     }
 
   } else {
@@ -48,19 +53,18 @@ export async function procesarEvento(entry) {
     messageId = msg.message?.mid;
     senderName = "Usuario IG";
 
-    // Detectar si es Texto o Audio
     if (msg.message?.text) {
       text = msg.message.text;
     } else if (msg.message?.attachments && msg.message.attachments[0].type === 'audio') {
       audioUrl = msg.message.attachments[0].payload.url;
-      console.log("🎤 Audio detectado en Instagram");
+      console.log("🎤 Audio Instagram detectado");
     }
   }
 
-  // FILTROS
+  // FILTROS DE SEGURIDAD
   const ahora = Date.now();
   const ultimaVez = ultimasRespuestas[senderId] || 0;
-  if (ahora - ultimaVez < 5000) return; // Candado de 5 seg
+  if (ahora - ultimaVez < 5000) return;
 
   if (messageId && mensajesProcesados.has(messageId)) return;
   if (messageId) {
@@ -71,39 +75,40 @@ export async function procesarEvento(entry) {
   ultimasRespuestas[senderId] = ahora;
 
   // ---------------------------------------------------------
-  // 🧠 PROCESAMIENTO DE AUDIO (LA MAGIA NUEVA)
+  // 🧠 PROCESAMIENTO DE AUDIO (UNIFICADO)
   // ---------------------------------------------------------
   if (audioUrl) {
     try {
-        const fileName = `audio_${senderId}_${Date.now()}.m4a`;
-        const filePath = await downloadFile(audioUrl, fileName);
+        // Usamos .ogg para WhatsApp (es el formato nativo de voz)
+        const ext = platform === 'whatsapp' ? 'ogg' : 'm4a';
+        const fileName = `audio_${senderId}_${Date.now()}.${ext}`;
+        
+        // Descargamos pasando los headers (clave para WhatsApp)
+        const filePath = await downloadFile(audioUrl, fileName, downloadHeaders);
         
         if (filePath) {
-            // Convertimos el audio a texto usando Whisper
             const transcripcion = await transcribirAudio(filePath);
-            
-            // Borramos el archivo temporal para no llenar el servidor
             fs.unlink(filePath, () => {}); 
 
             if (transcripcion) {
-                text = transcripcion; // ¡Ahora el audio es texto!
-                console.log(`🗣️ Usuario dijo (audio): "${text}"`);
+                text = transcripcion;
+                console.log(`🗣️ Transcripción (${platform}): "${text}"`);
             } else {
-                await sendMessage(senderId, "🎧 Recibí tu audio pero hubo un ruidito y no te escuché bien. ¿Me lo escribes? 💙", platform);
+                await sendMessage(senderId, "🎧 Hubo un problema escuchando tu audio. ¿Me lo escribes? 💙", platform);
                 return;
             }
         }
     } catch (e) {
         console.error("Error procesando audio:", e);
+        return;
     }
   }
 
-  if (!text) return; // Si después de todo no hay texto, salimos.
+  if (!text) return;
 
-  // --- FLUJO NORMAL (AHORA CON EL TEXTO YA TRANSCRITO) ---
+  // --- FLUJO NORMAL ---
   const mensajeLower = text.toLowerCase().trim();
 
-  // Comandos
   if (mensajeLower === "retomar" || mensajeLower === "zara on") {
     usuariosPausados[senderId] = false;
     await sendMessage(senderId, "🤖 Zara reactivada.", platform);
@@ -119,10 +124,9 @@ export async function procesarEvento(entry) {
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
 
-  // Lead
   const posibleTelefono = extraerTelefono(text);
   if (posibleTelefono) {
-    const alerta = `🚨 *LEAD (AUDIO/TXT)* 🚨\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
+    const alerta = `🚨 *LEAD DETECTADO (${platform.toUpperCase()})* 🚨\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
     for (const numero of NEGOCIO.staff_alertas) await sendMessage(numero, alerta, "whatsapp");
     
     const confirmacion = "¡Perfecto! 💙 Ya anoté tu número. Te llamaremos enseguida. ¿Alguna otra duda mientras?";
@@ -131,8 +135,7 @@ export async function procesarEvento(entry) {
     return;
   }
 
-  // IA
-  sesiones[senderId].push({ role: "user", content: text }); // Guardamos la transcripción
+  sesiones[senderId].push({ role: "user", content: text });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
