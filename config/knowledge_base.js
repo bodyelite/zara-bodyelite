@@ -2,13 +2,13 @@ export const NEGOCIO = {
   nombre: "Clínica Body Elite",
   telefono_interno: "56937648536", 
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-  ubicacion: "Av. Las Perdices Nº2990, Local 23 (Peñalolén). (Única sucursal)",
+  ubicacion: "Av. Las Perdices Nº2990, Local 23, Peñalolén (Strip Center Las Pircas).",
   horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
-  // 💡 LISTA DE NÚMEROS DE ALERTA (4 STAFF)
   staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"] 
 };
 
 export const TRATAMIENTOS = {
+  // --- CORPORALES ---
   "lipo_body_elite": {
     nombre: "Lipo Body Elite (Pack Completo)",
     precio: "$664.000",
@@ -39,12 +39,16 @@ export const TRATAMIENTOS = {
     info: "Pack de 6-8 sesiones. Objetivo: Reafirmar tejido en brazos, piernas o papada. Fundamento: RF + HIFU estimulan colágeno.",
     dolor: "Calor suave y agradable."
   },
+  "lipo_reductiva": { nombre: "Lipo Reductiva", precio: "$480.000", info: "Pack de 21 procedimientos (4-6 semanas). Quemadores + reafirmantes.", dolor: "Calor y vibración." },
+  "lipo_focalizada": { nombre: "Lipo Focalizada", precio: "$348.800", info: "3-4 semanas. Grasa localizada difícil.", dolor: "Pinchazo leve." },
   "lipo_papada": {
     nombre: "Lipo Papada",
     precio: "$313.600",
     info: "Plan específico para perfilado de rostro. Incluye Lipolítico y HIFU Facial.",
     dolor: "Pinchazo leve y calor."
   },
+  
+  // --- FACIALES ---
   "face_elite": {
     nombre: "Face Elite",
     precio: "$358.400",
@@ -57,6 +61,8 @@ export const TRATAMIENTOS = {
     info: "Anti-arrugas express (incluye Toxina/Botox). Objetivo: Tratar arrugas marcadas.",
     dolor: "Pinchazo leve."
   },
+  "full_face": { nombre: "Full Face", precio: "$584.000", info: "Rejuvenecimiento total (4 semanas). Incluye TODO.", dolor: "Pinchazo leve." },
+  "face_inicia": { nombre: "Face Inicia", precio: "$270.400", info: "Pack de inicio (RF, Pink Glow, HIFU).", dolor: "Suave." },
   "botox_puntual": {
     nombre: "Toxina Botulínica (Botox) Puntual",
     precio: "Desde $120.000 por zona / Pack 3 zonas $260.000 (Sujeto a evaluación)",
@@ -64,34 +70,38 @@ export const TRATAMIENTOS = {
     dolor: "Pinchazo rápido y leve."
   },
   "hidrofacial": {
-    nombre: "Hidrofacial (Limpieza Avanzada)",
-    precio: "Protocolo personalizado sin valor fijo.",
-    info: "Objetivo: Limpieza profunda, hidratación y renovación. Ideal para poros abiertos.",
+    nombre: "Hidrofacial",
+    precio: "Protocolo personalizado.",
+    info: "Limpieza profunda, hidratación y renovación. Ideal poros abiertos.",
     dolor: "Relajante."
   },
-  "limpieza_full": {
-    nombre: "Limpieza Facial Full",
-    precio: "$120.000",
-    info: "Pack de 6 pasos (3 RF + 3 Limpiezas). Objetivo: Piel radiante y limpia.",
-    dolor: "Relajante."
-  },
+  "limpieza_full": { nombre: "Limpieza Facial Full", precio: "$120.000", info: "Pack 6 pasos. Piel radiante.", dolor: "Relajante." },
+  
+  // --- DEPILACIÓN ---
   "depilacion_dl900": {
     nombre: "Depilación DL900",
-    precio: "Planes desde $153.600 (6 sesiones por zona).",
-    info: "Objetivo: Depilación láser rápida y segura para piel latina. Fundamento: Destruye el folículo sin dañar la piel.",
+    precio: "Planes desde $153.600 (6 sesiones).",
+    info: "Láser rápido y seguro para piel latina. Destruye el folículo.",
     dolor: "Pinchacito leve."
   },
-  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack de 6 sesiones (Zona 3).", dolor: "Pinchacito leve." },
-  "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack de 6 sesiones (Láser 1).", dolor: "Leve." },
-  "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Pack de 6 sesiones (Zona 2).", dolor: "Leve." }
+  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack 6 sesiones.", dolor: "Pinchacito leve." },
+  "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack 6 sesiones.", dolor: "Leve." }
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, experta estética y vendedora de ${NEGOCIO.nombre}.
+Eres Zara, experta estética de ${NEGOCIO.nombre}.
 UBICACIÓN: ${NEGOCIO.ubicacion}.
-PERSONALIDAD: Cercana, profesional, usa emojis (✨, 💙).
+
+DATOS ÚTILES (Úsalos si preguntan):
+- 🚗 **Estacionamiento:** ¡Sí! Tenemos estacionamiento GRATIS en el Strip Center Las Pircas.
+- 🚌 **Cómo llegar:** Si vienes en metro, baja en estación **Quilín** (L4) y sube a la micro **D17V**.
+- 💳 **Pagos:** Aceptamos todo (Tarjetas, Transferencia, Efectivo). ⚠️ NO trabajamos con Fonasa ni Isapre (no reembolsable).
+
+PERSONALIDAD: Cercana, profesional, usa emojis (✨, 💙). Habla de SEMANAS de duración.
 REGLA CLAVE: Cuando hables de un tratamiento, incluye su OBJETIVO y FUNDAMENTO CLÍNICO.
+
 REGLAS DE NEGOCIO:
 1. **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número aquí".
 2. **Botón:** Cierra invitando a evaluar gratis usando la frase: "AGENDA_AQUI_LINK".
+3. **Anuncios:** Si preguntan por un plan, véndeselo directo.
 `;
