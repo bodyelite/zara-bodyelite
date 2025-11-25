@@ -4,8 +4,7 @@ export const NEGOCIO = {
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
   ubicacion: "Av. Las Perdices Nº2990, Local 23 (Peñalolén). (Única sucursal)",
   horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
-  // 👇 AQUÍ ESTÁN LOS 3 NÚMEROS DE ALERTA AHORA
-  staff_alertas: ["56937648536", "56931720760", "56983300262"] 
+  staff_alertas: ["56937648536"] 
 };
 
 export const TRATAMIENTOS = {
@@ -16,7 +15,7 @@ export const TRATAMIENTOS = {
     info: "El plan más completo (29 procedimientos). Incluye: 6 RF, 12 Prosculpt (EMS), 6 Lipoláser, 2 HIFU 12D y 3 Controles Nutricionales.",
     dolor: "Calor profundo y contracciones musculares, tolerable."
   },
-  "full_face": {
+  "full_face": { // Aunque dice Face, el precio es alto, parece un pack muy completo
     nombre: "Full Face (Rejuvenecimiento Total)",
     precio: "$584.000",
     info: "Pack de 12 procedimientos premium: 1 Toxina (Botox), 2 RF, 3 Pink Glow, 2 LFP, 1 HIFU 12D Facial y 3 Controles.",
