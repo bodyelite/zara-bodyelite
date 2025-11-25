@@ -18,7 +18,10 @@ function extraerTelefono(texto) {
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let senderId, text = "", senderName, messageId, audioUrl;
-  let downloadHeaders = {}; // Para WhatsApp necesitamos headers especiales
+  // Headers por defecto para descarga
+  let downloadHeaders = { 
+    "User-Agent": "Mozilla/5.0 (compatible; ZaraBot/1.0)",
+  };
 
   // 1. EXTRAER DATOS
   if (platform === "whatsapp") {
@@ -37,10 +40,13 @@ export async function procesarEvento(entry) {
       const mediaId = msg.audio?.id || msg.voice?.id;
       console.log("🎤 Audio WhatsApp detectado ID:", mediaId);
       
-      // Obtenemos la URL real
-      audioUrl = await getWhatsAppMediaUrl(mediaId);
-      // WhatsApp requiere el token para descargar el archivo
-      downloadHeaders = { "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` };
+      // Obtenemos la URL base
+      const rawUrl = await getWhatsAppMediaUrl(mediaId);
+      if (rawUrl) {
+          // 🔥 FIX: Pegamos el token en la URL para que no se pierda en la redirección
+          audioUrl = `${rawUrl}`;
+          downloadHeaders["Authorization"] = `Bearer ${process.env.PAGE_ACCESS_TOKEN}`;
+      }
     }
 
   } else {
@@ -75,15 +81,14 @@ export async function procesarEvento(entry) {
   ultimasRespuestas[senderId] = ahora;
 
   // ---------------------------------------------------------
-  // 🧠 PROCESAMIENTO DE AUDIO (UNIFICADO)
+  // 🧠 PROCESAMIENTO DE AUDIO
   // ---------------------------------------------------------
   if (audioUrl) {
     try {
-        // Usamos .ogg para WhatsApp (es el formato nativo de voz)
         const ext = platform === 'whatsapp' ? 'ogg' : 'm4a';
         const fileName = `audio_${senderId}_${Date.now()}.${ext}`;
         
-        // Descargamos pasando los headers (clave para WhatsApp)
+        // Descarga robusta
         const filePath = await downloadFile(audioUrl, fileName, downloadHeaders);
         
         if (filePath) {
@@ -97,9 +102,12 @@ export async function procesarEvento(entry) {
                 await sendMessage(senderId, "🎧 Hubo un problema escuchando tu audio. ¿Me lo escribes? 💙", platform);
                 return;
             }
+        } else {
+             console.error("❌ No se pudo descargar el archivo de audio");
+             return;
         }
     } catch (e) {
-        console.error("Error procesando audio:", e);
+        console.error("Error crítico procesando audio:", e);
         return;
     }
   }
