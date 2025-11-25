@@ -9,8 +9,8 @@ const usuariosPausados = {};
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
 
-// 👇 AQUÍ ESTÁ EL LINK CORRECTO (Con los espacios arreglados)
-const FOTO_RESULTADOS_URL = "https://raw.githubusercontent.com/bodyelite/zara-bodyelite/main/Ant%20y%20desp%20Hombre.jpeg"; 
+// 👇 TU LINK DE FOTO YA PUESTO AQUÍ 👇
+const FOTO_RESULTADOS_URL = "https://i.ibb.co/PZqDzSm2/Ant-y-desp-Hombre.jpg"; 
 
 function extraerTelefono(texto) {
   if (!texto) return null;
@@ -34,7 +34,10 @@ export async function procesarEvento(entry) {
     else if (msg.type === "audio" || msg.type === "voice") {
       const mediaId = msg.audio?.id || msg.voice?.id;
       const rawUrl = await getWhatsAppMediaUrl(mediaId);
-      if (rawUrl) { audioUrl = rawUrl; downloadHeaders["Authorization"] = `Bearer ${process.env.PAGE_ACCESS_TOKEN}`; }
+      if (rawUrl) { 
+          audioUrl = rawUrl; 
+          downloadHeaders["Authorization"] = `Bearer ${process.env.PAGE_ACCESS_TOKEN}`; 
+      }
     }
   } else {
     const msg = entry.messaging?.[0];
@@ -91,12 +94,12 @@ export async function procesarEvento(entry) {
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
-  // LÓGICA DE ENVÍO DE FOTO
+  // LOGICA FOTO
   if (respuestaIA.includes("FOTO_RESULTADOS")) {
       const textoFinal = respuestaIA.replace("FOTO_RESULTADOS", "").trim();
       await sendMessage(senderId, textoFinal, platform);
-      // Usamos encodedURI para manejar los espacios en el nombre del archivo
-      await sendMessage(senderId, "", platform, encodeURI(FOTO_RESULTADOS_URL));
+      // Enviamos la foto real
+      await sendMessage(senderId, "", platform, FOTO_RESULTADOS_URL);
   } else {
       await sendMessage(senderId, respuestaIA, platform);
   }
