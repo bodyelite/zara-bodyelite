@@ -7,112 +7,76 @@ export const NEGOCIO = {
   staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"] 
 };
 
-// AQUÍ ESTÁN LOS GUIONES DE VENTA (No fichas técnicas)
 export const TRATAMIENTOS = {
-  // --- CORPORALES ---
+  // --- CORPORALES (DATOS CERRADOS - PRECIOS PLAN TOTAL) ---
   "lipo_body_elite": {
     nombre: "Plan Lipo Body Elite",
-    precio: "$664.000",
-    info: "Es nuestro plan de transformación total. Lo que lo hace único es que no solo ataca la grasa, sino que también reafirma la piel y tonifica el músculo al mismo tiempo (HIFU + EMS + Lipoláser). Es ideal si buscas un cambio radical en abdomen y cintura."
+    precio: "$664.000 (Plan Completo)",
+    info: "Es el plan de transformación total. Dura aprox 8 a 10 semanas. Ataca grasa, flacidez y tonifica músculo. Es ideal para un cambio radical.",
+    tech_list: ["HIFU 12D", "EMS Sculptor (Músculo)", "Lipoláser", "Radiofrecuencia (RF)"],
+    dolor: "Contracciones musculares fuertes."
   },
   "lipo_express": {
     nombre: "Plan Lipo Express",
-    precio: "$432.000",
-    info: "Es perfecto si buscas reducir contorno. Usamos tecnología que 'compacta' el tejido (HIFU) y otra que disuelve la grasita localizada (Cavitación). Los resultados se notan mucho en cómo te queda la ropa."
+    precio: "$432.000 (Plan Completo)",
+    info: "Plan reductivo de 8 semanas. Compacta el tejido y disuelve grasa localizada en abdomen y espalda. Resultados visibles en la ropa.",
+    tech_list: ["HIFU 12D", "Cavitación", "Radiofrecuencia (RF)"],
+    dolor: "Calor leve."
   },
   "push_up": {
     nombre: "Plan Push Up Glúteos",
-    precio: "$376.000",
-    info: "Es un levantamiento real sin cirugía. Usamos ondas electromagnéticas que generan un efecto gimnasio potente para dar forma y firmeza al glúteo."
-  },
-  "body_fitness": { 
-    nombre: "Plan Body Fitness", 
-    precio: "$360.000", 
-    info: "Está enfocado 100% en tonificar. Si sientes que te falta fuerza o definición muscular, este plan hace el trabajo intenso por ti."
+    precio: "$376.000 (Plan Completo)",
+    info: "Levantamiento de glúteos en 8 semanas. Genera un efecto gimnasio potente para dar forma y firmeza.",
+    tech_list: ["EMS Sculptor", "HIFU 12D", "Radiofrecuencia (RF)"],
+    dolor: "Contracción muscular fuerte."
   },
   "body_tensor": { 
     nombre: "Plan Body Tensor", 
-    precio: "$232.000", 
-    info: "Es la solución para la flacidez en brazos o piernas. Usamos radiofrecuencia y HIFU para estimular colágeno y que la piel se recoja."
+    precio: "$232.000 (Plan Completo)", 
+    info: "Firmeza para brazos o piernas en 8 semanas. Es la solución para flacidez y celulitis leve.", 
+    tech_list: ["Radiofrecuencia (RF)", "HIFU 12D"],
+    dolor: "Calor suave y agradable." 
   },
-  "lipo_reductiva": { 
-    nombre: "Plan Lipo Reductiva", 
-    precio: "$480.000", 
-    info: "Es un plan intensivo de quemadores de grasa y reafirmantes. Ideal si tienes un objetivo de reducción mayor."
-  },
-  "lipo_focalizada": { 
-    nombre: "Plan Lipo Focalizada", 
-    precio: "$348.800", 
-    info: "Ataca directo esas zonas difíciles que no bajan con nada. Es un tratamiento concentrado."
-  },
-  "lipo_papada": { 
-    nombre: "Plan Lipo Papada", 
-    precio: "$313.600", 
-    info: "Es específico para perfilar el rostro y reducir la grasa bajo el mentón."
-  },
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "Tonificación muscular pura. Programa de 9 semanas.", tech_list: ["EMS Sculptor / Pro Sculpt"], dolor: "Contracciones." },
+  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "Plan intensivo de 10 semanas enfocado en quema de grasa y reafirmación.", tech_list: ["Prosculpt", "Lipoláser", "HIFU 12D"], dolor: "Calor y vibración." },
 
   // --- FACIALES ---
   "face_elite": {
-    nombre: "Plan Face Elite",
-    precio: "$358.400",
-    info: "Es una joya para el rostro. Combina Botox para las líneas de expresión con tecnología que tensa la piel. El efecto es un rostro descansado y rejuvenecido."
+    nombre: "Plan Face Elite (Con Botox)",
+    precio: "$358.400 (Plan Completo)",
+    info: "Lifting sin cirugía. Incluye **Botox** y HIFU para un rostro rejuvenecido y descansado.",
+    tech_list: ["Toxina Botulínica (Botox)", "HIFU", "Pink Glow"],
+    dolor: "Pinchazo leve."
   },
-  "full_face": { 
-    nombre: "Plan Full Face", 
-    precio: "$584.000", 
-    info: "Es el rejuvenecimiento definitivo. Incluye todo lo necesario (Botox, Vitaminas, HIFU) para renovar la calidad de tu piel por completo."
+  "limpieza_full": {
+    nombre: "Pack Limpieza Facial Full",
+    precio: "$120.000 (Pack Total)",
+    info: "No es una limpieza común. Es un pack de 3 sesiones que incluye aparatología (RF) para limpiar y tensar la piel.",
+    tech_list: ["Radiofrecuencia (RF)", "Limpieza profunda", "Succión"],
+    dolor: "Relajante."
   },
-  "face_antiage": { 
-    nombre: "Plan Face Antiage", 
-    precio: "$281.600", 
-    info: "Es un plan antiarrugas express que incluye Botox y tecnologías tensoras."
-  },
-  "botox_puntual": { 
-    nombre: "Botox (Toxina Botulínica)", 
-    precio: "Desde $120.000 (Depende de la zona)", 
-    info: "Es la mejor opción para suavizar arrugas dinámicas en frente o patas de gallo de forma rápida."
-  },
-  "hidrofacial": { 
-    nombre: "Hidrofacial", 
-    precio: "A evaluar", 
-    info: "Es una limpieza profunda que además hidrata. Tu piel queda con un 'glow' inmediato."
-  },
-  "limpieza_full": { 
-    nombre: "Pack Limpieza Facial Full", 
-    precio: "$120.000", 
-    info: "No es una limpieza común, es un tratamiento de 3 sesiones que incluye aparatología para limpiar y reafirmar."
-  },
-  
-  // --- DEPILACIÓN ---
-  "depilacion_dl900": { 
-    nombre: "Depilación Láser", 
-    precio: "Desde $153.600", 
-    info: "Es la solución definitiva para olvidarte de los pelos. Usamos láser DL900 que es rápido, seguro y efectivo."
-  }
+  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express con Botox.", tech_list: ["Toxina (Botox)", "HIFU"], dolor: "Pinchazo leve." },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total (8 semanas). Incluye TODO.", tech_list: ["Toxina", "RF", "HIFU", "Pink Glow"], dolor: "Pinchazo leve." },
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, asesora experta de ${NEGOCIO.nombre}.
-TU OBJETIVO: Conversar, entender y luego vender. NO despachar información.
+Eres Zara, la Consultora Experta y Directa de ${NEGOCIO.nombre}.
+TU MISIÓN: Asesorar, dar certeza técnica y cerrar la cita.
 
-GUIÓN DE VENTA OBLIGATORIO (Sigue estos pasos):
+GUIÓN DE VENTA ESTRUCTURADO (PROHIBIDO VOMITAR INFO):
+1. **SI PREGUNTAN QUÉ ES / PARA QUÉ SIRVE:** Usa el campo 'info' del tratamiento. Sé concisa y enfócate en el resultado. NO des el precio todavía.
+   - *Ejemplo:* "El Plan Lipo Express es un plan de 8 semanas que baja contorno y mejora tu piel. ¿Te gustaría saber qué tecnologías usamos?"
 
-1️⃣ **PASO 1: EMPATÍA Y SOLUCIÓN (El Gancho)**
-   - Si el cliente cuenta un problema (ej: "tengo guata"), valida su dolor: "¡Te entiendo full! Es una zona súper difícil."
-   - Presenta la solución como concepto, no como lista técnica: "En Body Elite nos especializamos en reducir abdomen sin cirugía usando nuestros planes integrales. ¿Ya conoces cómo funcionan?"
+2. **SI PREGUNTAN CÓMO / TECNOLOGÍA / APARATOS:** Usa el campo 'tech_list' para nombrar la tecnología (ej: 'HIFU 12D').
+   - *Ejemplo:* "Para lograr eso, usamos 3 tecnologías médicas: HIFU 12D, Cavitación y Radiofrecuencia. ¿Te hace sentido este enfoque integral?"
 
-2️⃣ **PASO 2: LA EXPLICACIÓN (Sin precios aún)**
-   - Cuando expliques el plan, usa el texto de "info" de la lista de arriba.
-   - **SOBRE LA DURACIÓN:** Di siempre: "Son programas de aproximadamente **8 semanas**. Generalmente vienes 1 o 2 veces por semana, dependiendo de tu ciclo. Eso lo ajustamos a tu medida en la evaluación."
-   - Cierra preguntando: "¿Te hace sentido algo así? ¿Te gustaría saber el valor?"
+3. **EL CIERRE (PRECIO + ACCIÓN):** Solo cuando el cliente muestre interés O pregunte por precio:
+   - Entrega el valor del plan completo.
+   - Vende el regalo: "Incluye tu Evaluación con IA gratis 🎁."
+   - **CIERRE DOBLE OPCIÓN:** "¿Qué prefieres: agendar tu evaluación ahora mismo o que te llamemos para coordinar?" (AGENDA_AQUI_LINK)
 
-3️⃣ **PASO 3: EL PRECIO Y EL CIERRE (Solo si hay interés)**
-   - Entrega el precio del plan completo.
-   - Vende el regalo: "Y ojo, para asegurarnos de que sea lo que necesitas, la **Evaluación es GRATIS y asistida por IA** para ser ultra precisos 🎁."
-   - **CIERRE DE DOBLE OPCIÓN:** "¿Prefieres que te llamemos para explicarte bien los detalles o te acomoda agendarte tú misma en la agenda online? (AGENDA_AQUI_LINK)"
+REGLAS DE FORMATO Y TONO:
+- **FORMATO:** Respuestas de MÁXIMO 3 líneas. Usa emojis y párrafos cortos.
+- **TONO:** Directo, confiado, experto, cero evasivo.
 
-REGLAS DE ORO:
-- **NO HABLES DE "PROCEDIMIENTOS":** Habla de semanas y frecuencia.
-- **NO HABLES TÉCNICO:** No listes máquinas si no preguntan. Vende el resultado ("reafirma", "compacta", "levanta").
-- **FOTOS:** Si piden ver cambios: "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
 `;
