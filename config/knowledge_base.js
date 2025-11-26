@@ -8,97 +8,128 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
+  // --- CORPORALES ---
   "lipo_body_elite": {
     nombre: "Lipo Body Elite (Pack Completo)",
     precio: "$664.000",
-    info: "🔥 Plan más completo (29 proced.) para reducir grasa, tonificar músculo y mejorar firmeza. Dura aprox 5-8 semanas (10-12 sesiones). Incluye HIFU 12D, EMS Sculptor, Cavitación y Nutrición. Fundamento: Actúa sobre grasa, tejido conectivo y musculatura profunda.",
-    dolor: "Calor profundo y trabajo muscular intenso, totalmente tolerable."
+    info: "🔥 Nuestro plan más potente. Dura 5-8 semanas. Incluye todo: HIFU, EMS, Lipoláser... ¡Cambio total!",
+    dolor: "Trabajo muscular intenso."
+  },
+  "lipo_reductiva": {
+    nombre: "Lipo Reductiva",
+    precio: "$480.000",
+    info: "Pack de 4-6 semanas. Full quemadores + reafirmantes.",
+    dolor: "Calor y vibración."
   },
   "lipo_express": {
     nombre: "Lipo Express",
     precio: "$432.000",
-    info: "⚡️ Plan rápido de 4 a 8 semanas (8-10 sesiones). Reduce grasa localizada en abdomen/espalda y mejora contorno. Incluye HIFU 12D, Cavitación y Radiofrecuencia. Fundamento: La cavitación rompe adipocitos y el HIFU tensa la piel.",
-    dolor: "Calor leve y vibración."
+    info: "⚡️ Plan rápido (4-5 semanas). Baja contorno y mejora piel.",
+    dolor: "Calor leve."
   },
   "push_up": {
     nombre: "Push Up Glúteos",
     precio: "$376.000",
-    info: "🍑 Levanta, afirma y da contorno natural al glúteo (8-10 sesiones). Fundamento: EMS genera contracciones que mejoran tono y volumen muscular real (sin relleno).",
-    dolor: "Contracciones musculares fuertes (efecto gimnasio)."
+    info: "🍑 Levantamiento de glúteos. 4-5 semanas. Efecto gimnasio sin esfuerzo.",
+    dolor: "Contracción muscular fuerte."
   },
   "body_fitness": {
-    nombre: "Body Fitness (Tonificación)",
+    nombre: "Body Fitness",
     precio: "$360.000",
-    info: "Pack de 6-8 sesiones (aprox 4 semanas). Objetivo: Marcar y definir musculatura con EMS Sculptor. Ideal post-entrenamiento.",
-    dolor: "Contracciones musculares fuertes."
+    info: "💪 4 semanas para marcar y definir músculo a full.",
+    dolor: "Contracciones musculares."
   },
-  "body_tensor": {
-    nombre: "Body Tensor (Flacidez y Celulitis)",
-    precio: "$232.000",
-    info: "Pack de 6-8 sesiones. Objetivo: Reafirmar tejido y tratar flacidez/celulitis en brazos, piernas o papada. Fundamento: RF + HIFU estimulan colágeno y mejoran firmeza.",
-    dolor: "Calor suave y agradable."
+  "lipo_focalizada": {
+    nombre: "Lipo Focalizada",
+    precio: "$348.800",
+    info: "🎯 Para esa grasita difícil. 3-4 semanas.",
+    dolor: "Pinchazo leve."
   },
   "lipo_papada": {
     nombre: "Lipo Papada",
     precio: "$313.600",
-    info: "Plan específico de 9 procedimientos. Objetivo: Reducir grasa submentoniana y mejorar contorno mandibular. Incluye Lipolítico y HIFU Facial.",
-    dolor: "Pinchazo leve y calor."
+    info: "Perfilado de rostro y chao papada. Aprox 3 semanas.",
+    dolor: "Pinchazo leve."
+  },
+  "body_tensor": {
+    nombre: "Body Tensor",
+    precio: "$232.000",
+    info: "Firmeza para brazos o piernas. 3-4 semanas.",
+    dolor: "Calor suave."
+  },
+
+  // --- FACIALES ---
+  "full_face": {
+    nombre: "Full Face",
+    precio: "$584.000",
+    info: "💎 Rejuvenecimiento total (4 semanas). Incluye Botox, HIFU y más.",
+    dolor: "Pinchazo leve."
   },
   "face_elite": {
     nombre: "Face Elite",
     precio: "$358.400",
-    info: "💎 Pack completo de rejuvenecimiento (8-10 sesiones). Objetivo: Tensar, mejorar contorno, tratar arrugas y luminosidad. Incluye HIFU 12D, Pink Glow y Toxina (según evaluación).",
-    dolor: "Pinchazo leve y calor."
+    info: "✨ Pack alto impacto con Botox y HIFU. Lifting sin cirugía.",
+    dolor: "Pinchazo leve."
   },
   "face_antiage": {
     nombre: "Face Antiage",
     precio: "$281.600",
-    info: "Anti-arrugas express. 3 procedimientos (incluye Toxina/Botox). Objetivo: Tratar arrugas marcadas y envejecimiento global en rostro.",
+    info: "Anti-arrugas express con Botox. 2-3 semanas.",
     dolor: "Pinchazo leve."
   },
   "botox_puntual": {
-    nombre: "Toxina Botulínica (Botox) Puntual",
-    precio: "Desde $120.000 por zona / Pack 3 zonas $260.000 (Sujeto a evaluación)",
-    info: "Objetivo: Suavizar arrugas dinámicas (frente, entrecejo, patas de gallo). El número de zonas se define en evaluación.",
-    dolor: "Pinchazo rápido y leve."
+    nombre: "Botox (Toxina)",
+    precio: "Desde $120.000/zona o $260.000 pack completo (aprox)",
+    info: "Suaviza arrugas en días. Rostro descansado.",
+    dolor: "Pinchazo rápido."
   },
   "hidrofacial": {
-    nombre: "Hidrofacial (Limpieza Avanzada)",
-    precio: "Protocolo personalizado sin valor fijo.",
-    info: "Objetivo: Limpieza profunda, hidratación y renovación en 1 sesión. Ideal para poros abiertos, piel apagada y deshidratada.",
+    nombre: "Hidrofacial",
+    precio: "A evaluar.",
+    info: "Limpieza profunda y glow inmediato.",
     dolor: "Relajante."
   },
   "limpieza_full": {
     nombre: "Limpieza Facial Full",
     precio: "$120.000",
-    info: "Pack de 6 procedimientos (3 RF + 3 Limpiezas). Objetivo: Piel radiante y limpia.",
+    info: "Piel radiante en 6 pasos.",
     dolor: "Relajante."
   },
+  "face_inicia": { nombre: "Face Inicia", precio: "$270.400", info: "Pack inicio piel joven.", dolor: "Suave." },
+  "face_smart": { nombre: "Face Smart", precio: "$198.400", info: "Revitalización inteligente.", dolor: "Leve." },
+  "face_one": { nombre: "Face One", precio: "$169.600", info: "Mantención básica.", dolor: "Agradable." },
+  "exosoma": { nombre: "Exosoma", precio: "$152.000", info: "Regeneración celular.", dolor: "Mínimo." },
+  "face_light": { nombre: "Face Light", precio: "$128.800", info: "Luz al rostro.", dolor: "Suave." },
+  "face_h12": { nombre: "Face H12", precio: "$121.600", info: "Dúo LFP + HIFU.", dolor: "Leve." },
+
+  // --- DEPILACIÓN ---
   "depilacion_dl900": {
     nombre: "Depilación DL900",
-    precio: "Planes desde $153.600 (6 sesiones por zona).",
-    info: "Objetivo: Depilación láser rápida y segura para piel latina. Fundamento: Destruye el folículo sin dañar la piel.",
+    precio: "Planes desde $153.600 (6 sesiones).",
+    info: "Láser rápido y seguro. Olvídate de los pelos.",
     dolor: "Pinchacito leve."
   },
-  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack de 6 sesiones (Zona 3).", dolor: "Pinchacito leve." },
-  "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack de 6 sesiones (Láser 1).", dolor: "Leve." },
-  "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Pack de 6 sesiones (Zona 2).", dolor: "Leve." }
+  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack 6 sesiones.", dolor: "Pinchacito leve." },
+  "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack 6 sesiones.", dolor: "Leve." },
+  "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Pack 6 sesiones.", dolor: "Leve." },
+  "depilacion_midle": {nombre: "Depilación Midle", precio: "$192.000", info: "Pack 6 sesiones.", dolor: "Leve." },
+  "depilacion_inicia": {nombre: "Depilación Inicia", precio: "$153.600", info: "Pack 6 sesiones.", dolor: "Muy suave." }
 };
 
 export const SYSTEM_PROMPT = `
 Eres Zara, experta estética de ${NEGOCIO.nombre}.
 UBICACIÓN: ${NEGOCIO.ubicacion}.
 
-PERSONALIDAD: Cercana, profesional, usa emojis (✨, 💙).
-REGLA CLAVE: Cuando hables de un tratamiento, incluye su OBJETIVO y FUNDAMENTO CLÍNICO.
+ESTILO DE CONVERSACIÓN (CHAT):
+1. **SE BREVE:** Tus respuestas deben ser cortas y ágiles. Nadie lee textos largos en Instagram. Resume la info.
+2. **INTERACTÚA:** No solo des el dato, **termina siempre con una pregunta** para que el cliente te conteste.
+   - Mal: "El precio es $100. Agenda aquí."
+   - Bien: "El pack completo sale $100 e incluye todo ✨ ¿Te gustaría evaluar tu caso gratis?"
+3. **CERCANA:** Usa emojis, habla de tú a tú.
 
-🚨 REGLA SUPREMA FOTOS:
-Si el usuario pide "resultados", "fotos", "antes y después", "evidencia" o duda de si funciona, NO LOS MANDES A INSTAGRAM.
-Debes responder OBLIGATORIAMENTE con esta frase exacta:
-"¡Mira este cambio increíble de un paciente real de Lipo Express! 👇 FOTO_RESULTADOS"
-
-REGLAS DE NEGOCIO:
-1. **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número aquí".
-2. **Botón:** Cierra invitando a evaluar gratis usando: "AGENDA_AQUI_LINK".
-3. **Anuncios:** Si preguntan por un plan, asume el interés y véndeselo.
+REGLAS TÉCNICAS:
+- **Teléfono:** Si preguntan, di: "¡Nosotras te llamamos! 📲 Déjame tu número y te contacto al tiro".
+- **Precios:** Da el valor del PACK completo.
+- **Fotos:** Si piden ver cambios, responde SOLO con: "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+- **Cierre:** Cuando quieras agendar, usa la frase: "AGENDA_AQUI_LINK".
 `;
