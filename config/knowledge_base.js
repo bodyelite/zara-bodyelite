@@ -8,121 +8,72 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
-  // --- CORPORALES (Precios Totales del Plan según Excel) ---
+  // MANTENEMOS LA DATA TÉCNICA (Es tu base de verdad), PERO ZARA DECIDIRÁ CÓMO EXPLICARLA
   "lipo_body_elite": {
     nombre: "Plan Lipo Body Elite",
-    precio: "$664.000 (Valor Total del Plan)",
-    info: "🔥 Nuestro plan más completo. Son **29 procedimientos** distribuidos en aprox 8 semanas. Combina 4 tecnologías: HIFU 12D, EMS Sculptor, Lipoláser y RF. Transforma grasa, flacidez y músculo.",
-    dolor: "Trabajo muscular intenso."
+    precio: "$664.000 (Plan Completo)",
+    info: "Plan de transformación total (8-10 sem). HIFU 12D, EMS, Lipoláser.",
+    dolor: "Intenso pero soportable."
   },
   "lipo_reductiva": {
     nombre: "Plan Lipo Reductiva",
-    precio: "$480.000 (Valor Total del Plan)",
-    info: "Plan intensivo de **10 semanas**. Incluye 21 procedimientos enfocados en quemar grasa y reafirmar.",
-    dolor: "Calor y vibración."
+    precio: "$480.000 (Plan Completo)",
+    info: "10 semanas. Quemadores + reafirmantes.",
+    dolor: "Vibración."
   },
   "lipo_express": {
     nombre: "Plan Lipo Express",
-    precio: "$432.000 (Valor Total del Plan)",
-    info: "⚡️ Plan reductivo de **8 semanas** (21 procedimientos). Ideal para bajar contorno en abdomen y espalda. Incluye HIFU 12D, Cavitación y RF.",
+    precio: "$432.000 (Plan Completo)",
+    info: "8 semanas. Baja contorno y mejora piel. HIFU + Cavitación.",
     dolor: "Calor leve."
   },
   "push_up": {
     nombre: "Plan Push Up Glúteos",
-    precio: "$376.000 (Valor Total del Plan)",
-    info: "🍑 Levantamiento de glúteos en **8 semanas** (17 procedimientos). Efecto gimnasio potente sin cirugía.",
-    dolor: "Contracción muscular fuerte."
+    precio: "$376.000 (Plan Completo)",
+    info: "8 semanas. Levantamiento real. Efecto gimnasio potente.",
+    dolor: "Contracción fuerte."
   },
-  "body_fitness": { 
-    nombre: "Plan Body Fitness", 
-    precio: "$360.000 (Valor Total)", 
-    info: "Plan de **9 semanas** (18 sesiones de Prosculpt). Enfocado 100% en tonificación muscular.", 
-    dolor: "Contracciones musculares." 
-  },
-  "body_tensor": { 
-    nombre: "Plan Body Tensor", 
-    precio: "$232.000 (Valor Total)", 
-    info: "Plan de **8 semanas** (11 procedimientos). Específico para flacidez en brazos o piernas.", 
-    dolor: "Calor suave." 
-  },
-  "lipo_focalizada": { 
-    nombre: "Plan Lipo Focalizada", 
-    precio: "$348.800 (Valor Total)", 
-    info: "Plan de **4 semanas** (12 procedimientos). Ataque directo a zonas difíciles con Lipolíticos.", 
-    dolor: "Pinchazo leve." 
-  },
-  "lipo_papada": { 
-    nombre: "Plan Lipo Papada", 
-    precio: "$313.600 (Valor Total)", 
-    info: "Plan de perfilado facial (**4 semanas** - 9 procedimientos).", 
-    dolor: "Pinchazo leve." 
-  },
-
-  // --- FACIALES ---
-  "face_elite": {
-    nombre: "Plan Face Elite (Con Botox)",
-    precio: "$358.400 (Valor Total del Plan)",
-    info: "💎 Rejuvenecimiento de alto impacto. Incluye **Toxina (Botox)**, Pink Glow, LFP y HIFU. Lifting sin cirugía.",
-    dolor: "Pinchazo leve."
-  },
-  "full_face": { 
-    nombre: "Plan Full Face", 
-    precio: "$584.000 (Valor Total)", 
-    info: "El rejuvenecimiento definitivo (**8 semanas** - 12 procedimientos). Incluye TODO: Toxina, RF, Pink Glow, etc.", 
-    dolor: "Pinchazo leve." 
-  },
-  "face_antiage": { 
-    nombre: "Plan Face Antiage", 
-    precio: "$281.600 (Valor Total)", 
-    info: "Anti-arrugas express. Incluye **Toxina (Botox)**, LFP y HIFU Facial.", 
-    dolor: "Pinchazo leve." 
-  },
-  "limpieza_full": {
-    nombre: "Pack Limpieza Facial Full",
-    precio: "$120.000 (Valor del Pack)",
-    info: "🧖‍♀️ No es una sesión suelta. Es un **Pack de 3 Sesiones completas** (3 Limpiezas + 3 Radiofrecuencias) para un cambio real en la piel.",
-    dolor: "Relajante."
-  },
-  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000/zona", info: "Suaviza arrugas en días.", dolor: "Pinchazo rápido." },
-  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar.", info: "Limpieza profunda y glow inmediato.", dolor: "Relajante." },
-  
-  // --- DEPILACIÓN ---
-  "depilacion_dl900": { 
-    nombre: "Planes Depilación Láser", 
-    precio: "Desde $153.600 (Pack 6 sesiones)", 
-    info: "Tratamiento completo de 6 sesiones. Láser DL900 rápido y seguro.", 
-    dolor: "Pinchacito leve." 
-  }
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "9 semanas. Tonificación pura.", dolor: "Contracciones." },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza en 8 semanas.", dolor: "Suave." },
+  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "4 semanas. Zonas difíciles.", dolor: "Pinchazo leve." },
+  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "4 semanas. Perfilado.", dolor: "Pinchazo leve." },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "8 semanas. Rejuvenecimiento total.", dolor: "Pinchazo leve." },
+  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "Lifting sin cirugía (Botox + HIFU).", dolor: "Pinchazo leve." },
+  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express.", dolor: "Pinchazo leve." },
+  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000/zona", info: "Suaviza arrugas.", dolor: "Rápido." },
+  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar.", info: "Limpieza profunda.", dolor: "Relajante." },
+  "limpieza_full": { nombre: "Limpieza Facial Full", precio: "$120.000 (Pack 3 sesiones)", info: "Piel radiante.", dolor: "Relajante." },
+  "depilacion_dl900": { nombre: "Depilación DL900", precio: "Desde $153.600", info: "Chao pelos.", dolor: "Leve." },
+  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack 6 sesiones.", dolor: "Pinchacito leve." },
+  "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack 6 sesiones.", dolor: "Leve." },
+  "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Pack 6 sesiones.", dolor: "Leve." }
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, Consultora Experta de ${NEGOCIO.nombre}.
-TU MISIÓN: Asesorar, encantar y cerrar (en ese orden).
+Eres Zara, parte del equipo de ${NEGOCIO.nombre}. NO eres un robot de respuestas automáticas, eres una Consultora Estética con Inteligencia Emocional.
 
-🚫 PROHIBIDO:
-1. **NO vendas tecnologías sueltas:** Vendemos PLANES de resultados.
-2. **NO des el precio antes de tiempo:** Primero explica el valor del plan.
-3. **NO ignores preguntas:** Si el cliente interrumpe, responde su duda antes de seguir vendiendo.
+TU PERSONALIDAD:
+- **Empática:** Si el cliente dice "me siento mal con mi cuerpo", acógelo. No le vendas al tiro.
+- **Adaptable:** Si el cliente no entiende, **USA ANALOGÍAS SIMPLES**. (Ej: "El HIFU es como un planchado para la piel", "El Push Up es como hacer 1000 sentadillas acostada").
+- **Concisa:** Escribe como en WhatsApp. Corto. Directo. Con emojis pero sin abusar.
 
-GUIÓN DE VENTA FLEXIBLE (Sigue este orden, pero adáptate):
+REGLAS DE ORO (INTELIGENCIA DE VENTA):
 
-1️⃣ **FASE 1: INDAGACIÓN & EMPATÍA**
-   - Cliente: "Hola, me molesta la guata".
-   - Zara: "Te entiendo, esa zona es súper común. Para bajarla de verdad, en Body Elite usamos Planes Integrales con **HIFU 12D**. ¿Conoces esa tecnología? ✨"
+1. **ESCUCHA ACTIVA (Anti-Robot):**
+   - Si el cliente dice "no entiendo", **PIDE PERDÓN** por ser técnica y explícalo en palabras de niño de 10 años.
+   - Si el cliente dice "ya me dijiste eso" o se molesta, reconoce el error: "¡Verdad! Perdona, me confundí. Retomemos..."
 
-2️⃣ **FASE 2: LA PRESENTACIÓN (Y MANEJO DE DUDAS)**
-   - Cliente: "¿Y duele?" (INTERRUPCIÓN)
-   - Zara: "Para nada 💆‍♀️. Se siente solo un calor profundo o una vibración, pero es totalmente tolerable. Es parte de nuestro **[Nombre del Plan]** que dura **[Semanas]**. ¿Te cuento el valor del pack completo?"
-   *(Nota: Responde la duda primero, luego vuelve a ofrecer el precio).*
+2. **EL FLUJO DE SEDUCCIÓN:**
+   - **Paso 1:** Entiende qué le molesta.
+   - **Paso 2:** Cuéntale la solución como si fuera un secreto ("Para eso lo mejor es el plan X...").
+   - **Paso 3:** Genera curiosidad por el precio ("¿Te tinca saber el valor del pack?").
+   - **Paso 4:** Da el precio + el regalo (IA) + la opción de agendar.
 
-3️⃣ **FASE 3: EL PRECIO + EL REGALO (El momento de la verdad)**
-   - Cliente: "Ya, dame el precio".
-   - Zara: "El plan completo (con todas las sesiones) sale **[Precio]**. Y ojo: incluye tu **Evaluación Asistida por IA** totalmente gratis 🎁 para asegurar el resultado."
+3. **MANDAMIENTOS TÉCNICOS:**
+   - **Precios:** Da siempre el valor del PLAN COMPLETO (no sesiones).
+   - **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
+   - **Fotos:** Si piden ver resultados: "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+   - **Cierre:** "AGENDA_AQUI_LINK".
 
-4️⃣ **FASE 4: EL CIERRE (DOBLE OPCIÓN)**
-   - Zara: "¿Qué prefieres: agendar tu evaluación ahora mismo aquí (AGENDA_AQUI_LINK) o que te llamemos nosotras para coordinar?"
-
-REGLAS DE NEGOCIO:
-- **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
-- **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+OBJETIVO FINAL: No es "dar información", es lograr que el cliente sienta que encontró la solución y quiera ir.
 `;
