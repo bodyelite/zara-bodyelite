@@ -9,13 +9,28 @@ const usuariosPausados = {};
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
 
-// 👇 LINK VALIDADO DIRECTO
 const FOTO_RESULTADOS_URL = "https://i.ibb.co/PZqDzSm2/Ant-y-desp-Hombre.jpg"; 
 
 function extraerTelefono(texto) {
   if (!texto) return null;
   const match = texto.match(/\b(\+?56)?(\s?9)\s?\d{4}\s?\d{4}\b/); 
   return match ? match[0] : null;
+}
+
+// Función Horario (Chile GMT-3)
+function esHorarioLaboral() {
+    const ahora = new Date();
+    const horaChile = (ahora.getUTCHours() - 3 + 24) % 24; 
+    return horaChile >= 9 && horaChile < 19; 
+}
+
+function obtenerCrossSell() {
+    const tips = [
+        "Oye, y por si te interesa, ¡también tenemos Depilación Láser DL900! ⚡️",
+        "Dato extra: También hacemos Botox para complementar con el rostro ✨",
+        "Recuerda que la evaluación incluye un escáner facial con IA de regalo 🎁"
+    ];
+    return tips[Math.floor(Math.random() * tips.length)];
 }
 
 export async function procesarEvento(entry) {
@@ -76,13 +91,29 @@ export async function procesarEvento(entry) {
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
 
+  // --- CAPTURA DE LEAD CON HORARIO ---
   const posibleTelefono = extraerTelefono(text);
   if (posibleTelefono) {
-    const alerta = `🚨 *LEAD DETECTADO* 🚨\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
+    const enHorario = esHorarioLaboral();
+    const estadoLlamada = enHorario ? "✅ LLAMAR AHORA" : "🌙 FUERA DE HORARIO - LLAMAR MAÑANA";
+    
+    const alerta = `🚨 *LEAD DETECTADO* 🚨\n⏰ ${estadoLlamada}\n👤 ${senderName}\n📞 ${posibleTelefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
+    
     for (const numero of NEGOCIO.staff_alertas) await sendMessage(numero, alerta, "whatsapp");
-    const confirmacion = "¡Perfecto! 💙 Ya anoté tu número. Te llamaremos enseguida.";
-    sesiones[senderId].push({ role: "assistant", content: confirmacion });
-    await sendMessage(senderId, confirmacion, platform);
+    
+    // Respuesta diferenciada según la hora
+    let confirmacion = "";
+    if (enHorario) {
+        confirmacion = "¡Perfecto! 💙 Ya le pasé tu número a las especialistas. Te llamaremos en unos minutos.";
+    } else {
+        confirmacion = "¡Listo! 🌙 Ya guardé tu contacto. Como nuestro equipo administrativo ya terminó su jornada, te llamaremos mañana a primera hora. ¿Te acomoda algún horario en especial?";
+    }
+
+    const crossSell = obtenerCrossSell();
+    const mensajeFinal = `${confirmacion}\n\n${crossSell}`;
+
+    sesiones[senderId].push({ role: "assistant", content: mensajeFinal });
+    await sendMessage(senderId, mensajeFinal, platform);
     return;
   }
 
@@ -91,16 +122,10 @@ export async function procesarEvento(entry) {
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
-  // LÓGICA DE FOTO FORZADA
-  const clientePideFoto = mensajeLower.includes("foto") || mensajeLower.includes("resultado") || mensajeLower.includes("antes y") || mensajeLower.includes("ver");
-  const iaSugiereFoto = respuestaIA.includes("FOTO_RESULTADOS");
-
-  if (iaSugiereFoto || clientePideFoto) {
-      const textoFinal = respuestaIA.replace("FOTO_RESULTADOS", "").trim() || "¡Mira estos resultados reales!";
-      console.log("📸 Intentando enviar foto...");
-      
-      // Enviar Solo Foto (Tarjeta) porque incluye texto y botón
-      await sendMessage(senderId, textoFinal, platform, FOTO_RESULTADOS_URL);
+  if (respuestaIA.includes("FOTO_RESULTADOS")) {
+      const textoFinal = respuestaIA.replace("FOTO_RESULTADOS", "").trim();
+      await sendMessage(senderId, textoFinal, platform);
+      if (FOTO_RESULTADOS_URL.startsWith("http")) await sendMessage(senderId, "", platform, FOTO_RESULTADOS_URL);
   } else {
       await sendMessage(senderId, respuestaIA, platform);
   }
