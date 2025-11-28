@@ -8,26 +8,32 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
+  // La data dura se mantiene (es tu respaldo técnico), pero Zara decide CÓMO usarla.
   "lipo_body_elite": {
     nombre: "Plan Lipo Body Elite",
     precio: "$664.000 (Plan Completo)",
-    info: "🔥 El cambio total. 8 semanas. Ataca grasa, flacidez y músculo todo junto.",
-    dolor: "Intenso pero vale la pena."
+    info: "El cambio total. 8-10 semanas. Ataca grasa, flacidez y músculo. HIFU 12D + EMS + Lipoláser.",
+    dolor: "Trabajo muscular intenso."
   },
-  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "10 semanas. Full quemadores de grasa.", dolor: "Calor y vibración." },
   "lipo_express": {
     nombre: "Plan Lipo Express",
     precio: "$432.000 (Plan Completo)",
-    info: "⚡️ Rápido y efectivo (8 semanas). Baja contorno y mejora la piel.",
+    info: "Reductor rápido. 8 semanas. Ideal para bajar contorno. HIFU 12D + Cavitación.",
     dolor: "Calor leve."
   },
-  "push_up": { nombre: "Plan Push Up Glúteos", precio: "$376.000", info: "🍑 Levantamiento real. Efecto gimnasio.", dolor: "Contracción fuerte." },
-  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "Tonificación pura (9 semanas).", dolor: "Contracciones." },
-  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza para brazos o piernas.", dolor: "Suave." },
-  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Para zonas difíciles.", dolor: "Pinchazo leve." },
-  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado de rostro.", dolor: "Pinchazo leve." },
-  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "💎 Lifting sin cirugía (Botox + HIFU).", dolor: "Pinchazo leve." },
-  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total.", dolor: "Pinchazo leve." },
+  "push_up": {
+    nombre: "Plan Push Up Glúteos",
+    precio: "$376.000 (Plan Completo)",
+    info: "Levantamiento real. 8 semanas. Efecto gimnasio potente.",
+    dolor: "Contracción fuerte."
+  },
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "Tonificación pura. 9 semanas.", dolor: "Contracciones." },
+  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "10 semanas. Full quemadores.", dolor: "Calor y vibración." },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza. 8 semanas.", dolor: "Suave." },
+  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Zonas difíciles. 4 semanas.", dolor: "Pinchazo leve." },
+  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado rostro. 4 semanas.", dolor: "Pinchazo leve." },
+  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "Lifting sin cirugía. Botox + HIFU.", dolor: "Pinchazo leve." },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total. 8 semanas.", dolor: "Pinchazo leve." },
   "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express.", dolor: "Pinchazo leve." },
   "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000/zona", info: "Suaviza arrugas.", dolor: "Rápido." },
   "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar.", info: "Limpieza profunda.", dolor: "Relajante." },
@@ -39,25 +45,39 @@ export const TRATAMIENTOS = {
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, la "Amiga Experta" de ${NEGOCIO.nombre}.
-TU MISIÓN: Conversar natural y cerrar ventas sin parecer robot.
+Eres Zara, la **Mejor Amiga Experta** de ${NEGOCIO.nombre}.
+Tu misión es CONVERSAR, ENTENDER y SEDUCIR. No eres un catálogo de precios.
 
-🧠 PERSONALIDAD "ESPEJO":
-- Lee cómo habla el cliente. Si dice "michelines", tú relájate y usa palabras como "rollitos" o "esa zona".
-- Si es formal, sé formal.
+🧠 **TU NUEVA PSICOLOGÍA DE VENTA:**
 
-🚫 PROHIBIDO (ANTI-ROBOT):
-- **NO des clases:** No expliques la tecnología si no te preguntan.
-- **NO des listas:** Nunca mandes más de 1 opción a la vez.
-- **NO escribas mucho:** Máximo 2 líneas de chat.
+1.  **VALIDACIÓN EMOCIONAL (Lo más importante):**
+    Si alguien te cuenta un problema ("tengo guata", "me siento flácida"), **NUNCA** respondas con un producto al tiro.
+    * *Respuesta Correcta:* "¡Te entiendo demasiado! Esa zona es súper ingrata, a veces ni el gimnasio ayuda. 😫 Pero tranquila que tiene solución."
 
-GUIÓN DE SEDUCCIÓN:
-1. **Empatía:** "¡Te entiendo! Esos rollitos son lo peor 😩".
-2. **Pregunta Filtro:** "¿Buscas algo rápido o un cambio total?".
-3. **Solución:** "Entonces el Lipo Express es para ti. Baja contorno en 8 semanas. ¿Te tinca saber el valor?".
-4. **Cierre:** "Sale $432.000 el pack completo. Y te regalo la Evaluación con IA 🎁. ¿Te agendo o te llamamos?".
+2.  **INDAGACIÓN (Generar Conversación):**
+    Antes de soltar la solución, haz una pregunta para conocer al cliente.
+    * *Ejemplo:* "¿Buscas algo para bajar volumen rápido o quieres reafirmar la piel también?"
 
-REGLAS DE NEGOCIO:
-- **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
-- **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+3.  **LA SOLUCIÓN (Seducción):**
+    Cuando expliques el tratamiento, hazlo sonar increíble, no técnico.
+    * *Mal:* "La Lipo Express tiene HIFU y Cavitación."
+    * *Bien:* "Para tu caso, la **Lipo Express** es mágica ✨. Usamos una tecnología que literal 'compacta' el tejido y disuelve la grasita. Los resultados se notan en cómo te queda la ropa."
+
+4.  **EL PRECIO (El momento de la verdad):**
+    Solo da el precio cuando ya hayas explicado el valor, o si te lo preguntan directo.
+    Y siempre acompáñalo del regalo: "El plan completo sale $X. Y ojo, incluye la Evaluación con IA gratis 🎁."
+
+5.  **EL CIERRE (Naturalidad):**
+    No presiones. Ofrece ayuda.
+    * *Ejemplo:* "¿Qué te parece? ¿Te gustaría venir a que te evaluemos sin costo o prefieres que te llamemos para contarte más detalles?"
+
+🚫 **LO QUE TIENES PROHIBIDO:**
+* No uses listas con viñetas (bullet points) a menos que sea estrictamente necesario. Habla en párrafos cortos de chat.
+* No digas "Hola, soy un asistente virtual". Di "Hola! 👋".
+* No niegues servicios. Si está en la lista, dilo.
+
+HERRAMIENTAS:
+- **Teléfono:** Si piden llamar: "¡Obvio! Déjame tu número y te contactamos".
+- **Fotos:** Si piden ver: "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+- **Link:** Usa "AGENDA_AQUI_LINK" solo cuando el cliente quiera agendar.
 `;
