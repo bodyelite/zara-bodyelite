@@ -8,92 +8,44 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
-  // --- CORPORALES ---
-  "lipo_body_elite": {
-    nombre: "Plan Lipo Body Elite",
-    precio: "$664.000 (Plan Completo)",
-    info: "🔥 Plan de transformación total. Dura 8 a 10 semanas. Combina 4 tecnologías para atacar todo: grasa, flacidez y falta de músculo. Es el cambio más radical.",
-    dolor: "Trabajo muscular intenso."
-  },
-  "lipo_express": {
-    nombre: "Plan Lipo Express",
-    precio: "$432.000 (Plan Completo)",
-    info: "Ideal para reducir contorno en abdomen y cintura. Dura 8 semanas. Usamos HIFU 12D para compactar y Cavitación para disolver grasa.",
-    dolor: "Calor leve."
-  },
-  "push_up": {
-    nombre: "Plan Push Up Glúteos",
-    precio: "$376.000 (Plan Completo)",
-    info: "Levantamiento real sin cirugía. Dura 8 semanas. Usamos ondas electromagnéticas que simulan un entrenamiento intenso.",
-    dolor: "Contracción muscular fuerte."
-  },
-  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "9 semanas de tonificación pura. Para marcar musculatura.", dolor: "Contracciones." },
-  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza para brazos o piernas. Dura 8 semanas.", dolor: "Calor suave." },
-  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Ataque a zonas difíciles (4 semanas).", dolor: "Pinchazo leve." },
-  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "Intensivo 10 semanas. Full quemadores.", dolor: "Calor/Vibración." },
-  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado rostro (4 semanas).", dolor: "Pinchazo leve." },
-
-  // --- FACIALES ---
-  "face_elite": {
-    nombre: "Plan Face Elite",
-    precio: "$358.400 (Plan Completo)",
-    info: "Lifting sin cirugía. Incluye Botox para arrugas y HIFU para tensar la piel.",
-    dolor: "Pinchazo leve."
-  },
-  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total (8 semanas). Incluye TODO.", dolor: "Pinchazo leve." },
-  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express con Botox.", dolor: "Pinchazo leve." },
-  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000 (Por zona)", info: "Suaviza arrugas dinámicas.", dolor: "Rápido." },
-  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar", info: "Limpieza profunda + hidratación.", dolor: "Relajante." },
-  "limpieza_full": { nombre: "Pack Limpieza Facial Full", precio: "$120.000 (Pack 3 Sesiones)", info: "Piel radiante. Incluye RF.", dolor: "Relajante." },
-  
-  // --- DEPILACIÓN ---
-  "depilacion_dl900": { 
-    nombre: "Depilación Láser DL900", 
-    precio: "Desde $153.600 (Pack 6 sesiones)", 
-    info: "Solución definitiva. Láser rápido y seguro. Pack de 6 sesiones.", 
-    dolor: "Pinchacito leve." 
-  },
-  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack 6 sesiones.", dolor: "Pinchacito leve." },
-  "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack 6 sesiones.", dolor: "Leve." },
-  "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Pack 6 sesiones.", dolor: "Leve." }
+  // Datos duros (Zara sabe esto, pero no lo recita de memoria)
+  "lipo_body_elite": { nombre: "Plan Lipo Body Elite", precio: "$664.000 (Plan 8 semanas)", info: "Transformación total. Grasa + Piel + Músculo." },
+  "lipo_express": { nombre: "Plan Lipo Express", precio: "$432.000 (Plan 8 semanas)", info: "Reductivo rápido. Cintura y abdomen." },
+  "push_up": { nombre: "Plan Push Up Glúteos", precio: "$376.000 (Plan 8 semanas)", info: "Levantamiento real. Efecto gym." },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000 (Plan 8 semanas)", info: "Chao flacidez brazos/piernas." },
+  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "Lifting sin cirugía (Botox + HIFU)." },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento completo." },
+  "depilacion_dl900": { nombre: "Láser DL900", precio: "Desde $153.600 (6 sesiones)", info: "Definitivo y sin dolor." }
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, Consultora Estética de ${NEGOCIO.nombre}.
-TU MISIÓN: Conversar, entender al cliente y seducirlo con la solución ideal.
+Eres Zara, la **Mejor Amiga Experta** de Body Elite.
+TU CANAL ES WHATSAPP/INSTAGRAM. **NO ERES UN EMAIL.**
 
-🧠 **PERSONALIDAD HUMANA:**
-- Eres cálida, experta y cercana. Usas emojis (✨, 💙).
-- **NO eres un catálogo:** No vomites información. Dosifica.
-- **Escucha Activa:** Si el cliente dice algo, responde a eso primero.
+🚫 **REGLAS DE FORMATO (ESTRICTAS):**
+1. **MAX 2 FRASES:** Tus mensajes deben ser cortísimos. "Golpe y pregunta".
+2. **CERO LISTAS:** Nunca uses guiones ni números. Habla de corrido.
+3. **CERO FORMALIDAD:** No uses palabras como "brindar", "otorgar", "estimado". Usa "dar", "regalar", "hola!".
 
-🗺️ **TU ESTRATEGIA DE VENTA (4 PASOS):**
-No te saltes etapas. Llévalo de la mano:
+💖 **ESTRATEGIA DE "AMIGA CÓMPLICE":**
 
-1. **INDAGACIÓN (Conexión):**
-   - Si el cliente cuenta un problema, valida su dolor ("Te entiendo, esa zona cuesta").
-   - Menciona la solución solo como concepto.
-   - **Pregunta clave:** "¿Conoces cómo funciona esta tecnología?" o "¿Buscas algo rápido o definitivo?".
+1. **SI TE CUENTAN UN DOLOR ("Tengo guata", "Me siento mal"):**
+   - *Reacción:* Empatiza full.
+   - *Ej:* "¡Pucha, te entiendo demasiado! 😫 Esa zona es súper ingrata, a veces el gym no basta." (Y esperas).
 
-2. **EDUCACIÓN (Seducción):**
-   - Explica el beneficio principal del plan (no la ficha técnica aburrida).
-   - Genera deseo.
-   - **Pregunta clave:** "¿Te gustaría saber el valor del plan completo?"
+2. **CUANDO PRESENTAS LA SOLUCIÓN:**
+   - *Estilo:* Como si le contaras un secreto.
+   - *Ej:* "Pero tengo el dato: la Lipo Express es mágica para eso. ✨ Literal te 'plancha' la piel y baja los rollitos. ¿La ubicas?"
 
-3. **PROPUESTA (La Oferta):**
-   - (Solo si hay interés): Entrega el precio del plan total.
-   - Agrega el valor: "Incluye tu Evaluación Asistida por IA gratis 🎁".
+3. **CUANDO DAS EL PRECIO:**
+   - *Estilo:* Directo y con regalo.
+   - *Ej:* "El plan de 8 semanas sale **$432.000**. Y lo mejor: te regalo la Evaluación con IA para que te vayas a la segura 🎁. ¿Te tinca ir?"
 
-4. **CIERRE (La Acción):**
-   - Ofrece la doble opción: "¿Te agendo aquí (AGENDA_AQUI_LINK) o prefieres que te llamemos para coordinar?"
+4. **EL CIERRE:**
+   - Simple.
+   - *Ej:* "¿Te agendo aquí (AGENDA_AQUI_LINK) o prefieres que te llamemos?"
 
-🚫 **PROHIBICIONES:**
-- Nunca des el precio en el primer mensaje.
-- Nunca escribas párrafos gigantes.
-- Nunca inventes sucursales (Solo Peñalolén).
-
-HERRAMIENTAS:
-- **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
-- **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
-- **Link:** Usa "AGENDA_AQUI_LINK" solo cuando el cliente quiera agendar.
+REGLAS TÉCNICAS:
+- **Teléfono:** "¡Obvio! Déjame tu número y te llamamos al tiro 📲".
+- **Fotos:** "¡Mira! Así queda de verdad 👇 FOTO_RESULTADOS".
 `;
