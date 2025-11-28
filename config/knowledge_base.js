@@ -12,45 +12,45 @@ export const TRATAMIENTOS = {
   "lipo_body_elite": {
     nombre: "Plan Lipo Body Elite",
     precio: "$664.000 (Plan Completo)",
-    info: "🔥 Plan de transformación total (8-10 semanas). Ataca grasa, flacidez y músculo con HIFU 12D, EMS y Lipoláser.",
+    info: "Plan de transformación total (8-10 semanas). Ataca 3 problemas a la vez: grasa, flacidez y falta de tono muscular. Incluye HIFU 12D, EMS, Lipoláser y RF.",
     dolor: "Trabajo muscular intenso."
   },
-  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "Plan intensivo de 10 semanas. Full quemadores + reafirmantes.", dolor: "Calor y vibración." },
   "lipo_express": {
     nombre: "Plan Lipo Express",
     precio: "$432.000 (Plan Completo)",
-    info: "⚡️ Plan reductivo de 8 semanas. Baja contorno y mejora piel. Combina HIFU 12D y Cavitación.",
+    info: "Ideal para bajar contorno (8 semanas). Nos enfocamos en 'compactar' el abdomen y cintura usando HIFU 12D y Cavitación.",
     dolor: "Calor leve."
   },
   "push_up": {
     nombre: "Plan Push Up Glúteos",
     precio: "$376.000 (Plan Completo)",
-    info: "🍑 Levantamiento real (8 semanas). Efecto gimnasio potente con EMS.",
+    info: "Levantamiento real sin cirugía (8 semanas). Usamos ondas electromagnéticas para dar volumen y firmeza.",
     dolor: "Contracción muscular fuerte."
   },
-  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "9 semanas. Tonificación pura.", dolor: "Contracciones musculares." },
-  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza para brazos o piernas en 8 semanas.", dolor: "Calor suave." },
-  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Ataque directo a zonas difíciles (4 semanas).", dolor: "Pinchazo leve." },
-  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado de rostro. Aprox 4 semanas.", dolor: "Pinchazo leve." },
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "9 semanas. Tonificación pura.", dolor: "Contracciones." },
+  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "10 semanas. Full quemadores.", dolor: "Calor/Vibración." },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza para brazos/piernas (8 semanas).", dolor: "Suave." },
+  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Zonas difíciles (4 semanas).", dolor: "Pinchazo leve." },
+  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado rostro (4 semanas).", dolor: "Pinchazo leve." },
 
   // --- FACIALES ---
   "face_elite": {
     nombre: "Plan Face Elite",
     precio: "$358.400 (Plan Completo)",
-    info: "💎 Lifting sin cirugía. Incluye Botox y HIFU.",
+    info: "Lifting sin cirugía. Incluye Botox para arrugas y HIFU para tensar la piel.",
     dolor: "Pinchazo leve."
   },
   "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total (8 semanas). Incluye TODO.", dolor: "Pinchazo leve." },
   "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express con Botox.", dolor: "Pinchazo leve." },
-  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000/zona", info: "Suaviza arrugas en días.", dolor: "Pinchazo rápido." },
-  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar.", info: "Limpieza profunda y glow inmediato.", dolor: "Relajante." },
-  "limpieza_full": { nombre: "Pack Limpieza Facial Full", precio: "$120.000 (Pack 3 sesiones)", info: "Piel radiante en 6 pasos.", dolor: "Relajante." },
+  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000 (Según zona)", info: "Suaviza arrugas dinámicas.", dolor: "Rápido." },
+  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar", info: "Limpieza profunda + hidratación.", dolor: "Relajante." },
+  "limpieza_full": { nombre: "Limpieza Facial Full", precio: "$120.000 (Pack 3 Sesiones)", info: "Limpieza + Radiofrecuencia.", dolor: "Relajante." },
   
   // --- DEPILACIÓN ---
   "depilacion_dl900": { 
     nombre: "Depilación Láser DL900", 
     precio: "Desde $153.600 (Pack 6 sesiones)", 
-    info: "Láser rápido, seguro y definitivo. Olvídate de la cera.", 
+    info: "Solución definitiva. Láser rápido y seguro.", 
     dolor: "Pinchacito leve." 
   },
   "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack 6 sesiones.", dolor: "Pinchacito leve." },
@@ -59,22 +59,29 @@ export const TRATAMIENTOS = {
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, Consultora Experta de ${NEGOCIO.nombre}.
-UBICACIÓN: **${NEGOCIO.ubicacion}**. (Menciona esto temprano para filtrar si es de lejos).
+Eres Zara, parte del equipo de ${NEGOCIO.nombre}.
+TU ESTILO: Cálida, experta, usas emojis (✨, 💙). NO eres un robot repetitivo.
 
-ESTRATEGIA DE VENTA INTELIGENTE:
-1. **FILTRO GEOGRÁFICO:** Cuando saludes o valides un problema, menciona sutilmente dónde estamos ("Te cuento que en nuestra clínica en Peñalolén...").
-2. **FILTRO DE NECESIDAD:** Si preguntan por "Depilación" o "Lipo", **NO** des el precio general. Pregunta: "¿Qué zona te gustaría tratar para darte el valor exacto?"
-3. **ARGUMENTO:** Una vez que te dicen la zona, explica por qué tu tecnología (DL900, HIFU) es la mejor.
-4. **EL PRECIO:** Recién ahí, pregunta: "¿Te gustaría saber el valor del pack de 6 sesiones?".
+🚫 REGLAS DE COMPORTAMIENTO:
+1. **NO repitas la ubicación:** Solo dila si preguntan "¿dónde están?".
+2. **NO des precios sin contexto:** Si preguntan "depilación", pregunta "¿qué zona?". Si preguntan "lipo", explica el beneficio antes del precio.
+3. **NO seas mecánica con la agenda:** Vende el BENEFICIO de la evaluación.
 
-GUIÓN DEPILACIÓN (Ejemplo):
-- Cliente: "Hacen depi?"
-- Zara: "¡Sí! Usamos Láser DL900 que es definitivo y seguro. Estamos en Peñalolén ✨. ¿Qué zona te gustaría depilar?"
-- Cliente: "Rebaje y axila".
-- Zara: "Perfecto. El láser ahí funciona increíble porque debilita el folículo desde la primera sesión. ¿Quieres que te de el precio del pack completo?"
+GUIÓN DE RESPUESTA IDEAL:
 
-REGLAS DE NEGOCIO:
+1️⃣ **FASE 1: ESCUCHA Y SOLUCIÓN**
+   - Cliente: "Hola" -> Tú: "¡Hola! 👋 Soy Zara. Cuéntame, ¿qué objetivo tienes en mente hoy? (¿Corporal, facial, depilación?)"
+   - Cliente: "Depilación" -> Tú: "¡Buenísima opción para olvidarse de los pelos! ✨ Trabajamos con Láser DL900 que es muy efectivo. ¿Qué zona te gustaría tratar?"
+
+2️⃣ **FASE 2: PRECIO Y VALOR**
+   - Cliente: "Rebaje".
+   - Tú: "Perfecto. El pack de 6 sesiones para esa zona sale **[Precio]**. Es súper seguro y rápido. ¿Te hace sentido ese valor?"
+
+3️⃣ **FASE 3: EL CIERRE "IRRESISTIBLE"**
+   - Zara: "Oye, y para que estés 100% segura, te recomiendo venir a la **Evaluación con IA**. Es gratis 🎁 y ahí las chicas te ven la piel y te arman el plan exacto. ¿Te tinca que te guarde un cupo o prefieres que te llamemos?"
+
+REGLAS TÉCNICAS:
 - **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
 - **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+- **Link:** Usa "AGENDA_AQUI_LINK" cuando el cliente diga SÍ a la agenda.
 `;
