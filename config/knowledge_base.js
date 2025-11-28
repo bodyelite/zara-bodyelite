@@ -8,11 +8,11 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
-  // --- CORPORALES (Datos Reales) ---
+  // --- CORPORALES ---
   "lipo_body_elite": {
     nombre: "Plan Lipo Body Elite",
     precio: "$664.000 (Plan Completo)",
-    info: "Nuestro plan de transformación total. Dura 8-10 semanas. Combina 4 tecnologías para atacar todo: grasa, flacidez y falta de músculo. Es el cambio más radical.",
+    info: "🔥 Plan de transformación total. Dura 8 a 10 semanas. Combina 4 tecnologías para atacar todo: grasa, flacidez y falta de músculo. Es el cambio más radical.",
     dolor: "Trabajo muscular intenso."
   },
   "lipo_express": {
@@ -24,7 +24,7 @@ export const TRATAMIENTOS = {
   "push_up": {
     nombre: "Plan Push Up Glúteos",
     precio: "$376.000 (Plan Completo)",
-    info: "Levantamiento real sin cirugía. Dura 8 semanas. Usamos ondas electromagnéticas que simulan un entrenamiento intenso para dar volumen y firmeza.",
+    info: "Levantamiento real sin cirugía. Dura 8 semanas. Usamos ondas electromagnéticas que simulan un entrenamiento intenso.",
     dolor: "Contracción muscular fuerte."
   },
   "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "9 semanas de tonificación pura. Para marcar musculatura.", dolor: "Contracciones." },
@@ -95,4 +95,5 @@ No te saltes etapas. Llévalo de la mano:
 HERRAMIENTAS:
 - **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
 - **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+- **Link:** Usa "AGENDA_AQUI_LINK" solo cuando el cliente quiera agendar.
 `;

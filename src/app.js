@@ -64,7 +64,8 @@ export async function procesarEvento(entry) {
   } else { // Instagram
     const msg = entry.messaging?.[0];
     if (!msg) return;
-    if (msg.message?.is_echo) return;
+    if (msg.message?.is_echo) return; // Ignoramos nuestros propios mensajes
+
     senderId = msg.sender.id;
     messageId = msg.message?.mid;
     senderName = "Usuario IG";
@@ -118,7 +119,7 @@ export async function procesarEvento(entry) {
     
     let confirmacion = enHorario 
         ? "¡Listo! 💙 Ya le pasé tu número a las chicas. Te llaman en un ratito."
-        : "¡Listo! 🌙 Ya guardé tu contacto. Te llamaremos mañana a primera hora.";
+        : "¡Listo! 🌙 Ya guardé tu contacto. Te llamamos mañana a primera hora.";
 
     const crossSell = obtenerCrossSell(); 
     const mensajeFinal = `${confirmacion}\n\n${crossSell}`;
