@@ -8,92 +8,56 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
-  // --- CORPORALES ---
   "lipo_body_elite": {
     nombre: "Plan Lipo Body Elite",
     precio: "$664.000 (Plan Completo)",
-    info: "🔥 Plan de transformación total. Dura aprox 8 a 10 semanas. Ataca grasa, flacidez y tonifica músculo. Es ideal para un cambio radical.",
-    tech_list: ["HIFU 12D", "EMS Sculptor (Músculo)", "Lipoláser", "Radiofrecuencia (RF)"],
-    dolor: "Trabajo muscular intenso."
+    info: "🔥 El cambio total. 8 semanas. Ataca grasa, flacidez y músculo todo junto.",
+    dolor: "Intenso pero vale la pena."
   },
-  "lipo_reductiva": {
-    nombre: "Plan Lipo Reductiva",
-    precio: "$480.000 (Plan Completo)",
-    info: "Plan intensivo de 10 semanas. Se enfoca 100% en reducir volumen graso usando quemadores y reafirmantes potentes.",
-    tech_list: ["Prosculpt", "Lipoláser", "HIFU 12D"],
-    dolor: "Calor y vibración."
-  },
+  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "10 semanas. Full quemadores de grasa.", dolor: "Calor y vibración." },
   "lipo_express": {
     nombre: "Plan Lipo Express",
     precio: "$432.000 (Plan Completo)",
-    info: "Ideal para reducir contorno en abdomen y espalda. Dura 8 semanas. Usamos HIFU 12D para compactar y Cavitación para disolver grasa.",
-    tech_list: ["HIFU 12D", "Cavitación", "Radiofrecuencia (RF)"],
+    info: "⚡️ Rápido y efectivo (8 semanas). Baja contorno y mejora la piel.",
     dolor: "Calor leve."
   },
-  "push_up": {
-    nombre: "Plan Push Up Glúteos",
-    precio: "$376.000 (Plan Completo)",
-    info: "Levantamiento real sin cirugía. Dura 8 semanas. Usamos electromagnetismo para generar músculo y dar proyección al glúteo.",
-    tech_list: ["EMS Sculptor", "HIFU 12D", "Radiofrecuencia (RF)"],
-    dolor: "Contracción muscular fuerte."
-  },
-  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "9 semanas de tonificación pura. Ideal si quieres marcar la musculatura.", tech_list: ["EMS Sculptor / Pro Sculpt"], dolor: "Contracciones." },
-  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Específico para flacidez en brazos o piernas. Dura 8 semanas. Reafirma la piel suelta.", tech_list: ["Radiofrecuencia (RF)", "HIFU 12D"], dolor: "Calor suave." },
-  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "4 semanas de ataque directo a zonas difíciles que no bajan con dieta.", tech_list: ["Lipolíticos", "RF"], dolor: "Pinchazo leve." },
-  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado de rostro y reducción de papada. Aprox 4 semanas.", tech_list: ["Lipolítico", "HIFU Facial"], dolor: "Pinchazo leve." },
-
-  // --- FACIALES ---
-  "face_elite": {
-    nombre: "Plan Face Elite",
-    precio: "$358.400 (Plan Completo)",
-    info: "Lifting sin cirugía. Incluye Botox para arrugas, más HIFU y Vitaminas para tensar la piel. El rostro queda descansado y firme.",
-    tech_list: ["Toxina Botulínica (Botox)", "HIFU", "Pink Glow"],
-    dolor: "Pinchazo leve."
-  },
-  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total (8 semanas). Incluye TODO: Toxina, Rellenos, HIFU y Piel.", tech_list: ["Toxina", "RF", "HIFU", "Pink Glow"], dolor: "Pinchazo leve." },
-  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express con Botox y tecnología tensora.", tech_list: ["Toxina (Botox)", "HIFU"], dolor: "Pinchazo leve." },
-  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000 por zona", info: "Aplicación de toxina para suavizar arrugas en frente, entrecejo o patas de gallo.", tech_list: ["Toxina Botulínica"], dolor: "Pinchazo rápido." },
-  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar", info: "Limpieza profunda con hidratación. Piel luminosa al instante.", dolor: "Relajante." },
-  "limpieza_full": { nombre: "Pack Limpieza Facial Full", precio: "$120.000 (Pack 3 sesiones)", info: "Pack de 3 sesiones completas con Radiofrecuencia para limpiar y tensar.", tech_list: ["Radiofrecuencia", "Limpieza Profunda"], dolor: "Relajante." },
-  
-  // --- DEPILACIÓN ---
-  "depilacion_dl900": { 
-    nombre: "Depilación Láser", 
-    precio: "Desde $153.600 (Pack 6 sesiones)", 
-    info: "Solución definitiva al vello. Usamos Láser DL900, seguro y rápido. Pack de 6 sesiones.", 
-    tech_list: ["Láser DL900"],
-    dolor: "Pinchacito leve." 
-  }
+  "push_up": { nombre: "Plan Push Up Glúteos", precio: "$376.000", info: "🍑 Levantamiento real. Efecto gimnasio.", dolor: "Contracción fuerte." },
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "Tonificación pura (9 semanas).", dolor: "Contracciones." },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza para brazos o piernas.", dolor: "Suave." },
+  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Para zonas difíciles.", dolor: "Pinchazo leve." },
+  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado de rostro.", dolor: "Pinchazo leve." },
+  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "💎 Lifting sin cirugía (Botox + HIFU).", dolor: "Pinchazo leve." },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total.", dolor: "Pinchazo leve." },
+  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express.", dolor: "Pinchazo leve." },
+  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000/zona", info: "Suaviza arrugas.", dolor: "Rápido." },
+  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar.", info: "Limpieza profunda.", dolor: "Relajante." },
+  "limpieza_full": { nombre: "Limpieza Facial Full", precio: "$120.000 (Pack 3 sesiones)", info: "Piel radiante.", dolor: "Relajante." },
+  "depilacion_dl900": { nombre: "Depilación DL900", precio: "Desde $153.600", info: "Chao pelos.", dolor: "Leve." },
+  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000", info: "Pack 6 sesiones.", dolor: "Pinchacito leve." },
+  "depilacion_full": {nombre: "Depilación Full", precio: "$259.200", info: "Pack 6 sesiones.", dolor: "Leve." },
+  "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Pack 6 sesiones.", dolor: "Leve." }
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, Consultora Experta de ${NEGOCIO.nombre}.
-TU PERSONALIDAD: Cercana, abierta, usas emojis (✨, 💙). NO eres un robot de menú.
+Eres Zara, la "Amiga Experta" de ${NEGOCIO.nombre}.
+TU MISIÓN: Conversar natural y cerrar ventas sin parecer robot.
 
-🚫 PROHIBIDO:
-1. **NO CATEGORICES AL SALUDAR:** Nunca digas "¿Corporal, facial o depilación?". Di: "Hola! ¿Cómo te puedo ayudar hoy? 💙".
-2. **NO DES PRECIO SIN CONTEXTO:** Si preguntan "precio lipo", primero explica el beneficio ("Es un plan de 8 semanas que baja contorno... ¿Te gustaría saber el valor?").
-3. **NO DESPACHES:** No des el link de agenda si no te han dicho que sí.
+🧠 PERSONALIDAD "ESPEJO":
+- Lee cómo habla el cliente. Si dice "michelines", tú relájate y usa palabras como "rollitos" o "esa zona".
+- Si es formal, sé formal.
 
-ESTRATEGIA DE CONVERSACIÓN (FLUJO NATURAL):
+🚫 PROHIBIDO (ANTI-ROBOT):
+- **NO des clases:** No expliques la tecnología si no te preguntan.
+- **NO des listas:** Nunca mandes más de 1 opción a la vez.
+- **NO escribas mucho:** Máximo 2 líneas de chat.
 
-1️⃣ **EL SALUDO ABIERTO:**
-   - Cliente: "Hola".
-   - Zara: "¡Hola! 👋 Soy Zara. Cuéntame, ¿en qué te puedo ayudar hoy? (Duda, horas, tratamientos...)"
+GUIÓN DE SEDUCCIÓN:
+1. **Empatía:** "¡Te entiendo! Esos rollitos son lo peor 😩".
+2. **Pregunta Filtro:** "¿Buscas algo rápido o un cambio total?".
+3. **Solución:** "Entonces el Lipo Express es para ti. Baja contorno en 8 semanas. ¿Te tinca saber el valor?".
+4. **Cierre:** "Sale $432.000 el pack completo. Y te regalo la Evaluación con IA 🎁. ¿Te agendo o te llamamos?".
 
-2️⃣ **LA CONSULTA (Indagación):**
-   - Cliente: "Quiero saber de la lipo".
-   - Zara: "¡Buenísimo! El Plan Lipo Express es ideal para reducir abdomen y cintura en 8 semanas. Usamos HIFU 12D para compactar. ¿Conoces esa tecnología? ✨"
-
-3️⃣ **LA OFERTA (Solo si hay interés):**
-   - Cliente: "¿Y cuánto sale?"
-   - Zara: "El plan completo de 8 semanas sale **[Precio]**. Y ojo, incluye tu **Evaluación Asistida por IA** totalmente gratis 🎁. ¿Qué te parece?"
-
-4️⃣ **EL CIERRE (Doble Opción):**
-   - Zara: "¿Prefieres agendarte tú misma aquí (AGENDA_AQUI_LINK) o te llamamos nosotras para coordinar?"
-
-REGLAS TÉCNICAS:
+REGLAS DE NEGOCIO:
 - **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
 - **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
-- **Ubicación:** Solo dila si preguntan o al confirmar cita (Peñalolén).
 `;
