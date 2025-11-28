@@ -7,56 +7,74 @@ export const NEGOCIO = {
   staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"] 
 };
 
+// INFORMACIÓN DE VENTA (No técnica aburrida, sino BENEFICIOS)
 export const TRATAMIENTOS = {
-  // Mantenemos los datos estrictos de los planes
   "lipo_body_elite": {
     nombre: "Plan Lipo Body Elite",
     precio: "$664.000 (Plan Completo)",
-    info: "🔥 Plan de transformación total. Dura 8 a 10 semanas (29 proced.). Incluye: HIFU 12D, EMS Sculptor, Lipoláser... ¡Cambio real!",
-    tech_list: ["HIFU 12D", "EMS Sculptor (Músculo)", "Lipoláser", "Radiofrecuencia (RF)"],
-    dolor: "Trabajo muscular intenso."
+    info: "Es nuestra transformación total. Ataca 3 problemas a la vez: grasa, flacidez y falta de tono muscular. Dura aprox 8 semanas e incluye todo (HIFU, EMS, Lipoláser). Es el cambio más radical que ofrecemos."
   },
-  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000 (Plan Completo)", info: "10 semanas. Full quemadores + reafirmantes.", tech_list: ["Prosculpt", "Lipoláser", "HIFU 12D"], dolor: "Calor y vibración." },
   "lipo_express": {
     nombre: "Plan Lipo Express",
     precio: "$432.000 (Plan Completo)",
-    info: "⚡️ Plan reductivo de 8 semanas. Baja contorno y mejora piel. Combina HIFU 12D y Cavitación.",
-    tech_list: ["HIFU 12D", "Cavitación", "Radiofrecuencia (RF)"],
-    dolor: "Calor leve."
+    info: "Ideal si buscas bajar contorno rápido. Nos enfocamos en 'compactar' el abdomen y cintura usando HIFU y Cavitación. El plan dura unas 8 semanas y los resultados se notan en la ropa."
   },
   "push_up": {
     nombre: "Plan Push Up Glúteos",
     precio: "$376.000 (Plan Completo)",
-    info: "🍑 Levantamiento real (8 semanas). Efecto gimnasio potente con EMS.",
-    tech_list: ["EMS Sculptor", "HIFU 12D", "Radiofrecuencia (RF)"],
-    dolor: "Contracción muscular fuerte."
+    info: "Es un levantamiento real sin cirugía. Usamos ondas electromagnéticas que simulan un entrenamiento intenso para dar volumen y firmeza. Dura 8 semanas."
   },
-  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "9 semanas. Tonificación pura.", tech_list: ["EMS Sculptor / Pro Sculpt"], dolor: "Contracciones." },
-  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza para brazos o piernas en 8 semanas.", tech_list: ["Radiofrecuencia (RF)", "HIFU 12D"], dolor: "Calor suave." },
-  
-  // --- FACIALES / DEPILACIÓN (Simplificados para el prompt) ---
-  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "Lifting sin cirugía. Incluye Botox y HIFU.", tech_list: ["Toxina Botulínica (Botox)", "HIFU", "Pink Glow"], dolor: "Pinchazo leve." },
-  "limpieza_full": { nombre: "Pack Limpieza Facial Full", precio: "$120.000 (Pack 3 sesiones)", info: "3 sesiones. Limpieza + Radiofrecuencia.", dolor: "Relajante." },
-  "depilacion_dl900": { nombre: "Planes Depilación Láser", precio: "Desde $153.600", info: "Olvídate de los pelos. Rápido y seguro.", tech_list: ["Láser DL900"], dolor: "Pinchacito leve." }
+  "body_fitness": { 
+    nombre: "Plan Body Fitness", 
+    precio: "$360.000 (Plan Completo)", 
+    info: "100% enfocado en tonificar. Si sientes que te falta firmeza muscular, este plan de 9 semanas hace el trabajo duro por ti."
+  },
+  "lipo_reductiva": { 
+    nombre: "Plan Lipo Reductiva", 
+    precio: "$480.000 (Plan Completo)", 
+    info: "Un plan intensivo de 10 semanas para casos que necesitan mayor reducción de grasa." 
+  },
+  "face_elite": {
+    nombre: "Plan Face Elite",
+    precio: "$358.400 (Plan Completo)",
+    info: "Es un lifting sin cirugía. Combinamos Botox para las arrugas con tecnología que tensa la piel. Te quitas años de encima y la cara se ve descansada."
+  },
+  "full_face": { 
+    nombre: "Plan Full Face", 
+    precio: "$584.000 (Plan Completo)", 
+    info: "El rejuvenecimiento definitivo. Incluye Botox, Vitaminas, HIFU... todo lo que tu piel necesita para renovarse en 8 semanas." 
+  },
+  "botox_puntual": { 
+    nombre: "Botox (Toxina)", 
+    precio: "Desde $120.000 (Depende de zona)", 
+    info: "Lo mejor para borrar líneas de expresión en frente o patas de gallo. Es rápido y el cambio es sutil pero hermoso." 
+  },
+  "depilacion_dl900": { 
+    nombre: "Depilación Láser", 
+    precio: "Desde $153.600 (Pack 6 sesiones)", 
+    info: "La solución definitiva. Nuestro láser DL900 es rápido, seguro para tu piel y muy efectivo." 
+  }
 };
 
 export const SYSTEM_PROMPT = `
-Eres Zara, la Consultora Experta y Directa de ${NEGOCIO.nombre}.
-TU OBJETIVO: Asesorar, conversar y cerrar la venta.
+Eres Zara, la Consultora Estrella de ${NEGOCIO.nombre}.
+TU OBJETIVO: No es informar, es CONVERSAR para vender.
 
-ESTILO DE COMUNICACIÓN (WHATSAPP):
-1. **ULTRA BREVE:** Tus respuestas deben ser cortas, con MÁXIMO 2 ORACIONES por párrafo. Nunca uses un solo bloque de texto grande.
-2. **TONO:** Usa emojis (✨, 💙) y lenguaje natural.
+🚫 REGLAS ANTI-ROBOT (OBLIGATORIAS):
+1. **NUNCA vomites texto:** Tus respuestas deben ser de máximo 2 o 3 oraciones. Cortas, como un chat real.
+2. **NUNCA des toda la info en el primer mensaje:** Si te preguntan por un tratamiento, primero véndelo (beneficio) y luego pregunta si quieren saber el precio.
+3. **CERO LENGUAJE TÉCNICO ABURRIDO:** No hables de "procedimientos" ni "protocolos". Habla de "resultados", "semanas", "cambios".
+4. **EMPATÍA REAL:** Si te dicen "tengo guata", no digas "para la adiposidad...". Di: "Te entiendo, esa zona es súper difícil de bajar, pero tenemos un plan genial para eso".
 
-ESTRATEGIA DE FILTRO (EVITAR EL VÓMITO DE LISTAS):
-1. **SI PREGUNTAN POR UN PROBLEMA/PLAN GENERAL (ej: Depilación, Lipo):**
-   - Responde con el plan inicial o más representativo (ej: "Planes Depilación Láser").
-   - **PROHIBIDO** listar las 3 o 4 opciones (Full, Midle, Grande) de golpe.
-   - **Pregunta para filtrar:** "¿Buscas algo en zona pequeña o estás interesada en packs más grandes?"
+GUIÓN DE SEDUCCIÓN (Sigue este orden mental):
+1. **El Gancho:** Valida el problema del cliente y preséntale la solución ("Para eso, el Plan X es increíble porque...").
+2. **La Interacción:** Termina con una pregunta ("¿Conoces esa tecnología?", "¿Buscas un cambio rápido?").
+3. **El Precio (Solo después de interactuar):** Cuando des el precio, véndelo junto al regalo ("Incluye Evaluación con IA gratis 🎁").
+4. **El Cierre:** Da opciones ("¿Te agendo o te llamamos?").
 
-2. **GUIÓN DE VENTA:** Si explicas un tratamiento, termina la respuesta preguntando: "¿Te gustaría saber el valor del plan?"
+SI PREGUNTAN POR FOTOS:
+Responde SOLO: "¡Mira este cambio real! 👇 FOTO_RESULTADOS"
 
-REGLAS DE NEGOCIO:
-- **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
-- **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
+SI DAN EL TELÉFONO:
+Responde: "¡Perfecto! 💙 Ya le avisé a las chicas. Te llamamos en breve."
 `;
