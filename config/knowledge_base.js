@@ -7,85 +7,64 @@ export const NEGOCIO = {
   staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"] 
 };
 
-// AQUÍ ESTÁ EL SECRETO: Descripciones que venden el RESULTADO, no la máquina.
+// TU INVENTARIO (La única fuente de verdad)
 export const TRATAMIENTOS = {
-  // --- CORPORALES ---
-  "lipo_body_elite": {
-    nombre: "Plan Lipo Body Elite",
-    precio: "$664.000 (Plan Completo)",
-    info: "Es nuestra **remodelación total** sin cirugía. Atacamos los 3 enemigos: grasa, flacidez y falta de tono. Imagina reducir centímetros mientras tu piel se pega y tus músculos se marcan. Es un cambio radical en 8 semanas. 🔥",
-    tech_list: ["HIFU 12D", "EMS Sculptor", "Lipoláser", "Radiofrecuencia"]
-  },
-  "lipo_express": {
-    nombre: "Plan Lipo Express",
-    precio: "$432.000 (Plan Completo)",
-    info: "Perfecto para bajar esa grasita que no se va con dieta. Usamos tecnología que 'derrite' el tejido adiposo y otra que 'plancha' la piel para que no quede suelta. En 8 semanas bajas contorno visiblemente. ⚡️",
-    tech_list: ["HIFU 12D", "Cavitación", "Radiofrecuencia"]
-  },
-  "push_up": {
-    nombre: "Plan Push Up Glúteos",
-    precio: "$376.000 (Plan Completo)",
-    info: "Es el secreto para un glúteo levantado y redondo. Usamos ondas electromagnéticas que equivalen a **20.000 sentadillas** por sesión. El resultado es volumen y firmeza real, como si vivieras en el gym. 🍑",
-    tech_list: ["EMS Sculptor", "HIFU 12D", "Radiofrecuencia"]
-  },
-  "body_tensor": { 
-    nombre: "Plan Body Tensor", 
-    precio: "$232.000 (Plan Completo)", 
-    info: "Olvídate de la piel suelta al saludar. Este plan regenera tu colágeno para devolverle la firmeza y tensión a tus brazos o piernas. La piel se siente más joven y compacta.", 
-    tech_list: ["Radiofrecuencia", "HIFU 12D"] 
-  },
-  "lipo_focalizada": { 
-    nombre: "Plan Lipo Focalizada", 
-    precio: "$348.800 (Plan Completo)", 
-    info: "Un ataque directo a esos rollitos difíciles. Usamos lipolíticos potentes para disolver la grasa localizada en tiempo récord (4 semanas).", 
-    tech_list: ["Lipolíticos", "RF"] 
-  },
-  
-  // --- FACIALES ---
-  "face_elite": {
-    nombre: "Plan Face Elite",
-    precio: "$358.400 (Plan Completo)",
-    info: "Es un **lifting sin bisturí**. Borramos las arrugas con Botox y tensamos todo el óvalo facial con HIFU. Te quitas años de encima y la cara se ve descansada y luminosa al instante. 💎",
-    tech_list: ["Botox", "HIFU", "Pink Glow"]
-  },
-  "face_antiage": { 
-    nombre: "Plan Face Antiage", 
-    precio: "$281.600", 
-    info: "Ideal para detener el tiempo. Suavizamos las líneas de expresión profundas y revitalizamos la piel para que luzcas fresca y natural.", 
-    tech_list: ["Botox", "HIFU"] 
-  },
-  "limpieza_full": { 
-    nombre: "Pack Limpieza Facial Full", 
-    precio: "$120.000 (Pack 3 Sesiones)", 
-    info: "No es una limpieza normal, es un **tratamiento de choque**. En 3 sesiones logramos limpiar, hidratar y tensar la piel con aparatología. Tu cara queda con un brillo espectacular. ✨", 
-    tech_list: ["RF", "Limpieza profunda"] 
-  },
-  
-  // --- DEPILACIÓN ---
-  "depilacion_dl900": { 
-    nombre: "Depilación Láser", 
-    precio: "Desde $153.600 (Pack 6 sesiones)", 
-    info: "La libertad de no depilarte más. Nuestro láser elimina el vello de raíz sin dolor y deja la piel suavecita. Es una inversión en comodidad para siempre.", 
-    tech_list: ["Láser DL900"] 
-  }
+  // Corporales
+  "lipo_body_elite": { nombre: "Plan Lipo Body Elite", precio: "$664.000", info: "El plan total (8-10 sem). Grasa + Flacidez + Músculo. (HIFU, EMS, Lipoláser)." },
+  "lipo_express": { nombre: "Plan Lipo Express", precio: "$432.000", info: "Reductivo rápido (8 sem). Baja contorno. (HIFU + Cavitación)." },
+  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "Intensivo quemadores (10 sem)." },
+  "push_up": { nombre: "Plan Push Up Glúteos", precio: "$376.000", info: "Levantamiento real (8 sem). Efecto gimnasio." },
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "Tonificación pura (9 sem)." },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Firmeza piel brazos/piernas (8 sem)." },
+  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Zonas difíciles (4 sem)." },
+  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado rostro (4 sem)." },
+
+  // Faciales
+  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "Lifting sin cirugía (Botox + HIFU)." },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Rejuvenecimiento total (8 sem)." },
+  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Anti-arrugas express (Botox)." },
+  "botox_puntual": { nombre: "Botox (Toxina)", precio: "Desde $120.000/zona", info: "Suaviza líneas de expresión." },
+  "hidrofacial": { nombre: "Hidrofacial", precio: "A evaluar", info: "Limpieza profunda + hidratación." },
+  "limpieza_full": { nombre: "Pack Limpieza Facial Full", precio: "$120.000", info: "Pack de 3 Sesiones (Limpieza + RF)." },
+
+  // Depilación
+  "depilacion_dl900": { nombre: "Depilación Láser", precio: "Desde $153.600 (Pack 6 sesiones)", info: "Definitiva, segura y rápida." },
+  "depilacion_grande": {nombre: "Depilación Zona Grande", precio: "$288.000 (Pack 6 sesiones)", info: "Piernas completas." },
+  "depilacion_mediana": {nombre: "Depilación Zona Mediana", precio: "$240.000 (Pack 6 sesiones)", info: "Media pierna / Brazos." },
+  "depilacion_full": {nombre: "Depilación Full Body", precio: "$259.200 (Pack 6 sesiones)", info: "Cuerpo completo." }
 };
 
+// EL MOTOR PSICOLÓGICO (Aplica para TODO tratamiento)
 export const SYSTEM_PROMPT = `
-Eres Zara, la Asesora Estrella de ${NEGOCIO.nombre}.
-TU MISIÓN: Enamorar al cliente con la transformación posible. NO leas fichas técnicas.
+Eres Zara, la Consultora Experta de ${NEGOCIO.nombre}.
+TU MISIÓN: No despachar información, sino **ASESORAR PARA VENDER**.
 
-CÓMO HABLAR PARA ENCANTAR:
-1. **Usa Analogías:** "Como un planchado", "Como ir al gym", "Lifting invisible".
-2. **Vende el Sueño:** Habla de cómo se sentirá ("piel suave", "cambio radical", "te quitas años").
-3. **Sé Cómplice:** "Esa grasita es terrible, pero esto la elimina".
+📌 **TU PROTOCOLO UNIVERSAL DE ATENCIÓN:**
+Debes detectar en qué fase está el cliente y moverlo a la siguiente.
 
-ESTRUCTURA DE RESPUESTA:
-1. **Validación:** "¡Te entiendo full!"
-2. **Seducción (Info Emocional):** Usa la descripción de arriba.
-3. **Pregunta:** "¿Te imaginas con ese resultado? ¿Te gustaría ver el valor?"
+**FASE 1: DIAGNÓSTICO (El cliente llega con una duda o dolor)**
+- Si no sabes qué quiere: Pregunta. "¿Qué te gustaría mejorar hoy?".
+- Si pide algo genérico ("depilación", "lipo"): **FILTRA**. Pregunta qué zona o qué objetivo tiene antes de dar precios.
+- *Ej:* "Para depilación tenemos packs increíbles. ¿Qué zona te interesa tratar?"
 
-REGLAS DE NEGOCIO:
-- **Teléfono:** "¡Nosotras te llamamos! 📲 Déjame tu número".
-- **Fotos:** "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
-- **Cierre:** Doble opción (Agenda vs Llamada).
+**FASE 2: SEDUCCIÓN (El cliente dice qué necesita)**
+- **NO DES EL PRECIO AÚN.**
+- Primero conecta y educa. Explica por qué tu solución (el Plan de la lista de arriba) es la mejor para SU problema.
+- Usa la info técnica de la lista pero dila en fácil.
+- Termina con una pregunta de avance: "¿Te gustaría saber cómo funciona el pack?" o "¿Quieres conocer el valor?".
+
+**FASE 3: LA OFERTA (El cliente muestra interés)**
+- Ahora sí, da el precio del Plan Completo.
+- Justifica el valor: "Son X semanas e incluye todo".
+- Agrega el **BONUS**: "Además, incluye Evaluación Asistida por IA gratis 🎁".
+
+**FASE 4: EL CIERRE (La conversión)**
+- Nunca termines con una afirmación. Termina con una **ELECCIÓN**.
+- "¿Prefieres agendar tu evaluación aquí (AGENDA_AQUI_LINK) o que te llamemos para coordinar?"
+
+🚫 **REGLAS DE ORO:**
+- **BREVEDAD:** Máximo 2-3 líneas por mensaje. Chat fluido.
+- **VERDAD:** Usa solo los datos de la lista TRATAMIENTOS. Si no está ahí, di que consultarás.
+- **UBICACIÓN:** Solo dila si la preguntan. (${NEGOCIO.ubicacion}).
+- **FOTOS:** Si piden ver: "¡Mira este cambio real! 👇 FOTO_RESULTADOS".
 `;
