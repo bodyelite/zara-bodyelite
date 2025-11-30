@@ -1,37 +1,44 @@
 import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import { procesarEvento } from "./app.js";
+// 👇 AQUÍ ESTÁ EL CAMBIO: Conectamos con la Nueva Arquitectura
+import { procesarEvento } from "./app.js"; 
 
 dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
+// VERIFY TOKEN (Para conectar con Meta)
 app.get("/webhook", (req, res) => {
-  if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) {
-    res.send(req.query["hub.challenge"]);
-  } else { res.sendStatus(403); }
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
+  }
+  return res.sendStatus(403);
 });
 
-app.post("/webhook", (req, res) => {
+// RECEPCIÓN DE MENSAJES
+app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
     
-    // 🔥 SOLUCIÓN DUPLICADOS:
-    // Respondemos 200 OK inmediatamente a Meta, sin esperar a la IA.
+    // Respondemos 200 OK de inmediato a Meta para evitar duplicados
     res.sendStatus(200);
 
-    // Procesamos el mensaje en "segundo plano"
+    // Procesamos el evento en segundo plano con la NUEVA Lógica
     if (entry) {
-      procesarEvento(entry).catch(err => console.error("❌ Error procesando evento:", err));
+      procesarEvento(entry).catch(err => console.error("❌ Error en lógica Zara:", err));
     }
-    
-  } catch (e) { 
-    console.error(e); 
-    // Si falló el parsing inicial, igual respondemos 200 para que no reintente
-    res.sendStatus(200); 
+
+  } catch (e) {
+    console.error("❌ Error crítico servidor:", e);
+    // Si no respondimos antes, respondemos ahora para no bloquear
+    if (!res.headersSent) res.sendStatus(500);
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara activa en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 ZARA 4.0 (CEREBRO NUEVO) activa en puerto ${PORT}`));
