@@ -29,8 +29,8 @@ function esHorarioLaboral() {
 
 function obtenerCrossSell() {
     const tips = [
-        "Dato: También tenemos Depilación Láser DL900 por si te interesa aprovechar el viaje ⚡️",
-        "Recuerda que la evaluación incluye un análisis facial con IA de regalo 🎁",
+        "Dato: También tenemos Depilación Láser DL900 por si te interesa ⚡️",
+        "Recuerda que la evaluación incluye análisis facial con IA de regalo 🎁",
         "También hacemos Botox, por si quieres complementar ✨"
     ];
     return tips[Math.floor(Math.random() * tips.length)];
@@ -104,7 +104,7 @@ export async function procesarEvento(entry) {
     
     let confirmacion = enHorario 
         ? "¡Listo! 💙 Ya le pasé tu número a las chicas. Te llaman en un ratito."
-        : "¡Listo! 🌙 Ya guardé tu contacto. Te llamaremos mañana a primera hora.";
+        : "¡Listo! 🌙 Ya guardé tu contacto. Te llamamos mañana temprano.";
 
     const crossSell = obtenerCrossSell(); 
     const mensajeFinal = `${confirmacion}\n\n${crossSell}`;
