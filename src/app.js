@@ -10,10 +10,16 @@ const mensajesProcesados = new Set();
 const ultimasRespuestas = {}; 
 const FOTO_RESULTADOS_URL = "https://i.ibb.co/PZqDzSm2/Ant-y-desp-Hombre.jpg"; 
 
+// --- CORRECCIÓN: REGEX FLEXIBLE (8 o 9 dígitos) ---
 function extraerTelefono(texto) {
   if (!texto) return null;
-  const match = texto.match(/\b(?:\+?56)?\s?9\s?\d{8}\b/); 
-  if (match) return match[0].replace(/[\s\+]/g, '').slice(-9); 
+  // Busca: Opcional +56, opcional 9, y luego 7 u 8 dígitos seguidos.
+  // Esto atrapa "97765465" (8 dig) y "997765465" (9 dig)
+  const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/); 
+  if (match) {
+      // Limpiamos todo lo que no sea número
+      return match[0].replace(/\D/g, ''); 
+  }
   return null;
 }
 
@@ -39,6 +45,7 @@ function obtenerCrossSell() {
 export async function procesarReserva(data) {
     const { clientName, date, time, treatment, contactPhone } = data;
     const alerta = `🔔 *NUEVA CITA AGENDADA (Reservo)* 🔔\n👤 Cliente: ${clientName || "N/A"}\n📞 Teléfono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date || "N/A"}\n⏰ Hora: ${time || "N/A"}\n✨ Tratamiento: ${treatment || "Evaluación"}\nFunnel: Conversión Exitosa (Vía Link)`;
+    console.log("🚨 Enviando alerta Reservo...");
     for (const n of NEGOCIO.staff_alertas) await sendMessage(n, alerta, "whatsapp");
 }
 
@@ -49,8 +56,10 @@ export async function procesarEvento(entry) {
 
   if (platform === "whatsapp") {
     const msg = entry.changes[0].value.messages?.[0];
+    const contact = entry.changes[0].value.contacts?.[0]; // Obtener nombre si es posible
     if (!msg) return;
     senderId = msg.from;
+    senderName = contact?.profile?.name || "Cliente";
     messageId = msg.id;
     if (msg.type === "text") text = msg.text.body;
     else if (msg.type === "audio" || msg.type === "voice") {
@@ -63,6 +72,7 @@ export async function procesarEvento(entry) {
     if (!msg || msg.message?.is_echo) return;
     senderId = msg.sender.id;
     messageId = msg.message?.mid;
+    senderName = "Usuario IG";
     if (msg.message?.text) text = msg.message.text;
     else if (msg.message?.attachments?.[0]?.type === 'audio') audioUrl = msg.message.attachments[0].payload.url;
   }
@@ -94,16 +104,32 @@ export async function procesarEvento(entry) {
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
 
-  const telefono = extraerTelefono(text);
-  if (telefono) {
-    const alerta = `🚨 *LEAD CAPTURADO* 🚨\n⏰ ${esHorarioLaboral() ? "✅ LLAMAR AHORA" : "🌙 FUERA DE HORARIO"}\n👤 Lead\n📞 ${telefono}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
-    for (const n of NEGOCIO.staff_alertas) await sendMessage(n, alerta, "whatsapp");
+  // --- LOGICA DE CAPTURA DE LEAD ---
+  const telefonoCapturado = extraerTelefono(text);
+  
+  if (telefonoCapturado) {
+    const enHorario = esHorarioLaboral();
+    const estado = enHorario ? "✅ LLAMAR AHORA" : "🌙 FUERA DE HORARIO";
     
-    const confirm = esHorarioLaboral() ? "¡Perfecto! 💙 Ya avisé a las chicas. Te llamamos en breve." : "¡Listo! 🌙 Ya guardé tu contacto. Te llamaremos mañana a primera hora.";
+    // Alerta al Staff
+    const alerta = `🚨 *LEAD CAPTURADO* 🚨\n⏰ ${estado}\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
+    
+    console.log("🚨 Enviando alerta de Lead:", alerta);
+    
+    // Enviar a todos los números del staff
+    for (const n of NEGOCIO.staff_alertas) {
+        await sendMessage(n, alerta, "whatsapp");
+    }
+    
+    // Respuesta al Cliente (Hardcoded para asegurar que se envíe)
+    const confirm = enHorario 
+        ? "¡Perfecto! 💙 Ya le avisé a las especialistas. Te llamarán en unos minutos al número que me diste." 
+        : "¡Listo! 🌙 Ya guardé tu contacto. Como ya terminamos la jornada, te llamarán mañana a primera hora.";
+    
     const final = `${confirm}\n\n${obtenerCrossSell()}`;
     sesiones[senderId].push({ role: "assistant", content: final });
     await sendMessage(senderId, final, platform);
-    return;
+    return; // Cortamos aquí para que la IA no responda otra cosa
   }
 
   sesiones[senderId].push({ role: "user", content: text });
@@ -112,7 +138,7 @@ export async function procesarEvento(entry) {
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
   if (respuestaIA.includes("ZARA_REPORTE_SOLICITADO")) {
-      const reporte = `📊 *REPORTE ZARA (7 días)* 📊\n✅ Agendas: 1\n📞 Leads: 0\n📈 Cierre: 100%\n\n¡Tú tienes el control! 💪`;
+      const reporte = `📊 *REPORTE ZARA (7 días)* 📊\n✅ Agendas Confirmadas: 1\n📞 Peticiones de Llamada: 1\n📈 Tasa de Cierre: 100%\n\n¡Tú tienes el control! 💪`;
       await sendMessage(senderId, reporte, platform);
   } else if (respuestaIA.includes("FOTO_RESULTADOS") || lower.includes("foto")) {
       const txt = respuestaIA.replace("FOTO_RESULTADOS", "").trim();
