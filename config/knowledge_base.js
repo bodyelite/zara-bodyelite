@@ -1,4 +1,4 @@
-// ZARA 3.0 - CEREBRO V19 (CIERRE DE PUERTA CERRADA + EMOJIS)
+// ZARA 3.0 - CEREBRO V20 (MODO PING-PONG FORZADO)
 
 export const NEGOCIO = {
   nombre: "Clínica Body Elite",
@@ -9,134 +9,63 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
-  "lipo_express": {
-    nombre: "Plan Lipo Express",
-    precio: "$432.000",
-    info: "⚡️ Reductivo rápido. Baja contorno y pega la piel.",
-    clave: "rapido, express, bajar, corto"
-  },
-  "lipo_body_elite": {
-    nombre: "Plan Lipo Body Elite (Sin Cirugía)",
-    precio: "$664.000",
-    info: "🔥 Plan Estrella. 8 semanas. Ataca grasa, flacidez y celulitis a la vez con HIFU 12D y Lipoláser.",
-    clave: "grasa, guata, abdomen, reducir, rollo, completo"
-  },
-  "push_up": {
-    nombre: "Plan Push Up Glúteos",
-    precio: "$376.000",
-    info: "🍑 Levantamiento real. Endurece y levanta glúteos sin cirugía.",
-    clave: "cola, gluteos, levantar, poto"
-  },
-  "lipo_reductiva": {
-    nombre: "Plan Lipo Reductiva",
-    precio: "$480.000",
-    info: "Full quemadores para reducir centímetros.",
-    clave: "reductivo, bajar peso"
-  },
-  "lipo_focalizada": {
-    nombre: "Plan Lipo Focalizada",
-    precio: "$348.800",
-    info: "Para atacar esa zona rebelde específica.",
-    clave: "zona, rollo, focalizado"
-  },
-  "body_fitness": {
-    nombre: "Plan Body Fitness",
-    precio: "$360.000",
-    info: "Tonificación muscular intensa. Define y marca.",
-    clave: "tonificar, musculo, fitness"
-  },
-  "body_tensor": {
-    nombre: "Plan Body Tensor",
-    precio: "$232.000",
-    info: "Combate la flacidez en brazos o piernas.",
-    clave: "brazos, alas, flacidez, piernas"
-  },
-  "full_face": {
-    nombre: "Plan Full Face",
-    precio: "$584.000",
-    info: "👑 Renovación máxima de rostro.",
-    clave: "full face, cara completa, premium"
-  },
-  "face_elite": {
-    nombre: "Plan Face Elite",
-    precio: "$358.400",
-    info: "✨ Mix rejuvenecimiento (Toxina + Pink Glow).",
-    clave: "cara, arrugas, manchas, rejuvenecer"
-  },
-  "lipo_papada": {
-    nombre: "Plan Lipo Papada",
-    precio: "$313.600",
-    info: "💎 Elimina papada y perfila el rostro.",
-    clave: "papada, cuello, cara gorda"
-  },
-  "face_antiage": {
-    nombre: "Plan Face Antiage",
-    precio: "$281.600",
-    info: "Combate el envejecimiento con tecnología.",
-    clave: "antiage, edad, arrugas"
-  },
-  "face_inicia": {
-    nombre: "Plan Face Inicia",
-    precio: "$270.400",
-    info: "Ideal para empezar a cuidar tu rostro.",
-    clave: "iniciar, cara, basico"
-  },
-  "face_smart": {
-    nombre: "Plan Face Smart",
-    precio: "$198.400",
-    info: "Revitalización inteligente de piel.",
-    clave: "smart, piel, rostro"
-  },
-  "face_one": {
-    nombre: "Plan Face One",
-    precio: "$169.600",
-    info: "Sesión de alto impacto facial.",
-    clave: "one, sesion, hifu"
-  },
-  "exosomas": {
-    nombre: "Exosomas",
-    precio: "$152.000",
-    info: "🧬 Regeneración avanzada de piel y cicatrices.",
-    clave: "cicatrices, acné, exosoma"
-  },
-  "limpieza_full": {
-    nombre: "Limpieza Facial Full",
-    precio: "$120.000",
-    info: "Limpieza profunda con aparatología.",
-    clave: "limpieza, granos, puntos negros"
-  },
-  "depilacion_grande": { nombre: "Depilación Zona Grande", precio: "$288.000", info: "Piernas completas, espalda.", clave: "piernas, espalda" },
-  "depilacion_full": { nombre: "Depilación Full Body", precio: "$259.200", info: "Cuerpo completo promo.", clave: "cuerpo completo, todo" },
-  "depilacion_mediana": { nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Media pierna, rebaje.", clave: "media pierna, rebaje" },
-  "depilacion_pequena": { nombre: "Depilación Zona Pequeña", precio: "$192.000", info: "Axilas, rostro.", clave: "axila, bozo, cara" },
-  "botox_zona": { nombre: "Botox (Toxina)", precio: "Desde $120.000", info: "Suaviza arrugas de expresión.", clave: "botox, toxina" },
-  "pink_glow_sesion": { nombre: "Pink Glow", precio: "$150.000", info: "Piel de vidrio, hidratación.", clave: "pink glow" }
+  "lipo_express": { nombre: "Plan Lipo Express", precio: "$432.000", info: "⚡️ Reductivo rápido.", clave: "rapido, express, bajar, corto" },
+  "lipo_body_elite": { nombre: "Plan Lipo Body Elite (Sin Cirugía)", precio: "$664.000", info: "🔥 Plan Estrella 8 semanas.", clave: "grasa, guata, abdomen, reducir" },
+  "push_up": { nombre: "Plan Push Up Glúteos", precio: "$376.000", info: "🍑 Levantamiento real.", clave: "cola, gluteos, levantar" },
+  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "Full quemadores.", clave: "reductivo, bajar peso" },
+  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Zona rebelde específica.", clave: "zona, rollo, focalizado" },
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "Tonificación muscular.", clave: "tonificar, musculo, fitness" },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Combate flacidez.", clave: "brazos, alas, flacidez" },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "👑 Renovación máxima.", clave: "full face, cara" },
+  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "✨ Mix rejuvenecimiento.", clave: "cara, arrugas" },
+  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "Combate envejecimiento.", clave: "antiage, edad" },
+  "face_inicia": { nombre: "Plan Face Inicia", precio: "$270.400", info: "Ideal para empezar.", clave: "iniciar, cara, basico" },
+  "face_smart": { nombre: "Plan Face Smart", precio: "$198.400", info: "Revitalización.", clave: "smart, piel, rostro" },
+  "face_one": { nombre: "Plan Face One", precio: "$169.600", info: "Sesión alto impacto.", clave: "one, sesion, hifu" },
+  "exosomas": { nombre: "Exosomas", precio: "$152.000", info: "🧬 Regeneración avanzada.", clave: "cicatrices, acné" },
+  "limpieza_full": { nombre: "Limpieza Facial Full", precio: "$120.000", info: "Limpieza profunda.", clave: "limpieza, granos" },
+  "depilacion_grande": { nombre: "Depilación Zona Grande", precio: "$288.000", info: "Piernas completas.", clave: "piernas, espalda" },
+  "depilacion_full": { nombre: "Depilación Full Body", precio: "$259.200", info: "Cuerpo completo.", clave: "cuerpo completo" },
+  "depilacion_mediana": { nombre: "Depilación Zona Mediana", precio: "$240.000", info: "Media pierna.", clave: "media pierna" },
+  "depilacion_pequena": { nombre: "Depilación Zona Pequeña", precio: "$192.000", info: "Axilas, rostro.", clave: "axila, bozo" },
+  "botox_zona": { nombre: "Botox (Toxina)", precio: "Desde $120.000", info: "Suaviza arrugas.", clave: "botox, toxina" },
+  "pink_glow_sesion": { nombre: "Pink Glow", precio: "$150.000", info: "Piel de vidrio.", clave: "pink glow" }
 };
 
 export const SYSTEM_PROMPT = `
 ERES ZARA, COACH DE VENTA DE CLÍNICA BODY ELITE. 💁‍♀️✨
-Tu misión es CONVERSAR, SEDUCIR y GUIAR.
-Usa emojis ✨💖🍑🔥 para dar calidez.
+Tu misión es CONVERSAR. Tienes prohibido dar "discursos".
+Debes respetar los TURNOS DE CONVERSACIÓN.
 
-🚫 **REGLA DE ORO (LINK PROHIBIDO):**
-JAMÁS envíes el link de agenda (AGENDA_AQUI_LINK) sin que el cliente te lo pida explícitamente o elija la opción de "autoagendarse".
-Si das el link antes de tiempo, matas la venta.
+⛔️ **TUS PROHIBICIONES ABSOLUTAS:**
+1. JAMÁS des el precio en el mensaje 1 ni en el 2. Solo al final.
+2. JAMÁS des el link si no te lo piden explícitamente o eligen esa opción.
+3. JAMÁS escribas más de 3 líneas seguidas.
 
-✅ **TU COREOGRAFÍA DE VENTA (V19):**
+✅ **TU GUIÓN POR TURNOS (Respeta el orden):**
 
-1. **INDAGACIÓN:** "¿Qué te gustaría mejorar hoy? ¿Rostro o cuerpo? 🤔"
-2. **SEDUCCIÓN TECNOLÓGICA:** Explica el beneficio clave sin aburrir. "¿Te gustaría saber cómo funciona? ✨"
-3. **GANCHO + PRECIO:** "Te va a encantar... el plan sale [Precio]. Pero lo mejor es..."
-4. **EL GOLPE DE LA IA:** "...usamos IA para escanearte y personalizar tu plan. 🧬 ¡Por eso la evaluación es clave (y gratis)!"
+TURNO 1 (Saludo + Indagación):
+Si saludan, NO vendas nada. Solo pregunta con energía:
+"¡Hola! 👋 Qué rico saludarte. Cuéntame, ¿qué te gustaría mejorar hoy? ¿Cuerpo o Rostro? 🤔"
 
-5. **CIERRE DE PUERTA CERRADA (Sin Link):**
-   "Entonces, para asegurar tu evaluación VIP:
-   **¿Te llamamos nosotras para coordinar o prefieres que te envíe el link para agendarte tú misma?** 📲"
-   *(ESPERA LA RESPUESTA DEL CLIENTE AQUÍ)*.
+TURNO 2 (Empatía + Gancho Tecnológico):
+Si te cuentan su dolor (ej: "celulitis"):
+"¡Te entiendo mil! Es súper común. ✨ Para eso, el **Plan Lipo Body Elite** es atómico. Ataca justo la celulitis y reafirma a la vez. ¿Te gustaría saber cómo funciona la tecnología?"
+(¡NO DES PRECIO AÚN!).
 
-6. **ENTREGA:**
-   - Si dicen "llámame": Pide el número (si no lo tienes) o confirma.
-   - Si dicen "link": "¡Súper! Aquí tienes el acceso directo: AGENDA_AQUI_LINK ✨"
+TURNO 3 (La Ilusión + Promesa de Precio):
+Explica brevemente la tecnología (HIFU/Láser) y crea intriga:
+"Lo genial es que activa tu propio colágeno para tensar la piel. ¡Los cambios se notan muchísimo! 😍 (Y te adelanto que el valor te va a encantar). ¿Te cuento el precio?"
+
+TURNO 4 (Precio + Golpe de IA):
+Solo aquí das el precio y vendes la IA:
+"El plan completo sale $664.000. Pero ojo, lo clave es que usamos **IA para escanearte** 🧬 y personalizar todo a TI. ¡Por eso la evaluación es vital (y gratis)! ¿Te has hecho un escáner así antes?"
+
+TURNO 5 (Cierre Puerta Cerrada):
+"¡Es una tecnología única! Entonces, para asegurar tu cupo:
+**¿Te llamamos para coordinar o prefieres que te envíe el link para agendarte tú misma?** 📲"
+
+(ESPERA LA RESPUESTA PARA DAR EL LINK).
 
 **SI EL USUARIO DICE "ZARA REPORTE"** responde: **ZARA_REPORTE_SOLICITADO**.
 `;
