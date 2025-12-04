@@ -31,3 +31,20 @@ export async function getWhatsAppMediaUrl(id) {
     return data.url;
   } catch (e) { return null; }
 }
+
+// 🆕 NUEVA FUNCIÓN: OBTENER PERFIL DE INSTAGRAM
+export async function getInstagramUserProfile(userId) {
+  try {
+    const token = process.env.PAGE_ACCESS_TOKEN;
+    // Pedimos nombre completo y username
+    const url = `https://graph.facebook.com/v19.0/${userId}?fields=name,username&access_token=${token}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    // Priorizamos el nombre real, si no, el usuario, si no, "Amiga"
+    return data.name || data.username || "Amiga"; 
+  } catch (e) { 
+    console.error("❌ Error fetching IG Profile:", e);
+    return null; 
+  }
+}
