@@ -155,7 +155,7 @@ export async function procesarEvento(entry) {
     return;
   }
 
-  sesiones[senderId].push({ role: "user", content: `[Cliente: ${senderName}] ` + text });
+  sesiones[senderId].push({ role: "user", content: text });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
