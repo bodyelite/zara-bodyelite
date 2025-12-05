@@ -1,0 +1,74 @@
+import fetch from "node-fetch";
+const LINK = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+
+export async function sendMessage(to, text, platform, img = null) {
+  try {
+    const token = process.env.PAGE_ACCESS_TOKEN;
+    const version = "v19.0";
+    let url = `https://graph.facebook.com/${version}/me/messages`; // Default IG
+    if (platform === "whatsapp") {
+       url = `https://graph.facebook.com/${version}/${process.env.PHONE_NUMBER_ID}/messages`;
+    }
+
+    let body = {};
+
+    // CASO 1: IMAGEN
+    if (img) {
+        if (platform === "instagram") body = { recipient: { id: to }, message: { attachment: { type: "image", payload: { url: img, is_reusable: true } } } };
+        else body = { messaging_product: "whatsapp", to, type: "image", image: { link: img, caption: "Resultados Reales ✨" } };
+    
+    // CASO 2: SOLICITUD DE LINK (Especial para IG)
+    } else if (text.includes("AGENDA_AQUI_LINK")) {
+        const textoSinLink = text.replace("AGENDA_AQUI_LINK", "").trim();
+        
+        if (platform === "instagram") {
+            // EN IG: Texto limpio + Botón
+            body = {
+                recipient: { id: to },
+                message: {
+                    attachment: {
+                        type: "template",
+                        payload: {
+                            template_type: "button",
+                            text: textoSinLink.substring(0, 640), 
+                            buttons: [{ type: "web_url", url: LINK, title: "📅 Agendar Gratis" }]
+                        }
+                    }
+                }
+            };
+        } else {
+            // EN WSP: Texto + Link Pegado
+            const textoConLink = textoSinLink + "\n\n" + LINK;
+            body = { messaging_product: "whatsapp", to, type: "text", text: { body: textoConLink, preview_url: true } };
+        }
+
+    // CASO 3: TEXTO NORMAL
+    } else {
+        if (platform === "whatsapp") body = { messaging_product: "whatsapp", to, type: "text", text: { body: text, preview_url: false } };
+        else body = { recipient: { id: to }, message: { text: text } };
+    }
+
+    await fetch(url, { method: "POST", headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+  } catch (e) { console.error("❌ Meta Error:", e); }
+}
+
+export async function getWhatsAppMediaUrl(id) {
+  try {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${id}`, { headers: { "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.url;
+  } catch (e) { return null; }
+}
+
+export async function getInstagramUserProfile(userId) {
+  try {
+    const token = process.env.PAGE_ACCESS_TOKEN;
+    const url = `https://graph.facebook.com/v19.0/${userId}?fields=name,username&access_token=${token}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.name || data.username || "Amiga"; 
+  } catch (e) { return null; }
+}
