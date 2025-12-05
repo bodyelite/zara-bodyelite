@@ -57,9 +57,9 @@ setInterval(() => {
 
 function obtenerCrossSell() {
     const tips = [
-        "PD: ¡Pregunta por nuestras promos de Depilación Láser cuando vengas! ⚡️",
-        "Dato extra: También hacemos Botox. ¡Aprovecha de preguntar en tu evaluación! ✨",
-        "Tip: La evaluación incluye un análisis de piel gratuito. ¡Disfrútalo! 🎁"
+        "PD: ¡Pregunta por el **30% OFF** en Depilación Láser cuando vengas! ⚡️",
+        "Dato extra: Tenemos **30% OFF** en Botox y Ácido. ¡Pregunta en tu evaluación! ✨",
+        "Tip: Tu evaluación incluye análisis digital gratuito. ¡Aprovéchalo! 🎁"
     ];
     return tips[Math.floor(Math.random() * tips.length)];
 }
@@ -75,10 +75,19 @@ function generarReporteTexto(periodo) {
 
 export async function procesarReserva(data) {
     metricas.agendados++; 
-    console.log("📥 WEBHOOK RESERVO:", JSON.stringify(data));
+    console.log("📥 WEBHOOK RESERVO RECIBIDO Y PROCESANDO:", JSON.stringify(data)); // Log fuerte
     const { clientName, date, time, treatment, contactPhone } = data;
     const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
-    for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
+    
+    // Iterar con promesas para asegurar envío
+    for (const n of NEGOCIO.staff_alertas) { 
+        try {
+            await sendMessage(n, alerta, "whatsapp");
+            console.log("✅ Alerta enviada a:", n);
+        } catch(e) {
+            console.error("❌ Falló alerta a:", n, e);
+        }
+    }
 }
 
 export async function procesarEvento(entry) {
@@ -114,6 +123,7 @@ export async function procesarEvento(entry) {
   if ((now - (ultimasRespuestas[senderId] || 0)) < 3000) return;
   if (messageId && mensajesProcesados.has(messageId)) return;
   if (messageId) { mensajesProcesados.add(messageId); if (mensajesProcesados.size > 1000) mensajesProcesados.clear(); }
+  
   ultimasRespuestas[senderId] = now;
   estadosClientes[senderId] = 'activo';
 
@@ -128,7 +138,14 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const lower = text.toLowerCase().trim();
 
-  if (lower === "zara reporte") { await sendMessage(senderId, generarReporteTexto("GLOBAL"), platform); return; }
+  if (lower.startsWith("zara reporte") || lower === "reporte") { 
+      let periodo = "HOY/GLOBAL";
+      if (lower.includes("ayer")) periodo = "AYER";
+      if (lower.includes("7")) periodo = "SEMANAL";
+      await sendMessage(senderId, generarReporteTexto(periodo), platform); 
+      return; 
+  }
+  
   if (lower === "retomar") { usuariosPausados[senderId] = false; await sendMessage(senderId, "🤖 Zara reactivada.", platform); return; }
   if (lower.includes("silencio")) { usuariosPausados[senderId] = true; return; }
   if (usuariosPausados[senderId]) return;
@@ -146,7 +163,7 @@ export async function procesarEvento(entry) {
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
     
     const confirm = enHorario 
-        ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos al número que me diste.`
+        ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.`
         : `¡Listo ${senderName}! 🌙 Ya guardé tu contacto. Te llamaremos mañana desde las 10:00 AM.`;
 
     const final = `${confirm}\n\n${obtenerCrossSell()}`;
@@ -155,7 +172,7 @@ export async function procesarEvento(entry) {
     return;
   }
 
-  sesiones[senderId].push({ role: "user", content: text });
+  sesiones[senderId].push({ role: "user", content: `[Cliente: ${senderName}] ` + text });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);

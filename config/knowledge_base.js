@@ -6,37 +6,35 @@ export const NEGOCIO = {
   staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"] 
 };
 
-// DATOS EXACTOS SEGÚN LA TABLA EXCEL (image_a223a6.png)
 export const TRATAMIENTOS = {
-  // --- CORPORALES ---
   "lipo_express": { 
       nombre: "Plan Lipo Express", 
       precio: "$432.000", 
-      info: "⚡️ Reductivo rápido (21 Sesiones). Combina RF + Prosculpt + HIFU 12D + Controles.", 
+      info: "⚡️ Reductivo rápido (21 Sesiones). Combina **HIFU 12D + Cavitación** para eliminar grasa y pegar la piel.", 
       clave: "rapido, express, bajar, corto" 
   },
   "lipo_body_elite": { 
       nombre: "Plan Lipo Body Elite", 
       precio: "$664.000", 
-      info: "🔥 Plan Estrella (29 Sesiones). El más completo: RF + Prosculpt + Lipoláser + HIFU 12D + Controles.", 
+      info: "🔥 Plan Estrella (29 Sesiones). El más completo: **HIFU 12D + Lipoláser + EMS**. Ataca grasa profunda, flacidez y celulitis a la vez.", 
       clave: "grasa, guata, abdomen, reducir, rollo, completo" 
   },
   "push_up": { 
       nombre: "Plan Push Up", 
       precio: "$376.000", 
-      info: "🍑 Levantamiento Glúteos (17 Sesiones). RF + Prosculpt + HIFU 12D.", 
+      info: "🍑 Levantamiento Glúteos (17 Sesiones). Solo **Ondas Prosculpt** (Ejercicio intenso). (SIN Rellenos).", 
       clave: "cola, gluteos, levantar, poto" 
   },
   "lipo_reductiva": { 
       nombre: "Plan Lipo Reductiva", 
       precio: "$480.000", 
-      info: "Full Quemadores (21 Sesiones). RF + Prosculpt + Lipoláser + HIFU 12D + Controles.", 
+      info: "Full Quemadores (21 Sesiones). RF + Prosculpt + Lipoláser + HIFU 12D.", 
       clave: "reductivo, bajar peso" 
   },
   "lipo_focalizada": { 
       nombre: "Plan Lipo Focalizada Reductiva", 
       precio: "$348.800", 
-      info: "Zona Rebelde (12 Sesiones). RF + Lipolítico + HIFU 12D + Controles.", 
+      info: "Zona Rebelde (12 Sesiones). RF + Lipolítico + HIFU 12D.", 
       clave: "zona, rollo, focalizado" 
   },
   "body_fitness": { 
@@ -48,21 +46,13 @@ export const TRATAMIENTOS = {
   "body_tensor": { 
       nombre: "Plan Body Tensor", 
       precio: "$232.000", 
-      info: "Combate Flacidez (11 Sesiones). RF + HIFU 12D + Controles.", 
+      info: "Combate Flacidez (11 Sesiones). RF + HIFU 12D.", 
       clave: "brazos, alas, flacidez, piernas" 
-  },
-
-  // --- FACIALES (Precios y Tecnologías exactas del Excel) ---
-  "limpieza_facial_full": {
-      nombre: "Limpieza Facial Full",
-      precio: "$120.000",
-      info: "Limpieza Profunda (6 Sesiones). RF + Limpieza.",
-      clave: "limpieza, granos, puntos negros"
   },
   "full_face": { 
       nombre: "Plan Full Face", 
       precio: "$584.000", 
-      info: "👑 Renovación Máxima (12 Sesiones). Toxina + RF + Pink Glow + LFP + HIFU 12D + Controles.", 
+      info: "👑 Renovación Máxima (12 Sesiones). Toxina + RF + Pink Glow + LFP + HIFU 12D.", 
       clave: "full face, cara completa, premium" 
   },
   "face_elite": { 
@@ -107,8 +97,15 @@ export const TRATAMIENTOS = {
       info: "Regeneración (1 Sesión). Exosoma.",
       clave: "cicatrices, acné, exosoma"
   },
+  "limpieza_facial_full": {
+      nombre: "Limpieza Facial Full",
+      precio: "$120.000",
+      info: "Limpieza Profunda (6 Sesiones). RF + Limpieza.",
+      clave: "limpieza, granos, puntos negros"
+  },
+  "pink_glow_sesion": { nombre: "Pink Glow", precio: "$150.000", info: "Mesoterapia (1 Sesión). Piel de Vidrio.", clave: "pink glow" },
+  "botox_zona": { nombre: "Botox (Toxina)", precio: "$120.000", info: "Precio por 1 Zona.", clave: "botox, toxina" },
   
-  // --- DEPILACIÓN (Según Excel) ---
   "depilacion_midle": { nombre: "Depilación Midle", precio: "$192.000", info: "Zona Media (6 Sesiones).", clave: "media pierna, rebaje" },
   "depilacion_full": { nombre: "Depilación Full", precio: "$259.200", info: "Cuerpo Completo (6 Sesiones).", clave: "cuerpo completo, todo" },
   "depilacion_grande": { nombre: "Depilación Zona Grande", precio: "$288.000", info: "Zona Grande (6 Sesiones).", clave: "piernas, espalda" }
@@ -116,15 +113,14 @@ export const TRATAMIENTOS = {
 
 export const SYSTEM_PROMPT = `
 ERES ZARA, COACH DE VENTA DE CLÍNICA BODY ELITE. 💁‍♀️✨
-Misión: SEDUCIR y CERRAR usando SOLO los planes oficiales.
+Misión: SEDUCIR y CERRAR con lógica comercial impecable.
 
-🛑 **REGLAS DE ORO:**
-1. **PRECIOS EXACTOS:** Solo existen los precios de la lista. NO INVENTES "Botox a $120.000" (Eso vale la Limpieza Facial).
-2. **ESTRATEGIA "DESDE":** - Corporales: "Planes desde **$432.000** (Lipo Express)..."
-   - Faciales: "Tratamientos desde **$120.000** (Limpieza Full)..."
-3. **NO RELLENOS:** En Push Up, destaca que es PROSCULPT (Ejercicio), no inyecciones.
+🛑 **REGLA DE PRECIOS:**
+1. **CORPORALES:** USA SIEMPRE EL ANCLA. "Tenemos planes desde **$432.000** (Lipo Express)... y el tuyo sale [Precio]".
+2. **FACIALES:** VE AL GRANO. Di directamente el precio del plan consultado. NO uses "desde $120.000" (eso es limpieza y confunde).
+   Ej: "El Plan Face Elite sale **$358.400**."
 
-✅ **TU SECUENCIA MAESTRA (V53):**
+✅ **TU SECUENCIA (V54):**
 
 1. **INDAGACIÓN:** "¿Qué objetivo tienes hoy? ¿Cuerpo o Rostro? ✨"
 
@@ -136,16 +132,19 @@ Misión: SEDUCIR y CERRAR usando SOLO los planes oficiales.
    "Es tecnología avanzada que ataca el problema de raíz. ¡El cambio es increíble! 😍 (Y te adelanto que tenemos planes con precios convenientes). ¿Vemos los valores?"
 
 4. **PRECIO + IA (El Golpe):**
-   "Mira, tenemos planes desde $[Precio Desde Categ]. El tuyo sale **[Precio Real]**.
+   - Si es Corporal: "Mira, partimos desde $432.000... El plan que necesitas sale **[Precio Real]**."
+   - Si es Facial: "El plan sale **[Precio Real]**."
    
-   Pero lo clave es la **Evaluación Presencial con IA**. 🧬 En la clínica analizamos tu caso para darte el plan exacto. ¡Es gratis!"
+   **LUEGO AGREGA SIEMPRE:**
+   "Pero lo clave es la **Evaluación Presencial con IA**. 🧬 En la clínica analizamos tu caso para darte el plan exacto. ¡Es gratis!"
 
 5. **CIERRE:**
-   "Estamos en **Av. Las Perdices 2990**. ¿Te llamamos para coordinar o te agendas en el link?"
+   "Estamos en **Av. Las Perdices 2990 (Strip Center Las Pircas)**.
+   ¿Te llamamos para coordinar o te agendas en el link?"
 
 6. **ENTREGA + CROSS-SELLING:**
-   - Agenda: "¡Perfecto! Accede aquí: AGENDA_AQUI_LINK. (Ah, y pregunta por la promo de depilación 😉)."
-   - Llamada: "¡Genial! Déjame tu número 👇 (Y te contamos de la promo de depilación 😉)."
+   - Agenda: "¡Perfecto! Accede aquí: AGENDA_AQUI_LINK. (Ah, y pregunta por el 30% OFF en depilación 😉)."
+   - Llamada: "¡Genial! Déjame tu número 👇 (Y te contamos del 30% OFF en depilación 😉)."
 
 **SI EL USUARIO DICE "ZARA REPORTE"** responde: **ZARA_REPORTE_SOLICITADO**.
 `;
