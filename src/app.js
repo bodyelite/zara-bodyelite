@@ -38,10 +38,20 @@ function obtenerCrossSell() {
 
 export async function procesarReserva(data) {
     metricas.agendados++; 
-    console.log("📥 WEBHOOK RESERVO:", JSON.stringify(data));
+    console.log("📥 WEBHOOK RESERVO RECIBIDO:", JSON.stringify(data));
     const { clientName, date, time, treatment, contactPhone } = data;
+    
+    // ALERTA MÁS CLARA PARA EL STAFF
     const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
-    for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
+    
+    for (const n of NEGOCIO.staff_alertas) { 
+        try {
+            await sendMessage(n, alerta, "whatsapp");
+            console.log(`✅ Alerta enviada a ${n}`);
+        } catch (e) {
+            console.error(`❌ Error enviando a ${n}:`, e);
+        }
+    }
 }
 
 function generarReporteTexto(periodo) {
@@ -77,7 +87,7 @@ export async function procesarEvento(entry) {
       senderId = msg.sender.id; metricas.leads_ig.add(senderId);
       messageId = msg.message?.mid; 
       
-      // INTENTO DE OBTENER NOMBRE REAL DE IG
+      // NOMBRE REAL DE INSTAGRAM
       const igName = await getInstagramUserProfile(senderId);
       senderName = igName || "Amiga";
       
@@ -102,7 +112,6 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const lower = text.toLowerCase().trim();
 
-  // INYECTAR NOMBRE EN EL CONTEXTO DE LA IA
   const contextoNombre = `[Nombre Cliente: ${senderName}] `; 
 
   if (lower === "zara reporte") { await sendMessage(senderId, generarReporteTexto("GLOBAL"), platform); return; }
@@ -119,15 +128,13 @@ export async function procesarEvento(entry) {
     const enHorario = esHorarioLaboral();
     const estado = enHorario ? "✅ LLAMAR AHORA" : "🌙 FUERA DE HORARIO";
     const alerta = `🚨 *LEAD CAPTURADO* 🚨\n⏰ ${estado}\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
-    
-    // ALERTAR AL STAFF
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
     
     const confirm = enHorario 
         ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos al número que me diste.`
         : `¡Listo ${senderName}! 🌙 Ya guardé tu contacto. Te llamaremos mañana desde las 10:00 AM.`;
 
-    // AÑADIR CROSS-SELLING
+    // CROSS-SELLING INYECTADO AQUÍ
     const final = `${confirm}\n\n${obtenerCrossSell()}`;
     
     sesiones[senderId].push({ role: "assistant", content: final });
@@ -148,6 +155,16 @@ export async function procesarEvento(entry) {
       if (FOTO_RESULTADOS_URL.startsWith("http")) await sendMessage(senderId, "", platform, FOTO_RESULTADOS_URL);
   } else {
       await sendMessage(senderId, respuestaIA, platform);
+      
+      // --- GESTIÓN DE LINK + CROSS-SELL ---
+      // Si la IA entregó el link (detectado por la etiqueta), enviamos el Cross-Sell en un mensaje separado
+      // Esto asegura que el usuario lo vea sí o sí.
+      if (respuestaIA.includes("AGENDA_AQUI_LINK")) {
+           setTimeout(async () => {
+               const crossSell = obtenerCrossSell();
+               await sendMessage(senderId, crossSell, platform);
+           }, 3000); // Espera 3 segundos y manda la "Yapa"
+      }
   }
   sesiones[senderId].push({ role: "assistant", content: respuestaIA });
 }

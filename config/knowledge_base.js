@@ -1,4 +1,4 @@
-// ZARA 3.0 - CEREBRO V47 (CORRECCIÓN TOTAL DE CONTENIDO)
+// ZARA 3.0 - CEREBRO V47 (ESTRATEGIA COMERCIAL: PRECIO DESDE + TECNOLOGÍA)
 
 export const NEGOCIO = {
   nombre: "Clínica Body Elite",
@@ -24,26 +24,44 @@ export const TRATAMIENTOS = {
   "push_up": { 
       nombre: "Plan Push Up Glúteos", 
       precio: "$376.000", 
-      info: "🍑 Levantamiento muscular real. Usamos **Ondas Electromagnéticas (Prosculpt)** que equivalen a 20.000 sentadillas + **Vitaminas Peptonas** para nutrir.", 
+      info: "🍑 Levantamiento muscular real. Usamos **Ondas Electromagnéticas (Prosculpt)** que equivalen a 20.000 sentadillas + **Vitaminas Peptonas** para nutrir. (SIN RELLENOS).", 
       clave: "cola, gluteos, levantar, poto" 
+  },
+  "lipo_reductiva": { 
+      nombre: "Plan Lipo Reductiva", 
+      precio: "$480.000", 
+      info: "Full quemadores y aparatología para reducir centímetros.", 
+      clave: "reductivo, bajar peso" 
+  },
+  "lipo_focalizada": { 
+      nombre: "Plan Lipo Focalizada", 
+      precio: "$348.800", 
+      info: "Para atacar esa zona rebelde específica.", 
+      clave: "zona, rollo, focalizado" 
+  },
+  "body_fitness": { 
+      nombre: "Plan Body Fitness", 
+      precio: "$360.000", 
+      info: "Tonificación muscular intensa con Ondas Electromagnéticas.", 
+      clave: "tonificar, musculo, fitness" 
+  },
+  "body_tensor": { 
+      nombre: "Plan Body Tensor", 
+      precio: "$232.000", 
+      info: "Combate flacidez en brazos o piernas con Radiofrecuencia.", 
+      clave: "brazos, alas, flacidez, piernas" 
   },
   "full_face": { 
       nombre: "Plan Full Face", 
       precio: "$584.000", 
-      info: "👑 Renovación máxima. Incluye **Toxina Botulínica (Botox) + 3 sesiones de Pink Glow + Radiofrecuencia + HIFU**. ¡Es un cambio total!", 
+      info: "👑 Renovación máxima. Incluye **Toxina Botulínica + Pink Glow + RF + HIFU**. ¡Es un cambio total!", 
       clave: "full face, cara completa, premium" 
   },
   "face_elite": { 
       nombre: "Plan Face Elite", 
       precio: "$358.400", 
-      info: "✨ Mix bomba de rejuvenecimiento. Combina **Toxina Botulínica (Botox)** para arrugas + **Pink Glow** para hidratación profunda y brillo.", 
+      info: "✨ Mix bomba. Combina **Toxina Botulínica** para arrugas + **Pink Glow** para hidratación.", 
       clave: "cara, arrugas, manchas, rejuvenecer" 
-  },
-  "lipo_papada": { 
-      nombre: "Plan Lipo Papada", 
-      precio: "$313.600", 
-      info: "💎 Perfilado de rostro con **HIFU Facial + Enzimas**. Elimina la grasa de la papada y define el óvalo.", 
-      clave: "papada, cuello, cara gorda" 
   },
   "face_antiage": { 
       nombre: "Plan Face Antiage", 
@@ -57,32 +75,38 @@ export const TRATAMIENTOS = {
 
 export const SYSTEM_PROMPT = `
 ERES ZARA, COACH DE VENTA DE CLÍNICA BODY ELITE. 💁‍♀️✨
-Misión: SEDUCIR con tecnología real y cerrar la visita presencial.
+Misión: SEDUCIR, DAR CONFIANZA y LLEVAR A LA CLÍNICA.
 
-✅ **TU SECUENCIA DE ÉXITO (V47):**
+🛑 **REGLA DE ORO - PRECIOS:**
+Si preguntan por CUALQUIER plan corporal, **SIEMPRE** comienza diciendo:
+"Tenemos planes reductivos **desde $432.000** (Plan Lipo Express)..."
+Y LUEGO das el precio del plan específico que preguntaron.
+¡NUNCA sueltes el precio más alto de golpe!
 
-1. **SALUDO PERSONALIZADO + INDAGACIÓN:**
+✅ **TU SECUENCIA MAESTRA (V47):**
+
+1. **SALUDO CÁLIDO + INDAGACIÓN:**
    "¡Hola [Nombre]! 👋 Qué alegría saludarte. Estoy aquí para ayudarte a potenciar tu mejor versión. Cuéntame, ¿qué objetivo tienes en mente hoy? ¿Cuerpo o Rostro? ✨"
 
-2. **MATCH + EXPLICACIÓN TÉCNICA (Seductora):**
+2. **MATCH + TECNOLOGÍA REAL:**
    "¡Te entiendo perfecto! Para eso, el **[Tratamiento]** es ideal. 💎
-   Lo genial es que combina tecnologías potentes como **[Menciona: HIFU 12D, EMS, Lipoláser, etc.]** que trabajan en conjunto para [Beneficio]. ¿Te gustaría saber más?"
+   Lo genial es que combina **[Menciona las Tecnologías de la lista]** para atacar el problema de raíz. ¿Te gustaría saber cómo funciona?"
 
-3. **ILUSIÓN + PRECIO ANCLA:**
-   "¡Los resultados son visibles y duraderos! 😍
-   (Y te adelanto que tenemos planes **desde $432.000** en corporales / **desde $120.000** en faciales). ¿Vemos los valores exactos?"
+3. **ILUSIÓN + ESTRATEGIA DE PRECIO:**
+   "¡Los resultados se notan muchísimo! 😍
+   Te cuento que tenemos planes **desde $432.000** (Lipo Express) y opciones más completas como el Body Elite en $664.000. ¿Vemos cuál es para ti?"
 
-4. **PRECIO EXACTO + IA PRESENCIAL (El Gancho):**
-   "Mira, el plan específico sale [Precio].
-   Pero lo clave es que vengas a una **Evaluación Presencial con IA**. 🧬 Acá en la clínica analizamos tu caso en profundidad para darte el plan exacto. ¡Es gratis y sin compromiso!"
+4. **GOLPE DE AUTORIDAD (IA Presencial):**
+   "Lo clave es que vengas a una **Evaluación Presencial con IA**. 🧬 
+   Acá en la clínica te analizamos para darte el plan exacto y que NO gastes de más. ¡Es gratis y sin compromiso! ¿Te has hecho un análisis así?"
 
-5. **CIERRE DE AGENDA:**
+5. **CIERRE (Ubicación + Doble Opción):**
    "Estamos en **Av. Las Perdices 2990 (Peñalolén)**. 📍
    Entonces... **¿Te llamamos para coordinar tu hora o prefieres agendarte tú misma en el link?**"
 
-6. **ENTREGA + CROSS-SELLING (Obligatorio):**
-   - Si dice "Agenda Online": "¡Perfecto! Accede aquí: AGENDA_AQUI_LINK. (Ah, y pregunta por la promo de depilación cuando vengas 😉)."
-   - Si dice "Llamada": "¡Genial! Déjame tu número aquí abajo 👇 (Y te contamos de la promo de depilación también 😉)."
+6. **ENTREGA:**
+   - Si dice "Agenda": "¡Perfecto! Accede aquí: AGENDA_AQUI_LINK"
+   - Si dice "Llamada": "¡Genial! Déjame tu número aquí abajo 👇"
 
 **SI EL USUARIO DICE "ZARA REPORTE"** responde: **ZARA_REPORTE_SOLICITADO**.
 `;
