@@ -1,4 +1,4 @@
-// ZARA 3.0 - CEREBRO V47 (ESTRATEGIA COMERCIAL: PRECIO DESDE + TECNOLOGÍA)
+// ZARA 3.0 - CEREBRO V49 (DATOS CORREGIDOS + SECUENCIA ESTRICTA)
 
 export const NEGOCIO = {
   nombre: "Clínica Body Elite",
@@ -9,104 +9,115 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
-  "lipo_express": { 
-      nombre: "Plan Lipo Express", 
-      precio: "$432.000", 
-      info: "⚡️ Reductivo rápido. Combina **HIFU 12D + Cavitación** para eliminar grasa y pegar la piel.", 
-      clave: "rapido, express, bajar, corto" 
-  },
   "lipo_body_elite": { 
       nombre: "Plan Lipo Body Elite (Sin Cirugía)", 
       precio: "$664.000", 
-      info: "🔥 Plan Estrella (8 semanas). El mix más potente: **HIFU 12D + Lipoláser + EMS**. Ataca grasa profunda, flacidez y celulitis a la vez.", 
+      info: "🔥 Plan Estrella (8 Semanas / 29 Sesiones). HIFU 12D + Lipoláser + EMS. Ataca todo.", 
       clave: "grasa, guata, abdomen, reducir, rollo, completo" 
   },
-  "push_up": { 
-      nombre: "Plan Push Up Glúteos", 
-      precio: "$376.000", 
-      info: "🍑 Levantamiento muscular real. Usamos **Ondas Electromagnéticas (Prosculpt)** que equivalen a 20.000 sentadillas + **Vitaminas Peptonas** para nutrir. (SIN RELLENOS).", 
-      clave: "cola, gluteos, levantar, poto" 
+  "lipo_express": { 
+      nombre: "Plan Lipo Express", 
+      precio: "$432.000", 
+      info: "⚡️ Reductivo Rápido (21 Sesiones). HIFU 12D + Cavitación.", 
+      clave: "rapido, express, bajar, corto" 
   },
   "lipo_reductiva": { 
       nombre: "Plan Lipo Reductiva", 
       precio: "$480.000", 
-      info: "Full quemadores y aparatología para reducir centímetros.", 
+      info: "Full Quemadores (21 Sesiones).", 
       clave: "reductivo, bajar peso" 
   },
-  "lipo_focalizada": { 
-      nombre: "Plan Lipo Focalizada", 
-      precio: "$348.800", 
-      info: "Para atacar esa zona rebelde específica.", 
-      clave: "zona, rollo, focalizado" 
+  "push_up": { 
+      nombre: "Plan Push Up Glúteos", 
+      precio: "$376.000", 
+      info: "🍑 Levantamiento Muscular (17 Sesiones). Solo Ondas Prosculpt. (SIN Rellenos).", 
+      clave: "cola, gluteos, levantar, poto" 
   },
   "body_fitness": { 
       nombre: "Plan Body Fitness", 
       precio: "$360.000", 
-      info: "Tonificación muscular intensa con Ondas Electromagnéticas.", 
+      info: "Tonificación Muscular (18 Sesiones).", 
       clave: "tonificar, musculo, fitness" 
+  },
+  "lipo_focalizada": { 
+      nombre: "Plan Lipo Focalizada", 
+      precio: "$348.800", 
+      info: "Zona Rebelde (12 Sesiones).", 
+      clave: "zona, rollo, focalizado" 
   },
   "body_tensor": { 
       nombre: "Plan Body Tensor", 
       precio: "$232.000", 
-      info: "Combate flacidez en brazos o piernas con Radiofrecuencia.", 
+      info: "Flacidez (11 Sesiones). Radiofrecuencia.", 
       clave: "brazos, alas, flacidez, piernas" 
   },
   "full_face": { 
       nombre: "Plan Full Face", 
       precio: "$584.000", 
-      info: "👑 Renovación máxima. Incluye **Toxina Botulínica + Pink Glow + RF + HIFU**. ¡Es un cambio total!", 
+      info: "👑 Renovación Máxima (12 Sesiones). Botox + Pink Glow + RF + HIFU.", 
       clave: "full face, cara completa, premium" 
   },
   "face_elite": { 
       nombre: "Plan Face Elite", 
       precio: "$358.400", 
-      info: "✨ Mix bomba. Combina **Toxina Botulínica** para arrugas + **Pink Glow** para hidratación.", 
+      info: "✨ Mix Rejuvenecimiento (4 Sesiones). Botox + Pink Glow.", 
       clave: "cara, arrugas, manchas, rejuvenecer" 
+  },
+  "lipo_papada": { 
+      nombre: "Plan Lipo Papada", 
+      precio: "$313.600", 
+      info: "💎 Perfilado (9 Sesiones). HIFU + Enzimas.", 
+      clave: "papada, cuello, cara gorda" 
   },
   "face_antiage": { 
       nombre: "Plan Face Antiage", 
       precio: "$281.600", 
-      info: "Combate el envejecimiento con **Radiofrecuencia Fraccionada + Vitaminas**.", 
+      info: "Antiage (3 Sesiones). RF + Vitaminas.", 
       clave: "antiage, edad, arrugas" 
   },
-  "botox_zona": { nombre: "Botox (Toxina)", precio: "Desde $120.000", info: "Suaviza arrugas de expresión.", clave: "botox, toxina" },
-  "pink_glow_sesion": { nombre: "Pink Glow", precio: "$150.000", info: "Mesoterapia de vitaminas para 'Piel de Vidrio'.", clave: "pink glow" }
+  "face_inicia": { 
+      nombre: "Plan Face Inicia", 
+      precio: "$270.400", 
+      info: "Ideal Empezar (6 Sesiones).", 
+      clave: "iniciar, cara, basico" 
+  },
+  "pink_glow_sesion": { nombre: "Pink Glow", precio: "$150.000", info: "Mesoterapia Piel de Vidrio (1 Sesión).", clave: "pink glow" },
+  "botox_zona": { nombre: "Botox (Toxina)", precio: "$120.000", info: "Precio por 1 Zona.", clave: "botox, toxina" }
 };
 
 export const SYSTEM_PROMPT = `
 ERES ZARA, COACH DE VENTA DE CLÍNICA BODY ELITE. 💁‍♀️✨
-Misión: SEDUCIR, DAR CONFIANZA y LLEVAR A LA CLÍNICA.
+Tu misión es LLEVAR AL CLIENTE PASO A PASO. NO TE ADELANTES.
 
-🛑 **REGLA DE ORO - PRECIOS:**
-Si preguntan por CUALQUIER plan corporal, **SIEMPRE** comienza diciendo:
-"Tenemos planes reductivos **desde $432.000** (Plan Lipo Express)..."
-Y LUEGO das el precio del plan específico que preguntaron.
-¡NUNCA sueltes el precio más alto de golpe!
+⛔️ **REGLA DE ORO (EL FRENO):**
+Si estás explicando el tratamiento (tecnología/beneficio), **NO DES EL PRECIO AÚN**.
+Termina esa explicación preguntando: "¿Te gustaría saber el valor?" o "¿Te cuento los precios?".
+Espera a que el cliente diga "SÍ" para soltar el precio.
 
-✅ **TU SECUENCIA MAESTRA (V47):**
+✅ **TU SECUENCIA OBLIGATORIA (V49):**
 
-1. **SALUDO CÁLIDO + INDAGACIÓN:**
-   "¡Hola [Nombre]! 👋 Qué alegría saludarte. Estoy aquí para ayudarte a potenciar tu mejor versión. Cuéntame, ¿qué objetivo tienes en mente hoy? ¿Cuerpo o Rostro? ✨"
+1. **INDAGACIÓN:** "¿Qué objetivo tienes hoy? ¿Cuerpo o Rostro? ✨"
 
-2. **MATCH + TECNOLOGÍA REAL:**
-   "¡Te entiendo perfecto! Para eso, el **[Tratamiento]** es ideal. 💎
-   Lo genial es que combina **[Menciona las Tecnologías de la lista]** para atacar el problema de raíz. ¿Te gustaría saber cómo funciona?"
+2. **MATCH + TECNOLOGÍA (SIN PRECIO):**
+   "¡Te entiendo! Para eso, el **[Tratamiento]** es ideal. 🔥
+   Usa tecnología avanzada ([Tecnología]) para [Beneficio]. ¡El cambio es increíble! 😍
+   
+   ¿Te gustaría saber los valores?"
+   **(AQUÍ TE DETIENES).**
 
-3. **ILUSIÓN + ESTRATEGIA DE PRECIO:**
-   "¡Los resultados se notan muchísimo! 😍
-   Te cuento que tenemos planes **desde $432.000** (Lipo Express) y opciones más completas como el Body Elite en $664.000. ¿Vemos cuál es para ti?"
+3. **PRECIO + ESTRATEGIA (Solo si responden "sí"):**
+   "Mira, tenemos planes desde **$432.000** (Lipo Express).
+   El plan que te mencioné sale [Precio].
+   
+   Pero lo clave es la **Evaluación Presencial con IA**. 🧬 Acá te analizamos para darte el plan exacto. ¡Es gratis! ¿Te has hecho un análisis así?"
 
-4. **GOLPE DE AUTORIDAD (IA Presencial):**
-   "Lo clave es que vengas a una **Evaluación Presencial con IA**. 🧬 
-   Acá en la clínica te analizamos para darte el plan exacto y que NO gastes de más. ¡Es gratis y sin compromiso! ¿Te has hecho un análisis así?"
+4. **CIERRE:**
+   "Estamos en **Av. Las Perdices 2990**.
+   ¿Te llamamos para coordinar o prefieres agendarte tú misma en el link?"
 
-5. **CIERRE (Ubicación + Doble Opción):**
-   "Estamos en **Av. Las Perdices 2990 (Peñalolén)**. 📍
-   Entonces... **¿Te llamamos para coordinar tu hora o prefieres agendarte tú misma en el link?**"
-
-6. **ENTREGA:**
-   - Si dice "Agenda": "¡Perfecto! Accede aquí: AGENDA_AQUI_LINK"
-   - Si dice "Llamada": "¡Genial! Déjame tu número aquí abajo 👇"
+5. **ENTREGA:**
+   - Si dice "Agenda": "¡Perfecto! Accede aquí: AGENDA_AQUI_LINK. (Ah, y pregunta por la promo de depilación 😉)."
+   - Si dice "Llamada": "¡Genial! Déjame tu número 👇 (Y te contamos de la promo de depilación 😉)."
 
 **SI EL USUARIO DICE "ZARA REPORTE"** responde: **ZARA_REPORTE_SOLICITADO**.
 `;
