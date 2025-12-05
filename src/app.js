@@ -57,9 +57,9 @@ setInterval(() => {
 
 function obtenerCrossSell() {
     const tips = [
-        "PD: ¡Pregunta por el **30% OFF** en Depilación Láser cuando vengas! ⚡️",
-        "Dato extra: Tenemos **30% OFF** en Botox y Ácido. ¡Pregunta en tu evaluación! ✨",
-        "Tip: Tu evaluación incluye análisis digital gratuito. ¡Aprovéchalo! 🎁"
+        "PD: ¡Pregunta por nuestras promos de Depilación Láser cuando vengas! ⚡️",
+        "Dato extra: También hacemos Botox. ¡Aprovecha de preguntar en tu evaluación! ✨",
+        "Tip: La evaluación incluye un análisis de piel gratuito. ¡Disfrútalo! 🎁"
     ];
     return tips[Math.floor(Math.random() * tips.length)];
 }
@@ -73,19 +73,21 @@ function generarReporteTexto(periodo) {
     return `📊 *REPORTE ZARA* 📊\n👥 Leads: ${totalLeads}\n   WSP: ${leadsWsp} | IG: ${leadsIg}\n🎯 Conversiones: ${conversiones}\n✅ Agendas: ${metricas.agendados}\n📈 Tasa: ${tasa}%`;
 }
 
+// --- ALERTA SOLO CUANDO LLEGA WEBHOOK DE RESERVO ---
 export async function procesarReserva(data) {
     metricas.agendados++; 
-    console.log("📥 WEBHOOK RESERVO RECIBIDO Y PROCESANDO:", JSON.stringify(data)); // Log fuerte
+    console.log("📥 WEBHOOK RESERVO RECIBIDO:", JSON.stringify(data));
+    
     const { clientName, date, time, treatment, contactPhone } = data;
+    
+    // ALERTA REAL DE AGENDAMIENTO
     const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
     
-    // Iterar con promesas para asegurar envío
     for (const n of NEGOCIO.staff_alertas) { 
         try {
             await sendMessage(n, alerta, "whatsapp");
-            console.log("✅ Alerta enviada a:", n);
-        } catch(e) {
-            console.error("❌ Falló alerta a:", n, e);
+        } catch (e) {
+            console.error(`❌ Error enviando alerta a ${n}`, e);
         }
     }
 }
@@ -123,7 +125,6 @@ export async function procesarEvento(entry) {
   if ((now - (ultimasRespuestas[senderId] || 0)) < 3000) return;
   if (messageId && mensajesProcesados.has(messageId)) return;
   if (messageId) { mensajesProcesados.add(messageId); if (mensajesProcesados.size > 1000) mensajesProcesados.clear(); }
-  
   ultimasRespuestas[senderId] = now;
   estadosClientes[senderId] = 'activo';
 
@@ -159,11 +160,13 @@ export async function procesarEvento(entry) {
     estadosClientes[senderId] = 'agendado';
     const enHorario = esHorarioLaboral();
     const estado = enHorario ? "✅ LLAMAR AHORA" : "🌙 FUERA DE HORARIO";
-    const alerta = `🚨 *LEAD CAPTURADO* 🚨\n⏰ ${estado}\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
+    
+    // ALERTA DE LLAMADA (Esto SÍ debe avisar)
+    const alerta = `🚨 *SOLICITUD DE LLAMADA* 🚨\n⏰ ${estado}\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
     
     const confirm = enHorario 
-        ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.`
+        ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos al número que me diste.`
         : `¡Listo ${senderName}! 🌙 Ya guardé tu contacto. Te llamaremos mañana desde las 10:00 AM.`;
 
     const final = `${confirm}\n\n${obtenerCrossSell()}`;
@@ -186,6 +189,7 @@ export async function procesarEvento(entry) {
   } else {
       await sendMessage(senderId, respuestaIA, platform);
       
+      // Si dio el link, mandamos el Cross-Selling al cliente, PERO NO AVISAMOS AL STAFF
       if (respuestaIA.includes("AGENDA_AQUI_LINK")) {
            setTimeout(async () => {
                const crossSell = obtenerCrossSell();
