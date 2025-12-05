@@ -4,33 +4,17 @@ import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
 import { NEGOCIO } from "../config/knowledge_base.js";
 
-// --- MÉTRICAS DE LEADS ÚNICOS (EN MEMORIA) ---
-const metricas = {
-    leads_wsp: new Set(),
-    leads_ig: new Set(),
-    mensajes_totales: 0,
-    llamadas: 0,
-    intencion_link: 0,
-    agendados: 0
-};
-
+const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 0, llamadas: 0, intencion_link: 0, agendados: 0 };
 const sesiones = {}; 
 const usuariosPausados = {}; 
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
-const estadosClientes = {}; 
 
 function extraerTelefono(texto) {
   if (!texto) return null;
   const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/); 
   if (match) return match[0].replace(/\D/g, ''); 
   return null;
-}
-
-function esHorarioPrudente() {
-    const now = new Date();
-    const horaChile = (now.getUTCHours() - 3 + 24) % 24; 
-    return horaChile >= 9 && horaChile < 20.5; 
 }
 
 function esHorarioLaboral() {
@@ -43,27 +27,6 @@ function esHorarioLaboral() {
     return decimal >= 9.5 && decimal < 19; 
 }
 
-const TIEMPO_DORMIDO = 2 * 60 * 60 * 1000; 
-const INTERVALO_CHECK = 10 * 60 * 1000;
-
-setInterval(() => {
-    if (!esHorarioPrudente()) return;
-    const ahora = Date.now();
-    console.log("⏰ Zara Despertador: Buscando oportunidades...");
-
-    Object.keys(ultimasRespuestas).forEach(async (senderId) => {
-        const ultimoMsj = ultimasRespuestas[senderId];
-        const estado = estadosClientes[senderId] || 'activo';
-        
-        if ((ahora - ultimoMsj) > TIEMPO_DORMIDO && estado !== 'agendado' && estado !== 'nudged' && !usuariosPausados[senderId]) {
-            console.log(`💡 Recuperando a ${senderId}...`);
-            const mensajeNudge = "¿Aún no te decides? 🤔 El **Diagnóstico con IA** te entrega la info real para no gastar de más. Es un regalo de Body Elite 🎁. ¿Te agendo tu diagnóstico gratuito?";
-            await sendMessage(senderId, mensajeNudge, "whatsapp"); 
-            estadosClientes[senderId] = 'nudged'; 
-        }
-    });
-}, INTERVALO_CHECK);
-
 function obtenerCrossSell() {
     const tips = [
         "PD: ¡Pregunta por nuestras promos de Depilación Láser cuando vengas! ⚡️",
@@ -73,33 +36,21 @@ function obtenerCrossSell() {
     return tips[Math.floor(Math.random() * tips.length)];
 }
 
-// --- GENERADOR DE REPORTES DINÁMICO ---
-function generarReporteTexto(periodo) {
-    const leadsWsp = metricas.leads_wsp.size;
-    const leadsIg = metricas.leads_ig.size;
-    const totalLeads = leadsWsp + leadsIg;
-    const conversiones = metricas.llamadas + metricas.intencion_link + metricas.agendados;
-    const tasa = totalLeads > 0 ? ((conversiones / totalLeads) * 100).toFixed(1) : "0.0";
-
-    return `📊 *REPORTE ZARA (${periodo})* 📊\n\n` +
-           `👥 *Total Personas:* ${totalLeads}\n` +
-           `   📱 WhatsApp: ${leadsWsp}\n` +
-           `   📸 Instagram: ${leadsIg}\n` +
-           `   (Tráfico total: ${metricas.mensajes_totales} msjes)\n\n` +
-           `🎯 *Conversiones:* ${conversiones}\n` +
-           `   📞 Piden Llamada: ${metricas.llamadas}\n` +
-           `   🔗 Piden Link: ${metricas.intencion_link}\n` +
-           `   ✅ Agendados: ${metricas.agendados}\n\n` +
-           `📈 *Tasa Cierre:* ${tasa}%\n` +
-           `💪 ¡Vamos por más!`;
-}
-
 export async function procesarReserva(data) {
     metricas.agendados++; 
     console.log("📥 WEBHOOK RESERVO:", JSON.stringify(data));
     const { clientName, date, time, treatment, contactPhone } = data;
     const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
+}
+
+function generarReporteTexto(periodo) {
+    const leadsWsp = metricas.leads_wsp.size;
+    const leadsIg = metricas.leads_ig.size;
+    const totalLeads = leadsWsp + leadsIg;
+    const conversiones = metricas.llamadas + metricas.intencion_link + metricas.agendados;
+    const tasa = totalLeads > 0 ? ((conversiones / totalLeads) * 100).toFixed(1) : "0.0";
+    return `📊 *REPORTE ZARA* 📊\n👥 Leads: ${totalLeads}\n🎯 Conversiones: ${conversiones}\n✅ Agendas: ${metricas.agendados}\n📈 Tasa: ${tasa}%`;
 }
 
 export async function procesarEvento(entry) {
@@ -125,8 +76,11 @@ export async function procesarEvento(entry) {
       if (!msg || msg.message?.is_echo) return;
       senderId = msg.sender.id; metricas.leads_ig.add(senderId);
       messageId = msg.message?.mid; 
+      
+      // INTENTO DE OBTENER NOMBRE REAL DE IG
       const igName = await getInstagramUserProfile(senderId);
       senderName = igName || "Amiga";
+      
       if (msg.message?.text) text = msg.message.text;
       else if (msg.message?.attachments?.[0]?.type === 'audio') audioUrl = msg.message.attachments[0].payload.url;
   }
@@ -136,7 +90,6 @@ export async function procesarEvento(entry) {
   if (messageId && mensajesProcesados.has(messageId)) return;
   if (messageId) { mensajesProcesados.add(messageId); if (mensajesProcesados.size > 1000) mensajesProcesados.clear(); }
   ultimasRespuestas[senderId] = now;
-  estadosClientes[senderId] = 'activo';
 
   if (audioUrl) {
     try {
@@ -149,39 +102,40 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const lower = text.toLowerCase().trim();
 
-  // --- LOGICA DE REPORTE MULTI-COMANDO ---
-  if (lower.startsWith("zara reporte") || lower === "reporte") { 
-      let periodo = "HOY (En Tiempo Real)";
-      if (lower.includes("ayer")) periodo = "AYER (Acumulado)";
-      if (lower.includes("7 dias") || lower.includes("semana")) periodo = "ÚLTIMOS 7 DÍAS";
-      
-      await sendMessage(senderId, generarReporteTexto(periodo), platform); 
-      return; 
-  }
+  // INYECTAR NOMBRE EN EL CONTEXTO DE LA IA
+  const contextoNombre = `[Nombre Cliente: ${senderName}] `; 
 
+  if (lower === "zara reporte") { await sendMessage(senderId, generarReporteTexto("GLOBAL"), platform); return; }
   if (lower === "retomar") { usuariosPausados[senderId] = false; await sendMessage(senderId, "🤖 Zara reactivada.", platform); return; }
   if (lower.includes("silencio")) { usuariosPausados[senderId] = true; return; }
   if (usuariosPausados[senderId]) return;
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
-  if (lower.includes("link") || lower.includes("agenda")) { metricas.intencion_link++; estadosClientes[senderId] = 'agendado'; }
+  if (lower.includes("link") || lower.includes("agenda")) metricas.intencion_link++;
 
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado) {
     metricas.llamadas++;
-    estadosClientes[senderId] = 'agendado';
     const enHorario = esHorarioLaboral();
     const estado = enHorario ? "✅ LLAMAR AHORA" : "🌙 FUERA DE HORARIO";
     const alerta = `🚨 *LEAD CAPTURADO* 🚨\n⏰ ${estado}\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
+    
+    // ALERTAR AL STAFF
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
-    const confirm = enHorario ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas...` : `¡Listo ${senderName}! 🌙 Ya guardé tu contacto...`;
+    
+    const confirm = enHorario 
+        ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos al número que me diste.`
+        : `¡Listo ${senderName}! 🌙 Ya guardé tu contacto. Te llamaremos mañana desde las 10:00 AM.`;
+
+    // AÑADIR CROSS-SELLING
     const final = `${confirm}\n\n${obtenerCrossSell()}`;
+    
     sesiones[senderId].push({ role: "assistant", content: final });
     await sendMessage(senderId, final, platform);
     return;
   }
 
-  sesiones[senderId].push({ role: "user", content: text });
+  sesiones[senderId].push({ role: "user", content: contextoNombre + text });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
