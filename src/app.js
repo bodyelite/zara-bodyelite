@@ -9,12 +9,19 @@ const sesiones = {};
 const usuariosPausados = {}; 
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
+const estadosClientes = {};
 
 function extraerTelefono(texto) {
   if (!texto) return null;
   const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/); 
   if (match) return match[0].replace(/\D/g, ''); 
   return null;
+}
+
+function esHorarioPrudente() {
+    const now = new Date();
+    const horaChile = (now.getUTCHours() - 3 + 24) % 24; 
+    return horaChile >= 9 && horaChile < 20.5; 
 }
 
 function esHorarioLaboral() {
@@ -27,6 +34,27 @@ function esHorarioLaboral() {
     return decimal >= 9.5 && decimal < 19; 
 }
 
+const TIEMPO_DORMIDO = 2 * 60 * 60 * 1000; 
+const INTERVALO_CHECK = 10 * 60 * 1000;
+
+setInterval(() => {
+    if (!esHorarioPrudente()) return;
+    const ahora = Date.now();
+    console.log("⏰ Zara Despertador: Buscando oportunidades...");
+
+    Object.keys(ultimasRespuestas).forEach(async (senderId) => {
+        const ultimoMsj = ultimasRespuestas[senderId];
+        const estado = estadosClientes[senderId] || 'activo';
+        
+        if ((ahora - ultimoMsj) > TIEMPO_DORMIDO && estado !== 'agendado' && estado !== 'nudged' && !usuariosPausados[senderId]) {
+            console.log(`💡 Recuperando a ${senderId}...`);
+            const mensajeNudge = "¿Aún no te decides? 🤔 El **Diagnóstico con IA** te entrega la info real para no gastar de más. Es un regalo de Body Elite 🎁. ¿Te agendo tu diagnóstico gratuito?";
+            await sendMessage(senderId, mensajeNudge, "whatsapp"); 
+            estadosClientes[senderId] = 'nudged'; 
+        }
+    });
+}, INTERVALO_CHECK);
+
 function obtenerCrossSell() {
     const tips = [
         "PD: ¡Pregunta por nuestras promos de Depilación Láser cuando vengas! ⚡️",
@@ -36,21 +64,21 @@ function obtenerCrossSell() {
     return tips[Math.floor(Math.random() * tips.length)];
 }
 
-export async function procesarReserva(data) {
-    metricas.agendados++; 
-    console.log("📥 WEBHOOK RESERVO:", JSON.stringify(data));
-    const { clientName, date, time, treatment, contactPhone } = data;
-    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
-    for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
-}
-
 function generarReporteTexto(periodo) {
     const leadsWsp = metricas.leads_wsp.size;
     const leadsIg = metricas.leads_ig.size;
     const totalLeads = leadsWsp + leadsIg;
     const conversiones = metricas.llamadas + metricas.intencion_link + metricas.agendados;
     const tasa = totalLeads > 0 ? ((conversiones / totalLeads) * 100).toFixed(1) : "0.0";
-    return `📊 *REPORTE ZARA* 📊\n👥 Leads: ${totalLeads}\n🎯 Conversiones: ${conversiones}\n✅ Agendas: ${metricas.agendados}\n📈 Tasa: ${tasa}%`;
+    return `📊 *REPORTE ZARA* 📊\n👥 Leads: ${totalLeads}\n   WSP: ${leadsWsp} | IG: ${leadsIg}\n🎯 Conversiones: ${conversiones}\n✅ Agendas: ${metricas.agendados}\n📈 Tasa: ${tasa}%`;
+}
+
+export async function procesarReserva(data) {
+    metricas.agendados++; 
+    console.log("📥 WEBHOOK RESERVO:", JSON.stringify(data));
+    const { clientName, date, time, treatment, contactPhone } = data;
+    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
+    for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
 }
 
 export async function procesarEvento(entry) {
@@ -87,6 +115,7 @@ export async function procesarEvento(entry) {
   if (messageId && mensajesProcesados.has(messageId)) return;
   if (messageId) { mensajesProcesados.add(messageId); if (mensajesProcesados.size > 1000) mensajesProcesados.clear(); }
   ultimasRespuestas[senderId] = now;
+  estadosClientes[senderId] = 'activo';
 
   if (audioUrl) {
     try {
@@ -105,11 +134,12 @@ export async function procesarEvento(entry) {
   if (usuariosPausados[senderId]) return;
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
-  if (lower.includes("link") || lower.includes("agenda")) metricas.intencion_link++;
+  if (lower.includes("link") || lower.includes("agenda")) { metricas.intencion_link++; estadosClientes[senderId] = 'agendado'; }
 
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado) {
     metricas.llamadas++;
+    estadosClientes[senderId] = 'agendado';
     const enHorario = esHorarioLaboral();
     const estado = enHorario ? "✅ LLAMAR AHORA" : "🌙 FUERA DE HORARIO";
     const alerta = `🚨 *LEAD CAPTURADO* 🚨\n⏰ ${estado}\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Contexto: "...${sesiones[senderId].slice(-2).map(m => m.content).join(' | ')}..."`;
@@ -125,7 +155,7 @@ export async function procesarEvento(entry) {
     return;
   }
 
-  sesiones[senderId].push({ role: "user", content: text });
+  sesiones[senderId].push({ role: "user", content: `[Cliente: ${senderName}] ` + text });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);

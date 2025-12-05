@@ -5,24 +5,20 @@ export async function sendMessage(to, text, platform, img = null) {
   try {
     const token = process.env.PAGE_ACCESS_TOKEN;
     const version = "v19.0";
-    let url = `https://graph.facebook.com/${version}/me/messages`; // Default IG
+    let url = `https://graph.facebook.com/${version}/me/messages`;
     if (platform === "whatsapp") {
        url = `https://graph.facebook.com/${version}/${process.env.PHONE_NUMBER_ID}/messages`;
     }
 
     let body = {};
 
-    // CASO 1: IMAGEN
     if (img) {
         if (platform === "instagram") body = { recipient: { id: to }, message: { attachment: { type: "image", payload: { url: img, is_reusable: true } } } };
         else body = { messaging_product: "whatsapp", to, type: "image", image: { link: img, caption: "Resultados Reales ✨" } };
-    
-    // CASO 2: SOLICITUD DE LINK (Especial para IG)
     } else if (text.includes("AGENDA_AQUI_LINK")) {
         const textoSinLink = text.replace("AGENDA_AQUI_LINK", "").trim();
         
         if (platform === "instagram") {
-            // EN IG: Texto limpio + Botón
             body = {
                 recipient: { id: to },
                 message: {
@@ -37,12 +33,10 @@ export async function sendMessage(to, text, platform, img = null) {
                 }
             };
         } else {
-            // EN WSP: Texto + Link Pegado
             const textoConLink = textoSinLink + "\n\n" + LINK;
             body = { messaging_product: "whatsapp", to, type: "text", text: { body: textoConLink, preview_url: true } };
         }
 
-    // CASO 3: TEXTO NORMAL
     } else {
         if (platform === "whatsapp") body = { messaging_product: "whatsapp", to, type: "text", text: { body: text, preview_url: false } };
         else body = { recipient: { id: to }, message: { text: text } };
