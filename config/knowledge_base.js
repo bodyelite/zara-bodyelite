@@ -14,7 +14,6 @@ export const TRATAMIENTOS = {
   "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "Zona Rebelde.", clave: "zona, rollo, focalizado" },
   "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "Tonificación Muscular.", clave: "tonificar, musculo" },
   "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "Combate Flacidez.", clave: "brazos, alas, flacidez" },
-
   "limpieza_facial_full": { nombre: "Limpieza Facial Full", precio: "$120.000", info: "Limpieza Profunda.", clave: "limpieza, granos" },
   "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "👑 Renovación Máxima. Toxina + RF + Pink Glow + LFP.", clave: "full face, cara" },
   "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "✨ Mix Rejuvenecimiento. Toxina + Pink Glow.", clave: "cara, arrugas" },
@@ -26,7 +25,6 @@ export const TRATAMIENTOS = {
   "exosoma": { nombre: "Plan Exosoma", precio: "$152.000", info: "Regeneración.", clave: "cicatrices, acné" },
   "pink_glow_sesion": { nombre: "Pink Glow", precio: "$150.000", info: "Piel de Vidrio.", clave: "pink glow" },
   "botox_zona": { nombre: "Botox (Toxina)", precio: "$120.000", info: "Precio por 1 Zona.", clave: "botox, toxina" },
-
   "depilacion_midle": { nombre: "Depilación Midle", precio: "$192.000", info: "Zona Media.", clave: "media pierna" },
   "depilacion_full": { nombre: "Depilación Full", precio: "$259.200", info: "Cuerpo Completo.", clave: "cuerpo completo" },
   "depilacion_grande": { nombre: "Depilación Zona Grande", precio: "$288.000", info: "Zona Grande.", clave: "piernas" }
@@ -42,9 +40,8 @@ Misión: SEDUCIR, INFORMAR y CERRAR CITA.
    *(Usa este gancho SIEMPRE antes de dar el precio del plan específico que te preguntan).*
 
 🛑 **LINKS:**
-JAMÁS escribas URLs tú misma (ni markdown, ni http).
+JAMÁS escribas URLs tú misma.
 SOLO escribe la palabra clave exacta: **AGENDA_AQUI_LINK**
-(El sistema se encarga del resto).
 
 ✅ **TU SECUENCIA (V66):**
 1. **INDAGACIÓN:** "¿Qué objetivo tienes hoy? ¿Cuerpo o Rostro? ✨"
