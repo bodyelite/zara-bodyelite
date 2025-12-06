@@ -68,24 +68,11 @@ function generarReporteTexto(periodo) {
 
 export async function procesarReserva(data) {
     metricas.agendados++; 
-    console.log("🔥🔥🔥 WEBHOOK RESERVO EJECUTÁNDOSE 🔥🔥🔥");
-    console.log("DATA RECIBIDA:", JSON.stringify(data));
-
-    const clientName = data.clientName || data.name || "Cliente Web";
-    const date = data.date || "Fecha por confirmar";
-    const time = data.time || "Hora por confirmar";
-    const treatment = data.treatment || data.service || "Evaluación";
-    const contactPhone = data.contactPhone || data.phone || "N/A";
-
-    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName}\n📞 Fono: ${contactPhone}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment}\n🚀 Origen: Zara Bot`;
-
+    console.log("🔥🔥🔥 WEBHOOK RESERVO EJECUTÁNDOSE (ZARA 11) 🔥🔥🔥");
+    const { clientName, date, time, treatment, contactPhone } = data;
+    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
     for (const n of NEGOCIO.staff_alertas) { 
-        try {
-            await sendMessage(n, alerta, "whatsapp");
-            console.log(`✅ Alerta enviada a ${n}`);
-        } catch(e) {
-            console.error(`❌ Falló envío a ${n}:`, e);
-        }
+        try { await sendMessage(n, alerta, "whatsapp"); } catch(e) { console.error(e); }
     }
 }
 

@@ -1,5 +1,4 @@
 import fetch from "node-fetch";
-// Importamos volviendo a la raíz (../../) para evitar errores de ruta
 import { NEGOCIO } from "../../config/knowledge_base.js"; 
 
 export async function sendMessage(to, text, platform, img = null) {
@@ -13,7 +12,6 @@ export async function sendMessage(to, text, platform, img = null) {
 
     let body = {};
 
-    // CASO 1: IMAGEN
     if (img) {
         if (platform === "instagram") {
             body = { recipient: { id: to }, message: { attachment: { type: "image", payload: { url: img, is_reusable: true } } } };
@@ -21,13 +19,11 @@ export async function sendMessage(to, text, platform, img = null) {
             body = { messaging_product: "whatsapp", to, type: "image", image: { link: img, caption: "Resultados Reales ✨" } };
         }
     
-    // CASO 2: SOLICITUD DE LINK (BOTÓN)
     } else if (text.includes("AGENDA_AQUI_LINK")) {
         const textoSinLink = text.replace("AGENDA_AQUI_LINK", "").trim();
         const agendaUrl = NEGOCIO.agenda_link;
 
         if (platform === "instagram") {
-            // INSTAGRAM: USAMOS TARJETA GENÉRICA (BOTÓN REAL)
             body = {
                 recipient: { id: to },
                 message: {
@@ -39,32 +35,21 @@ export async function sendMessage(to, text, platform, img = null) {
                                 {
                                     title: "Agenda tu Evaluación 🧬",
                                     subtitle: "Reserva gratis aquí 👇",
-                                    buttons: [
-                                        {
-                                            type: "web_url",
-                                            url: agendaUrl,
-                                            title: "📅 Agendar Ahora"
-                                        }
-                                    ]
+                                    buttons: [{ type: "web_url", url: agendaUrl, title: "📅 Agendar Ahora" }]
                                 }
                             ]
                         }
                     }
                 }
             };
-            
-            // Si hay texto antes del botón, lo mandamos primero
             if (textoSinLink.length > 2) {
                  await fetch(url, { method: "POST", headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ recipient: { id: to }, message: { text: textoSinLink } }) });
             }
-
         } else {
-            // WHATSAPP: LINK LIMPIO Y CLICKEABLE
             const textoConLink = `${textoSinLink}\n\n${agendaUrl}`;
             body = { messaging_product: "whatsapp", to, type: "text", text: { body: textoConLink, preview_url: true } };
         }
 
-    // CASO 3: TEXTO NORMAL
     } else {
         if (platform === "whatsapp") body = { messaging_product: "whatsapp", to, type: "text", text: { body: text, preview_url: false } };
         else body = { recipient: { id: to }, message: { text: text } };
