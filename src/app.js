@@ -4,22 +4,13 @@ import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
 import { NEGOCIO } from "../config/knowledge_base.js";
 
-// VARIABLES GLOBALES (INTENTO DE PERSISTENCIA EN MEMORIA)
-const metricas = { 
-    leads_wsp: new Set(), 
-    leads_ig: new Set(), 
-    mensajes_totales: 0, 
-    llamadas: 0, 
-    intencion_link: 0, 
-    agendados: 0 
-};
+const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 0, llamadas: 0, intencion_link: 0, agendados: 0 };
 const sesiones = {}; 
 const usuariosPausados = {}; 
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
 const estadosClientes = {};
 
-// --- FUNCIONES AUXILIARES ---
 function extraerTelefono(texto) {
   if (!texto) return null;
   const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/); 
@@ -43,16 +34,6 @@ function esHorarioLaboral() {
     return decimal >= 9.5 && decimal < 19; 
 }
 
-function obtenerCrossSell() {
-    const tips = [
-        "PD: ¡Pregunta por nuestras promos de Depilación Láser cuando vengas! ⚡️",
-        "Dato extra: También hacemos Botox. ¡Aprovecha de preguntar en tu evaluación! ✨",
-        "Tip: La evaluación incluye un análisis de piel gratuito. ¡Disfrútalo! 🎁"
-    ];
-    return tips[Math.floor(Math.random() * tips.length)];
-}
-
-// --- DESPERTADOR ---
 const TIEMPO_DORMIDO = 2 * 60 * 60 * 1000; 
 const INTERVALO_CHECK = 10 * 60 * 1000;
 
@@ -74,54 +55,51 @@ setInterval(() => {
     });
 }, INTERVALO_CHECK);
 
-// --- REPORTE ---
+// --- CROSS SELLING INTELIGENTE (20% OFF) ---
+function obtenerCrossSell(historialTexto) {
+    const lower = historialTexto.toLowerCase();
+    
+    // Si habló de cara/rostro -> Vender Corporal
+    if (lower.includes("cara") || lower.includes("rostro") || lower.includes("arruga") || lower.includes("mancha")) {
+        return "Dato Extra: ¡Tus tratamientos **Reductivos tienen un 20% OFF**! En la clínica te explicarán más. 🎁";
+    }
+    
+    // Si habló de cuerpo/grasa -> Vender Facial
+    if (lower.includes("cuerpo") || lower.includes("grasa") || lower.includes("lipo") || lower.includes("celulitis")) {
+        return "Dato Extra: ¡Tus tratamientos **Faciales Antiage tienen un 20% OFF**! En la clínica te explicarán más. ✨";
+    }
+
+    // Default
+    return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! En la clínica te explicarán más. ✨";
+}
+
 function generarReporteTexto(periodo) {
     const leadsWsp = metricas.leads_wsp.size;
     const leadsIg = metricas.leads_ig.size;
     const totalLeads = leadsWsp + leadsIg;
     const conversiones = metricas.llamadas + metricas.intencion_link + metricas.agendados;
     const tasa = totalLeads > 0 ? ((conversiones / totalLeads) * 100).toFixed(1) : "0.0";
-
-    return `📊 *REPORTE ZARA (${periodo})* 📊\n\n` +
-           `👥 *Total Personas:* ${totalLeads}\n` +
-           `   📱 WhatsApp: ${leadsWsp}\n` +
-           `   📸 Instagram: ${leadsIg}\n` +
-           `   (Tráfico total: ${metricas.mensajes_totales} msjes)\n\n` +
-           `🎯 *Conversiones:* ${conversiones}\n` +
-           `   📞 Piden Llamada: ${metricas.llamadas}\n` +
-           `   🔗 Piden Link: ${metricas.intencion_link}\n` +
-           `   ✅ Agendados: ${metricas.agendados}\n\n` +
-           `📈 *Tasa Cierre:* ${tasa}%\n` +
-           `💪 ¡Vamos por más!`;
+    return `📊 *REPORTE ZARA* 📊\n👥 Leads Únicos: ${totalLeads}\n   WSP: ${leadsWsp} | IG: ${leadsIg}\n🎯 Conversiones: ${conversiones}\n✅ Agendas Reservo: ${metricas.agendados}\n📈 Tasa: ${tasa}%`;
 }
 
-// --- CORRECCIÓN CRÍTICA: PROCESAR RESERVA ---
+// --- WEBHOOK RESERVO (LOGS FUERTES) ---
 export async function procesarReserva(data) {
-    try {
-        console.log("🔔 WEBHOOK RESERVO RECIBIDO (RAW):", JSON.stringify(data));
-        
-        // Aumentar contador
-        metricas.agendados++; 
-
-        const { clientName, date, time, treatment, contactPhone } = data;
-        
-        const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Cliente Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
-
-        // Enviar a todos con control de error individual
-        for (const n of NEGOCIO.staff_alertas) {
-            try {
-                await sendMessage(n, alerta, "whatsapp");
-                console.log(`✅ Alerta enviada exitosamente a ${n}`);
-            } catch (err) {
-                console.error(`❌ Error enviando alerta a ${n}:`, err.message);
-            }
+    metricas.agendados++; 
+    console.log("🚨 WEBHOOK RESERVO DISPARADO:", JSON.stringify(data));
+    
+    const { clientName, date, time, treatment, contactPhone } = data;
+    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
+    
+    for (const n of NEGOCIO.staff_alertas) { 
+        try {
+            await sendMessage(n, alerta, "whatsapp");
+            console.log("✅ Alerta enviada a:", n);
+        } catch(e) {
+            console.error("❌ Falló alerta a:", n, e);
         }
-    } catch (e) {
-        console.error("❌ Error Fatal en procesarReserva:", e);
     }
 }
 
-// --- PROCESAR EVENTO (CHAT) ---
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let senderId, text = "", senderName, messageId, audioUrl;
@@ -170,7 +148,6 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const lower = text.toLowerCase().trim();
 
-  // REPORTE
   if (lower.startsWith("zara reporte") || lower === "reporte") { 
       let periodo = "HOY/GLOBAL";
       if (lower.includes("ayer")) periodo = "AYER";
@@ -186,7 +163,6 @@ export async function procesarEvento(entry) {
   if (!sesiones[senderId]) sesiones[senderId] = [];
   if (lower.includes("link") || lower.includes("agenda")) { metricas.intencion_link++; estadosClientes[senderId] = 'agendado'; }
 
-  // CAPTURA TELÉFONO
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado) {
     metricas.llamadas++;
@@ -200,7 +176,10 @@ export async function procesarEvento(entry) {
         ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.`
         : `¡Listo ${senderName}! 🌙 Ya guardé tu contacto. Te llamaremos mañana desde las 10:00 AM.`;
 
-    const final = `${confirm}\n\n${obtenerCrossSell()}`;
+    // Pasamos el historial para detectar qué vender
+    const historialTotal = sesiones[senderId].map(m => m.content).join(" ");
+    const final = `${confirm}\n\n${obtenerCrossSell(historialTotal)}`; 
+    
     sesiones[senderId].push({ role: "assistant", content: final });
     await sendMessage(senderId, final, platform);
     return;
@@ -222,7 +201,8 @@ export async function procesarEvento(entry) {
       
       if (respuestaIA.includes("AGENDA_AQUI_LINK")) {
            setTimeout(async () => {
-               const crossSell = obtenerCrossSell();
+               const historialTotal = sesiones[senderId].map(m => m.content).join(" ");
+               const crossSell = obtenerCrossSell(historialTotal);
                await sendMessage(senderId, crossSell, platform);
            }, 3000); 
       }
