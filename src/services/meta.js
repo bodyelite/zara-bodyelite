@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+// CORRECCIÓN RUTA IMPORTACIÓN
 import { NEGOCIO } from "../../config/knowledge_base.js"; 
 
 export async function sendMessage(to, text, platform, img = null) {
