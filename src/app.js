@@ -55,21 +55,17 @@ setInterval(() => {
     });
 }, INTERVALO_CHECK);
 
-// --- CROSS SELLING INTELIGENTE (20% OFF) ---
 function obtenerCrossSell(historialTexto) {
-    const lower = historialTexto.toLowerCase();
+    const lower = (historialTexto || "").toLowerCase();
     
-    // Si habló de cara/rostro -> Vender Corporal
     if (lower.includes("cara") || lower.includes("rostro") || lower.includes("arruga") || lower.includes("mancha")) {
         return "Dato Extra: ¡Tus tratamientos **Reductivos tienen un 20% OFF**! En la clínica te explicarán más. 🎁";
     }
     
-    // Si habló de cuerpo/grasa -> Vender Facial
     if (lower.includes("cuerpo") || lower.includes("grasa") || lower.includes("lipo") || lower.includes("celulitis")) {
         return "Dato Extra: ¡Tus tratamientos **Faciales Antiage tienen un 20% OFF**! En la clínica te explicarán más. ✨";
     }
 
-    // Default
     return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! En la clínica te explicarán más. ✨";
 }
 
@@ -82,7 +78,6 @@ function generarReporteTexto(periodo) {
     return `📊 *REPORTE ZARA* 📊\n👥 Leads Únicos: ${totalLeads}\n   WSP: ${leadsWsp} | IG: ${leadsIg}\n🎯 Conversiones: ${conversiones}\n✅ Agendas Reservo: ${metricas.agendados}\n📈 Tasa: ${tasa}%`;
 }
 
-// --- WEBHOOK RESERVO (LOGS FUERTES) ---
 export async function procesarReserva(data) {
     metricas.agendados++; 
     console.log("🚨 WEBHOOK RESERVO DISPARADO:", JSON.stringify(data));
@@ -176,7 +171,6 @@ export async function procesarEvento(entry) {
         ? `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.`
         : `¡Listo ${senderName}! 🌙 Ya guardé tu contacto. Te llamaremos mañana desde las 10:00 AM.`;
 
-    // Pasamos el historial para detectar qué vender
     const historialTotal = sesiones[senderId].map(m => m.content).join(" ");
     const final = `${confirm}\n\n${obtenerCrossSell(historialTotal)}`; 
     
