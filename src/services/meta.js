@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
-import { NEGOCIO } from "../config/knowledge_base.js"; 
+// CORRECCIÓN: Usamos ../../ para volver a la raíz y encontrar config
+import { NEGOCIO } from "../../config/knowledge_base.js"; 
 
 export async function sendMessage(to, text, platform, img = null) {
   try {
