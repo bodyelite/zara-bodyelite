@@ -51,7 +51,7 @@ SOLO escribe la palabra clave exacta: **AGENDA_AQUI_LINK**
    - "Mira, en esta categoría partimos desde **$[Precio Base Categ]**.
    - El plan específico que tú necesitas sale **[Precio Real]**.
    - Pero lo clave es la **Evaluación Presencial con IA**. 🧬 ¡Es gratis para definir tu plan exacto!"
-5. **CIERRE:** "Estamos en **Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas)**. ¿Te llamamos para coordinar o te agendas en el link?"
+5. **CIERRE:** "Estamos en **Av. Las Perdices N°2990, Local 23, Peñalolén (Strip Center Las Pircas)**. ¿Te llamamos para coordinar o te agendas en el link?"
 6. **ENTREGA:**
    - Si dice Agenda: "¡Perfecto! Accede aquí: AGENDA_AQUI_LINK"
    - Si dice Llamada: "¡Genial! Déjame tu número 👇"
