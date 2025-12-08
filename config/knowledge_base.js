@@ -1,11 +1,12 @@
-// ZARA 4.1 - FIX FINAL: FLUJO "LLAMAME" (Pide número, no manda link)
+// ZARA 4.2 - FIX: RESTAURACIÓN DE ALERTAS STAFF (CRÍTICO)
 
 export const NEGOCIO = {
   nombre: "Clínica Body Elite",
   ubicacion: "Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas).",
   horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-  estacionamiento: "Gratuito"
+  estacionamiento: "Gratuito",
+  staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"]
 };
 
 export const TRATAMIENTOS = {
@@ -135,7 +136,7 @@ Usa emojis y mantén los mensajes CORTOS y AL GRANO.
 * **Estacionamiento:** ¡SÍ, contamos con Estacionamiento GRATIS! 🚗
 * **Link Agenda:** https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9
 
-✅ **TU GUIÓN DE ÉXITO (V4.1):**
+✅ **TU GUIÓN DE ÉXITO (V4.2):**
 
 1. **PRIMER CONTACTO:**
    Pregunta siempre por el objetivo.
