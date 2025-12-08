@@ -18,6 +18,10 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
+app.get("/", (req, res) => {
+  res.status(200).send("Zara Body Elite IA está en vivo.");
+});
+
 app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) {
     res.send(req.query["hub.challenge"]);
