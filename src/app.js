@@ -1,4 +1,5 @@
 import fs from "fs";
+import fetch from "node-fetch"; // Asegurar fetch para el monitor
 import { sendMessage, getWhatsAppMediaUrl } from "./services/meta.js";
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
@@ -9,6 +10,9 @@ const usuariosPausados = {};
 const ultimasRespuestas = {}; 
 const FOTO_RESULTADOS_URL = "https://i.ibb.co/PZqDzSm2/Ant-y-desp-Hombre.jpg";
 
+// URL DE TU MONITOR EN RENDER
+const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook";
+
 function extraerTelefono(texto) {
   if (!texto) return null;
   const match = texto.match(/\b(\+?56)?\s?9?\s?\d{4}\s?\d{4}\b/); 
@@ -16,21 +20,46 @@ function extraerTelefono(texto) {
   return null;
 }
 
+// --- FUNCIÓN: ENVIAR DATOS AL MONITOR WEB ---
+async function reportarMonitor(senderId, senderName, mensaje, tipo) {
+    try {
+        await fetch(MONITOR_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fecha: new Date().toLocaleString("es-CL"),
+                senderId: senderId,
+                senderName: senderName,
+                mensaje: mensaje,
+                tipo: tipo // "usuario" o "zara"
+            })
+        });
+    } catch (e) {
+        // Silencioso para no botar el bot si el monitor duerme
+        console.error("⚠️ Error conectando con Monitor:", e.message);
+    }
+}
+
+// --- PROCESAR RESERVA (AVISO WHATSAPP) ---
 export async function procesarReserva(data) {
-    console.log("🔥🔥🔥 PROCESANDO RESERVA DESDE RESERVO 🔥🔥🔥", data);
+    console.log("🔥🔥🔥 RESERVA WEB 🔥🔥🔥", data);
     const nombre = data.nombre || "Cliente Web";
     const telefono = data.telefono || "No especificado";
     const tratamiento = data.tratamiento || "Tratamiento";
     const fecha = data.fecha || "Por confirmar";
     
+    // Alerta al Monitor también
+    await reportarMonitor("RESERVA", nombre, `Nueva reserva: ${tratamiento} (${fecha})`, "sistema");
+
     const alerta = `🎉 *NUEVA RESERVA WEB CONFIRMADA* 🎉\n\n👤 ${nombre}\n📞 ${telefono}\n💆‍♀️ ${tratamiento}\n🗓️ ${fecha}\n🚀 Origen: Zara Bot / Web`;
     
     for (const n of NEGOCIO.staff_alertas) { 
         try { await sendMessage(n, alerta, "whatsapp"); } 
-        catch(e) { console.error(`Error enviando alerta a ${n}:`, e); }
+        catch(e) { console.error(`Error alerta staff:`, e); }
     }
 }
 
+// --- PROCESAR EVENTO (CHAT) ---
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let senderId, text = "", senderName;
@@ -70,6 +99,10 @@ export async function procesarEvento(entry) {
   ultimasRespuestas[senderId] = now;
 
   if (!text) return;
+
+  // 1. REPORTAR AL MONITOR (LO QUE DICE EL USUARIO)
+  await reportarMonitor(senderId, senderName, text, "usuario");
+
   const lower = text.toLowerCase().trim();
 
   if (lower === "retomar") { usuariosPausados[senderId] = false; return; }
@@ -81,7 +114,10 @@ export async function procesarEvento(entry) {
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado && telefonoCapturado.length >= 8) {
     const alerta = `🚨 *CLIENTE DEJÓ SU NÚMERO* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Dice: "${text}"\n⚠️ *¡LLAMAR AHORA!*`;
+    // Alerta urgente sí va al WhatsApp del staff
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
+    await reportarMonitor(senderId, senderName, "LEAD CAPTURADO - ENVIADA ALERTA", "sistema");
+    
     const confirm = "¡Listo! 💙 Ya le pasé tu número a las chicas. Te llamarán en breve para coordinar.";
     await sendMessage(senderId, confirm, platform);
     return;
@@ -92,6 +128,9 @@ export async function procesarEvento(entry) {
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
+  // 2. REPORTAR AL MONITOR (LO QUE RESPONDE ZARA)
+  await reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara");
+
   if (respuestaIA.includes("FOTO_RESULTADOS")) {
       const textoFinal = respuestaIA.replace("FOTO_RESULTADOS", "").trim();
       if(textoFinal) await sendMessage(senderId, textoFinal, platform);
