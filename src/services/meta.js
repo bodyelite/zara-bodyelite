@@ -6,26 +6,33 @@ export async function sendMessage(to, text, platform = "whatsapp") {
   try {
     let url, body;
     if (platform === "whatsapp") {
-      url = `https://graph.facebook.com/v21.0/${process.env.PHONENUMBER_ID}/messages`;
+      const phoneId = process.env.PHONENUMBER_ID;
+      url = `https://graph.facebook.com/v19.0/${phoneId}/messages`;
       body = { messaging_product: "whatsapp", recipient_type: "individual", to: to, type: "text", text: { body: text } };
     } else {
-      url = `https://graph.facebook.com/v21.0/me/messages`;
+      url = `https://graph.facebook.com/v19.0/me/messages`;
       body = { recipient: { id: to }, message: { text: text } };
     }
-    await fetch(url, {
+    
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` },
       body: JSON.stringify(body)
     });
-  } catch (e) { console.error("Meta API Error:", e); }
+    
+    if (!res.ok) {
+        const err = await res.text();
+        console.error("Meta API Error:", err);
+    }
+  } catch (e) { console.error("Network Error:", e); }
 }
 
 export async function sendButton(to, text, btnLabel, btnUrl, platform) {
     if (platform === "whatsapp") {
-        await sendMessage(to, `${text}\n\n🔗 ${btnUrl}`, "whatsapp");
+        await sendMessage(to, `${text}\n\n🔗 ${btnLabel}: ${btnUrl}`, "whatsapp");
     } else {
         try {
-            const url = `https://graph.facebook.com/v21.0/me/messages`;
+            const url = `https://graph.facebook.com/v19.0/me/messages`;
             const body = {
                 recipient: { id: to },
                 message: {
@@ -50,7 +57,7 @@ export async function sendButton(to, text, btnLabel, btnUrl, platform) {
 
 export async function getWhatsAppMediaUrl(mediaId) {
   try {
-    const res = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${mediaId}`, {
       headers: { "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` }
     });
     const data = await res.json();
@@ -60,7 +67,7 @@ export async function getWhatsAppMediaUrl(mediaId) {
 
 export async function getInstagramUserProfile(senderId) {
   try {
-    const url = `https://graph.facebook.com/v21.0/${senderId}?fields=name,username&access_token=${process.env.PAGE_ACCESS_TOKEN}`;
+    const url = `https://graph.facebook.com/v19.0/${senderId}?fields=name,username&access_token=${process.env.PAGE_ACCESS_TOKEN}`;
     const res = await fetch(url);
     const data = await res.json();
     return data.name || data.username || "Amiga";

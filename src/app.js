@@ -23,9 +23,7 @@ async function reportarMonitor(senderId, senderName, mensaje, tipo) {
 }
 
 function generarReporteTexto() {
-    const leadsWsp = metricas.leads_wsp.size;
-    const leadsIg = metricas.leads_ig.size;
-    return `📊 *REPORTE ZARA* 📊\n\n👥 Leads WSP: ${leadsWsp}\n📸 Leads IG: ${leadsIg}\n💬 Msjes Totales: ${metricas.mensajes_totales}\n📞 Pidio Llamada: ${metricas.llamadas}\n🔗 Pidio Link: ${metricas.intencion_link}\n✅ Agendados Web: ${metricas.agendados}`;
+    return `📊 *REPORTE ZARA* 📊\n\n👥 Leads WSP: ${metricas.leads_wsp.size}\n📸 Leads IG: ${metricas.leads_ig.size}\n💬 Total Msjes: ${metricas.mensajes_totales}\n📞 Pidieron Llamada: ${metricas.llamadas}\n🔗 Pidieron Link: ${metricas.intencion_link}\n✅ Agendas Web: ${metricas.agendados}`;
 }
 
 function extraerTelefono(texto) {
@@ -39,12 +37,11 @@ export async function procesarReserva(data) {
     metricas.agendados++; 
     const { clientName, date, time, treatment, contactPhone } = data; 
     const nombre = clientName || data.nombre || "Web";
-    const fono = contactPhone || data.telefono || "N/A";
     const trata = treatment || data.tratamiento || "Cita";
     
-    await reportarMonitor("RESERVA", nombre, `Reserva: ${trata} (${date})`, "sistema");
+    await reportarMonitor("RESERVA", nombre, `Reserva: ${trata}`, "sistema");
     
-    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 ${nombre}\n📞 ${fono}\n✨ ${trata}\n🗓️ ${date} ${time || ""}\n🚀 Origen: Zara/Web`;
+    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 ${nombre}\n📞 ${contactPhone || data.telefono}\n✨ ${trata}\n🗓️ ${date} ${time || ""}\n🚀 Origen: Zara/Web`;
     for (const n of NEGOCIO.staff_alertas) { 
         try { await sendMessage(n, alerta, "whatsapp"); } catch(e) {}
     }
@@ -98,7 +95,6 @@ export async function procesarEvento(entry) {
     const alerta = `🚨 *LEAD PIDIÓ LLAMADA* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}`;
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
     await reportarMonitor(senderId, senderName, "LEAD CAPTURADO", "sistema");
-    
     await sendMessage(senderId, "¡Perfecto! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.", platform);
     return;
   }
@@ -110,10 +106,8 @@ export async function procesarEvento(entry) {
   
   await reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara");
   
-  // LOGICA DE BOTÓN PARA INSTAGRAM
   if (respuestaIA.includes("agendamiento.reservo.cl")) {
       if (platform === "instagram") {
-          // Extraemos el texto antes del link para que se vea ordenado
           const textoLimpio = respuestaIA.replace(/https:\/\/agendamiento\.reservo\.cl\S+/g, "").trim();
           await sendButton(senderId, textoLimpio || "Aquí tienes tu link:", "📅 Agendar Cita", AGENDA_URL, "instagram");
       } else {
