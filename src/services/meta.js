@@ -20,6 +20,34 @@ export async function sendMessage(to, text, platform = "whatsapp") {
   } catch (e) { console.error("Meta API Error:", e); }
 }
 
+export async function sendButton(to, text, btnLabel, btnUrl, platform) {
+    if (platform === "whatsapp") {
+        await sendMessage(to, `${text}\n\n🔗 ${btnUrl}`, "whatsapp");
+    } else {
+        try {
+            const url = `https://graph.facebook.com/v21.0/me/messages`;
+            const body = {
+                recipient: { id: to },
+                message: {
+                    attachment: {
+                        type: "template",
+                        payload: {
+                            template_type: "button",
+                            text: text,
+                            buttons: [{ type: "web_url", url: btnUrl, title: btnLabel }]
+                        }
+                    }
+                }
+            };
+            await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` },
+                body: JSON.stringify(body)
+            });
+        } catch (e) { console.error("IG Button Error:", e); }
+    }
+}
+
 export async function getWhatsAppMediaUrl(mediaId) {
   try {
     const res = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {

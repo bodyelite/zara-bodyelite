@@ -1,6 +1,6 @@
 import fs from "fs";
 import fetch from "node-fetch";
-import { sendMessage, getWhatsAppMediaUrl, getInstagramUserProfile } from "./services/meta.js";
+import { sendMessage, sendButton, getWhatsAppMediaUrl, getInstagramUserProfile } from "./services/meta.js";
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
 import { NEGOCIO } from "../config/knowledge_base.js";
@@ -9,8 +9,8 @@ const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 
 const sesiones = {}; 
 const usuariosPausados = {}; 
 const ultimasRespuestas = {}; 
-const estadosClientes = {};
 const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook";
+const AGENDA_URL = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
 async function reportarMonitor(senderId, senderName, mensaje, tipo) {
     try {
@@ -22,6 +22,12 @@ async function reportarMonitor(senderId, senderName, mensaje, tipo) {
     } catch (e) {}
 }
 
+function generarReporteTexto() {
+    const leadsWsp = metricas.leads_wsp.size;
+    const leadsIg = metricas.leads_ig.size;
+    return `📊 *REPORTE ZARA* 📊\n\n👥 Leads WSP: ${leadsWsp}\n📸 Leads IG: ${leadsIg}\n💬 Msjes Totales: ${metricas.mensajes_totales}\n📞 Pidio Llamada: ${metricas.llamadas}\n🔗 Pidio Link: ${metricas.intencion_link}\n✅ Agendados Web: ${metricas.agendados}`;
+}
+
 function extraerTelefono(texto) {
   if (!texto) return null;
   const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/); 
@@ -29,23 +35,18 @@ function extraerTelefono(texto) {
   return null;
 }
 
-function obtenerCrossSell(historialTexto) {
-    const lower = (historialTexto || "").toLowerCase();
-    if (lower.includes("cara") || lower.includes("rostro") || lower.includes("arruga")) return "Dato Extra: ¡Tus tratamientos **Reductivos tienen un 20% OFF**! 🎁";
-    if (lower.includes("cuerpo") || lower.includes("grasa") || lower.includes("lipo")) return "Dato Extra: ¡Tus tratamientos **Faciales Antiage tienen un 20% OFF**! ✨";
-    return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! ✨";
-}
-
 export async function procesarReserva(data) {
     metricas.agendados++; 
-    console.log("🔥🔥🔥 WEBHOOK RESERVO EJECUTÁNDOSE (ZARA 11) 🔥🔥🔥");
-    const { clientName, date, time, treatment, contactPhone } = data;
+    const { clientName, date, time, treatment, contactPhone } = data; 
+    const nombre = clientName || data.nombre || "Web";
+    const fono = contactPhone || data.telefono || "N/A";
+    const trata = treatment || data.tratamiento || "Cita";
     
-    await reportarMonitor("RESERVA", clientName || "Web", `Reserva: ${treatment} (${date})`, "sistema");
+    await reportarMonitor("RESERVA", nombre, `Reserva: ${trata} (${date})`, "sistema");
     
-    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 Cliente: ${clientName || "Web"}\n📞 Fono: ${contactPhone || "N/A"}\n🗓️ Fecha: ${date} a las ${time}\n✨ Tratamiento: ${treatment || "Evaluación"}\n🚀 Origen: Zara Bot`;
+    const alerta = `🎉 *NUEVA RESERVA CONFIRMADA* 🎉\n\n👤 ${nombre}\n📞 ${fono}\n✨ ${trata}\n🗓️ ${date} ${time || ""}\n🚀 Origen: Zara/Web`;
     for (const n of NEGOCIO.staff_alertas) { 
-        try { await sendMessage(n, alerta, "whatsapp"); } catch(e) { console.error(e); }
+        try { await sendMessage(n, alerta, "whatsapp"); } catch(e) {}
     }
 }
 
@@ -73,31 +74,32 @@ export async function procesarEvento(entry) {
   const now = Date.now();
   if ((now - (ultimasRespuestas[senderId] || 0)) < 2000) return;
   ultimasRespuestas[senderId] = now;
-  estadosClientes[senderId] = 'activo';
 
   if (!text) return;
-  
+
   await reportarMonitor(senderId, senderName, text, "usuario");
-  
+
   const lower = text.toLowerCase().trim();
+  
+  if (lower === "zara reporte") {
+      await sendMessage(senderId, generarReporteTexto(), platform);
+      return;
+  }
   if (lower === "retomar") { usuariosPausados[senderId] = false; return; }
   if (lower.includes("silencio")) { usuariosPausados[senderId] = true; return; }
   if (usuariosPausados[senderId]) return;
 
   if (!sesiones[senderId]) sesiones[senderId] = [];
-  if (lower.includes("link") || lower.includes("agenda")) { metricas.intencion_link++; estadosClientes[senderId] = 'agendado'; }
+  if (lower.includes("link") || lower.includes("agenda")) metricas.intencion_link++;
 
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado) {
     metricas.llamadas++;
-    estadosClientes[senderId] = 'agendado';
-    const alerta = `🚨 *SOLICITUD DE LLAMADA* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}`;
+    const alerta = `🚨 *LEAD PIDIÓ LLAMADA* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}`;
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
     await reportarMonitor(senderId, senderName, "LEAD CAPTURADO", "sistema");
     
-    const confirm = "¡Perfecto! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.";
-    const historialTotal = sesiones[senderId].map(m => m.content).join(" ");
-    await sendMessage(senderId, `${confirm}\n\n${obtenerCrossSell(historialTotal)}`, platform);
+    await sendMessage(senderId, "¡Perfecto! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.", platform);
     return;
   }
 
@@ -107,7 +109,19 @@ export async function procesarEvento(entry) {
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
   await reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara");
-  await sendMessage(senderId, respuestaIA, platform);
+  
+  // LOGICA DE BOTÓN PARA INSTAGRAM
+  if (respuestaIA.includes("agendamiento.reservo.cl")) {
+      if (platform === "instagram") {
+          // Extraemos el texto antes del link para que se vea ordenado
+          const textoLimpio = respuestaIA.replace(/https:\/\/agendamiento\.reservo\.cl\S+/g, "").trim();
+          await sendButton(senderId, textoLimpio || "Aquí tienes tu link:", "📅 Agendar Cita", AGENDA_URL, "instagram");
+      } else {
+          await sendMessage(senderId, respuestaIA, "whatsapp");
+      }
+  } else {
+      await sendMessage(senderId, respuestaIA, platform);
+  }
   
   sesiones[senderId].push({ role: "assistant", content: respuestaIA });
 }
