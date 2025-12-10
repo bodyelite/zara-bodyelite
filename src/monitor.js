@@ -4,16 +4,15 @@ const app = express();
 
 app.use(bodyParser.json());
 
-// Ruta para ver si está vivo
+// Ruta Raíz (Ping)
 app.get("/", (req, res) => {
   res.send("🟢 Monitor de Zara Activo");
 });
 
-// Webhook que recibe los reportes de Zara
+// Ruta Webhook (Recepción de datos)
 app.post("/webhook", (req, res) => {
   const { fecha, senderId, senderName, mensaje, tipo } = req.body;
   
-  // Imprimir en el Log de Render (Esto es lo que verás en la pantalla negra)
   if (tipo === "sistema") {
       console.log(`🚨 [SISTEMA] ${mensaje}`);
   } else if (tipo === "usuario") {
