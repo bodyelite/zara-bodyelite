@@ -1,5 +1,5 @@
 import fs from "fs";
-import fetch from "node-fetch"; // Asegurar fetch para el monitor
+import fetch from "node-fetch";
 import { sendMessage, getWhatsAppMediaUrl } from "./services/meta.js";
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
@@ -9,8 +9,6 @@ const sesiones = {};
 const usuariosPausados = {}; 
 const ultimasRespuestas = {}; 
 const FOTO_RESULTADOS_URL = "https://i.ibb.co/PZqDzSm2/Ant-y-desp-Hombre.jpg";
-
-// URL DE TU MONITOR EN RENDER
 const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook";
 
 function extraerTelefono(texto) {
@@ -20,49 +18,32 @@ function extraerTelefono(texto) {
   return null;
 }
 
-// --- FUNCIÓN: ENVIAR DATOS AL MONITOR WEB ---
 async function reportarMonitor(senderId, senderName, mensaje, tipo) {
     try {
         await fetch(MONITOR_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                fecha: new Date().toLocaleString("es-CL"),
-                senderId: senderId,
-                senderName: senderName,
-                mensaje: mensaje,
-                tipo: tipo // "usuario" o "zara"
-            })
+            body: JSON.stringify({ fecha: new Date().toLocaleString("es-CL"), senderId, senderName, mensaje, tipo })
         });
-    } catch (e) {
-        // Silencioso para no botar el bot si el monitor duerme
-        console.error("⚠️ Error conectando con Monitor:", e.message);
-    }
+    } catch (e) {}
 }
 
-// --- PROCESAR RESERVA (AVISO WHATSAPP) ---
 export async function procesarReserva(data) {
-    console.log("🔥🔥🔥 RESERVA WEB 🔥🔥🔥", data);
+    console.log("WEBHOOK RESERVO:", data);
     const nombre = data.nombre || "Cliente Web";
     const telefono = data.telefono || "No especificado";
     const tratamiento = data.tratamiento || "Tratamiento";
     const fecha = data.fecha || "Por confirmar";
     
-    // Alerta al Monitor también
     await reportarMonitor("RESERVA", nombre, `Nueva reserva: ${tratamiento} (${fecha})`, "sistema");
-
-    const alerta = `🎉 *NUEVA RESERVA WEB CONFIRMADA* 🎉\n\n👤 ${nombre}\n📞 ${telefono}\n💆‍♀️ ${tratamiento}\n🗓️ ${fecha}\n🚀 Origen: Zara Bot / Web`;
+    const alerta = `🎉 *NUEVA RESERVA WEB* 🎉\n\n👤 ${nombre}\n📞 ${telefono}\n💆‍♀️ ${tratamiento}\n🗓️ ${fecha}\n🚀 Origen: Web`;
     
-    for (const n of NEGOCIO.staff_alertas) { 
-        try { await sendMessage(n, alerta, "whatsapp"); } 
-        catch(e) { console.error(`Error alerta staff:`, e); }
-    }
+    for (const n of NEGOCIO.staff_alertas) { try { await sendMessage(n, alerta, "whatsapp"); } catch(e) {} }
 }
 
-// --- PROCESAR EVENTO (CHAT) ---
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
-  let senderId, text = "", senderName;
+  let senderId, text = "", senderName = "Cliente";
 
   if (platform === "whatsapp") {
       const msg = entry.changes[0].value.messages?.[0];
@@ -71,26 +52,13 @@ export async function procesarEvento(entry) {
       senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || "Cliente";
       if (msg.type === "text") text = msg.text.body;
       else if (msg.type === "audio" || msg.type === "voice") {
-          const mediaId = msg.audio?.id || msg.voice?.id;
-          const rawUrl = await getWhatsAppMediaUrl(mediaId);
-          if (rawUrl) { 
-             try {
-                const ext = platform === 'whatsapp' ? 'ogg' : 'm4a';
-                const fileName = `audio_${senderId}_${Date.now()}.${ext}`;
-                const filePath = await downloadFile(rawUrl, fileName, { "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` });
-                if (filePath) {
-                    const transcripcion = await transcribirAudio(filePath);
-                    fs.unlink(filePath, () => {}); 
-                    if (transcripcion) text = transcripcion;
-                }
-             } catch (e) { console.error(e); }
-          }
+          text = "AUDIO_RECIBIDO (Transcribiendo...)"; 
       }
   } else { 
       const msg = entry.messaging?.[0];
       if (!msg || msg.message?.is_echo) return;
       senderId = msg.sender.id; 
-      senderName = "Amiga en Instagram"; 
+      senderName = "Usuario Instagram"; 
       if (msg.message?.text) text = msg.message.text;
   }
 
@@ -100,11 +68,9 @@ export async function procesarEvento(entry) {
 
   if (!text) return;
 
-  // 1. REPORTAR AL MONITOR (LO QUE DICE EL USUARIO)
   await reportarMonitor(senderId, senderName, text, "usuario");
 
   const lower = text.toLowerCase().trim();
-
   if (lower === "retomar") { usuariosPausados[senderId] = false; return; }
   if (lower.includes("silencio")) { usuariosPausados[senderId] = true; return; }
   if (usuariosPausados[senderId]) return;
@@ -113,22 +79,20 @@ export async function procesarEvento(entry) {
 
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado && telefonoCapturado.length >= 8) {
-    const alerta = `🚨 *CLIENTE DEJÓ SU NÚMERO* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Dice: "${text}"\n⚠️ *¡LLAMAR AHORA!*`;
-    // Alerta urgente sí va al WhatsApp del staff
+    const alerta = `🚨 *LEAD CALIENTE* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}\n💬 Interés: "${text}"\n⚠️ *LLAMAR AHORA*`;
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
-    await reportarMonitor(senderId, senderName, "LEAD CAPTURADO - ENVIADA ALERTA", "sistema");
-    
-    const confirm = "¡Listo! 💙 Ya le pasé tu número a las chicas. Te llamarán en breve para coordinar.";
+    await reportarMonitor(senderId, senderName, "LEAD CAPTURADO", "sistema");
+    const confirm = `¡Listo ${senderName}! 💙 Ya le pasé tu número a las chicas. Te llamarán en breve.`;
     await sendMessage(senderId, confirm, platform);
     return;
   }
 
-  sesiones[senderId].push({ role: "user", content: text });
+  const contextoUsuario = `El cliente se llama ${senderName}. Mensaje: "${text}"`;
+  sesiones[senderId].push({ role: "user", content: contextoUsuario });
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
-  // 2. REPORTAR AL MONITOR (LO QUE RESPONDE ZARA)
   await reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara");
 
   if (respuestaIA.includes("FOTO_RESULTADOS")) {
