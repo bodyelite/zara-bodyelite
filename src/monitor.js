@@ -4,44 +4,104 @@ const app = express();
 
 app.use(bodyParser.json());
 
-// Memoria temporal para guardar los últimos 50 mensajes
+// Memoria: Guardamos los últimos 50 eventos
 const historial = [];
 
-// RUTA VISUAL (La página web)
 app.get("/", (req, res) => {
   const html = `
     <html>
       <head>
-        <title>Monitor Zara 5.0</title>
-        <meta http-equiv="refresh" content="5"> <style>
-          body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-          .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-          h1 { text-align: center; color: #333; }
-          .card { border-bottom: 1px solid #eee; padding: 10px 0; }
-          .meta { font-size: 0.8em; color: #888; margin-bottom: 5px; }
-          .mensaje { padding: 10px; border-radius: 8px; display: inline-block; max-width: 80%;"> }
+        <title>Monitor Zara - Vista WhatsApp</title>
+        <meta http-equiv="refresh" content="5">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { 
+            background-color: #EFEAE2; /* Fondo Beige WhatsApp */
+            background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png"); /* Trama opcional */
+            background-blend-mode: overlay;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 20px;
+          }
+          .container { 
+            max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; 
+            background-color: transparent;
+          }
+          h1 { 
+            text-align: center; color: #555; font-size: 1.2rem; margin-bottom: 20px; 
+            background: white; padding: 10px; border-radius: 20px; width: fit-content; margin: 0 auto 20px auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
           
-          .usuario { text-align: left; }
-          .usuario .mensaje { background: #e1ffc7; color: #000; }
+          /* FILAS */
+          .row { display: flex; width: 100%; margin-bottom: 2px; }
           
-          .zara { text-align: right; }
-          .zara .mensaje { background: #d9fdd3; border: 1px solid #25d366; color: #000; }
+          /* BURBUJA GENERAL */
+          .bubble {
+            padding: 6px 7px 8px 9px;
+            border-radius: 7.5px;
+            max-width: 65%;
+            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            font-size: 14.2px;
+            line-height: 19px;
+            position: relative;
+            word-wrap: break-word;
+          }
           
-          .sistema { text-align: center; font-style: italic; color: #555; }
-          .sistema .mensaje { background: #ffe4ba; }
+          .meta {
+            font-size: 11px;
+            margin-bottom: 2px;
+            display: block;
+            font-weight: 500;
+            opacity: 0.6;
+          }
+
+          /* --- ESTILOS DE CHAT --- */
+          
+          /* CLIENTE (Blanco, Izquierda) */
+          .row.usuario { justify-content: flex-start; }
+          .row.usuario .bubble { 
+            background-color: #FFFFFF; 
+            color: #111;
+            border-top-left-radius: 0;
+          }
+          .row.usuario .meta { color: #1f7cff; } /* Nombre en azulito */
+
+          /* ZARA (Verde Claro, Derecha) */
+          .row.zara { justify-content: flex-end; }
+          .row.zara .bubble { 
+            background-color: #D9FDD3; /* Verde WhatsApp exacto */
+            color: #111;
+            border-top-right-radius: 0;
+          }
+          .row.zara .meta { text-align: right; color: #008000; }
+
+          /* SISTEMA (Amarillo, Centro - Alertas) */
+          .row.sistema { justify-content: center; margin: 10px 0; }
+          .row.sistema .bubble { 
+            background-color: #FFF5C4; 
+            font-size: 12.5px; 
+            text-align: center;
+            border-radius: 8px;
+            color: #555;
+            max-width: 90%;
+            box-shadow: none;
+            border: 1px solid #e0c880;
+          }
         </style>
       </head>
       <body>
         <div class="container">
-          <h1>👁️ Monitor de Zara (En Vivo)</h1>
-          <p style="text-align:center">Mostrando los últimos ${historial.length} eventos</p>
-          <hr>
+          <h1>👁️ Monitor En Vivo</h1>
+          
           ${historial.map(log => `
-            <div class="card ${log.tipo}">
-              <div class="meta">${log.fecha} - ${log.senderName} (${log.senderId})</div>
-              <div class="mensaje">${log.mensaje}</div>
+            <div class="row ${log.tipo}">
+              <div class="bubble">
+                <span class="meta">${log.senderName || 'Desconocido'} • ${log.fecha.split(',')[1]}</span>
+                ${log.mensaje.replace(/\n/g, '<br>')}
+              </div>
             </div>
           `).join('')}
+          
         </div>
       </body>
     </html>
@@ -49,27 +109,21 @@ app.get("/", (req, res) => {
   res.send(html);
 });
 
-// RUTA WEBHOOK (Recibe los datos)
 app.post("/webhook", (req, res) => {
   const { fecha, senderId, senderName, mensaje, tipo } = req.body;
   
-  // 1. Guardar en memoria para la web (ponemos el nuevo al principio)
+  // Guardamos al principio (Lo nuevo arriba)
   historial.unshift({ fecha, senderId, senderName, mensaje, tipo });
   
-  // Limitar a 50 mensajes para no llenar la memoria
   if (historial.length > 50) historial.pop();
 
-  // 2. Imprimir en consola (para los logs negros de Render)
-  if (tipo === "sistema") {
-      console.log(`🚨 [SISTEMA] ${mensaje}`);
-  } else if (tipo === "usuario") {
-      console.log(`👤 [CLIENTE] ${senderName} (${senderId}): ${mensaje}`);
-  } else {
-      console.log(`🤖 [ZARA] Le dijo a ${senderId}: ${mensaje}`);
-  }
+  // Logs técnicos en consola
+  if (tipo === "sistema") console.log(`🚨 [SISTEMA] ${mensaje}`);
+  else if (tipo === "usuario") console.log(`👤 [CLIENTE] ${senderName}: ${mensaje}`);
+  else console.log(`🤖 [ZARA] Respondió a ${senderId}`);
   
   res.sendStatus(200);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`📊 Monitor Visual escuchando en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`📊 Monitor WhatsApp Visual escuchando en puerto ${PORT}`));
