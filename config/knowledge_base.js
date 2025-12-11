@@ -3,46 +3,52 @@ export const NEGOCIO = {
   ubicacion: "Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas).",
   horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-  estacionamiento: "Gratuito",
+  estacionamiento: "Gratuito y seguro 🚗",
+  transporte: "Metro Quilín (L4) + Micro D17v (desde Mall Quilín).",
   staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"]
 };
 
 export const TRATAMIENTOS = {
-  "lipo_body_elite": { nombre: "Plan Lipo Body Elite", precio: "$664.000", info: "🔥 Plan Transformación (8-10 sem). Grasa + Flacidez + Músculo." },
-  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "👑 Renovación Facial Total (2 meses). Toxina + HIFU + Piel." },
-  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "⚡️ Reductivo Intensivo (8 sem). Lipoláser + HIFU." },
-  "lipo_express": { nombre: "Plan Lipo Express", precio: "$432.000", info: "🚀 Reductivo Rápido (6-8 sem). Baja contorno." },
-  "push_up": { nombre: "Plan Push Up Glúteos", precio: "$376.000", info: "🍑 Levantamiento (8 sem). Prosculpt y RF." },
-  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "💪 Tonificación (8 sem). Marcar musculatura." },
-  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "✨ Rejuvenecimiento (1 mes). Botox + HIFU." },
-  "lipo_focalizada": { nombre: "Plan Lipo Focalizada", precio: "$348.800", info: "🎯 Zona Rebelde (4 sem)." },
-  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "🫠 Perfilado Rostro (4 sem)." },
-  "face_antiage": { nombre: "Plan Face Antiage", precio: "$281.600", info: "⏳ Anti-edad Express. Botox + HIFU." },
-  "face_inicia": { nombre: "Plan Face Inicia", precio: "$270.400", info: "🌟 Inicio Facial (1 mes). Piel radiante." },
-  "depilacion_full": { nombre: "Depilación Full", precio: "$259.200", info: "Pack 6 Sesiones Láser." },
-  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "🧘‍♀️ Firmeza (6 sem). Flacidez." },
-  "face_smart": { nombre: "Plan Face Smart", precio: "$198.400", info: "🧠 Mix Inteligente. Pink Glow + HIFU." },
-  "face_one": { nombre: "Plan Face One", precio: "$169.600", info: "☝️ Básico Potente. RF + HIFU." },
-  "exosoma": { nombre: "Exosoma", precio: "$152.000", info: "🧬 Regeneración Celular." },
-  "face_light": { nombre: "Plan Face Light", precio: "$128.800", info: "💡 Brillo y Mantención." },
-  "face_h12": { nombre: "Plan Face H12", precio: "$121.600", info: "💧 Hidratación y Tensado." },
-  "limpieza_full": { nombre: "Limpieza Facial Full", precio: "$120.000", info: "🧼 Pack Limpieza Profunda." }
+  "lipo_body_elite": { 
+    nombre: "Plan Lipo Body Elite", 
+    precio: "$664.000", 
+    info: "🔥 Transformación total (Grasa + Flacidez + Músculo). El más completo.", 
+    clave: "lipo body elite, completo" 
+  },
+  "lipo_express": { 
+    nombre: "Plan Lipo Express", 
+    precio: "$432.000", 
+    info: "🚀 Reductivo rápido. Baja contorno en 8 semanas.", 
+    clave: "express, rapido" 
+  },
+  "push_up": { 
+    nombre: "Plan Push Up Glúteos", 
+    precio: "$376.000", 
+    info: "🍑 Levantamiento real. Efecto gimnasio sin esfuerzo.", 
+    clave: "push up, gluteos" 
+  },
+  "body_fitness": { nombre: "Plan Body Fitness", precio: "$360.000", info: "💪 Tonificación muscular pura.", clave: "fitness" },
+  "body_tensor": { nombre: "Plan Body Tensor", precio: "$232.000", info: "🧘‍♀️ Firmeza para la piel suelta.", clave: "tensor, flacidez" },
+  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "✨ Rejuvenecimiento en 1 mes (Botox + HIFU).", clave: "face elite" },
+  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "👑 Renovación total rostro (2 meses).", clave: "full face" },
+  "depilacion_full": { nombre: "Depilación Full", precio: "$259.200", info: "Láser definitivo 6 sesiones.", clave: "depilacion" }
 };
 
 export const SYSTEM_PROMPT = `
-ERES ZARA, COACH DE CLÍNICA BODY ELITE. 💁‍♀️✨
-Vende resultados, sé breve y cercana. Usa el nombre del cliente si lo tienes.
+ERES ZARA, LA AMIGA EXPERTA DE BODY ELITE. 💁‍♀️✨
+Tu tono es: **Estilo Instagram**, casual, usas emojis, frases cortas y coquetas ("pololeas" al cliente).
 
-📍 **DATOS:**
-* Peñalolén (Las Pircas). Estacionamiento GRATIS.
-* Metro: Quilín + Micro D17v.
+🛑 **REGLAS DE ORO (PARA NO MATAR LA VENTA):**
 
-✅ **FLUJO DE VENTA:**
-1. **Saludo:** "¿Hola [Nombre]! 👋 ¿Buscas mejorar Cuerpo o Rostro?"
-2. **Precios:** "Planes desde **$232.000** (Cuerpo) y **$120.000** (Rostro). ✨"
-3. **Cierre:** SIEMPRE da 2 opciones.
-   - "¿Te llamamos? 📞" (Pide el número).
-   - "¿Link de agenda? 🔗" (Manda el link).
+1.  **PROHIBIDO VOMITAR LISTAS:** Jamás envíes el menú completo de precios. ¡Eso aburre! 🚫📜
+2.  **NO DES PRECIOS AL TIRO:** Si preguntan "¿precio?" o "¿qué planes hay?", TU RESPUESTA DEBE SER UNA PREGUNTA para investigar.
+    * *Mal:* "Hola, aquí están los precios: Plan A $100, Plan B $200..."
+    * *Bien:* "¡Hola! 👋 Obvio que sí. Oye, para recomendarte el mejor, cuéntame... ¿qué es lo que más te gustaría mejorar ahora? ¿Guatita, piernas o rostro? 🤔"
+3.  **VENDE EL SUEÑO, LUEGO EL PRECIO:** Solo cuando sepas qué le duele (ej: "tengo guatita"), le ofreces la solución específica y ahí recién sueltas el precio.
+4.  **SE BREVE:** Respuestas cortas, como chat de amigas. No escribas biblias.
+5.  **CIERRE SIEMPRE:** Termina cada mensaje invitando a avanzar:
+    * "¿Te tinca que te llamemos para contarte más? 📞"
+    * "¿Te gustaría agendar una evaluación gratis? 💖"
 
-🔗 **LINK AGENDA:** https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9
+**TU OBJETIVO:** Enamorar, investigar y cerrar la cita (Link o Teléfono). NO informar precios como robot.
 `;
