@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { sendMessage, sendButton, getWhatsAppMediaUrl, getInstagramUserProfile } from "./services/meta.js";
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
-import { NEGOCIO } from "../config/knowledge_base.js";
+import { NEGOCIO } from "../config/negocio.js";
 
 const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 0, llamadas: 0, intencion_link: 0, agendados: 0 };
 const sesiones = {}; 
@@ -11,9 +11,8 @@ const usuariosPausados = {};
 const ultimasRespuestas = {}; 
 
 const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook";
-const AGENDA_URL = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
+const AGENDA_URL = NEGOCIO.agenda_link;
 
-// --- FUNCIÓN MONITOR ---
 async function reportarMonitor(senderId, senderName, mensaje, tipo) {
     try {
         await fetch(MONITOR_URL, {
@@ -30,7 +29,6 @@ function extraerTelefono(texto) {
   return null;
 }
 
-// --- LOGICA RESERVO ---
 export async function procesarReserva(data) {
     metricas.agendados++; 
     const nombre = data.nombre || data.clientName || "Web";
@@ -46,7 +44,6 @@ export async function procesarReserva(data) {
     }
 }
 
-// --- LOGICA PRINCIPAL ---
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let senderId, text = "", senderName;
@@ -56,10 +53,7 @@ export async function procesarEvento(entry) {
       const msg = entry.changes[0].value.messages?.[0];
       if (!msg) return;
       senderId = msg.from; metricas.leads_wsp.add(senderId);
-      
-      // ✅ AQUÍ CAPTURAMOS EL NOMBRE DEL PERFIL DE WHATSAPP
       senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || "Cliente";
-      
       if (msg.type === "text") text = msg.text.body;
       else if (msg.type === "audio" || msg.type === "voice") text = "AUDIO_RECIBIDO";
   } else { 
@@ -80,7 +74,6 @@ export async function procesarEvento(entry) {
 
   const lower = text.toLowerCase().trim();
   
-  // Comandos Internos
   if (lower === "zara reporte") {
      const reporte = `📊 *REPORTE ZARA* 📊\n\n💬 Msjes: ${metricas.mensajes_totales}\n📞 Llamadas: ${metricas.llamadas}\n🔗 Links: ${metricas.intencion_link}`;
      await sendMessage(senderId, reporte, platform);
@@ -90,7 +83,6 @@ export async function procesarEvento(entry) {
   if (lower.includes("silencio")) { usuariosPausados[senderId] = true; return; }
   if (usuariosPausados[senderId]) return;
 
-  // Lead Capturado
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado) {
     metricas.llamadas++;
@@ -101,11 +93,7 @@ export async function procesarEvento(entry) {
     return;
   }
 
-  // --- MEMORIA Y RESPUESTA IA ---
   if (!sesiones[senderId]) sesiones[senderId] = [];
-
-  // ✅ AQUÍ ESTÁ EL FIX: INYECTAMOS EL NOMBRE EN EL TEXTO QUE VE LA IA
-  // La IA recibirá: "[Cliente: Juan Carlos] hola" en lugar de solo "hola"
   sesiones[senderId].push({ role: "user", content: `[Cliente: ${senderName}] ${text}` });
   
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
@@ -114,7 +102,6 @@ export async function procesarEvento(entry) {
   
   await reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara");
   
-  // Manejo de Link de Agenda
   if (respuestaIA.includes("agendamiento.reservo.cl")) {
       const textoLimpio = respuestaIA.replace(/https:\/\/agendamiento\.reservo\.cl\S+/g, "").trim();
       if (platform === "instagram") {
