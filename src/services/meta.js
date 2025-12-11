@@ -1,75 +1,62 @@
 import fetch from "node-fetch";
-import dotenv from "dotenv";
-dotenv.config();
 
-export async function sendMessage(to, text, platform = "whatsapp") {
+export async function sendMessage(to, text, platform, imageUrl = null) {
   try {
-    let url, body;
+    const token = process.env.PAGE_ACCESS_TOKEN;
+    let url = "";
+    let body = {};
+
     if (platform === "whatsapp") {
-      const phoneId = process.env.PHONENUMBER_ID;
-      url = `https://graph.facebook.com/v19.0/${phoneId}/messages`;
-      body = { messaging_product: "whatsapp", recipient_type: "individual", to: to, type: "text", text: { body: text } };
+        const phoneId = process.env.PHONE_NUMBER_ID;
+        if (!phoneId) { console.error("❌ FALTA PHONE_NUMBER_ID EN RENDER"); return; }
+        url = `https://graph.facebook.com/v19.0/${phoneId}/messages`;
+        
+        if (imageUrl) {
+            body = { messaging_product: "whatsapp", to: to, type: "image", image: { link: imageUrl } };
+        } else {
+            body = { messaging_product: "whatsapp", to: to, type: "text", text: { body: text, preview_url: false } };
+        }
     } else {
-      url = `https://graph.facebook.com/v19.0/me/messages`;
-      body = { recipient: { id: to }, message: { text: text } };
+        // Instagram
+        url = `https://graph.facebook.com/v19.0/me/messages`;
+        if (imageUrl) {
+            body = { recipient: { id: to }, message: { attachment: { type: "image", payload: { url: imageUrl, is_reusable: true } } } };
+        } else {
+            body = { recipient: { id: to }, message: { text: text } };
+        }
     }
-    
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` },
-      body: JSON.stringify(body)
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body)
     });
-    
-    if (!res.ok) {
-        const err = await res.text();
-        console.error("Meta API Error:", err);
+
+    const data = await response.json();
+    if (!response.ok) {
+        console.error(`❌ ERROR META (${platform}):`, JSON.stringify(data, null, 2));
+    } else {
+        console.log(`✅ Mensaje enviado OK a ${platform}`);
     }
-  } catch (e) { console.error("Network Error:", e); }
+  } catch (error) { console.error("❌ Error Crítico Red:", error); }
 }
 
-export async function sendButton(to, text, btnLabel, btnUrl, platform) {
-    if (platform === "whatsapp") {
-        await sendMessage(to, `${text}\n\n🔗 ${btnLabel}: ${btnUrl}`, "whatsapp");
+export async function sendButton(to, text, btnTitle, url, platform) {
+    if (platform === "instagram") {
+        await sendMessage(to, `${text}\n\n👇 ${btnTitle}: ${url}`, "instagram");
     } else {
-        try {
-            const url = `https://graph.facebook.com/v19.0/me/messages`;
-            const body = {
-                recipient: { id: to },
-                message: {
-                    attachment: {
-                        type: "template",
-                        payload: {
-                            template_type: "button",
-                            text: text,
-                            buttons: [{ type: "web_url", url: btnUrl, title: btnLabel }]
-                        }
-                    }
-                }
-            };
-            await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` },
-                body: JSON.stringify(body)
-            });
-        } catch (e) { console.error("IG Button Error:", e); }
+        await sendMessage(to, `${text}\n\n🔗 ${url}`, "whatsapp");
     }
 }
 
 export async function getWhatsAppMediaUrl(mediaId) {
-  try {
-    const res = await fetch(`https://graph.facebook.com/v19.0/${mediaId}`, {
-      headers: { "Authorization": `Bearer ${process.env.PAGE_ACCESS_TOKEN}` }
-    });
-    const data = await res.json();
-    return data.url;
-  } catch (e) { return null; }
+    try {
+        const token = process.env.PAGE_ACCESS_TOKEN;
+        const r = await fetch(`https://graph.facebook.com/v19.0/${mediaId}`, { headers: { "Authorization": `Bearer ${token}` } });
+        if(!r.ok) return null;
+        const d = await r.json();
+        return d.url;
+    } catch(e) { return null; }
 }
 
-export async function getInstagramUserProfile(senderId) {
-  try {
-    const url = `https://graph.facebook.com/v19.0/${senderId}?fields=name,username&access_token=${process.env.PAGE_ACCESS_TOKEN}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.name || data.username || "Amiga";
-  } catch (e) { return "Amiga"; }
-}
+export async function getInstagramUserProfile(userId) { return "Usuario IG"; }
