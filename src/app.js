@@ -9,11 +9,11 @@ const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 
 const sesiones = {}; 
 const usuariosPausados = {}; 
 const ultimasRespuestas = {}; 
-const temporizadoresSeguimiento = {}; // Para la lógica de 2 horas
 
 const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook";
 const AGENDA_URL = "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9";
 
+// --- FUNCIÓN MONITOR ---
 async function reportarMonitor(senderId, senderName, mensaje, tipo) {
     try {
         await fetch(MONITOR_URL, {
@@ -30,19 +30,7 @@ function extraerTelefono(texto) {
   return null;
 }
 
-// --- LOGICA DE SEGUIMIENTO (2 HORAS) ---
-function programarSeguimiento(senderId, platform, nombre) {
-    // Si ya había uno, lo cancelamos para reiniciar el reloj
-    if (temporizadoresSeguimiento[senderId]) clearTimeout(temporizadoresSeguimiento[senderId]);
-    
-    // Programar mensaje en 2 horas (7200000 ms)
-    temporizadoresSeguimiento[senderId] = setTimeout(async () => {
-        const mensajeFollowUp = `Hola ${nombre} 👋 Me quedé pensando... ¿te quedó alguna duda sobre los planes? Cuéntame y te ayudo feliz. 💖`;
-        await sendMessage(senderId, mensajeFollowUp, platform);
-        await reportarMonitor(senderId, "Zara (FollowUp)", mensajeFollowUp, "zara");
-    }, 2 * 60 * 60 * 1000); 
-}
-
+// --- LOGICA RESERVO ---
 export async function procesarReserva(data) {
     metricas.agendados++; 
     const nombre = data.nombre || data.clientName || "Web";
@@ -58,6 +46,7 @@ export async function procesarReserva(data) {
     }
 }
 
+// --- LOGICA PRINCIPAL ---
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let senderId, text = "", senderName;
@@ -67,27 +56,31 @@ export async function procesarEvento(entry) {
       const msg = entry.changes[0].value.messages?.[0];
       if (!msg) return;
       senderId = msg.from; metricas.leads_wsp.add(senderId);
+      
+      // ✅ AQUÍ CAPTURAMOS EL NOMBRE DEL PERFIL DE WHATSAPP
       senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || "Cliente";
+      
       if (msg.type === "text") text = msg.text.body;
       else if (msg.type === "audio" || msg.type === "voice") text = "AUDIO_RECIBIDO";
   } else { 
       const msg = entry.messaging?.[0];
       if (!msg || msg.message?.is_echo) return;
       senderId = msg.sender.id; metricas.leads_ig.add(senderId);
-      senderName = "Amiga IG";
+      senderName = "Amiga IG"; 
       if (msg.message?.text) text = msg.message.text;
   }
 
   const now = Date.now();
-  if ((now - (ultimasRespuestas[senderId] || 0)) < 3000) return; // 3 seg anti-spam
+  if ((now - (ultimasRespuestas[senderId] || 0)) < 2000) return; 
   ultimasRespuestas[senderId] = now;
 
   if (!text) return;
 
   await reportarMonitor(senderId, senderName, text, "usuario");
 
-  // Control
   const lower = text.toLowerCase().trim();
+  
+  // Comandos Internos
   if (lower === "zara reporte") {
      const reporte = `📊 *REPORTE ZARA* 📊\n\n💬 Msjes: ${metricas.mensajes_totales}\n📞 Llamadas: ${metricas.llamadas}\n🔗 Links: ${metricas.intencion_link}`;
      await sendMessage(senderId, reporte, platform);
@@ -105,22 +98,23 @@ export async function procesarEvento(entry) {
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
     await reportarMonitor(senderId, senderName, "LEAD CAPTURADO", "sistema");
     await sendMessage(senderId, "¡Listo! 💙 Ya le pasé tu número a las chicas. Te llamarán en breve.", platform);
-    // Cancelamos seguimiento si ya convirtió
-    if (temporizadoresSeguimiento[senderId]) clearTimeout(temporizadoresSeguimiento[senderId]);
     return;
   }
 
-  // IA y Respuesta
+  // --- MEMORIA Y RESPUESTA IA ---
   if (!sesiones[senderId]) sesiones[senderId] = [];
-  sesiones[senderId].push({ role: "user", content: text });
+
+  // ✅ AQUÍ ESTÁ EL FIX: INYECTAMOS EL NOMBRE EN EL TEXTO QUE VE LA IA
+  // La IA recibirá: "[Cliente: Juan Carlos] hola" en lugar de solo "hola"
+  sesiones[senderId].push({ role: "user", content: `[Cliente: ${senderName}] ${text}` });
+  
   if (sesiones[senderId].length > 10) sesiones[senderId] = sesiones[senderId].slice(-10);
 
   const respuestaIA = await generarRespuestaIA(sesiones[senderId]);
   
-  // 1. Enviamos a Monitor
   await reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara");
   
-  // 2. Enviamos al Usuario (Link vs Texto)
+  // Manejo de Link de Agenda
   if (respuestaIA.includes("agendamiento.reservo.cl")) {
       const textoLimpio = respuestaIA.replace(/https:\/\/agendamiento\.reservo\.cl\S+/g, "").trim();
       if (platform === "instagram") {
@@ -133,7 +127,4 @@ export async function procesarEvento(entry) {
   }
   
   sesiones[senderId].push({ role: "assistant", content: respuestaIA });
-  
-  // 3. Programar seguimiento de 2 horas (Solo si no agendó)
-  programarSeguimiento(senderId, platform, senderName);
 }
