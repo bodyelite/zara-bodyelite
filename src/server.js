@@ -5,22 +5,27 @@ import { procesarEvento, procesarReserva } from "./app.js";
 
 dotenv.config();
 const app = express();
-
 app.use(bodyParser.json());
+
+// CONFIGURACIÓN CORS PARA PERMITIR COMUNICACIÓN DESDE RESERVO
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
-    next();
+  res.header("Access-Control-Allow-Origin", "*"); // Permite cualquier dominio
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Permite los métodos necesarios
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200); // Responde OK a la petición de precarga (preflight)
+  }
+  next();
 });
 
-app.get("/", (req, res) => res.status(200).send("Zara Body Elite IA 11.0 Active"));
-
+// Verificación Meta
 app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) {
     res.send(req.query["hub.challenge"]);
   } else { res.sendStatus(403); }
 });
 
+// Mensajes Meta
 app.post("/webhook", (req, res) => {
   try {
     const entry = req.body.entry?.[0];
@@ -29,15 +34,16 @@ app.post("/webhook", (req, res) => {
   } catch (e) { console.error(e); res.sendStatus(200); }
 });
 
-// RUTA CORREGIDA: Sin guion, tal cual tu captura de Reservo
-app.post("/reservowebhook", (req, res) => {
+// Webhook Reservo
+app.post("/reservo-webhook", (req, res) => {
   try {
     const data = req.body;
-    console.log("📥 Reservo Hit:", data);
     res.sendStatus(200);
-    if (data) procesarReserva(data).catch(err => console.error("❌ Reservo Logic Error:", err));
-  } catch (e) { console.error("❌ Server Reservo Error:", e); res.sendStatus(500); }
+    if (data && (data.clientName || data.contactPhone)) {
+      procesarReserva(data).catch(err => console.error("❌ Reservo Error:", err));
+    }
+  } catch (e) { console.error(e); res.sendStatus(500); }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara 11.0 Final activa en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara activa en puerto ${PORT}`));
