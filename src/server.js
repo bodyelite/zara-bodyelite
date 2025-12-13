@@ -5,27 +5,32 @@ import { procesarEvento, procesarReserva } from "./app.js";
 
 dotenv.config();
 const app = express();
-app.use(bodyParser.json());
 
-// CONFIGURACIÓN CORS PARA PERMITIR COMUNICACIÓN DESDE RESERVO
+// CONFIGURACIÓN CORS (VERSIÓN 2.0: SOLUCIÓN AL PREFLIGHT DE RESERVO)
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // Permite cualquier dominio
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Permite los métodos necesarios
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200); // Responde OK a la petición de precarga (preflight)
-  }
-  next();
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+    if (req.method === 'OPTIONS') {
+        // Respuesta OK (200) para peticiones de precarga (preflight)
+        res.sendStatus(200); 
+        return; 
+    }
+    next();
 });
 
-// Verificación Meta
+app.use(bodyParser.json());
+
+app.get("/", (req, res) => {
+  res.status(200).send("Zara Body Elite IA está en vivo.");
+});
+
 app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) {
     res.send(req.query["hub.challenge"]);
   } else { res.sendStatus(403); }
 });
 
-// Mensajes Meta
 app.post("/webhook", (req, res) => {
   try {
     const entry = req.body.entry?.[0];
@@ -34,15 +39,15 @@ app.post("/webhook", (req, res) => {
   } catch (e) { console.error(e); res.sendStatus(200); }
 });
 
-// Webhook Reservo
 app.post("/reservo-webhook", (req, res) => {
   try {
+    console.log("📥 [SERVER] POST /reservo-webhook recibido");
     const data = req.body;
     res.sendStatus(200);
-    if (data && (data.clientName || data.contactPhone)) {
-      procesarReserva(data).catch(err => console.error("❌ Reservo Error:", err));
+    if (data) {
+      procesarReserva(data).catch(err => console.error("❌ Reservo Logic Error:", err));
     }
-  } catch (e) { console.error(e); res.sendStatus(500); }
+  } catch (e) { console.error("❌ Server Reservo Error:", e); res.sendStatus(500); }
 });
 
 const PORT = process.env.PORT || 3000;
