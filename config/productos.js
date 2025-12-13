@@ -1,5 +1,4 @@
 export const TRATAMIENTOS = {
-  // --- CORPORALES ---
   "lipo_body_elite": { 
     nombre: "Plan Lipo Body Elite", 
     precio: "$664.000", 
@@ -48,7 +47,6 @@ export const TRATAMIENTOS = {
     objetivo: "reducir_firmeza",
     valor_base: 232000
   },
-  // --- ZONAS ESPECÍFICAS ---
   "lipo_papada": { 
     nombre: "Plan Lipo Papada", 
     precio: "$313.600", 
@@ -65,7 +63,6 @@ export const TRATAMIENTOS = {
     objetivo: "reducir_firmeza",
     valor_base: 348800
   },
-  // --- FACIALES ---
   "full_face": { 
     nombre: "Plan Full Face", 
     precio: "$584.000", 
@@ -98,7 +95,6 @@ export const TRATAMIENTOS = {
     objetivo: "rostro",
     valor_base: 120000
   },
-  // --- DEPILACIÓN ---
   "depilacion_full": { 
     nombre: "Depilación Full", 
     precio: "$259.200", 
