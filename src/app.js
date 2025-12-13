@@ -1,8 +1,7 @@
 import fs from "fs";
 import fetch from "node-fetch";
-import { sendMessage, sendButton, getWhatsAppMediaUrl, getInstagramUserProfile } from "./services/meta.js";
-import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
-import { downloadFile } from "./utils/download.js";
+import { sendMessage, sendButton } from "./services/meta.js";
+import { generarRespuestaIA } from "./services/openai.js";
 import { NEGOCIO } from "../config/negocio.js";
 
 const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 0, llamadas: 0, intencion_link: 0, agendados: 0 };
