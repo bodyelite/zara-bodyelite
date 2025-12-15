@@ -1,8 +1,9 @@
 import fs from "fs";
-import { sendMessage, getWhatsAppMediaUrl, getInstagramUserProfile } from "./services/meta.js";
+import fetch from "node-fetch";
+import { sendMessage, getWhatsAppMediaUrl, getInstagramUserProfile, sendButton } from "./services/meta.js"; // Añadida sendButton
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
-import { NEGOCIO } from "../config/knowledge_base.js";
+import { NEGOCIO } from "../config/knowledge_base.js"; // Ruta a knowledge_base
 
 const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 0, llamadas: 0, intencion_link: 0, agendados: 0 };
 const sesiones = {}; 
@@ -10,6 +11,18 @@ const usuariosPausados = {};
 const mensajesProcesados = new Set(); 
 const ultimasRespuestas = {}; 
 const estadosClientes = {};
+const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook"; // URL del monitor
+const AGENDA_URL = NEGOCIO.agenda_link;
+
+// FUNCIÓN RESTAURADA: REPORTAR AL MONITOR EXTERNO
+async function reportarMonitor(senderId, senderName, mensaje, tipo) {
+    try {
+        await fetch(MONITOR_URL, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fecha: new Date().toLocaleString("es-CL"), senderId, senderName, mensaje, tipo })
+        });
+    } catch (e) { console.error("Error al reportar al Monitor externo:", e); }
+}
 
 function extraerTelefono(texto) {
   if (!texto) return null;
@@ -46,13 +59,14 @@ setInterval(() => {
         if ((ahora - ultimoMsj) > TIEMPO_DORMIDO && estado !== 'agendado' && estado !== 'nudged' && !usuariosPausados[senderId]) {
             await sendMessage(senderId, "¿Aún no te decides? 🤔 El **Diagnóstico con IA** es un regalo de Body Elite 🎁. ¿Te agendo?", "whatsapp"); 
             estadosClientes[senderId] = 'nudged'; 
+            reportarMonitor(senderId, "Sistema", "Cliente nudged (dormido)", "sistema").catch(() => {});
         }
     });
 }, INTERVALO_CHECK);
 
 function obtenerCrossSell(historialTexto) {
     const lower = (historialTexto || "").toLowerCase();
-    if (lower.includes("cara") || lower.includes("rostro") || lower.includes("arruga")) return "Dato Extra: ¡Tus tratamientos **Reductivos tienen un 20% OFF**! 🎁";
+    if (lower.includes("cara") || lower.includes("rostro") || lower.includes("arrugas")) return "Dato Extra: ¡Tus tratamientos **Reductivos tienen un 20% OFF**! 🎁";
     if (lower.includes("cuerpo") || lower.includes("grasa") || lower.includes("lipo")) return "Dato Extra: ¡Tus tratamientos **Faciales Antiage tienen un 20% OFF**! ✨";
     return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! ✨";
 }
@@ -80,6 +94,7 @@ export async function procesarReserva(data = {}) {
     for (const n of NEGOCIO.staff_alertas) { 
         try { await sendMessage(n, alerta, "whatsapp"); } catch(e) { console.error(e); }
     }
+    reportarMonitor(contactPhone || "No Fono", clientName, "RESERVA CONFIRMADA", "sistema").catch(() => {});
 }
 
 export async function procesarEvento(entry) {
@@ -101,6 +116,8 @@ export async function procesarEvento(entry) {
       senderName = igName || "Amiga";
       if (msg.message?.text) text = msg.message.text;
   }
+  
+  reportarMonitor(senderId, senderName, text, "usuario").catch(() => {}); // Reportar mensaje de USUARIO
 
   const now = Date.now();
   if ((now - (ultimasRespuestas[senderId] || 0)) < 2000) return;
@@ -130,6 +147,7 @@ export async function procesarEvento(entry) {
     const confirm = "¡Perfecto! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.";
     const historialTotal = sesiones[senderId].map(m => m.content).join(" ");
     await sendMessage(senderId, `${confirm}\n\n${obtenerCrossSell(historialTotal)}`, platform);
+    reportarMonitor(senderId, senderName, "LEAD CAPTURADO", "sistema").catch(() => {});
     return;
   }
 
@@ -150,4 +168,5 @@ export async function procesarEvento(entry) {
       }
   }
   sesiones[senderId].push({ role: "assistant", content: respuestaIA });
+  reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara").catch(() => {}); // Reportar respuesta de ZARA
 }
