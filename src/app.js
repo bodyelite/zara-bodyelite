@@ -168,7 +168,7 @@ export async function procesarEvento(entry) {
       } else if (msg.type === "button" && msg.button.text) {
           text = msg.button.text;
       } else {
-          return;
+          return; 
       }
   } else { 
       const msg = entry.messaging?.[0];
