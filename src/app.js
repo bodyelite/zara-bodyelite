@@ -1,20 +1,35 @@
 import fs from "fs";
 import fetch from "node-fetch";
-import { sendMessage, getWhatsAppMediaUrl, getInstagramUserProfile, sendButton } from "./services/meta.js"; // Añadida sendButton
+import { sendMessage, getWhatsAppMediaUrl, getInstagramUserProfile, sendButton } from "./services/meta.js";
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { downloadFile } from "./utils/download.js";
-import { NEGOCIO } from "../config/knowledge_base.js"; // Ruta a knowledge_base
+import { NEGOCIO } from "../config/negocio.js";
 
-const metricas = { leads_wsp: new Set(), leads_ig: new Set(), mensajes_totales: 0, llamadas: 0, intencion_link: 0, agendados: 0 };
+// -------------------------------------------------------------
+// METRICAS y ESTADO
+// -------------------------------------------------------------
+const metricas = {
+    // Almacena las fechas de los eventos para reportes históricos
+    agendados: [],
+    llamadas: [],
+    intencion_link: [],
+    // Sets para Leads Únicos
+    leads_wsp: new Set(),
+    leads_ig: new Set(),
+    mensajes_totales: 0
+};
 const sesiones = {}; 
-const usuariosPausados = {}; 
-const mensajesProcesados = new Set(); 
+const usuariosPausados = {}; // Clave/Valor: senderId: true/false
 const ultimasRespuestas = {}; 
 const estadosClientes = {};
-const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook"; // URL del monitor
+
+const MONITOR_URL = "https://zara-monitor-2-1.onrender.com/webhook";
 const AGENDA_URL = NEGOCIO.agenda_link;
 
-// FUNCIÓN RESTAURADA: REPORTAR AL MONITOR EXTERNO
+// -------------------------------------------------------------
+// FUNCIONES DE UTILIDAD
+// -------------------------------------------------------------
+
 async function reportarMonitor(senderId, senderName, mensaje, tipo) {
     try {
         await fetch(MONITOR_URL, {
@@ -27,7 +42,7 @@ async function reportarMonitor(senderId, senderName, mensaje, tipo) {
 function extraerTelefono(texto) {
   if (!texto) return null;
   const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/); 
-  if (match) return match[0].replace(/\D/g, ' '); 
+  if (match) return match[0].replace(/\D/g, ''); 
   return null;
 }
 
@@ -35,16 +50,6 @@ function esHorarioPrudente() {
     const now = new Date();
     const horaChile = (now.getUTCHours() - 3 + 24) % 24; 
     return horaChile >= 9 && horaChile < 20.5; 
-}
-
-function esHorarioLaboral() {
-    const now = new Date();
-    const hora = (now.getUTCHours() - 3 + 24) % 24; 
-    const min = now.getUTCMinutes();
-    const decimal = hora + (min / 60);
-    const dia = now.getDay(); 
-    if (dia === 0) return false;
-    return decimal >= 9.5 && decimal < 19; 
 }
 
 const TIEMPO_DORMIDO = 2 * 60 * 60 * 1000; 
@@ -71,17 +76,60 @@ function obtenerCrossSell(historialTexto) {
     return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! ✨";
 }
 
-function generarReporteTexto(periodo) {
-    const leadsWsp = metricas.leads_wsp.size;
-    const leadsIg = metricas.leads_ig.size;
-    const totalLeads = leadsWsp + leadsIg;
-    const conversiones = metricas.llamadas + metricas.intencion_link + metricas.agendados;
-    const tasa = totalLeads > 0 ? ((conversiones / totalLeads) * 100).toFixed(1) : "0.0";
-    return `📊 *REPORTE ZARA* 📊\n👥 Leads Únicos: ${totalLeads}\n   WSP: ${leadsWsp} | IG: ${leadsIg}\n🎯 Conversiones: ${conversiones}\n   📞 Llamadas: ${metricas.llamadas}\n   🔗 Pidieron Link: ${metricas.intencion_link}\n✅ Agendas Reservo: ${metricas.agendados}\n📈 Tasa: ${tasa}%`;
+// -------------------------------------------------------------
+// LÓGICA DE REPORTES CON RANGO DE TIEMPO
+// -------------------------------------------------------------
+function filtrarMetricaPorRango(metrica, rango) {
+    const ahora = Date.now();
+    let inicioRango;
+
+    if (rango === 'SEMANA') {
+        inicioRango = ahora - (7 * 24 * 60 * 60 * 1000); // Últimos 7 días
+    } else if (rango === 'MES') {
+        const d = new Date();
+        d.setDate(1);
+        d.setHours(0, 0, 0, 0);
+        inicioRango = d.getTime(); // Inicio del mes actual
+    } else { // GLOBAL o por defecto
+        return metrica.length;
+    }
+
+    return metrica.filter(ts => ts >= inicioRango).length;
 }
 
+function generarReporteTexto(rango = 'SEMANA') {
+    
+    // Contamos leads únicos TOTALES sin rango de tiempo (métrica de Meta)
+    const totalLeads = metricas.leads_wsp.size + metricas.leads_ig.size; 
+    
+    // Filtramos las conversiones por rango de tiempo
+    const llamadas = filtrarMetricaPorRango(metricas.llamadas, rango);
+    const intencion_link = filtrarMetricaPorRango(metricas.intencion_link, rango);
+    const agendados = filtrarMetricaPorRango(metricas.agendados, rango);
+    
+    const conversiones = llamadas + intencion_link + agendados;
+    
+    // Usamos Leads Únicos Totales para la Tasa, ya que es la base de la conversación
+    const tasa = totalLeads > 0 ? ((conversiones / totalLeads) * 100).toFixed(1) : "0.0";
+    
+    const tituloRango = rango === 'SEMANA' ? 'Últimos 7 Días' : (rango === 'MES' ? 'Mes Actual' : 'TOTAL');
+
+    return `📊 *REPORTE ZARA - ${tituloRango}* 📊\n\n` +
+           `👥 Leads Únicos (Total): ${totalLeads}\n` +
+           `🎯 Conversiones (${tituloRango}): ${conversiones}\n` +
+           `   📞 Llamadas: ${llamadas}\n` +
+           `   🔗 Pidieron Link: ${intencion_link}\n` +
+           `   ✅ Agendas Reservo: ${agendados}\n` +
+           `📈 Tasa Global: ${tasa}%`;
+}
+
+// -------------------------------------------------------------
+// PROCESAMIENTO DE EVENTOS
+// -------------------------------------------------------------
+
 export async function procesarReserva(data = {}) {
-    metricas.agendados++; 
+    // Almacenamos el timestamp del evento
+    metricas.agendados.push(Date.now()); 
     console.log("🔥🔥🔥 WEBHOOK RESERVO EJECUTÁNDOSE (ZARA 11) 🔥🔥🔥");
     
     const clientName = data.clientName || "Web (Nombre no capturado)";
@@ -117,7 +165,7 @@ export async function procesarEvento(entry) {
       if (msg.message?.text) text = msg.message.text;
   }
   
-  reportarMonitor(senderId, senderName, text, "usuario").catch(() => {}); // Reportar mensaje de USUARIO
+  reportarMonitor(senderId, senderName, text, "usuario").catch(() => {});
 
   const now = Date.now();
   if ((now - (ultimasRespuestas[senderId] || 0)) < 2000) return;
@@ -127,19 +175,45 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const lower = text.toLowerCase().trim();
 
-  if (lower.startsWith("zara reporte")) { 
+  // -------------------------------------------------------------
+  // COMANDOS DE CONTROL Y REPORTES
+  // -------------------------------------------------------------
+  if (lower.startsWith("zara reporte semana")) { 
+      await sendMessage(senderId, generarReporteTexto("SEMANA"), platform); return; 
+  }
+  if (lower.startsWith("zara reporte mes")) { 
+      await sendMessage(senderId, generarReporteTexto("MES"), platform); return; 
+  }
+  if (lower.startsWith("zara reporte")) { // Por defecto, si no se especifica
       await sendMessage(senderId, generarReporteTexto("GLOBAL"), platform); return; 
   }
-  if (lower === "retomar") { usuariosPausados[senderId] = false; return; }
-  if (lower.includes("silencio")) { usuariosPausados[senderId] = true; return; }
+  
+  // ZARA ON/OFF
+  if (lower.includes("zara on")) { 
+      usuariosPausados[senderId] = false; 
+      await sendMessage(senderId, "✅ Zara reactivada. ¡Volvamos a vender! 🚀", platform);
+      return; 
+  }
+  if (lower.includes("zara off")) { 
+      usuariosPausados[senderId] = true; 
+      await sendMessage(senderId, "🛑 Zara pausada. Solo responderé a comandos explícitos.", platform);
+      return; 
+  }
+  
   if (usuariosPausados[senderId]) return;
 
+  // -------------------------------------------------------------
+  // LÓGICA CONVERSACIONAL
+  // -------------------------------------------------------------
   if (!sesiones[senderId]) sesiones[senderId] = [];
-  if (lower.includes("link") || lower.includes("agenda")) { metricas.intencion_link++; estadosClientes[senderId] = 'agendado'; }
+  if (lower.includes("link") || lower.includes("agenda")) { 
+      metricas.intencion_link.push(Date.now()); // Registro de conversión
+      estadosClientes[senderId] = 'agendado'; 
+  }
 
   const telefonoCapturado = extraerTelefono(text);
   if (telefonoCapturado) {
-    metricas.llamadas++;
+    metricas.llamadas.push(Date.now()); // Registro de conversión
     estadosClientes[senderId] = 'agendado';
     const alerta = `🚨 *SOLICITUD DE LLAMADA* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}`;
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
@@ -168,5 +242,5 @@ export async function procesarEvento(entry) {
       }
   }
   sesiones[senderId].push({ role: "assistant", content: respuestaIA });
-  reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara").catch(() => {}); // Reportar respuesta de ZARA
+  reportarMonitor(senderId, "Zara Bot", respuestaIA, "zara").catch(() => {});
 }
