@@ -67,7 +67,6 @@ function obtenerCrossSell(historialTexto) {
     return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! ✨";
 }
 
-// LÓGICA DE REPORTES CON RANGO DE TIEMPO
 function getRangeStart(rango) {
     const now = new Date();
     let start;
@@ -82,12 +81,12 @@ function getRangeStart(rango) {
         yesterday.setDate(now.getDate() - 1);
         start = setStartOfDay(yesterday);
     } else if (rango === 'SEMANA') { 
-        start = now.getTime() - (7 * 24 * 60 * 60 * 1000); // 7 días móviles
+        start = now.getTime() - (7 * 24 * 60 * 60 * 1000);
     } else if (rango === 'MES') { 
         const monthStart = new Date(now);
         monthStart.setDate(1);
         start = setStartOfDay(monthStart);
-    } else { // GLOBAL
+    } else {
         return 0;
     }
     
@@ -203,13 +202,10 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const lower = text.toLowerCase().trim();
 
-  // -------------------------------------------------------------
-  // COMANDOS DE CONTROL Y REPORTES
-  // -------------------------------------------------------------
   if (lower.startsWith("zara reporte ayer")) { 
       await sendMessage(senderId, generarReporteTexto("AYER"), platform); return; 
   }
-  if (lower.startsWith("zara reporte semana") || lower === "zara reporte") { // FIX: zara reporte -> SEMANA
+  if (lower.startsWith("zara reporte semana") || lower === "zara reporte") {
       await sendMessage(senderId, generarReporteTexto("SEMANA"), platform); return; 
   }
   if (lower.startsWith("zara reporte mes")) { 
@@ -232,9 +228,6 @@ export async function procesarEvento(entry) {
   
   if (usuariosPausados[senderId]) return;
 
-  // -------------------------------------------------------------
-  // LÓGICA CONVERSACIONAL
-  // -------------------------------------------------------------
   if (!sesiones[senderId].historial) sesiones[senderId].historial = [];
   if (lower.includes("link") || lower.includes("agenda")) { 
       metricas.intencion_link.push(Date.now());
@@ -258,7 +251,6 @@ export async function procesarEvento(entry) {
   sesiones[senderId].historial.push({ role: "user", content: `[Cliente: ${senderName}] ` + text });
   if (sesiones[senderId].historial.length > 10) sesiones[senderId].historial = sesiones[senderId].historial.slice(-10);
 
-  // FIX LÓGICA VENTA: Inyectamos la instrucción de vender la Evaluación con IA
   const prompt_instruccion_evaluacion = (sesiones[senderId].historial.length < 5)
       ? "🚨 RECUERDA: NO VENDER LA SESIÓN DIRECTA NI EL PRECIO COMPLETO. ENFATIZA SIEMPRE QUE EL SIGUIENTE PASO ES LA 'EVALUACIÓN CON IA (GRATIS Y VITAL)' antes de ofrecer el link."
       : "";
@@ -271,7 +263,6 @@ export async function procesarEvento(entry) {
   if (respuestaIA.includes("ZARA_REPORTE_SOLICITADO")) {
       await sendMessage(senderId, generarReporteTexto("SEMANA"), platform);
   } else {
-      // FIX LINK Y BOTÓN: Detectamos link y enviamos botón de Evaluación con IA
       if (respuestaIA.includes(AGENDA_URL) || respuestaIA.includes("AGENDAR_EVALUACION_LINK")) {
           const textoLimpio = respuestaIA.replace(AGENDA_URL, "").replace("AGENDAR_EVALUACION_LINK", "").trim();
           await sendButton(
