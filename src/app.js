@@ -182,6 +182,9 @@ export async function procesarEvento(entry) {
         sesiones[senderId] = { nombre: senderName, historial: [] };
       } else {
         senderName = cachedSession.nombre;
+        if (!sesiones[senderId].historial) {
+             sesiones[senderId].historial = [];
+        }
       }
 
       if (msg.message?.text) {
@@ -230,7 +233,9 @@ export async function procesarEvento(entry) {
   
   if (usuariosPausados[senderId]) return;
 
+  if (!sesiones[senderId]) sesiones[senderId] = { nombre: senderName, historial: [] };
   if (!sesiones[senderId].historial) sesiones[senderId].historial = [];
+  
   if (lower.includes("link") || lower.includes("agenda")) { 
       metricas.intencion_link.push(Date.now());
       estadosClientes[senderId] = 'agendado'; 
