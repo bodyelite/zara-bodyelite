@@ -67,7 +67,7 @@ function obtenerCrossSell(historialTexto) {
     return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! ✨";
 }
 
-// LÓGICA DE REPORTES CON RANGO DE TIEMPO AJUSTADA A CHILE
+// LÓGICA DE REPORTES CON RANGO DE TIEMPO
 function getRangeStart(rango) {
     const now = new Date();
     let start;
@@ -78,17 +78,15 @@ function getRangeStart(rango) {
     };
 
     if (rango === 'AYER') {
-        start = new Date(now);
-        start.setDate(now.getDate() - 1);
-        start = setStartOfDay(start);
-    } else if (rango === 'SEMANA') {
-        start = new Date(now);
-        start.setDate(now.getDate() - 7);
-        start = setStartOfDay(start);
-    } else if (rango === 'MES') {
-        start = new Date(now);
-        start.setDate(1);
-        start = setStartOfDay(start);
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        start = setStartOfDay(yesterday);
+    } else if (rango === 'SEMANA') { 
+        start = now.getTime() - (7 * 24 * 60 * 60 * 1000); // 7 días móviles
+    } else if (rango === 'MES') { 
+        const monthStart = new Date(now);
+        monthStart.setDate(1);
+        start = setStartOfDay(monthStart);
     } else { // GLOBAL
         return 0;
     }
@@ -96,7 +94,19 @@ function getRangeStart(rango) {
     return start;
 }
 
-function generarReporteTexto(rango = 'GLOBAL') {
+function filtrarMetricaPorRango(metrica, rango) {
+    const inicioRango = getRangeStart(rango);
+    if (inicioRango === 0) return metrica.length;
+    
+    let finRango = Date.now() + 1000;
+    if (rango === 'AYER') {
+        finRango = new Date().setHours(0, 0, 0, 0);
+    } 
+
+    return metrica.filter(ts => ts >= inicioRango && ts < finRango).length;
+}
+
+function generarReporteTexto(rango = 'SEMANA') {
     
     const totalLeads = metricas.leads_wsp.size + metricas.leads_ig.size; 
     
@@ -121,16 +131,6 @@ function generarReporteTexto(rango = 'GLOBAL') {
            `📈 Tasa Global: ${tasa}%`;
 }
 
-function filtrarMetricaPorRango(metrica, rango) {
-    const inicioRango = getRangeStart(rango);
-    if (inicioRango === 0) return metrica.length;
-    
-    // Si es AYER, solo contamos hasta el inicio de HOY
-    const finRango = (rango === 'AYER') ? getRangeStart('SEMANA') : Date.now() + 1000;
-    
-    return metrica.filter(ts => ts >= inicioRango && ts < finRango).length;
-}
-
 export async function procesarReserva(data = {}) {
     metricas.agendados.push(Date.now()); 
     console.log("🔥🔥🔥 WEBHOOK RESERVO EJECUTÁNDOSE (ZARA 11) 🔥🔥🔥");
@@ -150,41 +150,49 @@ export async function procesarReserva(data = {}) {
 
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
-  let senderId, text = "", senderName, messageId;
-  metricas.mensajes_totales++;
+  let senderId, text = "", senderName = "Cliente", messageId;
 
   if (platform === "whatsapp") {
       const msg = entry.changes[0].value.messages?.[0];
       if (!msg) return;
       senderId = msg.from; metricas.leads_wsp.add(senderId);
-      senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || "Cliente"; messageId = msg.id;
-      if (msg.type === "text") text = msg.text.body;
-      else if (msg.type === "audio") { 
+      senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || senderName;
+      messageId = msg.id;
+      
+      if (msg.type === "text") {
+          text = msg.text.body;
+      } else if (msg.type === "audio") { 
           const audioUrl = await getWhatsAppMediaUrl(msg.audio.id);
           const audioPath = await downloadFile(audioUrl, `${msg.id}.ogg`);
           text = await transcribirAudio(audioPath);
-          reportarMonitor(senderId, senderName, `🎤 (VOZ): ${text}`, "usuario").catch(() => {});
+          reportarMonitor(senderId, senderName, `🎤 (VOZ WSP): ${text}`, "usuario").catch(() => {});
+      } else {
+          return; 
       }
   } else { 
       const msg = entry.messaging?.[0];
       if (!msg || msg.message?.is_echo) return;
       senderId = msg.sender.id; metricas.leads_ig.add(senderId);
-      // FIX IG: Obtener nombre de usuario real (si no está cacheado)
-      if (!sesiones[senderId] || !sesiones[senderId].nombre) {
+      
+      let cachedSession = sesiones[senderId];
+      if (!cachedSession || !cachedSession.nombre) {
         const igName = await getInstagramUserProfile(senderId);
-        senderName = igName || "Amiga";
+        senderName = igName || senderName;
         sesiones[senderId] = { nombre: senderName, historial: [] };
       } else {
-        senderName = sesiones[senderId].nombre;
+        senderName = cachedSession.nombre;
       }
 
-      if (msg.message?.text) text = msg.message.text;
-      // FIX IG: Manejo de audio (Meta lo maneja como 'attachment')
-      else if (msg.message?.attachments?.[0]?.type === 'audio') {
+      if (msg.message?.text) {
+          text = msg.message.text;
+      } else if (msg.message?.attachments?.[0]?.type === 'audio') {
            text = "(Mensaje de voz: Por favor, escribe un mensaje de texto. No proceso audio de Instagram aún)";
+      } else {
+          return;
       }
   }
   
+  metricas.mensajes_totales++;
   reportarMonitor(senderId, senderName, text, "usuario").catch(() => {});
 
   const now = Date.now();
@@ -201,17 +209,16 @@ export async function procesarEvento(entry) {
   if (lower.startsWith("zara reporte ayer")) { 
       await sendMessage(senderId, generarReporteTexto("AYER"), platform); return; 
   }
-  if (lower.startsWith("zara reporte semana")) { 
+  if (lower.startsWith("zara reporte semana") || lower === "zara reporte") { // FIX: zara reporte -> SEMANA
       await sendMessage(senderId, generarReporteTexto("SEMANA"), platform); return; 
   }
   if (lower.startsWith("zara reporte mes")) { 
       await sendMessage(senderId, generarReporteTexto("MES"), platform); return; 
   }
-  if (lower.startsWith("zara reporte")) {
+  if (lower.startsWith("zara reporte global")) {
       await sendMessage(senderId, generarReporteTexto("GLOBAL"), platform); return; 
   }
   
-  // ZARA ON/OFF
   if (lower.includes("zara on")) { 
       usuariosPausados[senderId] = false; 
       await sendMessage(senderId, "✅ Zara reactivada. ¡Volvamos a vender! 🚀", platform);
@@ -241,7 +248,7 @@ export async function procesarEvento(entry) {
     const alerta = `🚨 *SOLICITUD DE LLAMADA* 🚨\n👤 ${senderName}\n📞 ${telefonoCapturado}`;
     for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
     
-    const confirm = "¡Perfecto! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.";
+    const confirm = `¡Perfecto ${senderName}! 💙 Ya avisé a las chicas. Te llamarán en unos minutos.`;
     const historialTotal = sesiones[senderId].historial.map(m => m.content).join(" ");
     await sendMessage(senderId, `${confirm}\n\n${obtenerCrossSell(historialTotal)}`, platform);
     reportarMonitor(senderId, senderName, "LEAD CAPTURADO", "sistema").catch(() => {});
@@ -251,12 +258,33 @@ export async function procesarEvento(entry) {
   sesiones[senderId].historial.push({ role: "user", content: `[Cliente: ${senderName}] ` + text });
   if (sesiones[senderId].historial.length > 10) sesiones[senderId].historial = sesiones[senderId].historial.slice(-10);
 
-  const respuestaIA = await generarRespuestaIA(sesiones[senderId].historial);
+  // FIX LÓGICA VENTA: Inyectamos la instrucción de vender la Evaluación con IA
+  const prompt_instruccion_evaluacion = (sesiones[senderId].historial.length < 5)
+      ? "🚨 RECUERDA: NO VENDER LA SESIÓN DIRECTA NI EL PRECIO COMPLETO. ENFATIZA SIEMPRE QUE EL SIGUIENTE PASO ES LA 'EVALUACIÓN CON IA (GRATIS Y VITAL)' antes de ofrecer el link."
+      : "";
+
+  const historialConInstruccion = [...sesiones[senderId].historial];
+  historialConInstruccion.push({ role: "system", content: prompt_instruccion_evaluacion });
+
+  const respuestaIA = await generarRespuestaIA(historialConInstruccion);
   
   if (respuestaIA.includes("ZARA_REPORTE_SOLICITADO")) {
-      await sendMessage(senderId, generarReporteTexto("GLOBAL"), platform);
+      await sendMessage(senderId, generarReporteTexto("SEMANA"), platform);
   } else {
-      await sendMessage(senderId, respuestaIA, platform);
+      // FIX LINK Y BOTÓN: Detectamos link y enviamos botón de Evaluación con IA
+      if (respuestaIA.includes(AGENDA_URL) || respuestaIA.includes("AGENDAR_EVALUACION_LINK")) {
+          const textoLimpio = respuestaIA.replace(AGENDA_URL, "").replace("AGENDAR_EVALUACION_LINK", "").trim();
+          await sendButton(
+              senderId, 
+              textoLimpio || `¡Perfecto ${senderName}! El diagnóstico es gratis. Agenda aquí:`, 
+              "📅 Agendar Evaluación con IA", 
+              AGENDA_URL, 
+              platform
+          );
+      } else {
+          await sendMessage(senderId, respuestaIA, platform);
+      }
+      
       if (respuestaIA.includes("AGENDA_AQUI_LINK")) {
            setTimeout(async () => {
                const historialTotal = sesiones[senderId].historial.map(m => m.content).join(" ");
