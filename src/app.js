@@ -67,7 +67,6 @@ function obtenerCrossSell(historialTexto) {
     return "Dato Extra: ¡Tienes un **20% OFF** en tratamientos complementarios! ✨";
 }
 
-// LÓGICA DE REPORTES
 function getRangeStart(rango) {
     const now = new Date();
     let start;
@@ -159,7 +158,7 @@ export async function procesarEvento(entry) {
       senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || senderName;
       messageId = msg.id;
       
-      if (msg.type === "text") { // FIX WSP: Mensajes de texto
+      if (msg.type === "text") {
           text = msg.text.body;
       } else if (msg.type === "audio") { 
           const audioUrl = await getWhatsAppMediaUrl(msg.audio.id);
@@ -167,9 +166,9 @@ export async function procesarEvento(entry) {
           text = await transcribirAudio(audioPath);
           reportarMonitor(senderId, senderName, `🎤 (VOZ WSP): ${text}`, "usuario").catch(() => {});
       } else if (msg.type === "button" && msg.button.text) {
-          text = msg.button.text; // Capturar texto de botón de WSP
+          text = msg.button.text;
       } else {
-          return; 
+          return;
       }
   } else { 
       const msg = entry.messaging?.[0];
@@ -205,9 +204,6 @@ export async function procesarEvento(entry) {
   if (!text) return;
   const lower = text.toLowerCase().trim();
 
-  // -------------------------------------------------------------
-  // COMANDOS DE CONTROL Y REPORTES
-  // -------------------------------------------------------------
   if (lower.startsWith("zara reporte ayer")) { 
       await sendMessage(senderId, generarReporteTexto("AYER"), platform); return; 
   }
@@ -234,9 +230,6 @@ export async function procesarEvento(entry) {
   
   if (usuariosPausados[senderId]) return;
 
-  // -------------------------------------------------------------
-  // LÓGICA CONVERSACIONAL
-  // -------------------------------------------------------------
   if (!sesiones[senderId].historial) sesiones[senderId].historial = [];
   if (lower.includes("link") || lower.includes("agenda")) { 
       metricas.intencion_link.push(Date.now());
