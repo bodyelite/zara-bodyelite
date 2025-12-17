@@ -20,7 +20,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const MONITOR_HTML = `
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>MONITOR V27 OFICIAL</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>MONITOR V29</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
 body{font-family:sans-serif;background:#d1d7db;display:flex;height:100vh;margin:0}
@@ -43,10 +43,10 @@ body{font-family:sans-serif;background:#d1d7db;display:flex;height:100vh;margin:
 <body>
 <div id="app">
   <div class="sidebar">
-    <div class="header">MONITOR V27 <span id="status" class="status-dot"></span></div>
+    <div class="header">MONITOR V29 <span id="status" class="status-dot"></span></div>
     <div id="list"></div>
   </div>
-  <div class="chat-area"><div class="header" id="chatTitle" style="background:#f0f2f5;color:#000">Selecciona un chat</div><div class="messages" id="msgs"><div class="empty-msg">Esperando mensajes en V27...</div></div></div>
+  <div class="chat-area"><div class="header" id="chatTitle" style="background:#f0f2f5;color:#000">Selecciona un chat</div><div class="messages" id="msgs"><div class="empty-msg">Esperando mensajes...</div></div></div>
 </div>
 <script>
 let chats={}, activeId=null;
@@ -83,7 +83,7 @@ setInterval(loop, 2000); loop();
 </script></body></html>
 `;
 
-app.get("/", (req, res) => res.send("Zara V27 Brain Active"));
+app.get("/", (req, res) => res.send("Zara V29 Syntax Fixed"));
 app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/data", (req, res) => res.json(chats));
 
@@ -116,4 +116,4 @@ app.post("/webchat", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara V27 OFICIAL corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara V29 Corrigiendo Sintaxis en puerto ${PORT}`));
