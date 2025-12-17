@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import fs from "fs";
+import path from "path"; // Importamos path
 import { procesarEvento, procesarReserva } from "./app.js";
 import { generarRespuestaIA } from "./services/openai.js";
 import { sendMessage } from "./services/meta.js";
@@ -20,7 +21,7 @@ app.use((req, res, next) => {
 });
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => res.status(200).send("Zara V11.0 Final - Logs Activos"));
+app.get("/", (req, res) => res.status(200).send("Zara V12.0 Final - Debug Logs Activos"));
 
 app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) {
@@ -69,16 +70,23 @@ app.post("/webchat", async (req, res) => {
             reply = reply.replace(NEGOCIO.agenda_link, "").replace("https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9", "").trim();
         }
 
+        // --- GUARDADO DE LOG WEB CON DEPURACIÓN ---
         try {
             const now = new Date();
             const fechaStr = now.toISOString().slice(0, 10);
             const horaStr = now.toLocaleTimeString('es-CL', { hour12: false });
             const logFileName = `web-${fechaStr}.log`;
+            const logPath = path.join(process.cwd(), logFileName); // Ruta absoluta
+
             const logEntry = `[${horaStr}] ${uid} - USER: ${message}\n[${horaStr}] ${uid} - ZARA: ${reply}\n---\n`;
-            fs.appendFileSync(logFileName, logEntry);
+            
+            console.log(`Intentando guardar log WEB en: ${logPath}`);
+            fs.appendFileSync(logPath, logEntry);
+            console.log("Log WEB guardado exitosamente.");
         } catch (logErr) {
-            console.error("Error crítico escribiendo log web:", logErr);
+            console.error("🔥 ERROR CRÍTICO AL GUARDAR LOG WEB:", logErr);
         }
+        // ------------------------------------------
 
         res.json({ response: reply, button: showButton, link: buttonLink });
 

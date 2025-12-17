@@ -1,20 +1,32 @@
 import fs from "fs";
+import path from "path"; // Importamos path para rutas absolutas
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
 
 const sesiones = {};
 
+// --- FUNCIÓN MEJORADA PARA GUARDAR LOGS ---
 function guardarLogFisico(origen, usuarioId, mensajeUsuario, respuestaZara) {
     try {
         const now = new Date();
         const fechaStr = now.toISOString().slice(0, 10);
         const horaStr = now.toLocaleTimeString('es-CL', { hour12: false });
         const logFileName = `${origen}-${fechaStr}.log`;
+        
+        // Usamos ruta absoluta para asegurar dónde se guarda
+        const logPath = path.join(process.cwd(), logFileName);
+
         const logEntry = `[${horaStr}] ${usuarioId} - USER: ${mensajeUsuario}\n[${horaStr}] ${usuarioId} - ZARA: ${respuestaZara}\n---\n`;
-        fs.appendFileSync(logFileName, logEntry);
+        
+        // Intentamos guardar y avisamos en consola
+        console.log(`Intentando guardar log en: ${logPath}`);
+        fs.appendFileSync(logPath, logEntry);
+        console.log("Log guardado exitosamente.");
+
     } catch (e) {
-        console.error(`Error crítico guardando log físico de ${origen}:`, e);
+        // Si falla, este error aparecerá en los logs de Render
+        console.error(`🔥 ERROR CRÍTICO AL GUARDAR LOG FÍSICO DE ${origen}:`, e);
     }
 }
 
@@ -65,6 +77,8 @@ export async function procesarEvento(entry) {
     sesiones[userId].historial.push({ role: "assistant", content: respuestaZara });
 
     await sendMessage(userId, respuestaZara, plataforma);
+    
+    // Guardamos el log
     guardarLogFisico(origen, userId, mensajeUsuario, respuestaZara);
   }
 }
