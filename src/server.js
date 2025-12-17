@@ -1,14 +1,15 @@
 import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import fs from "fs";
 import { procesarEvento, procesarReserva } from "./app.js";
 import { generarRespuestaIA } from "./services/openai.js";
-import { sendMessage } from "./services/meta.js"; 
+import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
 
 dotenv.config();
 const app = express();
-const webSessions = {}; 
+const webSessions = {};
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -19,7 +20,7 @@ app.use((req, res, next) => {
 });
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => res.status(200).send("Zara V8.0 Omnicanal Activa"));
+app.get("/", (req, res) => res.status(200).send("Zara V11.0 Final - Logs Activos"));
 
 app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) {
@@ -44,12 +45,12 @@ app.post("/reservo-webhook", (req, res) => {
 app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
-        const uid = userId || 'anonimo';
+        const uid = userId || 'anonimo_web';
 
         const telefonoMatch = message.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/);
         if (telefonoMatch) {
             const fono = telefonoMatch[0].replace(/\D/g, '');
-            const alerta = `🚨 *SOLICITUD LLAMADA (DESDE WEB)* 🚨\n👤 Cliente Web\n📞 ${fono}`;
+            const alerta = `🚨 *SOLICITUD LLAMADA (DESDE WEB)* 🚨\n👤 Cliente Web (${uid})\n📞 ${fono}`;
             for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
         }
 
@@ -62,18 +63,28 @@ app.post("/webchat", async (req, res) => {
 
         let showButton = false;
         let buttonLink = "";
-        
         if (reply.includes("agendamiento.reservo.cl") || (reply.toLowerCase().includes("link") && reply.toLowerCase().includes("agenda"))) {
             showButton = true;
             buttonLink = NEGOCIO.agenda_link;
-            reply = reply.replace(NEGOCIO.agenda_link, "").replace("https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9", "");
+            reply = reply.replace(NEGOCIO.agenda_link, "").replace("https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9", "").trim();
+        }
+
+        try {
+            const now = new Date();
+            const fechaStr = now.toISOString().slice(0, 10);
+            const horaStr = now.toLocaleTimeString('es-CL', { hour12: false });
+            const logFileName = `web-${fechaStr}.log`;
+            const logEntry = `[${horaStr}] ${uid} - USER: ${message}\n[${horaStr}] ${uid} - ZARA: ${reply}\n---\n`;
+            fs.appendFileSync(logFileName, logEntry);
+        } catch (logErr) {
+            console.error("Error crítico escribiendo log web:", logErr);
         }
 
         res.json({ response: reply, button: showButton, link: buttonLink });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ response: "Error de conexión temporal." });
+        console.error("Error en webchat:", error);
+        res.status(500).json({ response: "¡Ups! Tuve un pequeño lapsus. ¿Me lo repites? 😅" });
     }
 });
 
