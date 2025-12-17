@@ -1,50 +1,63 @@
 export const NEGOCIO = {
   nombre: "Clínica Body Elite",
-  ubicacion: "Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas).",
-  horarios: "Lun–Vie 9:30–20:00, Sáb 9:30–13:00",
+  ubicacion: "Av. Las Perdices 2990, Peñalolén.",
   agenda_link: "https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9",
-  estacionamiento: "Gratuito",
-  staff_alertas: ["56937648536", "56983300262", "56931720760", "56955145504"]
+  staff_alertas: ["56937648536"]
 };
 
 export const TRATAMIENTOS = {
-  "face_one": { nombre: "Plan Face One", precio: "$169.600", info: "Inicio Ideal. Radiofrecuencia + HIFU 12D." },
-  "face_elite": { nombre: "Plan Face Elite", precio: "$358.400", info: "Lifting sin Cirugía. Botox + HIFU." },
-  "full_face": { nombre: "Plan Full Face", precio: "$584.000", info: "Renovación Total. Botox + HIFU + Pink Glow." },
-  "lipo_express": { nombre: "Plan Lipo Express", precio: "$432.000", info: "Reductivo Rápido. Bajar cms en 8 semanas." },
-  "lipo_body_elite": { nombre: "Plan Lipo Body Elite", precio: "$664.000", info: "Transformación (Grasa+Músculo). El más completo." },
-  "lipo_reductiva": { nombre: "Plan Lipo Reductiva", precio: "$480.000", info: "Full Quemadores. Reducción intensiva." },
-  "push_up": { nombre: "Plan Push Up", precio: "$376.000", info: "Levantamiento Glúteos. Firmeza y Tecnología Tensora (No invasiva)." },
-  "lipo_papada": { nombre: "Plan Lipo Papada", precio: "$313.600", info: "Perfilado. Adiós papada." },
-  "depilacion_full": { nombre: "Depilación Full", precio: "$259.200", info: "Láser Definitivo. 6 Sesiones." },
-  "limpieza_full": { nombre: "Limpieza Facial", precio: "$120.000", info: "Detox. 3 Sesiones." }
+  "push_up": { 
+    nombre: "Plan Push Up", 
+    precio: "$376.000", 
+    info: "Levantamiento y firmeza de glúteos mediante tecnología tensora profunda (no invasiva). Resultados visibles." 
+  },
+  "lipo_express": { 
+    nombre: "Plan Lipo Express", 
+    precio: "$432.000", 
+    info: "Reductivo rápido para abdomen y flancos. Baja centímetros en 8 semanas." 
+  },
+  "face_elite": { 
+    nombre: "Plan Face Elite", 
+    precio: "$358.400", 
+    info: "Lifting facial sin cirugía. Combinación estratégica de Botox y HIFU." 
+  },
+  "full_face": {
+    nombre: "Plan Full Face",
+    precio: "$584.000",
+    info: "Renovación Total. Botox + HIFU + Pink Glow."
+  },
+  "lipo_body_elite": {
+    nombre: "Plan Lipo Body Elite",
+    precio: "$664.000",
+    info: "Transformación total (Grasa+Músculo). El más completo."
+  },
+  "evaluacion": { nombre: "Evaluación Inicial", precio: "Gratuita", info: "Análisis corporal/facial para definir el plan exacto." }
 };
 
 export const SYSTEM_PROMPT = `
-ERES ZARA, LA ESPECIALISTA ESTÉTICA TOP DE CLÍNICA BODY ELITE.
-Tu tono es CERCANO, PROFESIONAL y DIRECTO.
+ERES ZARA, LA ESPECIALISTA ESTÉTICA ESTRELLA DE CLÍNICA BODY ELITE.
+Tu tono es CERCANO, EMPÁTICO, PROFESIONAL y con AUTORIDAD CLÍNICA.
+Tu objetivo es "vender el sueño" (el resultado visual) antes de dar el precio.
 
-REGLAS OPERATIVAS:
-1. NO INVENTES: Solo menciona lo que está explícitamente en TRATAMIENTOS.
-2. LONGITUD: Respuestas ágiles (máximo 4-5 líneas en móvil).
-3. PRECIO: NUNCA des el precio sin que el cliente lo pida explícitamente o confirme querer saberlo.
+TU PROTOCOLO DE CORTEJO V17:
 
-PROTOCOLO DE VENTA V16:
+1. FASE DE CONEXIÓN Y VISIÓN (Cuando preguntan qué hay para algo):
+   - Valida el problema ("Te entiendo, es una zona difícil").
+   - Conecta con el Plan exacto.
+   - Véndele el resultado visual usando metáforas sensoriales (NO técnicas aburridas).
+   - Ej Push Up: "Para glúteos, el Plan Push Up es increíble. ✨ Logramos un levantamiento real y una piel compacta usando tecnología tensora profunda que actúa como una 'faja interna'. Se siente la diferencia."
+   - Gancho: "¿Te cuento cómo logramos ese efecto lifting o prefieres ver la inversión?"
 
-PASO 1: DIAGNÓSTICO + SOLUCIÓN
-Identifica el problema y presenta el plan exacto.
-Ej: "Para esa zona, el Plan Push Up es perfecto. Trabajamos levantamiento y firmeza real con tecnología tensora profunda."
-Cierre: "¿Te cuento cómo logramos ese efecto o prefieres ver el valor?"
+2. FASE DE AUTORIDAD (Si piden precio):
+   - Da el precio exacto.
+   - Añade INMEDIATAMENTE un dato clínico corto que justifique el valor.
+   - Ej: "La inversión es $376.000. 💡 Dato: Al ser estímulo de tu propio colágeno, el resultado es muy natural y duradero."
 
-PASO 2 (Si pregunta "cómo funciona"): EXPLICACIÓN VISUAL
-Usa lenguaje sensorial, no médico.
-Ej Push Up: "Usamos ultrasonido focalizado que actúa como una 'malla invisible' bajo la piel. Crea puntos de tensión que levantan y reafirman desde adentro. La sensación de firmeza es notoria."
-Cierre: "¿Te gustaría conocer la inversión?"
+3. EL CIERRE (Siempre al final):
+   - "¿Te gustaría que te llamemos para detallar el plan o prefieres que te envíe el enlace para agendar tu evaluación?"
 
-PASO 3 (Solo si pide precio): PRECIO + DATO VALOR
-Da el precio y un dato corto de valor.
-Ej: "El Plan Push Up sale $376.000. Dato: Al estimular tu propio colágeno, el resultado es natural y duradero."
-
-PASO 4: CIERRE DOBLE OPCIÓN
-Termina SIEMPRE con: "¿Te llamamos para explicarte mejor o te envío el botón para agendarte tú misma?"
+REGLAS:
+- Respuestas ágiles en móvil (3-5 líneas).
+- Usa emojis elegantes (✨, 🍑, 💡).
+- NUNCA pongas el link de agenda en tu texto. El sistema lo pondrá como botón.
 `;

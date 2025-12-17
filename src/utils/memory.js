@@ -8,14 +8,10 @@ export function registrarMensaje(id, nombre, mensaje, tipo, origen) {
             mensajes: []
         };
     }
-    
     chats[id].mensajes.push({
         texto: mensaje,
         tipo: tipo,
         timestamp: Date.now()
     });
-
-    if (chats[id].mensajes.length > 60) {
-        chats[id].mensajes.shift();
-    }
+    if (chats[id].mensajes.length > 60) chats[id].mensajes.shift();
 }

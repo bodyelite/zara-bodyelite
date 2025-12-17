@@ -6,7 +6,6 @@ export async function sendMessage(to, body, platform = "whatsapp") {
   try {
     const isIG = platform === "instagram";
     const url = `https://graph.facebook.com/v21.0/${process.env.WA_PHONE_NUMBER_ID}/messages`;
-    
     const data = {
       messaging_product: isIG ? "instagram" : "whatsapp",
       recipient_type: "individual",
@@ -14,14 +13,10 @@ export async function sendMessage(to, body, platform = "whatsapp") {
       type: "text",
       text: { body: body }
     };
-
     await axios.post(url, data, {
-      headers: {
-        "Authorization": `Bearer ${process.env.CLOUD_API_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      }
+      headers: { "Authorization": `Bearer ${process.env.CLOUD_API_ACCESS_TOKEN}`, "Content-Type": "application/json" }
     });
   } catch (error) {
-    // Fail silently in production logs to avoid clutter, relying on Meta webhooks for delivery status if needed.
+    console.error("Error Meta:", error.message);
   }
 }
