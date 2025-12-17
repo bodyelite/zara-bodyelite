@@ -4,10 +4,9 @@ dotenv.config();
 
 export async function sendMessage(to, body, platform = "whatsapp") {
   try {
-    const isIG = platform === "instagram";
     const url = `https://graph.facebook.com/v21.0/${process.env.WA_PHONE_NUMBER_ID}/messages`;
     const data = {
-      messaging_product: isIG ? "instagram" : "whatsapp",
+      messaging_product: platform === "instagram" ? "instagram" : "whatsapp",
       recipient_type: "individual",
       to: to,
       type: "text",
@@ -17,6 +16,6 @@ export async function sendMessage(to, body, platform = "whatsapp") {
       headers: { "Authorization": `Bearer ${process.env.CLOUD_API_ACCESS_TOKEN}`, "Content-Type": "application/json" }
     });
   } catch (error) {
-    console.error("Error Meta:", error.message);
+    console.error("Meta Error:", error.response ? error.response.data : error.message);
   }
 }

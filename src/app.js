@@ -3,51 +3,48 @@ import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
 import { registrarMensaje } from "./utils/memory.js";
 
-const sesionesMeta = {};
+const sesiones = {};
 
 export async function procesarEvento(entry) {
   const change = entry.changes[0];
   const value = change.value;
 
-  let origen = "desconocido";
-  let plataforma = "whatsapp";
+  let origen = value.messages ? "wsp" : (value.messaging ? "ig" : null);
+  if (!origen) return;
 
-  if (value.messages) {
-    origen = "wsp";
-    plataforma = "whatsapp";
-  } else if (value.messaging) {
-    origen = "ig";
-    plataforma = "instagram";
-  }
+  const message = value.messages ? value.messages[0] : value.messaging[0].message;
+  const contact = value.contacts ? value.contacts[0] : value.messaging[0].sender;
+  const userId = contact.wa_id || contact.id;
+  const userName = contact.profile?.name || "Cliente";
 
-  if (value.messages || value.messaging) {
-    const message = value.messages ? value.messages[0] : value.messaging[0].message;
-    const contact = value.contacts ? value.contacts[0] : (value.messaging ? value.messaging[0].sender : null);
+  // 1. Registrar Mensaje Usuario
+  let msgUser = message.type === "text" ? message.text.body : "[Multimedia]";
+  registrarMensaje(userId, userName, msgUser, "usuario", origen);
+
+  // 2. Procesar solo texto por ahora
+  if (message.type === "text") {
+    if (!sesiones[userId]) sesiones[userId] = [];
+    sesiones[userId].push({ role: "user", content: msgUser });
+
+    // 3. IA Genera Respuesta
+    let reply = await generarRespuestaIA(sesiones[userId]);
     
-    if (!message || !contact) return;
-
-    const userId = contact.wa_id || contact.id;
-    const userName = contact.profile?.name || "Cliente Meta";
-    
-    let mensajeUsuario = message.type === "text" ? message.text.body : `[Adjunto: ${message.type}]`;
-    registrarMensaje(userId, userName, mensajeUsuario, "usuario", origen);
-
-    if (!sesionesMeta[userId]) sesionesMeta[userId] = { historial: [], nombre: userName };
-    sesionesMeta[userId].historial.push({ role: "user", content: mensajeUsuario });
-
-    let respuestaZara = await generarRespuestaIA(sesionesMeta[userId].historial);
-    
-    if (respuestaZara.toLowerCase().includes("link") && respuestaZara.toLowerCase().includes("agenda")) {
-        respuestaZara += `\n\n${NEGOCIO.agenda_link}`;
+    // Inyectar link solo si es necesario (limpieza)
+    if (reply.includes("agenda") && !reply.includes("http")) {
+       // Opcional: Zara a veces no pone el link si sigue conversando.
+       // Dejamos que ella decida o lo forzamos al final si cierra venta.
     }
 
-    sesionesMeta[userId].historial.push({ role: "assistant", content: respuestaZara });
+    sesiones[userId].push({ role: "assistant", content: reply });
 
-    await sendMessage(userId, respuestaZara, plataforma);
-    registrarMensaje(userId, userName, respuestaZara, "zara", origen);
+    // 4. Responder a Meta
+    await sendMessage(userId, reply, origen === "ig" ? "instagram" : "whatsapp");
+
+    // 5. Registrar Respuesta Zara
+    registrarMensaje(userId, userName, reply, "zara", origen);
   }
 }
 
 export async function procesarReserva(data) {
-    // Implementación futura
+  console.log("Reserva:", data);
 }

@@ -6,24 +6,23 @@ dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function generarContexto() {
-    let texto = "\n[TRATAMIENTOS DISPONIBLES]:\n";
-    for (const [key, t] of Object.entries(TRATAMIENTOS)) {
-        texto += `- ${t.nombre}: ${t.precio}. (${t.info})\n`;
-    }
-    return texto;
+    let t = "\n[CATÁLOGO]:\n";
+    for (const [k, v] of Object.entries(TRATAMIENTOS)) t += `- ${v.nombre}: ${v.precio} (${v.info})\n`;
+    return t;
 }
 
 export async function generarRespuestaIA(historial) {
   try {
-    const messages = [{ role: "system", content: SYSTEM_PROMPT + generarContexto() }, ...historial.slice(-8)];
+    const messages = [{ role: "system", content: SYSTEM_PROMPT + generarContexto() }, ...historial.slice(-10)];
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: messages,
-      temperature: 0.7,
-      max_tokens: 350
+      temperature: 0.6,
+      max_tokens: 300
     });
     return completion.choices[0].message.content;
   } catch (error) {
-    return "Dame un segundo, estoy consultando mi sistema... 🗓️";
+    console.error("OpenAI Error:", error);
+    return "Estoy consultando la agenda, dame un momento... ⏳";
   }
 }
