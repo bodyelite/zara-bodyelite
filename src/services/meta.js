@@ -16,6 +16,6 @@ export async function sendMessage(to, body, platform = "whatsapp") {
       headers: { "Authorization": `Bearer ${process.env.CLOUD_API_ACCESS_TOKEN}`, "Content-Type": "application/json" }
     });
   } catch (error) {
-    console.error("Meta Error:", error.response ? error.response.data : error.message);
+    console.error("Meta Error");
   }
 }

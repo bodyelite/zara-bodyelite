@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import dotenv from "dotenv";
-import { SYSTEM_PROMPT, TRATAMIENTOS, NEGOCIO } from "../config/knowledge_base.js";
+import { SYSTEM_PROMPT, TRATAMIENTOS } from "../config/knowledge_base.js";
 
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -22,7 +22,6 @@ export async function generarRespuestaIA(historial) {
     });
     return completion.choices[0].message.content;
   } catch (error) {
-    console.error("OpenAI Error:", error);
     return "Estoy consultando la agenda, dame un momento... ⏳";
   }
 }

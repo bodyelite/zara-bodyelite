@@ -19,9 +19,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// MONITOR HTML SIMPLIFICADO Y ROBUSTO
-const MONITOR_HTML = \`
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Zara Monitor V19</title>
+const MONITOR_HTML = `
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Zara Monitor</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
 body{font-family:sans-serif;background:#d1d7db;display:flex;height:100vh;margin:0}
@@ -80,9 +79,9 @@ function renderChat(id) {
 }
 setInterval(loop, 2000); loop();
 </script></body></html>
-\`;
+`;
 
-app.get("/", (req, res) => res.send("Zara V19 System Online"));
+app.get("/", (req, res) => res.send("Zara Online"));
 app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/data", (req, res) => res.json(chats));
 
@@ -92,7 +91,7 @@ app.get("/webhook", (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
-  res.sendStatus(200); // Responder rápido a Meta
+  res.sendStatus(200);
   try {
      if (req.body.entry) await procesarEvento(req.body.entry[0]);
   } catch (e) { console.error(e); }
@@ -103,6 +102,12 @@ app.post("/webchat", async (req, res) => {
         const { message, userId } = req.body;
         const uid = userId || 'web_user';
         registrarMensaje(uid, "Web", message, "usuario", "web");
+
+        if (message.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/)) {
+            const fono = message.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/)[0].replace(/\D/g, '');
+            const alerta = `🚨 *SOLICITUD LLAMADA (WEB)* 🚨\n📞 ${fono}`;
+            for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
+        }
 
         if (!webSessions[uid]) webSessions[uid] = [];
         webSessions[uid].push({ role: "user", content: message });
@@ -117,4 +122,4 @@ app.post("/webchat", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(\`🚀 Zara V19 Reconstruida en puerto \${PORT}\`));
+app.listen(PORT, () => console.log(`🚀 Zara corriendo en puerto ${PORT}`));

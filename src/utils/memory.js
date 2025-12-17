@@ -13,6 +13,5 @@ export function registrarMensaje(id, nombre, mensaje, tipo, origen) {
         tipo: tipo,
         timestamp: Date.now()
     });
-    // Limite de memoria para no saturar
     if (chats[id].mensajes.length > 50) chats[id].mensajes.shift();
 }
