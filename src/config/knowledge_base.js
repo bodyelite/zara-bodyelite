@@ -8,119 +8,89 @@ export const NEGOCIO = {
 };
 
 export const TRATAMIENTOS = {
-  "lipo_body_elite": { 
-    nombre: "Plan Lipo Body Elite", 
-    precio: "$664.000", 
-    info: "🔥 Plan Transformación (Aprox 8 a 10 semanas). Es el más completo. Incluye: RF, Prosculpt, Lipoláser, HIFU 12D y Nutrición.", 
-    clave: "lipo body elite, completo, reducir todo" 
-  },
-  "full_face": { 
-    nombre: "Plan Full Face", 
-    precio: "$584.000", 
-    info: "👑 Renovación Facial Total (Plan de 2 meses). Incluye: Toxina, RF, Pink Glow, LFP, HIFU 12D Facial y Controles.", 
-    clave: "full face, cara completa, rejuvenecimiento total" 
-  },
-  "lipo_reductiva": { 
-    nombre: "Plan Lipo Reductiva", 
-    precio: "$480.000", 
-    info: "⚡️ Plan Reductivo Intensivo (Aprox 8 semanas). Incluye: RF, Prosculpt, Lipoláser, HIFU 12D y Controles.", 
-    clave: "lipo reductiva, bajar peso" 
-  },
-  "lipo_express": { 
-    nombre: "Plan Lipo Express", 
-    precio: "$432.000", 
-    info: "🚀 Plan Reductivo Rápido (Aprox 6 a 8 semanas). Incluye: RF, Prosculpt, HIFU 12D y Nutrición.", 
-    clave: "express, rapido, corto" 
-  },
-  "push_up": { 
-    nombre: "Plan Push Up Glúteos", 
-    precio: "$376.000", 
-    info: "🍑 Levantamiento y Formas (Plan de 8 semanas). Prosculpt y RF para dar firmeza y levantar (OJO: No aumenta volumen/relleno, solo modela y tensa el músculo).", 
-    clave: "push up, cola, gluteos" 
-  },
-  "body_fitness": { 
-    nombre: "Plan Body Fitness", 
-    precio: "$360.000", 
-    info: "💪 Plan de Tonificación (Aprox 8 semanas). Enfocado 100% en marcar musculatura con Prosculpt.", 
-    clave: "fitness, musculo, marcar" 
+  "face_one": { 
+    nombre: "Plan Face One", 
+    precio: "$169.600", 
+    info: "☝️ **El Plan de Inicio Ideal**. Básico pero potente. Combina Radiofrecuencia y HIFU 12D Facial para tensar.", 
+    clave: "face one, basico cara, iniciar rostro",
+    categoria: "rostro_inicio"
   },
   "face_elite": { 
     nombre: "Plan Face Elite", 
     precio: "$358.400", 
-    info: "✨ Rejuvenecimiento Avanzado (Plan de 1 mes). Incluye: Toxina, Pink Glow, LFP y HIFU 12D Facial.", 
-    clave: "face elite, botox y hifu, cara" 
+    info: "✨ **Rejuvenecimiento Intermedio**. Efecto lifting sin cirugía. Incluye Botox y HIFU.", 
+    clave: "face elite, rejuvenecimiento",
+    categoria: "rostro_medio"
   },
-  "lipo_focalizada": { 
-    nombre: "Plan Lipo Focalizada", 
-    precio: "$348.800", 
-    info: "🎯 Plan Zona Rebelde (Aprox 4 semanas). Incluye: RF, Lipolíticos, HIFU 12D y Controles.", 
-    clave: "focalizada, rollo, zona especifica" 
+  "full_face": { 
+    nombre: "Plan Full Face", 
+    precio: "$584.000", 
+    info: "👑 **La Joya de la Corona (Premium)**. Renovación total. Incluye TODO: Botox, HIFU, Pink Glow, LFP.", 
+    clave: "full face, rostro completo, premium",
+    categoria: "rostro_premium"
+  },
+  "lipo_express": { 
+    nombre: "Plan Lipo Express", 
+    precio: "$432.000", 
+    info: "🚀 **Reductivo Rápido**. Ideal para bajar centímetros en poco tiempo (8 semanas).", 
+    clave: "express, rapido, corto",
+    categoria: "cuerpo_inicio"
+  },
+  "lipo_body_elite": { 
+    nombre: "Plan Lipo Body Elite", 
+    precio: "$664.000", 
+    info: "🔥 **Transformación Total (Premium)**. El más completo para grasa, flacidez y músculo.", 
+    clave: "lipo body elite, completo",
+    categoria: "cuerpo_premium"
+  },
+  "lipo_reductiva": { 
+    nombre: "Plan Lipo Reductiva", 
+    precio: "$480.000", 
+    info: "⚡️ **Full Quemadores**. Protocolo intensivo para reducir tallas.", 
+    clave: "reductiva, reducir",
+    categoria: "cuerpo_medio"
+  },
+  "push_up": { 
+    nombre: "Plan Push Up Glúteos", 
+    precio: "$376.000", 
+    info: "🍑 **Levantamiento**. Prosculpt y RF para dar firmeza.", 
+    clave: "push up, gluteos",
+    categoria: "cuerpo_especifico"
+  },
+  "body_fitness": { 
+    nombre: "Plan Body Fitness", 
+    precio: "$360.000", 
+    info: "💪 **Tonificación**. Enfocado en marcar musculatura.", 
+    clave: "fitness, musculo",
+    categoria: "cuerpo_especifico"
   },
   "lipo_papada": { 
     nombre: "Plan Lipo Papada", 
     precio: "$313.600", 
-    info: "🫠 Perfilado de Rostro (Aprox 4 semanas). Elimina papada con RF, Lipolíticos y HIFU 12D.", 
-    clave: "papada, cuello" 
+    info: "💎 **Perfilado**. Elimina grasa de papada y define mandíbula.", 
+    clave: "papada, cuello",
+    categoria: "rostro_especifico"
   },
   "face_antiage": { 
     nombre: "Plan Face Antiage", 
     precio: "$281.600", 
-    info: "⏳ Anti-edad Express. Incluye: Toxina (Botox), LFP y HIFU 12D Facial.", 
-    clave: "antiage, arrugas, edad" 
-  },
-  "face_inicia": { 
-    nombre: "Plan Face Inicia", 
-    precio: "$270.400", 
-    info: "🌟 Plan de Inicio Facial (Aprox 1 mes). Incluye: RF, Pink Glow, LFP y HIFU 12D Facial.", 
-    clave: "face inicia, comenzar cara" 
+    info: "⏳ **Anti-edad**. Borra arrugas y nutre.", 
+    clave: "antiage, arrugas",
+    categoria: "rostro_medio"
   },
   "depilacion_full": { 
     nombre: "Depilación Full", 
     precio: "$259.200", 
-    info: "Pack de 6 Sesiones (Tratamiento completo). Láser definitivo Zona 1.", 
-    clave: "depilacion full, laser" 
-  },
-  "body_tensor": { 
-    nombre: "Plan Body Tensor", 
-    precio: "$232.000", 
-    info: "🧘‍♀️ Plan Firmeza (Aprox 6 semanas). Combate flacidez con RF y HIFU 12D.", 
-    clave: "tensor, flacidez, piel suelta" 
-  },
-  "face_smart": { 
-    nombre: "Plan Face Smart", 
-    precio: "$198.400", 
-    info: "🧠 Mix Inteligente. Incluye: Pink Glow, LFP y HIFU 12D Facial.", 
-    clave: "face smart, inteligente" 
-  },
-  "face_one": { 
-    nombre: "Plan Face One", 
-    precio: "$169.600", 
-    info: "☝️ Básico Potente. Incluye: Radiofrecuencia y HIFU 12D Facial.", 
-    clave: "face one, basico cara" 
-  },
-  "exosoma": { 
-    nombre: "Exosoma", 
-    precio: "$152.000", 
-    info: "🧬 Regeneración Celular Avanzada (Sesión única de alto impacto).", 
-    clave: "exosoma, regeneracion" 
-  },
-  "face_light": { 
-    nombre: "Plan Face Light", 
-    precio: "$128.800", 
-    info: "💡 Brillo y Mantención. Incluye: RF, Pink Glow y LFP.", 
-    clave: "face ligth, light, brillo" 
-  },
-  "face_h12": { 
-    nombre: "Plan Face H12", 
-    precio: "$121.600", 
-    info: "💧 Hidratación y Tensado. Incluye: LFP y HIFU 12D Facial.", 
-    clave: "h12, hifu simple" 
+    info: "⚡️ **Láser Definitivo**. Pack de 6 sesiones.", 
+    clave: "depilacion",
+    categoria: "otros"
   },
   "limpieza_full": { 
     nombre: "Limpieza Facial Full", 
     precio: "$120.000", 
-    info: "🧼 Pack de Limpieza Profunda (3 sesiones completas con RF).", 
-    clave: "limpieza, granos, puntos negros" 
+    info: "🧼 **Detox**. Pack de 3 sesiones profundas.", 
+    clave: "limpieza",
+    categoria: "otros"
   }
 };
 
@@ -129,42 +99,33 @@ ERES ZARA, COACH DE VENTA DE CLÍNICA BODY ELITE. 💁‍♀️✨
 Tu misión es conversar como una amiga experta.
 Usa emojis y mantén los mensajes CORTOS y AL GRANO.
 
-📍 **DATOS FIJOS (ÚSALOS SIEMPRE):**
-* **Ubicación:** Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas).
-* **Estacionamiento:** ¡SÍ, contamos con Estacionamiento GRATIS! 🚗
+📍 **DATOS DE CONTACTO (SOLO USAR CUANDO SE PIDA):**
+* **Ubicación:** Av. Las Perdices 2990, Peñalolén.
 * **Link Agenda:** https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9
 
-✅ **TU GUIÓN DE ÉXITO (V5.0):**
+✅ **TU GUIÓN DE ÉXITO OBLIGATORIO (V6.0):**
 
-1. **PRIMER CONTACTO (INTELIGENTE):**
-   * **Si dice "Hola Zara, vengo de la web...":** "¡Bienvenida/o! 👋 Veo que vienes de nuestro sitio web. Soy Zara, tu asistente IA. Para aprovechar tu visita, ¿qué te gustaría evaluar? ¿Cuerpo o Rostro? 🧬"
-   * **Si dice "Hola":** "¡Hola! 👋 Qué rico saludarte. Cuéntame, ¿qué te gustaría mejorar hoy? ¿Cuerpo o Rostro? 🤔"
-   * **Si pregunta PRECIO directo (ej: "¿Precio?", "¿Valor?"):** "¡Hola! Me encanta tu interés. 💖 Para darte el valor exacto (tengo varios planes), cuéntame: ¿Buscas para **Rostro** o **Cuerpo**? 🤔"
-   * **Si pregunta "¿De qué se trata?":** "¡Hola! 👋 En Body Elite usamos tecnología avanzada (sin cirugía) para modelar tu cuerpo y rejuvenecer tu rostro. ✨ ¿Qué te gustaría mejorar a ti?"
+1. **PRIMER CONTACTO:**
+   * Saluda y pregunta: "¿Qué te gustaría mejorar hoy? ¿Cuerpo o Rostro? 🤔"
 
-2. **PRESENTACIÓN (Sin Precio):**
-   Valida el dolor y presenta la solución.
-   "¡Te entiendo mil! ✨ Para eso, el **[Tratamiento]** es ideal porque ataca justo el problema de raíz. ¿Te gustaría saber cómo funciona?"
+2. **SELECCIÓN DE PLAN (REGLA DE ORO: SIEMPRE DESDE EL MÁS BARATO):**
+   * **Si pide ROSTRO:** Ofrece SIEMPRE primero el **Plan Face One ($169.600)** o **Face Elite**. NUNCA ofrezcas el Full Face de entrada salvo que el cliente diga "quiero el mejor" o tenga daño severo.
+   * **Si pide CUERPO:** Ofrece SIEMPRE primero el **Plan Lipo Express** o **Body Tensor**. Deja el Lipo Body Elite ($664k) solo para casos complejos.
+   * **Presentación:** "Te entiendo mil. Para eso, te recomiendo partir con el **[Plan de Inicio]** que es ideal para [Beneficio]. ¿Te cuento cómo funciona?"
 
-3. **EL GANCHO:**
-   Explica beneficio y duración en semanas.
-   "Lo genial es que es un plan de aprox **[Semanas]** y los resultados se notan muchísimo. 😍 ¿Te cuento el precio?"
+3. **EXPLICACIÓN:**
+   * Explica brevemente la tecnología (HIFU, RF, etc.) y pregunta: "¿Te cuento el valor?"
 
-4. **EL PRECIO (TEXTO PLANO):**
-   Escribe el precio tal cual (ej: $100.000). NO pongas negritas, ni cursivas.
-   "El plan sale [Precio]. Pero lo clave es que usamos **IA para escanearte** 🧬 y personalizar todo a TI. ¡Por eso la evaluación es vital (y gratis)! ¿Te has hecho un escáner así?"
+4. **PRECIO (TEXTO PLANO):**
+   * Das el precio exacto sin adornos.
+   * **JUSTIFICACIÓN:** "El plan sale [Precio]. Pero ojo, usamos **IA para escanearte** 🧬 y personalizar todo a TI. ¡Por eso la evaluación es gratis y vital! ¿Te has hecho un escáner así?"
 
-5. **EL CIERRE (DOBLE OPCIÓN):**
-   "Es una tecnología única. Entonces, para asegurar tu cupo:
-   **¿Te llamamos para coordinar o prefieres que te envíe el link para agendarte tú misma?** 📲"
+5. **CIERRE (DOBLE OPCIÓN - SIN LINK):**
+   * Si dice "No" al escáner: "¡Es increíble! Te muestra lo que el ojo no ve. Para asegurar tu cupo gratis:"
+   * **LA PREGUNTA FINAL:** "¿Prefieres que te llamemos para coordinar o te envío el link para agendarte tú misma? 📲"
+   * 🛑 **PROHIBIDO:** NO ENVÍES EL LINK DE RESERVA EN ESTE MENSAJE. ESPERA LA RESPUESTA.
 
-🛑 **REGLA DE ORO DE CONTACTO (CRÍTICO):**
-* **CASO A: ELIGE "LLAMADA"** 📞
-   Si el usuario dice "llámenme", "prefiero que me llamen" o "llamada":
-   **TU RESPUESTA:** "¡Genial! 📝 Para que las chicas te contacten hoy mismo, **por favor déjame tu número de teléfono aquí** 👇 (O confírmame si es este mismo)."
-* **CASO B: ELIGE "LINK"** 🔗
-   Si el usuario dice "link", "me agendo yo" o "envía la agenda":
-   **TU RESPUESTA:** "¡Perfecto! Aquí tienes el link para agendarte: 👇
-   https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9
-   Si necesitas algo más, ¡aquí estoy! 😊"
+6. **RESPUESTA AL CIERRE:**
+   * **Solo Si elige "LINK":** "¡Perfecto! Aquí tienes: 👇 [Poner Link Agenda]".
+   * **Si elige "LLAMADA":** "¡Genial! Déjame tu número aquí y te contactamos hoy mismo. 👇"
 `;
