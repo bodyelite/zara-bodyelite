@@ -14,15 +14,17 @@ function guardarLogFisico(origen, usuarioId, mensajeUsuario, respuestaZara) {
         const fechaStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
         const horaStr = now.toLocaleTimeString('es-CL', { hour12: false });
         // El nombre del archivo depende del origen (wsp-FECHA.log o ig-FECHA.log)
-        const logFileName = \`${origen}-\${fechaStr}.log\`;
+        // CORREGIDO: Sin barras invertidas extra
+        const logFileName = `${origen}-${fechaStr}.log`;
         
         // Formato estándar para que el monitor lo pueda leer
-        const logEntry = \`[\${horaStr}] \${usuarioId} - USER: \${mensajeUsuario}\n[\${horaStr}] \${usuarioId} - ZARA: \${respuestaZara}\n---\n\`;
+        // CORREGIDO: Sin barras invertidas extra
+        const logEntry = `[${horaStr}] ${usuarioId} - USER: ${mensajeUsuario}\n[${horaStr}] ${usuarioId} - ZARA: ${respuestaZara}\n---\n`;
 
         // 'appendFileSync' crea el archivo si no existe y agrega al final
         fs.appendFileSync(logFileName, logEntry);
     } catch (e) {
-        console.error(\`Error crítico guardando log físico de \${origen}:\`, e);
+        console.error(`Error crítico guardando log físico de ${origen}:`, e);
     }
 }
 // ---------------------------------------------------
@@ -67,7 +69,8 @@ export async function procesarEvento(entry) {
       // mensajeUsuario = await transcribirAudio(rutaDelArchivo); 
       mensajeUsuario = "[AUDIO RECIBIDO - Transcripción pendiente]";
     } else {
-        mensajeUsuario = \`[Archivo adjunto: \${message.type}]\`;
+        // CORREGIDO: Sin barras invertidas extra
+        mensajeUsuario = `[Archivo adjunto: ${message.type}]`;
     }
 
     // Guardar mensaje del usuario en el historial
@@ -79,7 +82,8 @@ export async function procesarEvento(entry) {
     
     // Detección de intención de agenda para añadir link
     if (respuestaZara.toLowerCase().includes("link") && respuestaZara.toLowerCase().includes("agenda")) {
-        respuestaZara += \`\n\n\${NEGOCIO.agenda_link}\`;
+        // CORREGIDO: Sin barras invertidas extra
+        respuestaZara += `\n\n${NEGOCIO.agenda_link}`;
     }
 
     // Guardar respuesta de Zara en el historial
