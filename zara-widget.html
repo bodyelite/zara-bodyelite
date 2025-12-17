@@ -10,7 +10,6 @@
         </div>
         <div class="z-close" onclick="toggleChat()">✕</div>
     </div>
-    
     <div id="z-b">
         <div class="z-msg-bot">
             ¡Hola! 👋 Soy Zara, la experta digital de Body Elite.<br><br>
@@ -18,104 +17,51 @@
             <b>¿Buscas cambios en Cuerpo o Rostro?</b> ✨
         </div>
     </div>
-    
     <div class="z-input-area">
         <input id="z-i" type="text" placeholder="Escribe aquí..." onkeydown="if(event.key==='Enter') sMsg()">
         <button onclick="sMsg()">➜</button>
     </div>
     <div class="z-footer">Powered by Body Elite AI</div>
 </div>
-
 <button id="z-t" onclick="toggleChat()">
     <img src="https://cdn-icons-png.flaticon.com/512/4712/4712038.png" alt="Z">
     <span>¿Dudas? Pregúntame</span>
 </button>
-
 <style>
     #z-c, #z-t { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    
-    #z-t {
-        position: fixed; bottom: 25px; right: 25px;
-        background: #0d9488; color: white; border: none;
-        padding: 12px 20px; border-radius: 50px;
-        box-shadow: 0 4px 15px rgba(13, 148, 136, 0.4);
-        cursor: pointer; display: flex; align-items: center; gap: 10px;
-        font-weight: 600; font-size: 15px; z-index: 999998;
-        transition: transform 0.2s;
-    }
+    #z-t { position: fixed; bottom: 25px; right: 25px; background: #0d9488; color: white; border: none; padding: 12px 20px; border-radius: 50px; box-shadow: 0 4px 15px rgba(13, 148, 136, 0.4); cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; z-index: 999998; transition: transform 0.2s; }
     #z-t img { width: 24px; height: 24px; border-radius: 50%; background: #fff; padding: 2px; }
     #z-t:hover { transform: scale(1.05); }
-
-    #z-c {
-        position: fixed; bottom: 90px; right: 25px;
-        width: 360px; height: 500px; max-height: 80vh;
-        background: #fff; border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        display: none; flex-direction: column; overflow: hidden;
-        z-index: 999999; border: 1px solid #f0f0f0;
-        animation: slideUp 0.3s ease;
-    }
-
-    #z-header {
-        background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
-        padding: 20px; color: white; display: flex; align-items: center; gap: 15px;
-    }
+    #z-c { position: fixed; bottom: 90px; right: 25px; width: 360px; height: 500px; max-height: 80vh; background: #fff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 999999; border: 1px solid #f0f0f0; animation: slideUp 0.3s ease; }
+    #z-header { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); padding: 20px; color: white; display: flex; align-items: center; gap: 15px; }
     .z-avatar { position: relative; width: 45px; height: 45px; }
     .z-avatar img { width: 100%; height: 100%; border-radius: 50%; background: #fff; padding: 2px; }
-    .z-status-dot {
-        position: absolute; bottom: 0; right: 0; width: 10px; height: 10px;
-        background: #4ade80; border-radius: 50%; border: 2px solid #0f766e;
-    }
+    .z-status-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #4ade80; border-radius: 50%; border: 2px solid #0f766e; }
     .z-info { flex: 1; }
     .z-name { font-weight: 700; font-size: 16px; }
     .z-role { font-size: 12px; opacity: 0.9; }
     .z-close { cursor: pointer; opacity: 0.7; font-size: 20px; }
-    
     #z-b { flex: 1; background: #f8fafc; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-    
-    .z-msg-bot {
-        align-self: flex-start; background: #fff; color: #334155;
-        padding: 12px 16px; border-radius: 12px 12px 12px 2px;
-        max-width: 85%; font-size: 14px; line-height: 1.5;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
-    }
-    .z-msg-user {
-        align-self: flex-end; background: #0d9488; color: #fff;
-        padding: 10px 14px; border-radius: 12px 12px 2px 12px;
-        max-width: 85%; font-size: 14px; margin-bottom: 5px;
-    }
-
+    .z-msg-bot { align-self: flex-start; background: #fff; color: #334155; padding: 12px 16px; border-radius: 12px 12px 12px 2px; max-width: 85%; font-size: 14px; line-height: 1.5; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .z-msg-user { align-self: flex-end; background: #0d9488; color: #fff; padding: 10px 14px; border-radius: 12px 12px 2px 12px; max-width: 85%; font-size: 14px; margin-bottom: 5px; }
     .z-input-area { padding: 15px; background: #fff; border-top: 1px solid #f1f5f9; display: flex; gap: 10px; }
-    #z-i {
-        flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #cbd5e1;
-        outline: none; font-size: 14px; transition: 0.2s; background: #f8fafc;
-    }
+    #z-i { flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #cbd5e1; outline: none; font-size: 14px; transition: 0.2s; background: #f8fafc; }
     #z-i:focus { border-color: #0d9488; background: #fff; }
-    .z-input-area button {
-        width: 42px; height: 42px; border-radius: 50%; background: #f97316;
-        color: white; border: none; cursor: pointer; font-size: 16px;
-        box-shadow: 0 2px 5px rgba(249, 115, 22, 0.3); transition: 0.2s;
-    }
+    .z-input-area button { width: 42px; height: 42px; border-radius: 50%; background: #f97316; color: white; border: none; cursor: pointer; font-size: 16px; box-shadow: 0 2px 5px rgba(249, 115, 22, 0.3); transition: 0.2s; }
     .z-footer { text-align: center; font-size: 10px; color: #cbd5e1; padding-bottom: 5px; background: #fff; }
-
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
     @media (max-width: 480px) {
-        #z-c {
-            width: 100% !important; height: 100% !important; max-height: 100% !important;
-            bottom: 0 !important; right: 0 !important; border-radius: 0 !important;
-            z-index: 9999999; position: fixed;
-        }
+        #z-c { width: 100% !important; height: 100% !important; max-height: 100% !important; bottom: 0 !important; right: 0 !important; border-radius: 0 !important; z-index: 9999999; position: fixed; }
         #z-header { padding-top: 40px; }
         #z-t { display: none !important; }
     }
 </style>
-
 <script>
     const chatC = document.getElementById('z-c');
     const tBtn = document.getElementById('z-t');
     const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
     const uId = 'web-' + Math.random().toString(36).substr(2, 9);
+    const webSessions = { historial: [] };
 
     function toggleChat() {
         if (chatC.style.display === 'flex') {
@@ -126,7 +72,6 @@
             if (window.innerWidth < 480) tBtn.style.display = 'none';
         }
     }
-
     setTimeout(() => { if (window.innerWidth > 480 && !chatC.style.display) toggleChat(); }, 4000);
 
     async function sMsg() {
