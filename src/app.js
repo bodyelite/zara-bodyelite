@@ -1,9 +1,9 @@
-import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
+import { generarRespuestaIA } from "./services/openai.js";
 import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
-import { registrarMensaje } from "./utils/memory.js"; // Conexión IMPORTANTE
+import { registrarMensaje } from "./utils/memory.js";
 
-const sesiones = {};
+const sesionesMeta = {};
 
 export async function procesarEvento(entry) {
   const change = entry.changes[0];
@@ -27,36 +27,27 @@ export async function procesarEvento(entry) {
     if (!message || !contact) return;
 
     const userId = contact.wa_id || contact.id;
-    const userName = contact.profile?.name || "Cliente";
+    const userName = contact.profile?.name || "Cliente Meta";
     
-    // 1. Registrar Mensaje del Usuario en el Monitor
-    let mensajeUsuario = "";
-    if (message.type === "text") {
-      mensajeUsuario = message.text.body;
-    } else {
-      mensajeUsuario = `[Adjunto: ${message.type}]`;
-    }
+    let mensajeUsuario = message.type === "text" ? message.text.body : `[Adjunto: ${message.type}]`;
     registrarMensaje(userId, userName, mensajeUsuario, "usuario", origen);
 
-    // 2. Gestión de IA
-    if (!sesiones[userId]) sesiones[userId] = { historial: [], nombre: userName };
-    sesiones[userId].historial.push({ role: "user", content: mensajeUsuario });
-    if (sesiones[userId].historial.length > 20) sesiones[userId].historial = sesiones[userId].historial.slice(-20);
+    if (!sesionesMeta[userId]) sesionesMeta[userId] = { historial: [], nombre: userName };
+    sesionesMeta[userId].historial.push({ role: "user", content: mensajeUsuario });
 
-    let respuestaZara = await generarRespuestaIA(sesiones[userId].historial);
+    let respuestaZara = await generarRespuestaIA(sesionesMeta[userId].historial);
     
     if (respuestaZara.toLowerCase().includes("link") && respuestaZara.toLowerCase().includes("agenda")) {
         respuestaZara += `\n\n${NEGOCIO.agenda_link}`;
     }
 
-    sesiones[userId].historial.push({ role: "assistant", content: respuestaZara });
+    sesionesMeta[userId].historial.push({ role: "assistant", content: respuestaZara });
 
-    // 3. Enviar y Registrar Respuesta en el Monitor
     await sendMessage(userId, respuestaZara, plataforma);
     registrarMensaje(userId, userName, respuestaZara, "zara", origen);
   }
 }
 
 export async function procesarReserva(data) {
-    console.log("Reserva recibida");
+    // Implementación futura
 }
