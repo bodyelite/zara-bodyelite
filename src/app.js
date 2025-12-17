@@ -1,7 +1,7 @@
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
-import { registrarMensaje } from "./utils/memory.js"; // Conexión al Monitor
+import { registrarMensaje } from "./utils/memory.js"; // Conexión IMPORTANTE
 
 const sesiones = {};
 

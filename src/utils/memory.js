@@ -1,5 +1,4 @@
 // Esta es la memoria central del Monitor.
-// Todos los canales (Web, WSP, IG) escriben aquí.
 export const chats = {};
 
 export function registrarMensaje(id, nombre, mensaje, tipo, origen) {
@@ -17,7 +16,7 @@ export function registrarMensaje(id, nombre, mensaje, tipo, origen) {
         timestamp: Date.now()
     });
 
-    // Mantener solo los últimos 50 mensajes para no saturar
+    // Mantener solo los últimos 50 mensajes para no saturar la RAM
     if (chats[id].mensajes.length > 50) {
         chats[id].mensajes.shift();
     }

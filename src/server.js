@@ -11,6 +11,13 @@ dotenv.config();
 const app = express();
 const webSessions = {};
 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+    if (req.method === 'OPTIONS') { res.sendStatus(200); return; }
+    next();
+});
 app.use(bodyParser.json());
 
 // --- 1. RUTA PRINCIPAL (MONITOR WEB) ---
@@ -108,9 +115,9 @@ app.get("/monitor", (req, res) => {
                 if(c.origen==='ig') { icon = 'fa-instagram'; color='#e1306c'; }
 
                 html += \`<div class="contact \${id === selectedId ? 'active' : ''}" onclick="selectChat('\${id}')">
-                    <div class="avatar" style="background:${color}">
+                    <div class="avatar" style="background:\${color}">
                         \${c.nombre[0]}
-                        <div class="icon-origin" style="background:${color}"><i class="fab \${icon}"></i></div>
+                        <div class="icon-origin" style="background:\${color}"><i class="fab \${icon}"></i></div>
                     </div>
                     <div class="info">
                         <div class="name">\${c.nombre}</div>
@@ -158,7 +165,7 @@ app.get("/api/data", (req, res) => {
 });
 
 // --- 3. WEBHOOKS DE ZARA ---
-app.get("/", (req, res) => res.status(200).send("Zara V14.0 Running"));
+app.get("/", (req, res) => res.status(200).send("Zara V14.0 Unificada Running"));
 
 app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) {
@@ -220,10 +227,10 @@ app.post("/webchat", async (req, res) => {
         res.json({ response: reply, button: showButton, link: buttonLink });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ response: "Error de conexión." });
+        console.error("🔥 ERROR EN WEBCHAT:", error);
+        res.status(500).json({ response: "Error interno del servidor." });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara + Monitor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara + Monitor V14 corriendo en puerto ${PORT}`));
