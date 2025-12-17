@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Evaluación IA | Body Elite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, Arial, sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070') no-repeat center center fixed;
+            background-size: cover; 
+            min-height: 100vh; width: 100vw;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            color: #fff; overflow-x: hidden; padding: 20px;
+        }
+        .header-container { text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
+        .brand-logo-img { max-width: 220px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 2px 5px rgba(255,255,255,0.2)); }
+        .header-text-mobile { display: none; }
+        #z-c {
+            width: 100%; max-width: 480px; height: 65vh; max-height: 650px;
+            background: #fff; border-radius: 25px; box-shadow: 0 30px 70px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15); z-index: 10;
+        }
+        #z-header { background: #111827; padding: 20px 25px; color: white; display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
+        .z-avatar { position: relative; width: 55px; height: 55px; flex-shrink: 0; }
+        .z-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .z-status-dot { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #22c55e; border-radius: 50%; border: 2px solid #111827; }
+        .z-info { flex: 1; overflow: hidden; }
+        .z-name { font-weight: 800; font-size: 18px; margin-bottom: 3px; letter-spacing: 0.5px; }
+        .z-role { font-size: 13px; opacity: 0.9; color: #d1d5db; }
+        #z-b { flex: 1; background: #f9fafb; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; -webkit-overflow-scrolling: touch; }
+        .z-msg-bot { align-self: flex-start; background: #fff; color: #1f2937; padding: 16px 20px; border-radius: 18px 18px 18px 4px; max-width: 85%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        .z-msg-user { align-self: flex-end; background: #111827; color: #fff; padding: 12px 16px; border-radius: 18px 18px 4px 18px; max-width: 85%; font-size: 15px; margin-bottom: 5px; box-shadow: 0 4px 15px rgba(17, 24, 39, 0.2); }
+        .z-input-area { background: #fff; padding: 20px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; flex-shrink: 0; padding-bottom: 20px; }
+        #z-i { flex: 1; padding: 16px 20px; border-radius: 35px; border: 1px solid #d1d5db; outline: none; font-size: 16px; background: #f3f4f6; -webkit-appearance: none; transition: 0.3s; }
+        #z-i:focus { background: #fff; border-color: #111827; box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.1); }
+        .z-input-area button { width: 54px; height: 54px; border-radius: 50%; background: #f97316; color: white; border: none; cursor: pointer; font-size: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4); }
+        .z-input-area button:hover { background: #ea580c; transform: scale(1.05); }
+        .agenda-btn { background: #f97316; color: white; border: none; padding: 14px 24px; border-radius: 25px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 10px; text-align: center; box-shadow: 0 6px 20px rgba(249, 115, 22, 0.3); transition: 0.3s; width: 100%; }
+        .agenda-btn:hover { background: #ea580c; transform: translateY(-2px); }
+        .commercial-section { text-align: center; margin-top: 30px; margin-bottom: 20px; z-index: 10; }
+        .services-title { font-size: 16px; font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase; }
+        .services-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .service-item { background: rgba(17, 24, 39, 0.9); padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); }
+        .service-pain { color: #9ca3af; font-size: 12px; display: block; margin-bottom: 4px; }
+        .footer-container { text-align: center; font-size: 14px; opacity: 0.9; z-index: 10; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .footer-address { display: flex; align-items: center; gap: 8px; }
+        .footer-social { display: flex; align-items: center; gap: 8px; color: #fff; text-decoration: none; font-weight: 600; padding: 8px 16px; background: rgba(255,255,255,0.1); border-radius: 20px; transition: 0.3s; }
+        .footer-btn { background: #22c55e; color: white; padding: 10px 24px; border-radius: 25px; font-weight: 700; text-decoration: none; display: inline-block; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); transition: 0.3s; }
+        @media (max-width: 768px) {
+            body { padding: 0; background: #111827; display: block; overflow: hidden; }
+            .header-container { position: fixed; top: 0; left: 0; right: 0; background: rgba(17,24,39,0.98); padding: 12px 20px; z-index: 30; margin: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.3); flex-direction: row; justify-content: space-between; align-items: center; height: 65px; }
+            .brand-logo-img { max-width: auto; height: 45px; margin-bottom: 0; order: 2; margin-left: 15px; }
+            .header-text-mobile { display: flex; flex-direction: column; align-items: flex-end; text-align: right; color: white; order: 1; flex: 1; }
+            .brand-name-mob { font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+            .brand-tagline-mob { font-size: 12px; opacity: 0.8; letter-spacing: 0.5px; }
+            #z-c { position: fixed !important; top: 65px; left: 0; right: 0; bottom: 0; width: 100% !important; height: auto !important; max-width: 100% !important; max-height: none !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; z-index: 20 !important; border: none;}
+            .z-input-area { padding-bottom: max(20px, env(safe-area-inset-bottom)) !important; }
+            .commercial-section, .footer-container { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="header-container">
+    <img src="logo azul.png" alt="Body Elite Logo" class="brand-logo-img">
+    <div class="header-text-mobile">
+        <div class="brand-name-mob">BODY ELITE</div>
+        <div class="brand-tagline-mob">Estética Avanzada</div>
+    </div>
+</div>
+<div id="z-c">
+    <div id="z-header">
+        <div class="z-avatar">
+            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" alt="Zara">
+            <div class="z-status-dot"></div>
+        </div>
+        <div class="z-info">
+            <div class="z-name">Zara</div>
+            <div class="z-role">Especialista Body Elite</div>
+        </div>
+    </div>
+    <div id="z-b">
+        <div class="z-msg-bot">
+            ¡Hola! 👋 Soy Zara, especialista de la clínica.<br><br>
+            Cuéntame, <b>¿qué te gustaría mejorar hoy? ¿Cuerpo o Rostro?</b> ✨
+        </div>
+    </div>
+    <div class="z-input-area">
+        <input id="z-i" type="text" placeholder="Escribe tu consulta..." onkeydown="if(event.key==='Enter') sMsg()">
+        <button onclick="sMsg()">➜</button>
+    </div>
+</div>
+<script>
+    const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
+    const uId = 'landing-final-v3-' + Math.random().toString(36).substr(2, 9);
+    const box = document.getElementById('z-b');
+
+    async function sMsg() {
+        const inp = document.getElementById('z-i');
+        const txt = inp.value.trim();
+        if(!txt) return;
+
+        inp.value = '';
+        box.innerHTML += `<div class="z-msg-user">${txt}</div>`;
+        box.scrollTop = box.scrollHeight;
+
+        try {
+            const loadId = 'load'+Date.now();
+            box.innerHTML += `<div id="${loadId}" style="font-size:12px;color:#6b7280;margin:5px 15px">Escribiendo...</div>`;
+            box.scrollTop = box.scrollHeight;
+
+            const res = await fetch(API_URL, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ message: txt, userId: uId })
+            });
+            const data = await res.json();
+            document.getElementById(loadId).remove();
+            
+            let cleanResp = data.response.replace(/\n/g, '<br>');
+            if (data.button) {
+                cleanResp += `<br><a href="${data.link}" target="_blank" class="agenda-btn">📅 AGENDAR EVALUACIÓN</a>`;
+            }
+            
+            box.innerHTML += `<div class="z-msg-bot">${cleanResp}</div>`;
+        } catch (e) {
+            document.querySelector('div[id^="load"]')?.remove();
+            box.innerHTML += `<div class="z-msg-bot" style="color:red">Error de conexión.</div>`;
+        }
+        box.scrollTop = box.scrollHeight;
+    }
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { procesarEvento } from "./app.js";
@@ -10,25 +11,16 @@ import { NEGOCIO } from "./config/knowledge_base.js";
 import { registrarMensaje, chats } from "./utils/memory.js";
 
 dotenv.config();
+const app = express();
+const webSessions = {};
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const webSessions = {};
-
+app.use(cors());
 app.use(bodyParser.json());
-// Servir archivos estáticos (el index.html que acabamos de crear)
-app.use(express.static(path.join(__dirname, '../public')));
-
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    if (req.method === 'OPTIONS') { res.sendStatus(200); return; }
-    next();
-});
 
 const MONITOR_HTML = `
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Zara Monitor V23</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Zara Monitor V25</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
 body{font-family:sans-serif;background:#d1d7db;display:flex;height:100vh;margin:0}
@@ -76,11 +68,7 @@ setInterval(loop, 2000); loop();
 </script></body></html>
 `;
 
-// RUTA RAIZ: Sirve el archivo index.html (Interfaz Web)
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
+app.get("/", (req, res) => res.send("Zara V25 API Server"));
 app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/data", (req, res) => res.json(chats));
 
@@ -113,4 +101,4 @@ app.post("/webchat", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara V24 + WEB corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara V25 corriendo en puerto ${PORT}`));
