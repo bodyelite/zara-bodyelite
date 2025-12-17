@@ -6,32 +6,69 @@ import { registrarMensaje } from "./utils/memory.js";
 const sesiones = {};
 
 export async function procesarEvento(entry) {
-  const change = entry.changes[0];
-  const value = change.value;
-  
-  let origen = value.messages ? "wsp" : (value.messaging ? "ig" : null);
-  if (!origen) return;
+  try {
+    let platform = null;
+    let senderId = null;
+    let senderName = "Usuario";
+    let text = null;
 
-  const message = value.messages ? value.messages[0] : value.messaging[0].message;
-  const contact = value.contacts ? value.contacts[0] : value.messaging[0].sender;
-  const userId = contact.wa_id || contact.id;
-  const userName = contact.profile?.name || "Cliente";
-
-  let msgUser = message.type === "text" ? message.text.body : "[Multimedia]";
-  registrarMensaje(userId, userName, msgUser, "usuario", origen);
-
-  if (message.type === "text") {
-    if (!sesiones[userId]) sesiones[userId] = [];
-    sesiones[userId].push({ role: "user", content: msgUser });
-
-    let reply = await generarRespuestaIA(sesiones[userId]);
-    sesiones[userId].push({ role: "assistant", content: reply });
+    // --- DETECCIÓN INTELIGENTE DE PLATAFORMA ---
     
-    await sendMessage(userId, reply, origen === "ig" ? "instagram" : "whatsapp");
-    registrarMensaje(userId, userName, reply, "zara", origen);
+    // CASO 1: WHATSAPP (Tiene 'changes')
+    if (entry.changes && entry.changes[0] && entry.changes[0].value && entry.changes[0].value.messages) {
+        platform = "whatsapp";
+        const change = entry.changes[0].value;
+        const msg = change.messages[0];
+        
+        senderId = msg.from;
+        senderName = change.contacts?.[0]?.profile?.name || "Cliente WSP";
+        
+        if (msg.type === "text") text = msg.text.body;
+        else text = "[Multimedia/Audio]";
+    }
+    
+    // CASO 2: INSTAGRAM (Tiene 'messaging')
+    else if (entry.messaging && entry.messaging[0]) {
+        platform = "instagram";
+        const msg = entry.messaging[0];
+        
+        senderId = msg.sender.id;
+        senderName = "Usuario IG"; // IG no manda el nombre fácil en el webhook básico
+        
+        if (msg.message && msg.message.text) text = msg.message.text;
+        else text = "[Multimedia/Audio]";
+    }
+
+    // Si no reconocemos nada, salimos sin romper el servidor
+    if (!platform || !text || !senderId) return;
+
+    // --- PROCESAMIENTO ---
+
+    console.log(`📩 MENSAJE RECIBIDO (${platform}):`, text);
+
+    registrarMensaje(senderId, senderName, text, "usuario", platform === "whatsapp" ? "wsp" : "ig");
+
+    // Gestión de historial
+    if (!sesiones[senderId]) sesiones[senderId] = [];
+    sesiones[senderId].push({ role: "user", content: text });
+
+    // Generar respuesta IA
+    const reply = await generarRespuestaIA(sesiones[senderId]);
+
+    // Guardar respuesta en historial
+    sesiones[senderId].push({ role: "assistant", content: reply });
+
+    // ENVIAR RESPUESTA
+    await sendMessage(senderId, reply, platform);
+
+    // Registrar en Monitor
+    registrarMensaje(senderId, "Zara", reply, "zara", platform === "whatsapp" ? "wsp" : "ig");
+
+  } catch (e) {
+    console.error("❌ ERROR CRÍTICO EN PROCESAR EVENTO:", e);
   }
 }
 
 export async function procesarReserva(data) {
-  console.log("Reserva");
+  console.log("Reserva recibida:", data);
 }
