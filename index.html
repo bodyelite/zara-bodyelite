@@ -2,99 +2,171 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluación IA | Body Elite</title>
     <style>
-        body {
-            margin: 0; padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068&auto=format&fit=crop');
-            background-size: cover; background-position: center;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh;
-        }
-        .chat-container {
-            width: 100%; max-width: 420px; height: 90vh;
-            background: #fff; display: flex; flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            border-radius: 20px; overflow: hidden;
-        }
-        @media (max-width: 480px) { .chat-container { height: 100vh; border-radius: 0; } }
-        
-        .header { background: #0d9488; padding: 20px; color: white; text-align: center; }
-        .avatar-lg { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #fff; margin-bottom: 10px; background: #fff; padding: 2px; }
-        .title { font-size: 18px; font-weight: 700; margin: 0; }
-        
-        .messages-box { flex: 1; padding: 20px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
-        .msg { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; max-width: 85%; }
-        .bot { background: #fff; color: #334155; border: 1px solid #e2e8f0; border-top-left-radius: 2px; }
-        .user { align-self: flex-end; background: #0d9488; color: white; border-bottom-right-radius: 2px; }
-        
-        .agenda-btn {
-            background: #f97316; color: white; border: none; padding: 10px 20px; 
-            border-radius: 25px; font-weight: bold; cursor: pointer; text-decoration: none;
-            display: inline-block; margin-top: 10px; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);
-            text-align: center; transition: transform 0.2s;
-        }
-        .agenda-btn:hover { transform: scale(1.05); }
-
-        .input-area { padding: 15px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 15px; }
-        button { width: 45px; height: 45px; border-radius: 50%; background: #0d9488; color: white; border: none; font-size: 18px; cursor: pointer; }
+        body { margin:0; font-family: sans-serif; background: url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068') no-repeat center center fixed; background-size: cover; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        /* Sobrescribir estilos para modo Landing */
+        #z-c { display: flex !important; position: relative !important; bottom: auto !important; right: auto !important; height: 90vh !important; width: 100% !important; max-width: 450px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important; }
+        #z-t { display: none !important; }
     </style>
 </head>
 <body>
-<div class="chat-container">
-    <div class="header">
-        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712038.png" class="avatar-lg" alt="Zara">
-        <h1 class="title">Zara - Body Elite</h1>
-        <div style="font-size: 12px; opacity: 0.9;">Coach de Estética Inteligente</div>
+<div id="z-c">
+    <div id="z-header">
+        <div class="z-avatar">
+            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" alt="Zara">
+            <div class="z-status-dot"></div>
+        </div>
+        <div class="z-info">
+            <div class="z-name">Zara</div>
+            <div class="z-role">Especialista Body Elite</div>
+        </div>
+        <div class="z-close" onclick="toggleChat()">✕</div>
     </div>
-    <div class="messages-box" id="msgBox">
-        <div class="msg bot">
-            ¡Hola! 👋 Soy Zara. Analizo tu caso y te recomiendo el mejor tratamiento.<br><br><b>¿Qué te gustaría mejorar? ¿Cuerpo o Rostro? ✨</b>
+    <div id="z-b">
+        <div class="z-msg-bot">
+            ¡Hola! 👋 Soy Zara, especialista de la clínica.<br><br>
+            Cuéntame, <b>¿qué te gustaría mejorar hoy? ¿Cuerpo o Rostro?</b> ✨
         </div>
     </div>
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="Escribe aquí..." onkeydown="if(event.key==='Enter') sendMessage()">
-        <button onclick="sendMessage()">➜</button>
+    <div class="z-input-area">
+        <input id="z-i" type="text" placeholder="Escribe tu consulta..." onkeydown="if(event.key==='Enter') sMsg()">
+        <button onclick="sMsg()">➜</button>
     </div>
 </div>
+
+<button id="z-t" onclick="toggleChat()">
+    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" style="border-radius:50%;width:28px;height:28px;margin-right:8px;border:2px solid #fff;">
+    <span>Asesoría Experta</span>
+</button>
+
+<style>
+    #z-c, #z-t { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    
+    /* BOTÓN FLOTANTE */
+    #z-t {
+        position: fixed; bottom: 30px; right: 30px;
+        background: #111827; /* NEGRO ELEGANTE */
+        color: white; border: none; padding: 14px 24px; border-radius: 50px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25); cursor: pointer;
+        display: flex; align-items: center; font-weight: 600; font-size: 15px;
+        z-index: 999998; transition: all 0.3s;
+    }
+    #z-t:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(0,0,0,0.3); }
+
+    /* CONTENEDOR CHAT (MÁS ANCHO) */
+    #z-c {
+        position: fixed; bottom: 100px; right: 30px;
+        width: 400px; /* MÁS ANCHO */
+        height: 550px; max-height: 80vh;
+        background: #fff; border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        display: none; flex-direction: column; overflow: hidden;
+        z-index: 999999; border: 1px solid #e5e7eb;
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* CABECERA (NEGRO + ORO/BLANCO) */
+    #z-header {
+        background: #111827; /* NEGRO ELEGANTE */
+        padding: 20px; color: white; display: flex; align-items: center; gap: 15px;
+    }
+    .z-avatar { position: relative; width: 50px; height: 50px; }
+    .z-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+    .z-status-dot { position: absolute; bottom: 2px; right: 2px; width: 10px; height: 10px; background: #22c55e; border-radius: 50%; border: 2px solid #111827; }
+    
+    .z-info { flex: 1; }
+    .z-name { font-weight: 700; font-size: 17px; letter-spacing: 0.5px; }
+    .z-role { font-size: 12px; opacity: 0.8; color: #9ca3af; }
+    .z-close { cursor: pointer; opacity: 0.6; font-size: 20px; transition: 0.2s; }
+    .z-close:hover { opacity: 1; }
+    
+    #z-b { flex: 1; background: #f3f4f6; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    
+    /* MENSAJES */
+    .z-msg-bot {
+        align-self: flex-start; background: #fff; color: #1f2937;
+        padding: 14px 18px; border-radius: 14px 14px 14px 2px;
+        max-width: 85%; font-size: 14px; line-height: 1.5;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .z-msg-user {
+        align-self: flex-end; background: #111827; color: #fff; /* NEGRO */
+        padding: 12px 16px; border-radius: 14px 14px 2px 14px;
+        max-width: 85%; font-size: 14px; margin-bottom: 5px;
+    }
+    
+    /* BOTÓN DE AGENDA DENTRO DEL CHAT */
+    .agenda-btn {
+        background: #f97316; color: white; border: none; padding: 10px 18px;
+        border-radius: 20px; font-weight: bold; font-size: 13px; text-decoration: none;
+        display: inline-block; margin-top: 8px; text-align: center;
+        box-shadow: 0 3px 10px rgba(249, 115, 22, 0.2); transition: 0.2s;
+    }
+    .agenda-btn:hover { background: #ea580c; }
+
+    .z-input-area { padding: 15px; background: #fff; border-top: 1px solid #e5e7eb; display: flex; gap: 10px; }
+    #z-i { flex: 1; padding: 12px 16px; border-radius: 24px; border: 1px solid #d1d5db; outline: none; font-size: 14px; background: #f9fafb; transition: 0.2s; }
+    #z-i:focus { border-color: #111827; background: #fff; }
+    .z-input-area button { width: 42px; height: 42px; border-radius: 50%; background: #f97316; color: white; border: none; cursor: pointer; font-size: 16px; transition: 0.2s; }
+    .z-input-area button:hover { background: #ea580c; transform: scale(1.05); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 480px) {
+        #z-c { width: 100% !important; height: 100% !important; max-height: 100% !important; bottom: 0 !important; right: 0 !important; border-radius: 0 !important; z-index: 9999999; }
+        #z-t { display: none !important; }
+    }
+</style>
 <script>
+    const chatC = document.getElementById('z-c');
+    const tBtn = document.getElementById('z-t');
     const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
-    const uId = 'landing-' + Math.random().toString(36).substr(2, 9);
-    const box = document.getElementById('msgBox');
+    const uId = 'web-' + Math.random().toString(36).substr(2, 9);
+    const webSessions = { historial: [] };
 
-    async function sendMessage() {
-        const input = document.getElementById('userInput');
-        const text = input.value.trim();
-        if(!text) return;
+    function toggleChat() {
+        if (chatC.style.display === 'flex') {
+            chatC.style.display = 'none';
+            tBtn.style.display = 'flex';
+        } else {
+            chatC.style.display = 'flex';
+            if (window.innerWidth < 480) tBtn.style.display = 'none';
+        }
+    }
+    setTimeout(() => { if (window.innerWidth > 480 && !chatC.style.display) toggleChat(); }, 5000);
 
-        input.value = '';
-        box.innerHTML += `<div class="msg user">${text}</div>`;
+    async function sMsg() {
+        const inp = document.getElementById('z-i');
+        const box = document.getElementById('z-b');
+        const txt = inp.value.trim();
+        if(!txt) return;
+
+        inp.value = '';
+        box.innerHTML += `<div class="z-msg-user">${txt}</div>`;
         box.scrollTop = box.scrollHeight;
 
         try {
             const loadId = 'load'+Date.now();
-            box.innerHTML += `<div id="${loadId}" style="font-size:12px;color:#999;margin-left:10px">Escribiendo...</div>`;
+            box.innerHTML += `<div id="${loadId}" style="font-size:12px;color:#6b7280;margin:5px 15px">Escribiendo...</div>`;
             box.scrollTop = box.scrollHeight;
 
             const res = await fetch(API_URL, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ message: text, userId: uId })
+                body: JSON.stringify({ message: txt, userId: uId })
             });
             const data = await res.json();
             document.getElementById(loadId).remove();
             
             let cleanResp = data.response.replace(/\n/g, '<br>');
             if (data.button) {
-                cleanResp += `<br><br><a href="${data.link}" target="_blank" class="agenda-btn">📅 AGENDAR EVALUACIÓN AQUÍ</a>`;
+                cleanResp += `<br><a href="${data.link}" target="_blank" class="agenda-btn">📅 AGENDAR EVALUACIÓN</a>`;
             }
             
-            box.innerHTML += `<div class="msg bot">${cleanResp}</div>`;
+            box.innerHTML += `<div class="z-msg-bot">${cleanResp}</div>`;
         } catch (e) {
             document.querySelector('div[id^="load"]')?.remove();
-            box.innerHTML += `<div class="msg bot" style="color:red">Error de conexión.</div>`;
+            box.innerHTML += `<div class="z-msg-bot" style="color:red">Error de conexión.</div>`;
         }
         box.scrollTop = box.scrollHeight;
     }
