@@ -1,6 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { procesarEvento } from "./app.js";
 import { generarRespuestaIA } from "./services/openai.js";
 import { sendMessage } from "./services/meta.js";
@@ -8,10 +10,16 @@ import { NEGOCIO } from "./config/knowledge_base.js";
 import { registrarMensaje, chats } from "./utils/memory.js";
 
 dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const webSessions = {};
 
 app.use(bodyParser.json());
+// Servir archivos estáticos (el index.html que acabamos de crear)
+app.use(express.static(path.join(__dirname, '../public')));
+
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -68,7 +76,11 @@ setInterval(loop, 2000); loop();
 </script></body></html>
 `;
 
-app.get("/", (req, res) => res.send("Zara V23 Clean Structure"));
+// RUTA RAIZ: Sirve el archivo index.html (Interfaz Web)
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/data", (req, res) => res.json(chats));
 
@@ -101,4 +113,4 @@ app.post("/webchat", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara V23 corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara V24 + WEB corriendo en puerto ${PORT}`));
