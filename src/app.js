@@ -1,6 +1,7 @@
 import fs from "fs"; // Importante para guardar los logs físicos
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
-import { sendMessage, markAsRead } from "./services/meta.js";
+// SE ELIMINÓ 'markAsRead' DE LA IMPORTACIÓN
+import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
 
 // Memoria volátil para el contexto de la sesión (se reinicia si el servidor cae)
@@ -13,15 +14,15 @@ function guardarLogFisico(origen, usuarioId, mensajeUsuario, respuestaZara) {
         const fechaStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
         const horaStr = now.toLocaleTimeString('es-CL', { hour12: false });
         // El nombre del archivo depende del origen (wsp-FECHA.log o ig-FECHA.log)
-        const logFileName = `${origen}-${fechaStr}.log`;
+        const logFileName = \`${origen}-\${fechaStr}.log\`;
         
         // Formato estándar para que el monitor lo pueda leer
-        const logEntry = `[${horaStr}] ${usuarioId} - USER: ${mensajeUsuario}\n[${horaStr}] ${usuarioId} - ZARA: ${respuestaZara}\n---\n`;
+        const logEntry = \`[\${horaStr}] \${usuarioId} - USER: \${mensajeUsuario}\n[\${horaStr}] \${usuarioId} - ZARA: \${respuestaZara}\n---\n\`;
 
         // 'appendFileSync' crea el archivo si no existe y agrega al final
         fs.appendFileSync(logFileName, logEntry);
     } catch (e) {
-        console.error(`Error crítico guardando log físico de ${origen}:`, e);
+        console.error(\`Error crítico guardando log físico de \${origen}:\`, e);
     }
 }
 // ---------------------------------------------------
@@ -51,8 +52,8 @@ export async function procesarEvento(entry) {
     const userId = contact.wa_id || contact.id; // ID del usuario (teléfono o ID de IG)
     const userName = contact.profile?.name || "Cliente";
     
-    // Marcar como leído
-    if (message.id) await markAsRead(message.id, plataforma);
+    // SE ELIMINÓ LA LLAMADA A 'markAsRead' PORQUE NO EXISTE LA FUNCIÓN
+    // if (message.id) await markAsRead(message.id, plataforma);
 
     // Gestión de Sesión
     if (!sesiones[userId]) sesiones[userId] = { historial: [], nombre: userName, origen: origen };
@@ -66,7 +67,7 @@ export async function procesarEvento(entry) {
       // mensajeUsuario = await transcribirAudio(rutaDelArchivo); 
       mensajeUsuario = "[AUDIO RECIBIDO - Transcripción pendiente]";
     } else {
-        mensajeUsuario = `[Archivo adjunto: ${message.type}]`;
+        mensajeUsuario = \`[Archivo adjunto: \${message.type}]\`;
     }
 
     // Guardar mensaje del usuario en el historial
@@ -78,7 +79,7 @@ export async function procesarEvento(entry) {
     
     // Detección de intención de agenda para añadir link
     if (respuestaZara.toLowerCase().includes("link") && respuestaZara.toLowerCase().includes("agenda")) {
-        respuestaZara += `\n\n${NEGOCIO.agenda_link}`;
+        respuestaZara += \`\n\n\${NEGOCIO.agenda_link}\`;
     }
 
     // Guardar respuesta de Zara en el historial
