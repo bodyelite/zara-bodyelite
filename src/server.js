@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import { procesarEvento, procesarReserva } from "./app.js";
+import { procesarEvento } from "./app.js";
 import { generarRespuestaIA } from "./services/openai.js";
 import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 });
 
 const MONITOR_HTML = `
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Zara Monitor</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Zara Monitor V23</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
 body{font-family:sans-serif;background:#d1d7db;display:flex;height:100vh;margin:0}
@@ -28,7 +28,6 @@ body{font-family:sans-serif;background:#d1d7db;display:flex;height:100vh;margin:
 .sidebar{width:300px;border-right:1px solid #ddd;overflow-y:auto}
 .header{padding:15px;background:#f0f2f5;font-weight:bold;border-bottom:1px solid #ddd}
 .contact{padding:10px;cursor:pointer;border-bottom:1px solid #f0f2f5;display:flex;align-items:center}
-.contact:hover{background:#f5f6f6}
 .contact.active{background:#e9edef}
 .avatar{width:40px;height:40px;border-radius:50%;background:#ddd;margin-right:10px;display:flex;align-items:center;justify-content:center}
 .chat-area{flex:1;display:flex;flex-direction:column;background:#efeae2}
@@ -39,40 +38,28 @@ body{font-family:sans-serif;background:#d1d7db;display:flex;height:100vh;margin:
 </style></head>
 <body>
 <div id="app">
-  <div class="sidebar">
-    <div class="header">Chats Activos</div>
-    <div id="list"></div>
-  </div>
-  <div class="chat-area">
-    <div class="header" id="chatTitle">Selecciona un chat</div>
-    <div class="messages" id="msgs"></div>
-  </div>
+  <div class="sidebar"><div class="header">Chats</div><div id="list"></div></div>
+  <div class="chat-area"><div class="header" id="chatTitle">Selecciona</div><div class="messages" id="msgs"></div></div>
 </div>
 <script>
-let chats = {};
-let activeId = null;
+let chats={}, activeId=null;
 async function loop() {
   try {
-    const res = await fetch('/api/data');
-    chats = await res.json();
-    renderList();
-    if (activeId) renderChat(activeId);
-  } catch(e) {}
+    const res = await fetch('/api/data'); chats = await res.json(); renderList();
+    if(activeId) renderChat(activeId);
+  } catch(e){}
 }
 function renderList() {
-  const list = document.getElementById('list');
-  list.innerHTML = Object.keys(chats).map(id => {
+  document.getElementById('list').innerHTML = Object.keys(chats).map(id => {
     const c = chats[id];
-    const last = c.mensajes[c.mensajes.length-1]?.texto || "";
     return \`<div class="contact \${id===activeId?'active':''}" onclick="activeId='\${id}';renderChat('\${id}')">
-      <div class="avatar">\${c.origen[0].toUpperCase()}</div>
-      <div><b>\${c.nombre}</b><br><small>\${last.substring(0,20)}...</small></div>
+      <div class="avatar">\${c.origen[0].toUpperCase()}</div><div><b>\${c.nombre}</b></div>
     </div>\`;
   }).join('');
 }
 function renderChat(id) {
   const c = chats[id];
-  document.getElementById('chatTitle').innerText = c.nombre + " (" + c.origen + ")";
+  document.getElementById('chatTitle').innerText = c.nombre;
   document.getElementById('msgs').innerHTML = c.mensajes.map(m => 
     \`<div class="msg \${m.tipo}">\${m.texto}</div>\`
   ).join('');
@@ -81,7 +68,7 @@ setInterval(loop, 2000); loop();
 </script></body></html>
 `;
 
-app.get("/", (req, res) => res.send("Zara V21 Online"));
+app.get("/", (req, res) => res.send("Zara V23 Clean Structure"));
 app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/data", (req, res) => res.json(chats));
 
@@ -92,9 +79,7 @@ app.get("/webhook", (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   res.sendStatus(200);
-  try {
-     if (req.body.entry) await procesarEvento(req.body.entry[0]);
-  } catch (e) { console.error(e); }
+  try { if (req.body.entry) await procesarEvento(req.body.entry[0]); } catch (e) { console.error(e); }
 });
 
 app.post("/webchat", async (req, res) => {
@@ -102,12 +87,6 @@ app.post("/webchat", async (req, res) => {
         const { message, userId } = req.body;
         const uid = userId || 'web_user';
         registrarMensaje(uid, "Web", message, "usuario", "web");
-
-        if (message.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/)) {
-            const fono = message.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/)[0].replace(/\D/g, '');
-            const alerta = `🚨 *SOLICITUD LLAMADA (WEB)* 🚨\n📞 ${fono}`;
-            for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
-        }
 
         if (!webSessions[uid]) webSessions[uid] = [];
         webSessions[uid].push({ role: "user", content: message });
@@ -122,4 +101,4 @@ app.post("/webchat", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara V21 Clean corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara V23 corriendo en puerto ${PORT}`));
