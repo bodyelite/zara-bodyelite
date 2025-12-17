@@ -1,34 +1,42 @@
 import fs from "fs";
-import path from "path"; // Importamos path para rutas absolutas
+import path from "path";
 import { generarRespuestaIA, transcribirAudio } from "./services/openai.js";
 import { sendMessage } from "./services/meta.js";
 import { NEGOCIO } from "./config/knowledge_base.js";
 
 const sesiones = {};
 
-// --- FUNCIÓN MEJORADA PARA GUARDAR LOGS ---
+// --- FUNCIÓN DE GUARDADO CON DEPURACIÓN EXTREMA ---
 function guardarLogFisico(origen, usuarioId, mensajeUsuario, respuestaZara) {
+    const now = new Date();
+    const fechaStr = now.toISOString().slice(0, 10);
+    const horaStr = now.toLocaleTimeString('es-CL', { hour12: false });
+    const logFileName = `${origen}-${fechaStr}.log`;
+    
+    // Intentamos usar una ruta relativa simple primero
+    const logPath = `./${logFileName}`;
+
+    const logEntry = `[${horaStr}] ${usuarioId} - USER: ${mensajeUsuario}\n[${horaStr}] ${usuarioId} - ZARA: ${respuestaZara}\n---\n`;
+    
+    console.log(`📝 [DEBUG] Intentando guardar log de ${origen} en: ${logPath}`);
+    
     try {
-        const now = new Date();
-        const fechaStr = now.toISOString().slice(0, 10);
-        const horaStr = now.toLocaleTimeString('es-CL', { hour12: false });
-        const logFileName = `${origen}-${fechaStr}.log`;
+        // Verificamos si podemos escribir en el directorio actual
+        fs.accessSync('.', fs.constants.W_OK);
         
-        // Usamos ruta absoluta para asegurar dónde se guarda
-        const logPath = path.join(process.cwd(), logFileName);
-
-        const logEntry = `[${horaStr}] ${usuarioId} - USER: ${mensajeUsuario}\n[${horaStr}] ${usuarioId} - ZARA: ${respuestaZara}\n---\n`;
-        
-        // Intentamos guardar y avisamos en consola
-        console.log(`Intentando guardar log en: ${logPath}`);
+        // Intentamos escribir
         fs.appendFileSync(logPath, logEntry);
-        console.log("Log guardado exitosamente.");
-
+        console.log(`✅ [DEBUG] Log de ${origen} guardado EXITOSAMENTE.`);
+        
     } catch (e) {
-        // Si falla, este error aparecerá en los logs de Render
-        console.error(`🔥 ERROR CRÍTICO AL GUARDAR LOG FÍSICO DE ${origen}:`, e);
+        console.error(`🔥 [ERROR CRÍTICO] No se pudo guardar el log de ${origen}.`);
+        console.error(`📂 Ruta intentada: ${logPath}`);
+        console.error(`❌ Detalles del error:`, e);
+        // Aquí podríamos intentar una ruta alternativa como /tmp/ si fuera necesario,
+        // pero primero veamos por qué falla la ruta base.
     }
 }
+// ---------------------------------------------------
 
 export async function procesarEvento(entry) {
   const change = entry.changes[0];
@@ -78,7 +86,7 @@ export async function procesarEvento(entry) {
 
     await sendMessage(userId, respuestaZara, plataforma);
     
-    // Guardamos el log
+    // INTENTO DE GUARDADO CON DEPURACIÓN
     guardarLogFisico(origen, userId, mensajeUsuario, respuestaZara);
   }
 }
