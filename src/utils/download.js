@@ -1,15 +1,22 @@
 import fs from "fs";
 import fetch from "node-fetch";
 import path from "path";
-import os from "os";
 
-export async function downloadFile(url, name, headers = {}) {
-  try {
-    const res = await fetch(url, { headers, redirect: 'follow' });
-    if (!res.ok) throw new Error(res.statusText);
-    const temp = path.join(os.tmpdir(), name);
-    const stream = fs.createWriteStream(temp);
-    await new Promise((resolve, reject) => { res.body.pipe(stream); res.body.on("error", reject); stream.on("finish", resolve); });
-    return temp;
-  } catch (e) { return null; }
+export async function downloadFile(url, filename) {
+    try {
+        const token = process.env.PAGE_ACCESS_TOKEN;
+        const headers = { "Authorization": `Bearer ${token}` };
+        const response = await fetch(url, { headers });
+        if (!response.ok) throw new Error(`Fallo descarga: ${response.statusText}`);
+        const dest = path.resolve("/tmp", filename);
+        const fileStream = fs.createWriteStream(dest);
+        return new Promise((resolve, reject) => {
+            response.body.pipe(fileStream);
+            response.body.on("error", reject);
+            fileStream.on("finish", () => resolve(dest));
+        });
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
 }
