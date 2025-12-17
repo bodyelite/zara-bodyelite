@@ -30,10 +30,9 @@
 <style>
     #z-c, #z-t { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
     
-    /* BOTÓN FLOTANTE */
     #z-t {
         position: fixed; bottom: 30px; right: 30px;
-        background: #111827; /* NEGRO ELEGANTE */
+        background: #111827; 
         color: white; border: none; padding: 14px 24px; border-radius: 50px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.25); cursor: pointer;
         display: flex; align-items: center; font-weight: 600; font-size: 15px;
@@ -41,10 +40,9 @@
     }
     #z-t:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(0,0,0,0.3); }
 
-    /* CONTENEDOR CHAT (MÁS ANCHO) */
     #z-c {
         position: fixed; bottom: 100px; right: 30px;
-        width: 400px; /* MÁS ANCHO */
+        width: 400px;
         height: 550px; max-height: 80vh;
         background: #fff; border-radius: 16px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -53,9 +51,8 @@
         animation: fadeIn 0.3s ease;
     }
 
-    /* CABECERA (NEGRO + ORO/BLANCO) */
     #z-header {
-        background: #111827; /* NEGRO ELEGANTE */
+        background: #111827;
         padding: 20px; color: white; display: flex; align-items: center; gap: 15px;
     }
     .z-avatar { position: relative; width: 50px; height: 50px; }
@@ -70,7 +67,6 @@
     
     #z-b { flex: 1; background: #f3f4f6; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     
-    /* MENSAJES */
     .z-msg-bot {
         align-self: flex-start; background: #fff; color: #1f2937;
         padding: 14px 18px; border-radius: 14px 14px 14px 2px;
@@ -78,12 +74,11 @@
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     .z-msg-user {
-        align-self: flex-end; background: #111827; color: #fff; /* NEGRO */
+        align-self: flex-end; background: #111827; color: #fff;
         padding: 12px 16px; border-radius: 14px 14px 2px 14px;
         max-width: 85%; font-size: 14px; margin-bottom: 5px;
     }
     
-    /* BOTÓN DE AGENDA DENTRO DEL CHAT */
     .agenda-btn {
         background: #f97316; color: white; border: none; padding: 10px 18px;
         border-radius: 20px; font-weight: bold; font-size: 13px; text-decoration: none;
