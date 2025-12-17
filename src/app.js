@@ -12,46 +12,46 @@ export async function procesarEvento(entry) {
     let senderName = "Usuario";
     let text = null;
 
-    // DETECCIÓN WHATSAPP
-    if (entry.changes && entry.changes[0] && entry.changes[0].value && entry.changes[0].value.messages) {
+    // Detectar WSP
+    if (entry.changes && entry.changes[0]?.value?.messages) {
         platform = "whatsapp";
-        const change = entry.changes[0].value;
-        const msg = change.messages[0];
+        const msg = entry.changes[0].value.messages[0];
         senderId = msg.from;
-        senderName = change.contacts?.[0]?.profile?.name || "Cliente WSP";
-        if (msg.type === "text") text = msg.text.body;
-        else text = "[Multimedia/Audio]";
+        senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || "WSP User";
+        text = msg.type === "text" ? msg.text.body : "[Multimedia]";
     }
-    // DETECCIÓN INSTAGRAM
+    // Detectar IG
     else if (entry.messaging && entry.messaging[0]) {
         platform = "instagram";
         const msg = entry.messaging[0];
         senderId = msg.sender.id;
-        senderName = "Usuario IG"; 
-        if (msg.message && msg.message.text) text = msg.message.text;
-        else text = "[Multimedia/Audio]";
+        senderName = "IG User"; 
+        text = msg.message?.text || "[Multimedia]";
     }
 
     if (!platform || !text || !senderId) return;
 
-    console.log(`📩 MENSAJE (${platform}):`, text);
-
+    console.log(`📩 IN (${platform}): ${text} de ${senderId}`);
     registrarMensaje(senderId, senderName, text, "usuario", platform === "whatsapp" ? "wsp" : "ig");
 
     if (!sesiones[senderId]) sesiones[senderId] = [];
     sesiones[senderId].push({ role: "user", content: text });
 
     const reply = await generarRespuestaIA(sesiones[senderId]);
-    sesiones[senderId].push({ role: "assistant", content: reply });
+    console.log(`🤖 OUT: ${reply}`);
 
+    sesiones[senderId].push({ role: "assistant", content: reply });
+    
+    // Aquí es donde llamamos al envío blindado
     await sendMessage(senderId, reply, platform);
+    
     registrarMensaje(senderId, "Zara", reply, "zara", platform === "whatsapp" ? "wsp" : "ig");
 
   } catch (e) {
-    console.error("❌ ERROR PROCESAR EVENTO:", e);
+    console.error("❌ ERROR LOGICA APP:", e);
   }
 }
 
 export async function procesarReserva(data) {
-  console.log("Reserva recibida:", data);
+  console.log("Reserva:", data);
 }
