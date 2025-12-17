@@ -10,105 +10,125 @@
         body { 
             margin: 0; padding: 0; 
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-            /* Fondo con filtro oscuro integrado para que resalten los textos blancos */
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068') no-repeat center center fixed; 
+            /* Nuevo fondo AESTHETIC cálido con filtro oscuro */
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070') no-repeat center center fixed; 
             background-size: cover; 
             height: 100vh; width: 100vw;
-            display: flex; align-items: center; justify-content: flex-end; /* Chat a la derecha en escritorio */
-            overflow: hidden; position: relative; padding-right: 5%; /* Margen derecho para el chat */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; /* CENTRADO TOTAL */
+            overflow: hidden; position: relative;
         }
 
-        /* --- CAPAS DE MARCA (Brand Overlays) --- */
+        /* --- LOGO SUPERIOR --- */
         .brand-overlay {
-            position: absolute; top: 30px; left: 40px;
-            color: #fff; z-index: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            position: absolute; top: 30px; left: 0; right: 0;
+            text-align: center; z-index: 1;
+            padding: 0 20px;
         }
-        .logo-text {
-            font-weight: 800; font-size: 42px; line-height: 1;
-            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px;
+        .brand-logo-img {
+            max-width: 180px; /* Tamaño del logo */
+            height: auto;
+            display: block; margin: 0 auto 10px auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
-        .tagline { font-size: 16px; font-weight: 400; opacity: 0.9; margin-bottom: 5px; letter-spacing: 0.5px; }
-        .address { font-size: 13px; font-weight: 400; opacity: 0.7; }
+        .tagline { color: #fff; font-size: 14px; font-weight: 400; opacity: 0.9; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
+        /* --- FOOTER COMERCIAL (Iconos) --- */
         .footer-overlay {
-            position: absolute; bottom: 25px; left: 0; right: 0;
-            text-align: center; color: #fff; z-index: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            position: absolute; bottom: 30px; left: 0; right: 0;
+            display: flex; justify-content: center; gap: 30px;
+            color: #fff; z-index: 1; padding: 0 20px;
         }
-        .footer-line1 { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
-        .footer-line2 { font-size: 12px; font-weight: 400; opacity: 0.8; letter-spacing: 0.5px; }
+        .footer-item {
+            text-align: center; display: flex; flex-direction: column; align-items: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        .f-icon { font-size: 24px; margin-bottom: 8px; }
+        .f-text { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- CHAT WIDGET (ESCRITORIO) --- */
+        /* --- CHAT WIDGET (ESTRELLA CENTRAL) --- */
         #z-c {
             position: relative; z-index: 10;
-            width: 100%; max-width: 400px; height: 80vh; max-height: 750px;
-            background: #fff; border-radius: 20px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            width: 100%; max-width: 450px; /* Más ancho para ser protagonista */
+            height: 75vh; max-height: 700px;
+            background: #fff; border-radius: 25px; /* Bordes más redondeados */
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9); /* Sombra potente */
             display: flex; flex-direction: column; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            margin-top: 60px; /* Espacio para el logo */
+            margin-bottom: 80px; /* Espacio para el footer */
         }
         
         /* Header Chat */
-        #z-header { background: #111827; padding: 18px 20px; color: white; display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
-        .z-avatar { position: relative; width: 50px; height: 50px; flex-shrink: 0; }
-        .z-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
-        .z-status-dot { position: absolute; bottom: 2px; right: 2px; width: 10px; height: 10px; background: #22c55e; border-radius: 50%; border: 2px solid #111827; }
+        #z-header { background: #111827; padding: 20px 25px; color: white; display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
+        .z-avatar { position: relative; width: 55px; height: 55px; flex-shrink: 0; }
+        .z-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .z-status-dot { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #22c55e; border-radius: 50%; border: 2px solid #111827; }
         .z-info { flex: 1; overflow: hidden; }
-        .z-name { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
-        .z-role { font-size: 12px; opacity: 0.8; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .z-name { font-weight: 800; font-size: 18px; margin-bottom: 3px; letter-spacing: 0.5px; }
+        .z-role { font-size: 13px; opacity: 0.9; color: #d1d5db; }
 
         /* Body Chat */
-        #z-b { flex: 1; background: #f3f4f6; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
-        .z-msg-bot { align-self: flex-start; background: #fff; color: #1f2937; padding: 14px 18px; border-radius: 14px 14px 14px 2px; max-width: 85%; font-size: 15px; line-height: 1.5; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .z-msg-user { align-self: flex-end; background: #111827; color: #fff; padding: 12px 16px; border-radius: 14px 14px 2px 14px; max-width: 85%; font-size: 15px; margin-bottom: 5px; }
+        #z-b { flex: 1; background: #f9fafb; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; -webkit-overflow-scrolling: touch; }
+        .z-msg-bot { align-self: flex-start; background: #fff; color: #1f2937; padding: 16px 20px; border-radius: 18px 18px 18px 4px; max-width: 85%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        .z-msg-user { align-self: flex-end; background: #111827; color: #fff; padding: 14px 18px; border-radius: 18px 18px 4px 18px; max-width: 85%; font-size: 15px; margin-bottom: 5px; box-shadow: 0 4px 15px rgba(17, 24, 39, 0.2); }
 
         /* Input Chat */
-        .z-input-area { background: #fff; padding: 15px; border-top: 1px solid #e5e7eb; display: flex; gap: 10px; flex-shrink: 0; padding-bottom: 15px; }
-        #z-i { flex: 1; padding: 14px 16px; border-radius: 30px; border: 1px solid #d1d5db; outline: none; font-size: 16px; background: #f9fafb; -webkit-appearance: none; }
-        .z-input-area button { width: 48px; height: 48px; border-radius: 50%; background: #f97316; color: white; border: none; cursor: pointer; font-size: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s;}
+        .z-input-area { background: #fff; padding: 20px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; flex-shrink: 0; padding-bottom: 20px; }
+        #z-i { flex: 1; padding: 16px 20px; border-radius: 35px; border: 1px solid #d1d5db; outline: none; font-size: 16px; background: #f3f4f6; -webkit-appearance: none; transition: 0.3s; }
+        #z-i:focus { background: #fff; border-color: #111827; box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.1); }
+        .z-input-area button { width: 54px; height: 54px; border-radius: 50%; background: #f97316; color: white; border: none; cursor: pointer; font-size: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4); }
         .z-input-area button:hover { background: #ea580c; transform: scale(1.05); }
-        .agenda-btn { background: #f97316; color: white; border: none; padding: 12px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 8px; text-align: center; box-shadow: 0 3px 10px rgba(249, 115, 22, 0.2); }
+        .agenda-btn { background: #f97316; color: white; border: none; padding: 14px 24px; border-radius: 25px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 10px; text-align: center; box-shadow: 0 6px 20px rgba(249, 115, 22, 0.3); transition: 0.3s; width: 100%; }
+        .agenda-btn:hover { background: #ea580c; transform: translateY(-2px); }
 
         /* --- MÓVIL (RESPONSIVE) --- */
         @media (max-width: 768px) {
-            body { justify-content: center; padding-right: 0; align-items: flex-end; } /* Chat abajo en tablets */
-            .brand-overlay { top: 20px; left: 20px; text-align: left; }
-            .logo-text { font-size: 32px; }
-            #z-c { height: 70vh; margin-bottom: 20px; }
-            .footer-overlay { bottom: 10px; }
-            .footer-line1 { font-size: 11px; } .footer-line2 { font-size: 9px; }
+           .footer-item { flex: 1; } .f-text { font-size: 10px; } .f-icon { font-size: 20px; }
+           #z-c { height: 65vh; margin-top: 80px; }
         }
 
         @media (max-width: 480px) {
-            body { display: block !important; background: #111827 !important; /* Fondo negro solido para evitar flashes */ height: 100% !important; position: fixed; overflow: hidden; padding:0;}
+            body { display: block !important; background: #111827 !important; height: 100% !important; position: fixed; overflow: hidden; padding:0;}
             
-            /* Simplificar Header en Móvil */
-            .brand-overlay { top: 10px; left: 0; right: 0; text-align: center; pointer-events: none; z-index: 25;}
-            .logo-text { font-size: 24px; margin-bottom: 2px; text-shadow: 0 1px 5px rgba(0,0,0,0.9); }
-            .tagline, .address { display: none; } /* Ocultar detalles */
+            /* Logo arriba en móvil */
+            .brand-overlay { top: 15px; padding: 0 10px; z-index: 25; }
+            .brand-logo-img { max-width: 140px; margin-bottom: 5px; }
+            .tagline { font-size: 11px; }
             
             /* Ocultar Footer en Móvil */
             .footer-overlay { display: none; } 
 
-            /* Chat Full Screen */
-            #z-c { position: fixed !important; top: 0; left: 0; right: 0; bottom: 0; width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; z-index: 20 !important; border: none;}
-            #z-header { padding-top: 50px; /* Espacio para el logo arriba */ }
-            .z-input-area { padding-bottom: max(15px, env(safe-area-inset-bottom)) !important; }
+            /* Chat Full Screen debajo del logo */
+            #z-c { position: fixed !important; top: 70px !important; left: 0; right: 0; bottom: 0; width: 100% !important; height: auto !important; max-width: 100% !important; max-height: none !important; border-radius: 25px 25px 0 0 !important; box-shadow: none !important; margin: 0 !important; z-index: 20 !important; border: none;}
+            #z-header { border-radius: 25px 25px 0 0; padding: 15px 20px; }
+            .z-input-area { padding-bottom: max(20px, env(safe-area-inset-bottom)) !important; }
         }
     </style>
 </head>
 <body>
 
 <div class="brand-overlay">
-    <div class="logo-text">BODY ELITE</div>
+    <img src="logo.png" alt="Body Elite" class="brand-logo-img">
     <div class="tagline">Medicina Estética Avanzada</div>
-    <div class="address">Av. Las Perdices 2990, Peñalolén</div>
 </div>
 
 <div class="footer-overlay">
-    <div class="footer-line1">REMODELACIÓN CORPORAL • REJUVENECIMIENTO FACIAL • DEPILACIÓN LÁSER</div>
-    <div class="footer-line2">HIFU 12D • EMS SculptPro • Enzimas • Radiofrecuencia • Toxina (Botox) • Pink Glow • Exosomas</div>
+    <div class="footer-item">
+        <span class="f-icon">✨</span>
+        <span class="f-text">Rejuvenecimiento<br>Facial</span>
+    </div>
+    <div class="footer-item">
+        <span class="f-icon">🍑</span>
+        <span class="f-text">Remodelación<br>Corporal</span>
+    </div>
+    <div class="footer-item">
+        <span class="f-icon">⚡</span>
+        <span class="f-text">Depilación<br>Láser Premium</span>
+    </div>
+    <div class="footer-item">
+        <span class="f-icon">🧬</span>
+        <span class="f-text">Tecnología<br>Avanzada (HIFU/EMS)</span>
+    </div>
 </div>
 
 <div id="z-c">
