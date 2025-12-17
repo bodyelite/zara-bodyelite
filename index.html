@@ -11,34 +11,34 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, Arial, sans-serif;
             /* Fondo de Cabina Premium con Filtro Oscuro Cálido */
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070') no-repeat center center fixed;
+            background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=2070') no-repeat center center fixed;
             background-size: cover; 
             min-height: 100vh; width: 100vw;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
             color: #fff; overflow-x: hidden; padding: 20px;
         }
 
-        /* --- HEADER (Logo y Título) --- */
+        /* --- HEADER (Escritorio - Centrado) --- */
         .header-container {
-            text-align: center; margin-bottom: 20px;
+            text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center;
         }
+        /* AQUÍ ESTÁ LA CORRECCIÓN DEL NOMBRE DEL ARCHIVO */
         .brand-logo-img {
-            max-width: 250px; height: auto;
-            margin-bottom: 10px;
+            max-width: 220px; height: auto;
+            margin-bottom: 15px;
             filter: drop-shadow(0 2px 5px rgba(255,255,255,0.2));
         }
-        .main-title {
-            font-size: 18px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; opacity: 0.9;
-        }
+        /* Textos ocultos en escritorio, usamos solo el logo grande */
+        .header-text-mobile { display: none; }
 
-        /* --- CHAT WIDGET (ESTRELLA CENTRAL) --- */
+        /* --- CHAT WIDGET --- */
         #z-c {
             width: 100%; max-width: 480px;
             height: 65vh; max-height: 650px;
             background: #fff; border-radius: 25px;
             box-shadow: 0 30px 70px rgba(0,0,0,0.8);
             display: flex; flex-direction: column; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.15); z-index: 10;
         }
         #z-header { background: #111827; padding: 20px 25px; color: white; display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
         .z-avatar { position: relative; width: 55px; height: 55px; flex-shrink: 0; }
@@ -58,23 +58,21 @@
         .agenda-btn { background: #f97316; color: white; border: none; padding: 14px 24px; border-radius: 25px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 10px; text-align: center; box-shadow: 0 6px 20px rgba(249, 115, 22, 0.3); transition: 0.3s; width: 100%; }
         .agenda-btn:hover { background: #ea580c; transform: translateY(-2px); }
 
-        /* --- SECCIÓN COMERCIAL Y FOOTER --- */
+        /* --- SECCIÓN COMERCIAL Y FOOTER (Escritorio) --- */
         .commercial-section {
-            text-align: center; margin-top: 30px; margin-bottom: 20px;
+            text-align: center; margin-top: 30px; margin-bottom: 20px; z-index: 10;
         }
         .services-title { font-size: 16px; font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase; }
-        .services-grid {
-            display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
-        }
+        .services-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
         .service-item {
-            background: rgba(17, 24, 39, 0.8); padding: 12px 20px; border-radius: 12px;
+            background: rgba(17, 24, 39, 0.9); padding: 12px 20px; border-radius: 12px;
             font-size: 14px; font-weight: 500; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px);
         }
         .service-pain { color: #9ca3af; font-size: 12px; display: block; margin-bottom: 4px; }
 
         .footer-container {
-            text-align: center; font-size: 14px; opacity: 0.9;
+            text-align: center; font-size: 14px; opacity: 0.9; z-index: 10;
             display: flex; flex-direction: column; gap: 10px; align-items: center;
         }
         .footer-address { display: flex; align-items: center; gap: 8px; }
@@ -83,23 +81,42 @@
             font-weight: 600; padding: 8px 16px; background: rgba(255,255,255,0.1); border-radius: 20px;
             transition: 0.3s;
         }
-        .footer-social:hover { background: rgba(255,255,255,0.2); }
         .footer-btn {
             background: #22c55e; color: white; padding: 10px 24px; border-radius: 25px;
             font-weight: 700; text-decoration: none; display: inline-block;
             box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); transition: 0.3s;
         }
-        .footer-btn:hover { background: #16a34a; transform: translateY(-2px); }
 
-        /* --- RESPONSIVE (MÓVIL) --- */
+        /* --- RESPONSIVE (MÓVIL - CORRECCIÓN SOLICITADA) --- */
         @media (max-width: 768px) {
             body { padding: 0; background: #111827; /* Fondo sólido */ display: block; overflow: hidden; }
-            .header-container { position: fixed; top: 0; left: 0; right: 0; background: rgba(17,24,39,0.95); padding: 10px; z-index: 30; margin: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-            .brand-logo-img { max-width: 160px; margin-bottom: 5px; }
-            .main-title { font-size: 12px; }
             
-            /* Chat a pantalla completa */
-            #z-c { position: fixed !important; top: 75px; left: 0; right: 0; bottom: 0; width: 100% !important; height: auto !important; max-width: 100% !important; max-height: none !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; z-index: 20 !important; border: none;}
+            /* HEADER DIVIDIDO EN MÓVIL */
+            .header-container {
+                position: fixed; top: 0; left: 0; right: 0;
+                background: rgba(17,24,39,0.98); /* Fondo oscuro casi sólido */
+                padding: 12px 20px; z-index: 30; margin: 0;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                flex-direction: row; /* Cambiar a fila */
+                justify-content: space-between; /* Separar extremos */
+                align-items: center; /* Centrar verticalmente */
+                height: 60px; /* Altura fija */
+            }
+            .brand-logo-img {
+                max-width: auto; height: 36px; /* Logo más pequeño a la izquierda */
+                margin-bottom: 0;
+            }
+            .header-text-mobile {
+                display: flex; flex-direction: column; align-items: flex-end; /* Texto a la derecha */
+                color: white;
+            }
+            .brand-name-mob { font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+            .brand-tagline-mob { font-size: 12px; opacity: 0.8; letter-spacing: 0.5px; }
+            
+            /* CHAT A PANTALLA COMPLETA (Respetando espacio seguro inferior) */
+            #z-c { position: fixed !important; top: 60px; /* Justo debajo del header */ left: 0; right: 0; bottom: 0; width: 100% !important; height: auto !important; max-width: 100% !important; max-height: none !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; z-index: 20 !important; border: none;}
+            
+            /* CRÍTICO: Espacio para el teclado/barra de inicio */
             .z-input-area { padding-bottom: max(20px, env(safe-area-inset-bottom)) !important; }
             
             /* Ocultar secciones no esenciales en móvil */
@@ -110,8 +127,12 @@
 <body>
 
 <div class="header-container">
-    <img src="logo.png" alt="Body Elite Logo" class="brand-logo-img">
-    <div class="main-title">CIENCIA APLICADA A TU BELLEZA</div>
+    <img src="logo azul.png" alt="Body Elite Logo" class="brand-logo-img">
+    
+    <div class="header-text-mobile">
+        <div class="brand-name-mob">BODY ELITE</div>
+        <div class="brand-tagline-mob">Estética Avanzada</div>
+    </div>
 </div>
 
 <div id="z-c">
@@ -138,44 +159,24 @@
 </div>
 
 <div class="commercial-section">
-    <div class="services-title">NUESTRAS SOLUCIONES EXPERTAS</div>
+    <div class="services-title">SOLUCIONES EXPERTAS</div>
     <div class="services-grid">
-        <div class="service-item">
-            <span class="service-pain">¿Flacidez?</span>
-            Tensado sin cirugía (HIFU 12D)
-        </div>
-        <div class="service-item">
-            <span class="service-pain">¿Grasa localizada?</span>
-            Remodelación (Lipoenzimas)
-        </div>
-        <div class="service-item">
-            <span class="service-pain">¿Arrugas?</span>
-            Rejuvenecimiento (Botox)
-        </div>
-        <div class="service-item">
-            <span class="service-pain">¿Vello?</span>
-            Depilación Láser Premium
-        </div>
-        <div class="service-item">
-            <span class="service-pain">¿Piel apagada?</span>
-            Tecnología Avanzada
-        </div>
+        <div class="service-item"><span class="service-pain">¿Flacidez?</span>Tensado HIFU 12D</div>
+        <div class="service-item"><span class="service-pain">¿Grasa?</span>Lipoenzimas / EMS</div>
+        <div class="service-item"><span class="service-pain">¿Arrugas?</span>Botox / Fillers</div>
+        <div class="service-item"><span class="service-pain">¿Vello?</span>Láser Premium</div>
     </div>
 </div>
 
 <div class="footer-container">
-    <div class="footer-address">
-        <i class="fas fa-map-marker-alt"></i> Av. Las Perdices 2990, Peñalolén
-    </div>
-    <a href="https://www.instagram.com/bodyelitelp" target="_blank" class="footer-social">
-        <i class="fab fa-instagram"></i> @bodyelitelp
-    </a>
+    <div class="footer-address"><i class="fas fa-map-marker-alt"></i> Av. Las Perdices 2990, Peñalolén</div>
+    <a href="https://www.instagram.com/bodyelitelp" target="_blank" class="footer-social"><i class="fab fa-instagram"></i> @bodyelitelp</a>
     <a href="#" class="footer-btn">📅 RESERVAR HORA</a>
 </div>
 
 <script>
     const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
-    const uId = 'landing-center-' + Math.random().toString(36).substr(2, 9);
+    const uId = 'landing-final-fix-' + Math.random().toString(36).substr(2, 9);
     const box = document.getElementById('z-b');
 
     async function sMsg() {
