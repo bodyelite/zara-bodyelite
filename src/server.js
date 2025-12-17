@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import { procesarEvento, procesarReserva } from "./app.js";
 import { generarRespuestaIA } from "./services/openai.js";
-import { sendMessage } from "./services/meta.js"; // Para alertas
+import { sendMessage } from "./services/meta.js"; 
 import { NEGOCIO } from "./config/knowledge_base.js";
 
 dotenv.config();
@@ -41,40 +41,31 @@ app.post("/reservo-webhook", (req, res) => {
     if (data) procesarReserva(data).catch(console.error);
 });
 
-// --- CHAT WEB INTELIGENTE ---
 app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
         const uid = userId || 'anonimo';
-        console.log(`💬 [WEB] ${uid}: ${message}`);
 
-        // 1. DETECTAR TELÉFONO Y ALERTAR STAFF
         const telefonoMatch = message.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/);
         if (telefonoMatch) {
             const fono = telefonoMatch[0].replace(/\D/g, '');
             const alerta = `🚨 *SOLICITUD LLAMADA (DESDE WEB)* 🚨\n👤 Cliente Web\n📞 ${fono}`;
-            // Enviar alerta a todos los del staff
             for (const n of NEGOCIO.staff_alertas) { await sendMessage(n, alerta, "whatsapp"); }
-            console.log("✅ Alerta Web enviada al Staff");
         }
 
-        // 2. MEMORIA
         if (!webSessions[uid]) webSessions[uid] = { historial: [] };
         webSessions[uid].historial.push({ role: "user", content: message });
         if (webSessions[uid].historial.length > 12) webSessions[uid].historial = webSessions[uid].historial.slice(-12);
 
-        // 3. GENERAR RESPUESTA IA
         let reply = await generarRespuestaIA(webSessions[uid].historial);
         webSessions[uid].historial.push({ role: "assistant", content: reply });
 
-        // 4. DETECTAR INTENCIÓN DE LINK PARA MANDAR BOTÓN
         let showButton = false;
         let buttonLink = "";
         
         if (reply.includes("agendamiento.reservo.cl") || (reply.toLowerCase().includes("link") && reply.toLowerCase().includes("agenda"))) {
             showButton = true;
             buttonLink = NEGOCIO.agenda_link;
-            // Limpiamos el link de texto para que no se vea feo, solo quede el botón
             reply = reply.replace(NEGOCIO.agenda_link, "").replace("https://agendamiento.reservo.cl/makereserva/agenda/f0Hq15w0M0nrxU8d7W64x5t2S6L4h9", "");
         }
 

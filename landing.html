@@ -8,7 +8,6 @@
         body {
             margin: 0; padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            /* FONDO DE CLÍNICA PRO CON FILTRO OSCURO */
             background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068&auto=format&fit=crop');
             background-size: cover; background-position: center;
             display: flex; justify-content: center; align-items: center;
@@ -31,7 +30,6 @@
         .bot { background: #fff; color: #334155; border: 1px solid #e2e8f0; border-top-left-radius: 2px; }
         .user { align-self: flex-end; background: #0d9488; color: white; border-bottom-right-radius: 2px; }
         
-        /* BOTÓN DE AGENDA */
         .agenda-btn {
             background: #f97316; color: white; border: none; padding: 10px 20px; 
             border-radius: 25px; font-weight: bold; cursor: pointer; text-decoration: none;
@@ -89,7 +87,6 @@
             document.getElementById(loadId).remove();
             
             let cleanResp = data.response.replace(/\n/g, '<br>');
-            // AÑADIR BOTÓN SI EL BACKEND LO DICE
             if (data.button) {
                 cleanResp += `<br><br><a href="${data.link}" target="_blank" class="agenda-btn">📅 AGENDAR EVALUACIÓN AQUÍ</a>`;
             }
