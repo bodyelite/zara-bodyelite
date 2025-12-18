@@ -12,30 +12,28 @@ export async function sendMessage(to, body, platform = "whatsapp") {
 
     if (platform === "whatsapp") {
         url = `https://graph.facebook.com/v19.0/${phoneId}/messages`;
-        data = { 
-            messaging_product: "whatsapp", 
-            to: to, 
-            type: "text", 
-            text: { body: body } 
-        };
+        data = { messaging_product: "whatsapp", to: to, type: "text", text: { body: body } };
     } else {
         url = `https://graph.facebook.com/v19.0/me/messages`;
-        data = { 
-            recipient: { id: to }, 
-            message: { text: body } 
-        };
+        data = { recipient: { id: to }, message: { text: body } };
     }
 
     await axios.post(url, data, {
-      headers: { 
-          "Authorization": `Bearer ${token}`, 
-          "Content-Type": "application/json" 
-      }
+      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
     });
-    
-    console.log(`✅ ENVIADO a ${to} (${platform})`);
-    
   } catch (error) {
-    console.error("❌ ERROR META:", error.response ? JSON.stringify(error.response.data) : error.message);
+    console.error("META ERROR:", error.message);
+  }
+}
+
+// NUEVA FUNCIÓN: Obtiene el nombre real desde Instagram
+export async function getIgUserInfo(userId) {
+  try {
+    const token = process.env.PAGE_ACCESS_TOKEN || process.env.CLOUD_API_ACCESS_TOKEN;
+    const url = `https://graph.facebook.com/v19.0/${userId}?fields=name&access_token=${token}`;
+    const res = await axios.get(url);
+    return res.data.name || "Usuario IG";
+  } catch (e) {
+    return "Usuario IG";
   }
 }
