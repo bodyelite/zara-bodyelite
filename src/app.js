@@ -9,31 +9,49 @@ export async function procesarEvento(entry) {
   try {
     let platform = null;
     let senderId = null;
-    let senderName = "Usuario";
+    let senderName = "Cliente";
     let text = null;
 
+    // --- DETECCIÓN WHATSAPP ---
     if (entry.changes && entry.changes[0]?.value?.messages) {
         platform = "whatsapp";
-        const msg = entry.changes[0].value.messages[0];
+        const value = entry.changes[0].value;
+        const msg = value.messages[0];
+        
+        // Anti-Bucle WSP (por si acaso)
+        if (msg.from === process.env.PHONE_NUMBER_ID) return;
+
         senderId = msg.from;
-        senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || "WSP User";
+        senderName = value.contacts?.[0]?.profile?.name || "Cliente";
         text = msg.type === "text" ? msg.text.body : "[Multimedia]";
     }
+    // --- DETECCIÓN INSTAGRAM ---
     else if (entry.messaging && entry.messaging[0]) {
         platform = "instagram";
         const msg = entry.messaging[0];
+
+        // 🛑 ESCUDO ANTI-ECO (CRÍTICO PARA INSTAGRAM)
+        if (msg.message?.is_echo || msg.delivery || msg.read || !msg.message) {
+            return; 
+        }
+
         senderId = msg.sender.id;
-        senderName = "IG User"; 
-        text = msg.message?.text || "[Multimedia]";
+        senderName = "Usuario IG"; // IG no da el nombre en el webhook simple
+        text = msg.message.text || "[Multimedia]";
     }
 
     if (!platform || !text || !senderId) return;
 
-    console.log(`📩 IN (${platform}): ${text}`);
+    console.log(`📩 IN (${platform}): ${text} [De: ${senderName}]`);
     registrarMensaje(senderId, senderName, text, "usuario", platform === "whatsapp" ? "wsp" : "ig");
 
     if (!sesiones[senderId]) sesiones[senderId] = [];
-    sesiones[senderId].push({ role: "user", content: text });
+    
+    // Inyectamos el nombre en el mensaje para que la IA sepa a quién le habla
+    // Esto obliga a Zara a usar el nombre si está disponible
+    const mensajeContextualizado = `[Nombre del Cliente: ${senderName}] ${text}`;
+    
+    sesiones[senderId].push({ role: "user", content: mensajeContextualizado });
 
     const reply = await generarRespuestaIA(sesiones[senderId]);
     
@@ -44,7 +62,7 @@ export async function procesarEvento(entry) {
     registrarMensaje(senderId, "Zara", reply, "zara", platform === "whatsapp" ? "wsp" : "ig");
 
   } catch (e) {
-    console.error("ERROR APP:", e);
+    console.error("ERROR APP:", e.message);
   }
 }
 
