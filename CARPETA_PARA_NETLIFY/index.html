@@ -82,42 +82,39 @@
             <div class="z-role">Especialista Body Elite</div>
         </div>
     </div>
-    <div id="z-b">
-        <div class="z-msg-bot">
-            ¡Hola! 👋 Soy Zara, especialista de la clínica.<br><br>
-            Cuéntame, <b>¿qué te gustaría mejorar hoy? ¿Cuerpo o Rostro?</b> ✨
-        </div>
-    </div>
+    <div id="z-b"></div>
     <div class="z-input-area">
-        <input id="z-i" type="text" placeholder="Escribe tu consulta..." onkeydown="if(event.key==='Enter') sMsg()">
+        <input id="z-i" type="text" placeholder="Escribe aquí..." onkeydown="if(event.key==='Enter') sMsg()">
         <button onclick="sMsg()">➜</button>
     </div>
 </div>
 <script>
     const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
+    const box = document.getElementById('z-b');
+    const inp = document.getElementById('z-i');
     
-    // 🧠 GESTIÓN DE MEMORIA Y NOMBRE
     let uId = localStorage.getItem('zara_id');
     let uName = localStorage.getItem('zara_name');
+    let askingName = false;
 
+    // 1. ID Único
     if (!uId) {
         uId = 'web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('zara_id', uId);
     }
 
-    if (!uName) {
-        uName = prompt("👋 ¡Bienvenida/o! Para una mejor atención, ¿cuál es tu nombre?");
-        if (uName && uName.length > 1) {
-            localStorage.setItem('zara_name', uName);
-        } else {
-            uName = "Invitado";
-        }
+    // 2. Saludo Inicial
+    if (uName) {
+        // SI YA EXISTE: Saludo normal
+        box.innerHTML = `<div class="z-msg-bot">¡Hola de nuevo, ${uName}! 👋<br>Soy Zara. ¿En qué te ayudo hoy? ✨</div>`;
+    } else {
+        // SI ES NUEVO: Pide nombre
+        askingName = true;
+        box.innerHTML = `<div class="z-msg-bot">¡Hola! 👋 Soy Zara, especialista de Body Elite.<br><br>Para darte una mejor asesoría, <b>¿cuál es tu nombre?</b> 😊</div>`;
+        inp.placeholder = "Escribe tu nombre aquí...";
     }
 
-    const box = document.getElementById('z-b');
-
     async function sMsg() {
-        const inp = document.getElementById('z-i');
         const txt = inp.value.trim();
         if(!txt) return;
 
@@ -125,6 +122,20 @@
         box.innerHTML += `<div class="z-msg-user">${txt}</div>`;
         box.scrollTop = box.scrollHeight;
 
+        // --- MODO CAPTURA DE NOMBRE ---
+        if (askingName) {
+            uName = txt;
+            localStorage.setItem('zara_name', uName);
+            askingName = false;
+            inp.placeholder = "Escribe tu consulta...";
+            
+            // 🔥 AQUÍ ESTÁ EL CAMBIO CLAVE 🔥
+            // NO usamos 'return' ni simulamos.
+            // Dejamos que el código siga y envíe el nombre al servidor.
+            // Así el MONITOR lo ve y Zara contesta de verdad.
+        }
+
+        // --- ENVÍO AL SERVIDOR (MONITOR LO VERÁ AHORA) ---
         try {
             const loadId = 'load'+Date.now();
             box.innerHTML += `<div id="${loadId}" style="font-size:12px;color:#6b7280;margin:5px 15px">Escribiendo...</div>`;
@@ -132,8 +143,7 @@
 
             const res = await fetch(API_URL, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
-                // ENVIAMOS EL NOMBRE GUARDADO
-                body: JSON.stringify({ message: txt, userId: uId, userName: uName })
+                body: JSON.stringify({ message: txt, userId: uId, userName: uName || "Visitante" })
             });
             const data = await res.json();
             document.getElementById(loadId).remove();
