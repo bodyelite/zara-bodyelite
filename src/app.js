@@ -12,7 +12,6 @@ export async function procesarEvento(entry) {
     let senderName = "Usuario";
     let text = null;
 
-    // Detectar WSP
     if (entry.changes && entry.changes[0]?.value?.messages) {
         platform = "whatsapp";
         const msg = entry.changes[0].value.messages[0];
@@ -20,7 +19,6 @@ export async function procesarEvento(entry) {
         senderName = entry.changes[0].value.contacts?.[0]?.profile?.name || "WSP User";
         text = msg.type === "text" ? msg.text.body : "[Multimedia]";
     }
-    // Detectar IG
     else if (entry.messaging && entry.messaging[0]) {
         platform = "instagram";
         const msg = entry.messaging[0];
@@ -31,24 +29,22 @@ export async function procesarEvento(entry) {
 
     if (!platform || !text || !senderId) return;
 
-    console.log(`📩 IN (${platform}): ${text} de ${senderId}`);
+    console.log(`📩 IN (${platform}): ${text}`);
     registrarMensaje(senderId, senderName, text, "usuario", platform === "whatsapp" ? "wsp" : "ig");
 
     if (!sesiones[senderId]) sesiones[senderId] = [];
     sesiones[senderId].push({ role: "user", content: text });
 
     const reply = await generarRespuestaIA(sesiones[senderId]);
-    console.log(`🤖 OUT: ${reply}`);
-
+    
     sesiones[senderId].push({ role: "assistant", content: reply });
     
-    // Aquí es donde llamamos al envío blindado
     await sendMessage(senderId, reply, platform);
     
     registrarMensaje(senderId, "Zara", reply, "zara", platform === "whatsapp" ? "wsp" : "ig");
 
   } catch (e) {
-    console.error("❌ ERROR LOGICA APP:", e);
+    console.error("ERROR APP:", e);
   }
 }
 
