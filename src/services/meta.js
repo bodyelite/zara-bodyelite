@@ -4,26 +4,22 @@ dotenv.config();
 
 export async function sendMessage(to, body, platform = "whatsapp") {
   try {
-    // 1. Limpieza de Token (Trim quita espacios ocultos que rompen el parseo)
-    const rawToken = process.env.CLOUD_API_ACCESS_TOKEN;
-    const token = rawToken ? rawToken.trim() : null;
-
-    if (!token) {
-        console.error("❌ ERROR CRÍTICO: No se detecta el Token de Meta en las variables.");
-        return;
-    }
-
-    const isIG = platform === "instagram";
-    const version = "v19.0"; // Usamos una versión estable probada
+    // Tomamos el token DIRECTO, sin trims ni ifs que puedan fallar si la env es rara
+    const token = process.env.CLOUD_API_ACCESS_TOKEN; 
+    const version = "v19.0";
+    
+    // URL Standard
     const url = `https://graph.facebook.com/${version}/${process.env.WA_PHONE_NUMBER_ID}/messages`;
     
     const data = {
-      messaging_product: isIG ? "instagram" : "whatsapp",
+      messaging_product: platform === "instagram" ? "instagram" : "whatsapp",
       recipient_type: "individual",
       to: to,
       type: "text",
       text: { body: body }
     };
+
+    console.log(`📤 Intentando enviar a ${to} por ${platform}...`);
 
     await axios.post(url, data, {
       headers: { 
@@ -32,15 +28,10 @@ export async function sendMessage(to, body, platform = "whatsapp") {
       }
     });
     
-    console.log(`✅ MENSAJE ENVIADO a ${to} (${platform})`);
+    console.log(`✅ ENVIADO EXITOSO a ${to}`);
     
   } catch (error) {
-    console.error("❌ META API ERROR (Detalles):");
-    if (error.response) {
-        console.error("Status:", error.response.status);
-        console.error("Msg:", JSON.stringify(error.response.data));
-    } else {
-        console.error(error.message);
-    }
+    // Log de error detallado pero limpio
+    console.error("❌ ERROR META:", error.response ? JSON.stringify(error.response.data) : error.message);
   }
 }
