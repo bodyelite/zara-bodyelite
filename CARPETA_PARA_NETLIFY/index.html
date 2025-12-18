@@ -95,7 +95,25 @@
 </div>
 <script>
     const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
-    const uId = 'landing-final-v3-' + Math.random().toString(36).substr(2, 9);
+    
+    // 🧠 GESTIÓN DE MEMORIA Y NOMBRE
+    let uId = localStorage.getItem('zara_id');
+    let uName = localStorage.getItem('zara_name');
+
+    if (!uId) {
+        uId = 'web-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('zara_id', uId);
+    }
+
+    if (!uName) {
+        uName = prompt("👋 ¡Bienvenida/o! Para una mejor atención, ¿cuál es tu nombre?");
+        if (uName && uName.length > 1) {
+            localStorage.setItem('zara_name', uName);
+        } else {
+            uName = "Invitado";
+        }
+    }
+
     const box = document.getElementById('z-b');
 
     async function sMsg() {
@@ -114,7 +132,8 @@
 
             const res = await fetch(API_URL, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ message: txt, userId: uId })
+                // ENVIAMOS EL NOMBRE GUARDADO
+                body: JSON.stringify({ message: txt, userId: uId, userName: uName })
             });
             const data = await res.json();
             document.getElementById(loadId).remove();
