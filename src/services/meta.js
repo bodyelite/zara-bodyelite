@@ -9,8 +9,9 @@ dotenv.config();
 
 const metricas = { leads: new Set(), intencion: 0, llamadas: 0 };
 const usuariosPausados = new Set();
+// Memoria simple para recordar la campaña del usuario durante la sesión
+const campañasActivas = {}; 
 
-// Función de envío base
 export async function sendMessage(to, text, platform) {
     try {
         let url, data;
@@ -35,14 +36,24 @@ function extraerTelefono(texto) {
     return match ? match[0].replace(/\D/g, '') : null;
 }
 
-export async function procesarMensaje(senderId, text, name, platform) {
+// Aceptamos el parámetro 'campana'
+export async function procesarMensaje(senderId, text, name, platform, campana = null) {
     try {
         const lower = text.toLowerCase();
         metricas.leads.add(senderId);
 
+        // Si llega una campaña nueva, la guardamos en memoria para este usuario
+        if (campana) {
+            campañasActivas[senderId] = campana;
+            console.log(`[Zara] Guardando contexto de campaña para ${senderId}: ${campana}`);
+        }
+
+        // Recuperamos la campaña si existe en memoria
+        const campañaUsuario = campañasActivas[senderId] || null;
+
         // --- COMANDOS ADMIN ---
         if (lower === 'zara reporte') {
-            const msg = `📊 *REPORTE ZARA*\n👥 Leads: ${metricas.leads.size}\n🎯 Intención: ${metricas.intencion}\n📞 Fonos Capturados: ${metricas.llamadas}`;
+            const msg = `📊 *REPORTE ZARA*\n👥 Leads: ${metricas.leads.size}\n🎯 Intención: ${metricas.intencion}\n📞 Fonos: ${metricas.llamadas}`;
             await sendMessage(senderId, msg, platform);
             return;
         }
@@ -50,37 +61,38 @@ export async function procesarMensaje(senderId, text, name, platform) {
         if (lower === 'zara on') { usuariosPausados.delete(senderId); await sendMessage(senderId, "✅ Activa.", platform); return; }
         if (usuariosPausados.has(senderId)) return;
 
-        // --- DETECCIÓN DE TELÉFONO (CRÍTICO) ---
+        // --- DETECCIÓN DE TELÉFONO ---
         const telefono = extraerTelefono(text);
         if (telefono) {
             metricas.llamadas++;
-            // 1. Confirmar al cliente
-            await sendMessage(senderId, "¡Perfecto! 📝 Guardé tu número. Una especialista te contactará en breve para asesorarte. ✨", platform);
+            await sendMessage(senderId, "¡Perfecto! 📝 Guardé tu número. Una especialista te contactará en breve. ✨", platform);
             
-            // 2. ALERTAS A TODO EL STAFF (Bucle)
-            const alerta = `🚨 *LEAD CAPTURADO (${platform})* 🚨\n👤 ${name}\n📞 ${telefono}\n💬 Dijo: "${text}"`;
+            const origenLead = campañaUsuario ? `Campaña ADS: ${campañaUsuario}` : `Orgánico (${platform})`;
+            const alerta = `🚨 *LEAD CAPTURADO* 🚨\n👤 ${name}\n📞 ${telefono}\n📢 Origen: ${origenLead}\n💬 Dijo: "${text}"`;
             
-            console.log(`[ALERTA] Enviando aviso a ${NEGOCIO.staff_alertas.length} números.`);
-            
-            for (const staffNumber of NEGOCIO.staff_alertas) {
-                // Siempre usamos 'whatsapp' para asegurar que la alerta llegue al celular del staff
-                await sendMessage(staffNumber, alerta, 'whatsapp'); 
-            }
+            for (const staff of NEGOCIO.staff_alertas) { await sendMessage(staff, alerta, 'whatsapp'); }
             return;
         }
 
         if (lower.includes('precio') || lower.includes('agenda')) metricas.intencion++;
 
-        // --- INYECCIÓN DE CONOCIMIENTO AL PROMPT ---
+        // --- CONTEXTO INTELIGENTE CON CAMPAÑA ---
+        let contextoAdicional = "";
+        if (campañaUsuario) {
+            // Instrucción secreta para Zara: Priorizar la venta de lo que vio en el anuncio
+            contextoAdicional = `\n[IMPORTANTE: ESTE CLIENTE VIENE DE UN ANUNCIO SOBRE: "${campañaUsuario}". ENFÓCATE EN VENDER ESO PRIMERO.]`;
+        }
+
         const fullContext = `
         ${SYSTEM_PROMPT}
+        ${contextoAdicional}
 
-        [UBICACIÓN Y HORARIOS]
-        Dirección: ${NEGOCIO.direccion}
+        [DATOS DEL NEGOCIO]
+        Ubicación: ${NEGOCIO.direccion}
         Horario: ${NEGOCIO.horario}
-        Agenda: ${NEGOCIO.agenda_link}
+        Agenda Web: ${NEGOCIO.agenda_link}
 
-        [CATÁLOGO COMPLETO DE SERVICIOS]
+        [CATÁLOGO]
         ${PRODUCTOS}
         `;
 

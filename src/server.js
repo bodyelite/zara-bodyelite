@@ -12,10 +12,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- RUTA 1: MONITOR ---
-app.get('/monitor', (req, res) => res.json({ status: 'Online', version: 'Zara 6.1 (Variables Fixed)' }));
+// MONITOR
+app.get('/monitor', (req, res) => res.json({ status: 'Online', version: 'Zara 7.1 (Ads Detection)' }));
 
-// --- RUTA 2: CHAT WEB ---
+// WEBCHAT
 app.post('/webchat', async (req, res) => {
     try {
         const { message, history } = req.body;
@@ -29,14 +29,13 @@ app.post('/webchat', async (req, res) => {
     }
 });
 
-// --- RUTA 3: WEBHOOK META ---
+// WEBHOOK META
 app.get('/webhook', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-    // CORREGIDO: Usamos process.env.VERIFY_TOKEN
     if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-        console.log('[Meta] Webhook verificado correctamente');
+        console.log('[Meta] Webhook verificado');
         res.status(200).send(challenge);
     } else {
         res.sendStatus(403);
@@ -47,7 +46,8 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(200);
     try {
         const body = req.body;
-        // Lógica WhatsApp
+        
+        // A) WHATSAPP
         if (body.object === 'whatsapp_business_account') {
             const msg = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
             if (msg?.text) {
@@ -56,12 +56,27 @@ app.post('/webhook', async (req, res) => {
                 await procesarMensaje(msg.from, msg.text.body, name, 'whatsapp');
             }
         } 
-        // Lógica Instagram
+        // B) INSTAGRAM (Con detección de Campaña)
         else if (body.object === 'instagram') {
-            const messaging = body.entry?.[0]?.messaging?.[0];
-            if (messaging?.message?.text) {
-                console.log(`[Instagram] Msg: ${messaging.message.text}`);
-                await procesarMensaje(messaging.sender.id, messaging.message.text, 'Usuario IG', 'instagram');
+            const entry = body.entry?.[0];
+            const messaging = entry?.messaging?.[0];
+            
+            if (messaging) {
+                const senderId = messaging.sender.id;
+                
+                // 1. Detectar si viene de un Anuncio (Referral)
+                let campana = null;
+                if (messaging.referral?.ref) {
+                    campana = messaging.referral.ref;
+                    console.log(`[Instagram ADS] Cliente viene de campaña: ${campana}`);
+                }
+                
+                // 2. Detectar mensaje de texto
+                if (messaging.message?.text) {
+                    const text = messaging.message.text;
+                    console.log(`[Instagram] ID ${senderId}: ${text}`);
+                    await procesarMensaje(senderId, text, 'Usuario IG', 'instagram', campana);
+                }
             }
         }
     } catch (error) {
@@ -70,4 +85,4 @@ app.post('/webhook', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara 6.1 Corrigiendo Variables en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara 7.1 con Detector de Ads en puerto ${PORT}`));
