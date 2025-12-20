@@ -53,14 +53,14 @@ app.post("/api/send-manual", async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MONITOR V1400 (FILTROS ARREGLADOS + ICONOS CLASICOS)
+// MONITOR V1500 (FILTROS Y ICONOS OK)
 app.get("/monitor", (req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Zara CRM Elite</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; }
         body { display: flex; height: 100vh; background: #f0f2f5; overflow: hidden; }
@@ -70,33 +70,29 @@ app.get("/monitor", (req, res) => {
         .sidebar-header { padding: 15px; background: #f0f2f5; border-bottom: 1px solid #ddd; }
         .sidebar-header h3 { margin: 0 0 10px 0; color: #54656f; font-size: 18px; display: flex; align-items: center; gap: 8px; }
         
-        /* TABS DE FILTRO */
         .tabs { display: flex; gap: 8px; }
-        .tab { flex: 1; padding: 8px; border: none; background: #e0e0e0; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; color: #555; transition: 0.2s; text-transform: uppercase; }
+        .tab { flex: 1; padding: 10px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; color: #555; transition: 0.2s; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .tab:hover { background: #d0d0d0; }
         
-        /* COLORES ACTIVOS POR CANAL */
         .tab.all.active { background: #333; color: white; }
         .tab.wsp.active { background: #25D366; color: white; }
         .tab.ig.active { background: #E1306C; color: white; }
         .tab.web.active { background: #007bff; color: white; }
 
         .contact-list { flex: 1; overflow-y: auto; }
-        .contact { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f5f6f6; cursor: pointer; transition: 0.2s; }
+        .contact { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f5f6f6; cursor: pointer; transition: 0.2s; position: relative; }
         .contact:hover { background: #f5f6f6; }
-        .contact.active { background: #e9edef; border-left: 4px solid #00a884; }
+        .contact.active { background: #e9edef; border-left: 5px solid #00a884; }
         
-        /* AVATARS E ICONOS */
-        .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 24px; color: white; position: relative; }
-        .badge { position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 24px; color: white; position: relative; flex-shrink: 0; }
+        .channel-badge { position: absolute; bottom: -2px; right: -2px; width: 20px; height: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
         
         .details { flex: 1; min-width: 0; }
-        .name { font-weight: 600; font-size: 15px; color: #111; margin-bottom: 3px; }
+        .name-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .name { font-weight: 600; font-size: 15px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .preview { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .meta-info { display: flex; justify-content: space-between; align-items: baseline; }
-        .time { font-size: 11px; color: #999; }
+        .time { font-size: 11px; color: #999; flex-shrink: 0; margin-left: 5px; }
 
-        /* AREA DE CHAT */
         .main { flex: 1; display: flex; flex-direction: column; background: #efeae2; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
         .chat-header { height: 60px; background: #f0f2f5; display: flex; align-items: center; padding: 0 20px; font-weight: bold; color: #54656f; border-bottom: 1px solid #ddd; gap: 10px; }
         .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -108,6 +104,15 @@ app.get("/monitor", (req, res) => {
         .input-area { padding: 10px; background: #f0f2f5; display: flex; gap: 10px; border-top: 1px solid #ddd; }
         .input-area input { flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd; outline: none; font-size: 15px; }
         .send-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #00a884; color: white; cursor: pointer; font-size: 18px; }
+        
+        /* Iconos Específicos */
+        .ico-wsp { color: #25D366; }
+        .ico-ig { color: #E1306C; }
+        .ico-web { color: #007bff; }
+        
+        .bg-wsp { background-color: #25D366; }
+        .bg-ig { background-color: #E1306C; }
+        .bg-web { background-color: #007bff; }
     </style>
 </head>
 <body>
@@ -116,9 +121,9 @@ app.get("/monitor", (req, res) => {
             <h3><i class="fas fa-bolt"></i> Zara CRM</h3>
             <div class="tabs">
                 <button class="tab all active" onclick="filter('all', this)">Todos</button>
-                <button class="tab wsp" onclick="filter('whatsapp', this)">WSP</button>
-                <button class="tab ig" onclick="filter('instagram', this)">IG</button>
-                <button class="tab web" onclick="filter('web', this)">WEB</button>
+                <button class="tab wsp" onclick="filter('whatsapp', this)"><i class="fab fa-whatsapp"></i></button>
+                <button class="tab ig" onclick="filter('instagram', this)"><i class="fab fa-instagram"></i></button>
+                <button class="tab web" onclick="filter('web', this)"><i class="fas fa-globe"></i></button>
             </div>
         </div>
         <div class="contact-list" id="list"></div>
@@ -150,9 +155,7 @@ app.get("/monitor", (req, res) => {
 
     function filter(type, btn) {
         curFilter = type;
-        // Resetear clases activas
         document.querySelectorAll('.tab').forEach(t => t.className = 'tab ' + t.classList[1]); 
-        // Activar botón actual
         btn.classList.add('active');
         renderList();
     }
@@ -164,44 +167,38 @@ app.get("/monitor", (req, res) => {
         
         sorted.forEach(id => {
             const c = data[id];
+            // NORMALIZAMOS EL ORIGEN A MINUSCULAS PARA FILTRAR BIEN
+            const origen = (c.origen || 'web').toLowerCase();
             
-            // FILTRO ESTRICTO
-            if (curFilter !== 'all' && c.origen !== curFilter) return;
+            if (curFilter !== 'all' && origen !== curFilter) return;
             
-            // CONFIGURACION DE ICONOS Y COLORES
-            let color = '#777'; 
-            let mainIcon = 'fa-user';
-            let badgeIcon = 'fa-user';
+            // LÓGICA DE ICONOS Y COLORES
+            let bgClass = 'bg-web'; 
+            let mainIcon = 'fa-globe';
+            let badgeColor = 'ico-web';
 
-            if(c.origen === 'whatsapp') { 
-                color = '#25D366'; 
-                mainIcon = 'fa-whatsapp'; 
-                badgeIcon = 'fa-whatsapp';
-            } else if(c.origen === 'instagram') { 
-                color = '#E1306C'; 
-                mainIcon = 'fa-instagram'; 
-                badgeIcon = 'fa-instagram';
-            } else if(c.origen === 'web') { 
-                color = '#007bff'; 
-                mainIcon = 'fa-globe'; 
-                badgeIcon = 'fa-globe';
+            if(origen.includes('whatsapp') || origen.includes('wsp')) { 
+                bgClass = 'bg-wsp'; mainIcon = 'fa-whatsapp'; badgeColor = 'ico-wsp';
+            } else if(origen.includes('instagram') || origen.includes('ig')) { 
+                bgClass = 'bg-ig'; mainIcon = 'fa-instagram'; badgeColor = 'ico-ig';
             }
 
             const last = c.mensajes.slice(-1)[0] || {};
             const time = last.timestamp ? new Date(last.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
 
-            html += \`<div class="contact \${curId===id?'active':''}" onclick="openChat('\${id}', '\${c.origen}')">
-                <div class="avatar" style="background:\${color}">
-                    <i class="fab \${mainIcon}"></i> <div class="badge" style="color:\${color}">
-                        <i class="fas \${badgeIcon}" style="font-size:10px"></i>
+            html += \`<div class="contact \${curId===id?'active':''}" onclick="openChat('\${id}', '\${origen}')">
+                <div class="avatar \${bgClass}">
+                    <i class="fab \${mainIcon}"></i>
+                    <div class="channel-badge">
+                        <i class="fas \${mainIcon} \${badgeColor}" style="font-size:12px"></i>
                     </div>
                 </div>
                 <div class="details">
-                    <div class="meta-info">
+                    <div class="name-row">
                         <div class="name">\${c.nombre}</div>
                         <div class="time">\${time}</div>
                     </div>
-                    <div class="preview">\${last.texto ? last.texto.substring(0,35)+'...' : ''}</div>
+                    <div class="preview">\${last.texto ? last.texto.substring(0,30)+'...' : ''}</div>
                 </div>
             </div>\`;
         });
@@ -212,10 +209,9 @@ app.get("/monitor", (req, res) => {
         curId = id; 
         curOrigin = origin;
         
-        let headerIcon = '';
-        if(origin === 'whatsapp') headerIcon = '<i class="fab fa-whatsapp" style="color:#25D366; font-size:24px"></i>';
-        else if(origin === 'instagram') headerIcon = '<i class="fab fa-instagram" style="color:#E1306C; font-size:24px"></i>';
-        else if(origin === 'web') headerIcon = '<i class="fas fa-globe" style="color:#007bff; font-size:24px"></i>';
+        let headerIcon = '<i class="fas fa-globe ico-web"></i>';
+        if(origin.includes('whatsapp')) headerIcon = '<i class="fab fa-whatsapp ico-wsp" style="font-size:24px"></i>';
+        else if(origin.includes('instagram')) headerIcon = '<i class="fab fa-instagram ico-ig" style="font-size:24px"></i>';
 
         document.getElementById('header').innerHTML = \`\${headerIcon} \${data[id].nombre}\`;
         document.getElementById('input-area').style.display = 'flex';
@@ -245,7 +241,6 @@ app.get("/monitor", (req, res) => {
         if(!txt || !curId) return;
         
         inp.value = '';
-        // Optimistic UI update
         const box = document.getElementById('box');
         box.innerHTML += \`<div class="msg zara" style="opacity:0.6">\${txt} <small>...</small></div>\`;
         box.scrollTop = box.scrollHeight;
@@ -264,5 +259,5 @@ app.get("/monitor", (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => {
-    console.log("🚀 Zara V1400 (Filtros & Iconos OK) Online");
+    console.log("🚀 Zara V1500 (Filtros Blindados & Iconos) Online");
 });
