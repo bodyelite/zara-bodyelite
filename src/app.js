@@ -11,7 +11,9 @@ export async function procesarEvento(entry) {
     try {
         if (platform === "whatsapp") {
             const change = entry.changes[0].value;
-            if (!change.messages) return;
+            
+            // FILTRO DE SEGURIDAD: Si no es mensaje (ej: status update), ignorar
+            if (!change.messages || change.messages.length === 0) return;
             
             const msg = change.messages[0];
             senderId = msg.from;
@@ -20,26 +22,32 @@ export async function procesarEvento(entry) {
         } else {
             if (entry.messaging?.[0]?.message?.is_echo) return;
             senderId = entry.messaging[0].sender.id;
-            // AQUI ESTABA EL ERROR: Ahora llamamos a la función con el nombre correcto
             senderName = await getIgUserInfo(senderId);
             text = entry.messaging[0].message?.text;
         }
 
         if (!text) return;
 
+        console.log(`📨 [${platform.toUpperCase()}] Mensaje de ${senderName}: ${text}`);
+        
+        // 1. Guardar mensaje usuario
         registrar(senderId, senderName, text, "usuario", platform);
 
         if (!sesiones[senderId]) sesiones[senderId] = [];
         sesiones[senderId].push({ role: "user", content: text });
 
+        // 2. Generar respuesta
         const reply = await generarRespuestaIA(sesiones[senderId].slice(-10));
+        console.log(`🤖 [IA] Responde: ${reply}`);
         
+        // 3. Enviar a Meta
         await sendMessage(senderId, reply, platform);
         
+        // 4. Guardar respuesta Zara
         sesiones[senderId].push({ role: "assistant", content: reply });
         registrar(senderId, "Zara", reply, "zara", platform);
 
     } catch (e) {
-        console.error("Error procesando evento:", e);
+        console.error("❌ ERROR EN PROCESAR EVENTO:", e);
     }
 }
