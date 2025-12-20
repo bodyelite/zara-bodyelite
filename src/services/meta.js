@@ -4,11 +4,9 @@ import { generarRespuestaIA } from './openai.js';
 import { SYSTEM_PROMPT } from '../config/personalidad.js';
 import { PRODUCTOS } from '../config/productos.js';
 import { NEGOCIO } from '../config/negocio.js';
-import { guardarMensaje, obtenerChats } from '../utils/history.js'; // Importamos la memoria
+import { guardarMensaje, obtenerChats, actualizarEstado } from '../utils/history.js';
 
 dotenv.config();
-
-// Cache simple para nombres de IG
 const igCache = {};
 
 export async function getInstagramUser(id) {
@@ -27,7 +25,6 @@ export async function sendMessage(to, text, platform) {
     try {
         const token = process.env.PAGE_ACCESS_TOKEN;
         let url, data;
-
         if (platform === 'whatsapp') {
             url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
             data = { messaging_product: 'whatsapp', to: to, text: { body: text } };
@@ -35,52 +32,54 @@ export async function sendMessage(to, text, platform) {
             url = `https://graph.facebook.com/v18.0/me/messages`;
             data = { recipient: { id: to }, message: { text: text } };
         } 
-
         if (url) await axios.post(url, data, { headers: { Authorization: `Bearer ${token}` } });
     } catch (error) { console.error(`[Error Meta ${platform}]`, error.message); }
 }
 
 export async function procesarMensaje(senderId, text, name, platform, campana = null) {
-    console.log(`[CEREBRO] Procesando mensaje de ${name}: ${text}`);
+    console.log(`[CEREBRO] Procesando mensaje de ${name}...`);
+    if (platform === 'instagram' && (name === 'Usuario IG' || !name)) name = await getInstagramUser(senderId);
 
-    if (platform === 'instagram' && (name === 'Usuario IG' || !name)) {
-        name = await getInstagramUser(senderId);
-    }
-
-    // 1. GUARDAR LO QUE DIJO EL USUARIO
     guardarMensaje(senderId, name, platform, 'user', text, campana);
 
     try {
-        // 2. RECUPERAR EL HISTORIAL (LA MEMORIA)
         const chats = obtenerChats();
-        const historial = chats[senderId]?.mensajes || [];
-
-        // 3. PREPARAR CONTEXTO PARA LA IA
-        let contextoSistema = `${SYSTEM_PROMPT}\n\n[DATOS NEGOCIO]\n${JSON.stringify(NEGOCIO)}\n\n[PRODUCTOS Y PLANES]\n${PRODUCTOS}`;
-        if (campana) contextoSistema += `\n[IMPORTANTE: El cliente viene por el anuncio "${campana}". Enfócate en eso.]`;
-
-        // 4. CONVERTIR HISTORIAL A FORMATO OPENAI (Últimos 10 mensajes para dar contexto)
-        const historialIA = historial.slice(-10).map(m => ({
+        const historial = chats[senderId] ? chats[senderId].mensajes : [];
+        const historialReciente = historial.slice(-15).map(m => ({
             role: m.remite === 'zara' ? 'assistant' : 'user',
             content: m.texto
         }));
 
-        // 5. ENVIAR TODO AL CEREBRO (Sistema + Historial)
-        const messages = [
-            { role: "system", content: contextoSistema },
-            ...historialIA
-        ];
-        
-        const reply = await generarRespuestaIA(messages);
-        
-        // 6. RESPONDER Y GUARDAR
-        if (platform !== 'web') await sendMessage(senderId, reply, platform);
-        guardarMensaje(senderId, "Zara", platform, 'zara', reply, campana);
+        let contexto = `${SYSTEM_PROMPT}\n\n[INFO]\n${JSON.stringify(NEGOCIO)}\n\n[PLANES]\n${PRODUCTOS}`;
+        if (campana && campana !== 'Orgánico') contexto += `\n[CAMPAÑA]: "${campana}".`;
 
-        return reply;
+        const messages = [{ role: "system", content: contexto }, ...historialReciente];
+        
+        // --- PROCESAMIENTO INTELIGENTE ---
+        let rawReply = await generarRespuestaIA(messages);
+        
+        // Detectar etiqueta {TAG}
+        let estado = 'COLD'; // Por defecto
+        let cleanReply = rawReply;
+
+        const tagMatch = rawReply.match(/^\{(HOT|WARM|ALERT|COLD)\}/);
+        if (tagMatch) {
+            estado = tagMatch[1]; // Guardamos el estado (ej: HOT)
+            cleanReply = rawReply.replace(/^\{(HOT|WARM|ALERT|COLD)\}\s*/, ''); // Borramos el tag del texto
+            console.log(`[ANALISIS IA] Cliente: ${name} | Estado detectado: ${estado}`);
+            
+            // Actualizamos la base de datos con el nuevo estado
+            actualizarEstado(senderId, estado);
+        }
+
+        if (platform !== 'web') await sendMessage(senderId, cleanReply, platform);
+        guardarMensaje(senderId, "Zara", platform, 'zara', cleanReply, campana);
+        
+        // Retornamos también el estado para que el WebChat lo use si quiere
+        return cleanReply;
 
     } catch (e) {
         console.error('Error Zara:', e);
-        return "Tuve un pequeño error técnico, ¿me lo repites?";
+        return "Dame un segundo, estoy procesando tu solicitud...";
     }
 }
