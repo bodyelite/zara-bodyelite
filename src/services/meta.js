@@ -4,22 +4,27 @@ import { generarRespuestaIA } from './openai.js';
 import { SYSTEM_PROMPT } from '../config/personalidad.js';
 import { PRODUCTOS } from '../config/productos.js';
 import { NEGOCIO } from '../config/negocio.js';
-import { guardarMensaje } from '../utils/history.js'; // <-- Importación Vital
+import { guardarMensaje } from '../utils/history.js';
 
 dotenv.config();
 
 // Cache simple para nombres de IG
 const igCache = {};
 
-async function resolverNombreIG(id) {
+// --- FUNCIÓN EXPORTADA (La que faltaba) ---
+export async function getInstagramUser(id) {
     if (igCache[id]) return igCache[id];
     try {
         const token = process.env.PAGE_ACCESS_TOKEN;
         const url = `https://graph.facebook.com/v18.0/${id}?fields=name&access_token=${token}`;
         const res = await axios.get(url);
-        igCache[id] = res.data.name;
-        return res.data.name;
-    } catch { return "Instagram User"; }
+        const name = res.data.name || "Instagram User";
+        igCache[id] = name;
+        return name;
+    } catch (e) { 
+        console.error("[Querubín] No se pudo obtener nombre IG:", e.message);
+        return "Instagram User"; 
+    }
 }
 
 export async function sendMessage(to, text, platform) {
@@ -34,7 +39,7 @@ export async function sendMessage(to, text, platform) {
             url = `https://graph.facebook.com/v18.0/me/messages`;
             data = { recipient: { id: to }, message: { text: text } };
         } 
-        // Web no necesita envío API aquí, responde directo en server.js
+        // Web no requiere envío API aquí
 
         if (url) await axios.post(url, data, { headers: { Authorization: `Bearer ${token}` } });
     } catch (error) {
@@ -50,12 +55,12 @@ function extraerTelefono(texto) {
 export async function procesarMensaje(senderId, text, name, platform, campana = null) {
     console.log(`[CEREBRO] Procesando mensaje de ${name} en ${platform}`);
 
-    // 1. Resolver nombre IG si es necesario
+    // 1. Resolver nombre IG si es necesario (Usando la función exportada)
     if (platform === 'instagram' && (name === 'Usuario IG' || !name)) {
-        name = await resolverNombreIG(senderId);
+        name = await getInstagramUser(senderId);
     }
 
-    // 2. GUARDAR MENSAJE DEL USUARIO (Aquí llama a la memoria)
+    // 2. GUARDAR MENSAJE DEL USUARIO
     try {
         guardarMensaje(senderId, name, platform, 'user', text, campana);
     } catch (err) {
@@ -65,8 +70,12 @@ export async function procesarMensaje(senderId, text, name, platform, campana = 
     try {
         const lower = text.toLowerCase();
         
-        // Comandos
-        if (lower === 'zara reporte') { /* ... */ }
+        // Comandos Admin
+        if (lower === 'zara reporte') { 
+            // Lógica de reporte simple
+            await sendMessage(senderId, "📊 Reporte: Revisa el Monitor Web (/monitor)", platform);
+            return;
+        }
 
         // Detección Teléfono
         const telefono = extraerTelefono(text);
