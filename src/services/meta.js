@@ -10,6 +10,7 @@ dotenv.config();
 const metricas = { leads: new Set(), intencion: 0, llamadas: 0 };
 const usuariosPausados = new Set();
 
+// Función de envío base
 export async function sendMessage(to, text, platform) {
     try {
         let url, data;
@@ -25,7 +26,7 @@ export async function sendMessage(to, text, platform) {
 
         if (url) await axios.post(url, data, { headers: { Authorization: `Bearer ${token}` } });
     } catch (error) {
-        console.error(`[Error Meta ${platform}]`, error.message);
+        console.error(`[Error Meta ${platform}]`, error.response?.data?.error?.message || error.message);
     }
 }
 
@@ -41,7 +42,7 @@ export async function procesarMensaje(senderId, text, name, platform) {
 
         // --- COMANDOS ADMIN ---
         if (lower === 'zara reporte') {
-            const msg = `📊 *REPORTE ZARA*\n👥 Leads: ${metricas.leads.size}\n🎯 Intención: ${metricas.intencion}\n📞 Fono Capturado: ${metricas.llamadas}`;
+            const msg = `📊 *REPORTE ZARA*\n👥 Leads: ${metricas.leads.size}\n🎯 Intención: ${metricas.intencion}\n📞 Fonos Capturados: ${metricas.llamadas}`;
             await sendMessage(senderId, msg, platform);
             return;
         }
@@ -49,34 +50,37 @@ export async function procesarMensaje(senderId, text, name, platform) {
         if (lower === 'zara on') { usuariosPausados.delete(senderId); await sendMessage(senderId, "✅ Activa.", platform); return; }
         if (usuariosPausados.has(senderId)) return;
 
-        // --- DETECCIÓN DE TELÉFONO (Aviso a Staff) ---
+        // --- DETECCIÓN DE TELÉFONO (CRÍTICO) ---
         const telefono = extraerTelefono(text);
         if (telefono) {
             metricas.llamadas++;
+            // 1. Confirmar al cliente
             await sendMessage(senderId, "¡Perfecto! 📝 Guardé tu número. Una especialista te contactará en breve para asesorarte. ✨", platform);
             
-            // ALERTA A TU WSP PERSONAL
+            // 2. ALERTAS A TODO EL STAFF (Bucle)
             const alerta = `🚨 *LEAD CAPTURADO (${platform})* 🚨\n👤 ${name}\n📞 ${telefono}\n💬 Dijo: "${text}"`;
-            for (const staff of NEGOCIO.staff_alertas) {
-                // Enviamos siempre por WSP al dueño para asegurar lectura
-                await sendMessage(staff, alerta, 'whatsapp'); 
+            
+            console.log(`[ALERTA] Enviando aviso a ${NEGOCIO.staff_alertas.length} números.`);
+            
+            for (const staffNumber of NEGOCIO.staff_alertas) {
+                // Siempre usamos 'whatsapp' para asegurar que la alerta llegue al celular del staff
+                await sendMessage(staffNumber, alerta, 'whatsapp'); 
             }
             return;
         }
 
         if (lower.includes('precio') || lower.includes('agenda')) metricas.intencion++;
 
-        // --- CONSTRUCCIÓN DEL PROMPT CON CONOCIMIENTO ---
-        // Aquí fusionamos la Personalidad + Datos del Negocio + Catálogo de Productos
+        // --- INYECCIÓN DE CONOCIMIENTO AL PROMPT ---
         const fullContext = `
         ${SYSTEM_PROMPT}
 
-        [DATOS DEL NEGOCIO]
-        Ubicación: ${NEGOCIO.direccion}
+        [UBICACIÓN Y HORARIOS]
+        Dirección: ${NEGOCIO.direccion}
         Horario: ${NEGOCIO.horario}
-        Agenda Web: ${NEGOCIO.agenda_link}
+        Agenda: ${NEGOCIO.agenda_link}
 
-        [CATÁLOGO DE SERVICIOS Y PRECIOS OFICIALES]
+        [CATÁLOGO COMPLETO DE SERVICIOS]
         ${PRODUCTOS}
         `;
 
