@@ -1,51 +1,36 @@
-import fetch from "node-fetch";
+import axios from 'axios';
+import dotenv from 'dotenv';
+import { generarRespuestaIA } from './openai.js';
 
-export async function sendMessage(to, text, platform, imageUrl = null) {
-  try {
-    const token = process.env.PAGE_ACCESS_TOKEN;
-    let url = "";
-    let body = {};
+dotenv.config();
 
-    if (platform === "whatsapp") {
-        const phoneId = process.env.PHONE_NUMBER_ID;
-        url = `https://graph.facebook.com/v19.0/${phoneId}/messages`;
-        if (imageUrl) {
-            body = { messaging_product: "whatsapp", to: to, type: "image", image: { link: imageUrl } };
-        } else {
-            body = { messaging_product: "whatsapp", to: to, type: "text", text: { body: text, preview_url: false } };
-        }
-    } else {
-        url = `https://graph.facebook.com/v19.0/me/messages`;
-        if (imageUrl) {
-            body = { recipient: { id: to }, message: { attachment: { type: "image", payload: { url: imageUrl, is_reusable: true } } } };
-        } else {
-            body = { recipient: { id: to }, message: { text: text } };
-        }
-    }
-    await fetch(url, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-    });
-  } catch (error) { console.error(error); }
-}
-
-export async function sendButton(to, text, btnTitle, url, platform) {
-    if (platform === "instagram") {
-        await sendMessage(to, `${text}\n\n👇 ${btnTitle}: ${url}`, "instagram");
-    } else {
-        await sendMessage(to, `${text}\n\n🔗 ${url}`, "whatsapp");
-    }
-}
-
-export async function getWhatsAppMediaUrl(mediaId) {
+export async function sendMessage(to, text) {
     try {
-        const token = process.env.PAGE_ACCESS_TOKEN;
-        const r = await fetch(`https://graph.facebook.com/v19.0/${mediaId}`, { headers: { "Authorization": `Bearer ${token}` } });
-        if(!r.ok) return null;
-        const d = await r.json();
-        return d.url; 
-    } catch(e) { return null; }
+        await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+            {
+                messaging_product: 'whatsapp',
+                to: to,
+                text: { body: text }
+            },
+            { headers: { Authorization: `Bearer ${process.env.ACCESS_TOKEN}` } }
+        );
+    } catch (error) {
+        console.error('Meta Send Error:', error.response?.data || error.message);
+    }
 }
 
-export async function getInstagramUserProfile(userId) { return "Usuario IG"; }
+export async function procesarMensaje(senderId, text, name, systemPrompt, productos) {
+    try {
+        // Construcción básica de contexto para IA (Sin memoria persistente compleja por ahora para estabilidad)
+        const messages = [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: text }
+        ];
+        
+        const reply = await generarRespuestaIA(messages);
+        await sendMessage(senderId, reply);
+    } catch (e) {
+        console.error('Error procesando mensaje:', e);
+    }
+}
