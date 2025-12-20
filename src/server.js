@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { NEGOCIO } from './config/negocio.js';
 import { SYSTEM_PROMPT } from './config/personalidad.js';
+import { PRODUCTOS } from './config/productos.js';
 import { generarRespuestaIA } from './services/openai.js';
 import { procesarMensaje } from './services/meta.js';
 
@@ -13,14 +14,27 @@ app.use(cors());
 app.use(express.json());
 
 // MONITOR
-app.get('/monitor', (req, res) => res.json({ status: 'Online', version: 'Zara 7.1 (Ads Detection)' }));
+app.get('/monitor', (req, res) => res.json({ status: 'Online', version: 'Zara 8.0 (Web Campaign Ready)' }));
 
-// WEBCHAT
+// --- RUTA CHAT WEB (Con Detección de Campaña) ---
 app.post('/webchat', async (req, res) => {
     try {
-        const { message, history } = req.body;
-        console.log(`[Web] Mensaje: ${message}`);
-        const messages = [{ role: "system", content: SYSTEM_PROMPT }, ...(history || []), { role: "user", content: message }];
+        const { message, history, ref } = req.body; // Recibimos 'ref' (Campaña)
+        console.log(`[Web] Mensaje: ${message} | Campaña: ${ref || 'Orgánico'}`);
+        
+        // Inyectamos el contexto de la campaña en la mente de Zara para este turno
+        let contextoSistema = SYSTEM_PROMPT + `\n\n[CATÁLOGO]\n${PRODUCTOS}`;
+        
+        if (ref) {
+            contextoSistema += `\n\n[⚠️ ATENCIÓN: ESTE CLIENTE LLEGÓ A LA WEB POR UN ANUNCIO DE: "${ref.toUpperCase()}". PRIORIZA VENDER ESTE SERVICIO EN TU RESPUESTA.]`;
+        }
+
+        const messages = [
+            { role: "system", content: contextoSistema },
+            ...(history || []), 
+            { role: "user", content: message }
+        ];
+
         const reply = await generarRespuestaIA(messages);
         res.json({ reply });
     } catch (error) {
@@ -29,13 +43,12 @@ app.post('/webchat', async (req, res) => {
     }
 });
 
-// WEBHOOK META
+// --- RUTA WEBHOOK META (IG/WSP) ---
 app.get('/webhook', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
     if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-        console.log('[Meta] Webhook verificado');
         res.status(200).send(challenge);
     } else {
         res.sendStatus(403);
@@ -46,43 +59,26 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(200);
     try {
         const body = req.body;
-        
-        // A) WHATSAPP
         if (body.object === 'whatsapp_business_account') {
             const msg = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
             if (msg?.text) {
                 const name = body.entry[0].changes[0].value.contacts?.[0]?.profile?.name || 'Cliente';
-                console.log(`[WhatsApp] ${name}: ${msg.text.body}`);
                 await procesarMensaje(msg.from, msg.text.body, name, 'whatsapp');
             }
-        } 
-        // B) INSTAGRAM (Con detección de Campaña)
-        else if (body.object === 'instagram') {
-            const entry = body.entry?.[0];
-            const messaging = entry?.messaging?.[0];
-            
+        } else if (body.object === 'instagram') {
+            const messaging = body.entry?.[0]?.messaging?.[0];
             if (messaging) {
                 const senderId = messaging.sender.id;
-                
-                // 1. Detectar si viene de un Anuncio (Referral)
-                let campana = null;
-                if (messaging.referral?.ref) {
-                    campana = messaging.referral.ref;
-                    console.log(`[Instagram ADS] Cliente viene de campaña: ${campana}`);
-                }
-                
-                // 2. Detectar mensaje de texto
+                let campana = messaging.referral?.ref || null;
                 if (messaging.message?.text) {
-                    const text = messaging.message.text;
-                    console.log(`[Instagram] ID ${senderId}: ${text}`);
-                    await procesarMensaje(senderId, text, 'Usuario IG', 'instagram', campana);
+                    await procesarMensaje(senderId, messaging.message.text, 'Usuario IG', 'instagram', campana);
                 }
             }
         }
     } catch (error) {
-        console.error('[Meta] Error webhook:', error);
+        console.error('[Meta] Error:', error);
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara 7.1 con Detector de Ads en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara 8.0 Full Omnichannel Ads en puerto ${PORT}`));
