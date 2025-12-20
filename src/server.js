@@ -53,20 +53,19 @@ app.post("/api/send-manual", async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MONITOR V1200 (PESTAÑAS GRANDES + WEB AZUL)
+// MONITOR V1300
 app.get("/monitor", (req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Zara Monitor Omnicanal</title>
+    <title>Zara Monitor V1300</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; }
         body { display: flex; height: 100vh; background: #f0f2f5; overflow: hidden; }
         .sidebar { width: 380px; background: white; border-right: 1px solid #d1d7db; display: flex; flex-direction: column; }
         .sidebar-header { padding: 15px; background: #f0f2f5; border-bottom: 1px solid #ddd; }
-        
         .tabs { display: flex; gap: 5px; margin-top: 10px; }
         .tab { flex: 1; padding: 10px; border: none; background: #e0e0e0; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: #555; transition: 0.2s; }
         .tab:hover { background: #d0d0d0; }
@@ -75,19 +74,15 @@ app.get("/monitor", (req, res) => {
         .tab.wsp.active { background: #25D366; }
         .tab.ig.active { background: #E1306C; }
         .tab.web.active { background: #007bff; }
-
         .contact-list { flex: 1; overflow-y: auto; }
         .contact { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f5f6f6; cursor: pointer; }
         .contact:hover { background: #f5f6f6; }
         .contact.active { background: #f0f2f5; border-left: 4px solid #00a884; }
-        
         .avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 20px; color: white; position: relative; }
         .badge { position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        
         .details { flex: 1; min-width: 0; }
         .name { font-weight: 600; font-size: 15px; color: #111; margin-bottom: 3px; }
         .preview { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
         .main { flex: 1; display: flex; flex-direction: column; background: #efeae2; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
         .chat-header { height: 60px; background: #f0f2f5; display: flex; align-items: center; padding: 0 20px; font-weight: bold; color: #54656f; border-bottom: 1px solid #ddd; gap: 10px; }
         .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -95,7 +90,6 @@ app.get("/monitor", (req, res) => {
         .msg.usuario { background: white; align-self: flex-start; }
         .msg.zara { background: #d9fdd3; align-self: flex-end; }
         .time { font-size: 10px; text-align: right; color: #777; margin-top: 2px; }
-
         .input-area { padding: 10px; background: #f0f2f5; display: flex; gap: 10px; }
         .input-area input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
         .send-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #00a884; color: white; cursor: pointer; }
@@ -179,7 +173,7 @@ app.get("/monitor", (req, res) => {
     function renderChat(id) {
         const box = document.getElementById('box');
         const msgs = data[id].mensajes;
-        const html = msgs.map(m => \`<div class="msg \${m.tipo}">\${m.texto}<div class="time">\${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>\`).join('');
+        const html = msgs.map(m => \`<div class="msg \${m.tipo}">\${m.texto.replace(/\\n/g,'<br>')}<div class="time">\${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>\`).join('');
         if(box.innerHTML !== html) { box.innerHTML = html; box.scrollTop = box.scrollHeight; }
     }
 
@@ -195,4 +189,6 @@ app.get("/monitor", (req, res) => {
 </script></body></html>`);
 });
 
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || 3000, () => {
+    console.log("🚀 Zara V1300 (Corrección de Nombres) Online");
+});
