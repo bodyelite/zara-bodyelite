@@ -2,6 +2,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import { generarRespuestaIA } from './openai.js';
 import { SYSTEM_PROMPT } from '../config/personalidad.js';
+import { PRODUCTOS } from '../config/productos.js';
 import { NEGOCIO } from '../config/negocio.js';
 
 dotenv.config();
@@ -9,11 +10,10 @@ dotenv.config();
 const metricas = { leads: new Set(), intencion: 0, llamadas: 0 };
 const usuariosPausados = new Set();
 
-// --- FUNCIÓN DE ENVÍO BLINDADA ---
 export async function sendMessage(to, text, platform) {
     try {
         let url, data;
-        const token = process.env.PAGE_ACCESS_TOKEN; // Variable corregida para Render
+        const token = process.env.PAGE_ACCESS_TOKEN; 
 
         if (platform === 'whatsapp') {
             url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
@@ -24,27 +24,24 @@ export async function sendMessage(to, text, platform) {
         }
 
         if (url) await axios.post(url, data, { headers: { Authorization: `Bearer ${token}` } });
-
     } catch (error) {
-        console.error(`[Error Envío ${platform}]`, error.response?.data?.error?.message || error.message);
+        console.error(`[Error Meta ${platform}]`, error.message);
     }
 }
 
-// --- DETECTOR DE TELÉFONOS (Regex Chileno) ---
 function extraerTelefono(texto) {
     const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{8}\b/);
     return match ? match[0].replace(/\D/g, '') : null;
 }
 
-// --- LOGICA PRINCIPAL ---
 export async function procesarMensaje(senderId, text, name, platform) {
     try {
         const lower = text.toLowerCase();
         metricas.leads.add(senderId);
 
-        // 1. COMANDOS ADMIN
+        // --- COMANDOS ADMIN ---
         if (lower === 'zara reporte') {
-            const msg = `📊 *REPORTE ZARA*\n👥 Leads: ${metricas.leads.size}\n🎯 Intención: ${metricas.intencion}\n📞 Llamadas: ${metricas.llamadas}`;
+            const msg = `📊 *REPORTE ZARA*\n👥 Leads: ${metricas.leads.size}\n🎯 Intención: ${metricas.intencion}\n📞 Fono Capturado: ${metricas.llamadas}`;
             await sendMessage(senderId, msg, platform);
             return;
         }
@@ -52,29 +49,39 @@ export async function procesarMensaje(senderId, text, name, platform) {
         if (lower === 'zara on') { usuariosPausados.delete(senderId); await sendMessage(senderId, "✅ Activa.", platform); return; }
         if (usuariosPausados.has(senderId)) return;
 
-        // 2. DETECCIÓN DE TELÉFONO (CRÍTICO: AVISO A STAFF)
+        // --- DETECCIÓN DE TELÉFONO (Aviso a Staff) ---
         const telefono = extraerTelefono(text);
         if (telefono) {
             metricas.llamadas++;
-            console.log(`[ALERTA] Teléfono capturado: ${telefono}`);
+            await sendMessage(senderId, "¡Perfecto! 📝 Guardé tu número. Una especialista te contactará en breve para asesorarte. ✨", platform);
             
-            // Avisar al cliente
-            await sendMessage(senderId, "¡Perfecto! 📝 Ya pasé tu número a las chicas. Te llamarán en breve para coordinar. ✨", platform);
-            
-            // ALERTA AL STAFF (Bucle a todos los números configurados)
-            const alertaStaff = `🚨 *NUEVO LEAD CAPTURADO* 🚨\n\n👤 Nombre: ${name}\n📞 Teléfono: ${telefono}\n📱 Canal: ${platform}`;
-            for (const adminNum of NEGOCIO.staff_alertas) {
-                // Forzamos envío por WhatsApp al dueño, aunque el lead venga de IG
-                await sendMessage(adminNum, alertaStaff, 'whatsapp'); 
+            // ALERTA A TU WSP PERSONAL
+            const alerta = `🚨 *LEAD CAPTURADO (${platform})* 🚨\n👤 ${name}\n📞 ${telefono}\n💬 Dijo: "${text}"`;
+            for (const staff of NEGOCIO.staff_alertas) {
+                // Enviamos siempre por WSP al dueño para asegurar lectura
+                await sendMessage(staff, alerta, 'whatsapp'); 
             }
-            return; // Cortamos aquí para que la IA no responda encima
+            return;
         }
 
-        // 3. IA CON MENTALIDAD DE VENTA
         if (lower.includes('precio') || lower.includes('agenda')) metricas.intencion++;
-        
+
+        // --- CONSTRUCCIÓN DEL PROMPT CON CONOCIMIENTO ---
+        // Aquí fusionamos la Personalidad + Datos del Negocio + Catálogo de Productos
+        const fullContext = `
+        ${SYSTEM_PROMPT}
+
+        [DATOS DEL NEGOCIO]
+        Ubicación: ${NEGOCIO.direccion}
+        Horario: ${NEGOCIO.horario}
+        Agenda Web: ${NEGOCIO.agenda_link}
+
+        [CATÁLOGO DE SERVICIOS Y PRECIOS OFICIALES]
+        ${PRODUCTOS}
+        `;
+
         const messages = [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: fullContext },
             { role: "user", content: `[Cliente ${name}]: ${text}` }
         ];
         
