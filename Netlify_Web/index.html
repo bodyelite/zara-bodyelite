@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Evaluación IA | Body Elite</title>
+    <style>
+        /* RESET BÁSICO */
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068') no-repeat center center fixed; 
+            background-size: cover; 
+            height: 100vh; 
+            width: 100vw;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+        }
+
+        /* CONTENEDOR PRINCIPAL (ESCRITORIO) */
+        #z-c {
+            position: relative;
+            width: 100%; max-width: 420px;
+            height: 85vh; max-height: 800px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* HEADER */
+        #z-header {
+            background: #111827;
+            padding: 18px 20px;
+            color: white;
+            display: flex; align-items: center; gap: 15px;
+            flex-shrink: 0; 
+        }
+        .z-avatar { position: relative; width: 50px; height: 50px; flex-shrink: 0; }
+        .z-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+        .z-status-dot { position: absolute; bottom: 2px; right: 2px; width: 10px; height: 10px; background: #22c55e; border-radius: 50%; border: 2px solid #111827; }
+        .z-info { flex: 1; overflow: hidden; }
+        .z-name { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+        .z-role { font-size: 12px; opacity: 0.8; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* AREA DE MENSAJES */
+        #z-b {
+            flex: 1;
+            background: #f3f4f6;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 12px;
+            -webkit-overflow-scrolling: touch; 
+        }
+        .z-msg-bot { align-self: flex-start; background: #fff; color: #1f2937; padding: 14px 18px; border-radius: 14px 14px 14px 2px; max-width: 85%; font-size: 15px; line-height: 1.5; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .z-msg-user { align-self: flex-end; background: #111827; color: #fff; padding: 12px 16px; border-radius: 14px 14px 2px 14px; max-width: 85%; font-size: 15px; margin-bottom: 5px; }
+
+        /* AREA DE INPUT */
+        .z-input-area {
+            background: #fff;
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+            display: flex; gap: 10px;
+            flex-shrink: 0;
+            padding-bottom: 15px; 
+        }
+        #z-i {
+            flex: 1; padding: 14px 16px; border-radius: 30px; border: 1px solid #d1d5db;
+            outline: none; font-size: 16px; 
+            background: #f9fafb; -webkit-appearance: none;
+        }
+        .z-input-area button {
+            width: 48px; height: 48px; border-radius: 50%; background: #f97316;
+            color: white; border: none; cursor: pointer; font-size: 18px;
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- CORRECCIONES MÓVILES CRÍTICAS --- */
+        @media (max-width: 480px) {
+            body {
+                display: block !important; 
+                background: #fff !important; 
+                height: 100% !important;
+                position: fixed; 
+                overflow: hidden;
+            }
+            #z-c {
+                position: fixed !important;
+                top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+                width: 100% !important; height: 100% !important;
+                max-width: 100% !important; max-height: 100% !important;
+                border-radius: 0 !important;
+                box-shadow: none !important; margin: 0 !important;
+            }
+            .z-input-area {
+                padding-bottom: max(15px, env(safe-area-inset-bottom)) !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="z-c">
+    <div id="z-header">
+        <div class="z-avatar">
+            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" alt="Zara">
+            <div class="z-status-dot"></div>
+        </div>
+        <div class="z-info">
+            <div class="z-name">Zara</div>
+            <div class="z-role">Especialista Body Elite</div>
+        </div>
+    </div>
+    <div id="z-b">
+        <div class="z-msg-bot">
+            ¡Hola! 👋 Soy Zara, especialista de la clínica.<br><br>
+            Cuéntame, <b>¿qué te gustaría mejorar hoy? ¿Cuerpo o Rostro?</b> ✨
+        </div>
+    </div>
+    <div class="z-input-area">
+        <input id="z-i" type="text" placeholder="Escribe tu consulta..." onkeydown="if(event.key==='Enter') sMsg()">
+        <button onclick="sMsg()">➜</button>
+    </div>
+</div>
+
+<script>
+    // CONEXIÓN DIRECTA A TU SERVIDOR V6.1
+    const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
+    
+    const box = document.getElementById('z-b');
+
+    async function sMsg() {
+        const inp = document.getElementById('z-i');
+        const txt = inp.value.trim();
+        if(!txt) return;
+
+        inp.value = '';
+        // 1. DIBUJAR MENSAJE USUARIO
+        box.innerHTML += `<div class="z-msg-user">${txt}</div>`;
+        box.scrollTop = box.scrollHeight;
+
+        try {
+            // INDICADOR DE ESCRIBIENDO
+            const loadId = 'load'+Date.now();
+            box.innerHTML += `<div id="${loadId}" style="font-size:12px;color:#6b7280;margin:5px 15px">Escribiendo...</div>`;
+            box.scrollTop = box.scrollHeight;
+
+            // 2. ENVIAR A ZARA (RENDER)
+            const res = await fetch(API_URL, {
+                method: 'POST', 
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ message: txt })
+            });
+            const data = await res.json();
+            
+            // BORRAR INDICADOR
+            document.getElementById(loadId).remove();
+            
+            // 3. DIBUJAR RESPUESTA (Adaptada a V6.1 que usa 'reply')
+            // Nota: El backend V6.1 devuelve { reply: "..." }
+            let finalText = data.reply || "Lo siento, no pude procesar eso.";
+            let cleanResp = finalText.replace(/\n/g, '<br>');
+            
+            box.innerHTML += `<div class="z-msg-bot">${cleanResp}</div>`;
+
+        } catch (e) {
+            document.querySelector('div[id^="load"]')?.remove();
+            console.error(e);
+            box.innerHTML += `<div class="z-msg-bot" style="color:red">⚠️ Error de conexión con el servidor.</div>`;
+        }
+        box.scrollTop = box.scrollHeight;
+    }
+</script>
+</body>
+</html>
