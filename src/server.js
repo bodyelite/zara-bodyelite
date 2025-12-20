@@ -3,9 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { NEGOCIO } from './config/negocio.js';
 import { SYSTEM_PROMPT } from './config/personalidad.js';
-import { PRODUCTOS } from './config/productos.js';
 import { generarRespuestaIA } from './services/openai.js';
-import { sendMessage, procesarMensaje } from './services/meta.js';
+import { procesarMensaje } from './services/meta.js';
 
 dotenv.config();
 const app = express();
@@ -13,10 +12,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- RUTA 1: MONITOR DE ESTADO ---
-app.get('/monitor', (req, res) => res.json({ status: 'Online', canales: ['Web', 'WhatsApp', 'Instagram'], version: 'Zara 6.0' }));
+// --- RUTA 1: MONITOR ---
+app.get('/monitor', (req, res) => res.json({ status: 'Online', version: 'Zara 6.1 (Variables Fixed)' }));
 
-// --- RUTA 2: CHAT WEB (Cliente Directo) ---
+// --- RUTA 2: CHAT WEB ---
 app.post('/webchat', async (req, res) => {
     try {
         const { message, history } = req.body;
@@ -30,13 +29,14 @@ app.post('/webchat', async (req, res) => {
     }
 });
 
-// --- RUTA 3: WEBHOOK UNIFICADO (Meta: WhatsApp + Instagram) ---
+// --- RUTA 3: WEBHOOK META ---
 app.get('/webhook', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-    if (mode === 'subscribe' && token === process.env.WEBHOOK_VERIFY_TOKEN) {
-        console.log('[Meta] Webhook verificado');
+    // CORREGIDO: Usamos process.env.VERIFY_TOKEN
+    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+        console.log('[Meta] Webhook verificado correctamente');
         res.status(200).send(challenge);
     } else {
         res.sendStatus(403);
@@ -44,36 +44,30 @@ app.get('/webhook', (req, res) => {
 });
 
 app.post('/webhook', async (req, res) => {
-    res.sendStatus(200); // Responder OK rápido a Meta
+    res.sendStatus(200);
     try {
         const body = req.body;
-        
-        // A) DETECCION WHATSAPP
+        // Lógica WhatsApp
         if (body.object === 'whatsapp_business_account') {
-            const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-            if (message?.text) {
-                const senderId = message.from;
-                const text = message.text.body;
-                const name = body.entry[0].changes[0].value.contacts?.[0]?.profile?.name || 'Cliente WSP';
-                console.log(`[WhatsApp] ${name}: ${text}`);
-                await procesarMensaje(senderId, text, name, 'whatsapp');
+            const msg = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+            if (msg?.text) {
+                const name = body.entry[0].changes[0].value.contacts?.[0]?.profile?.name || 'Cliente';
+                console.log(`[WhatsApp] ${name}: ${msg.text.body}`);
+                await procesarMensaje(msg.from, msg.text.body, name, 'whatsapp');
             }
         } 
-        // B) DETECCION INSTAGRAM
+        // Lógica Instagram
         else if (body.object === 'instagram') {
             const messaging = body.entry?.[0]?.messaging?.[0];
             if (messaging?.message?.text) {
-                const senderId = messaging.sender.id;
-                const text = messaging.message.text;
-                console.log(`[Instagram] ID ${senderId}: ${text}`);
-                // Zara procesa igual, aunque el envío falle por permisos
-                await procesarMensaje(senderId, text, 'Usuario IG', 'instagram');
+                console.log(`[Instagram] Msg: ${messaging.message.text}`);
+                await procesarMensaje(messaging.sender.id, messaging.message.text, 'Usuario IG', 'instagram');
             }
         }
     } catch (error) {
-        console.error('[Meta] Error procesando webhook:', error);
+        console.error('[Meta] Error webhook:', error);
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Zara 6.0 Omnicanal en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Zara 6.1 Corrigiendo Variables en puerto ${PORT}`));
