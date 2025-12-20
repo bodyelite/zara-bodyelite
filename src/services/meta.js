@@ -4,14 +4,13 @@ import { generarRespuestaIA } from './openai.js';
 import { SYSTEM_PROMPT } from '../config/personalidad.js';
 import { PRODUCTOS } from '../config/productos.js';
 import { NEGOCIO } from '../config/negocio.js';
-import { guardarMensaje } from '../utils/history.js';
+import { guardarMensaje, obtenerChats } from '../utils/history.js'; // Importamos la memoria
 
 dotenv.config();
 
 // Cache simple para nombres de IG
 const igCache = {};
 
-// --- FUNCIÓN EXPORTADA (La que faltaba) ---
 export async function getInstagramUser(id) {
     if (igCache[id]) return igCache[id];
     try {
@@ -21,10 +20,7 @@ export async function getInstagramUser(id) {
         const name = res.data.name || "Instagram User";
         igCache[id] = name;
         return name;
-    } catch (e) { 
-        console.error("[Querubín] No se pudo obtener nombre IG:", e.message);
-        return "Instagram User"; 
-    }
+    } catch (e) { return "Instagram User"; }
 }
 
 export async function sendMessage(to, text, platform) {
@@ -39,74 +35,52 @@ export async function sendMessage(to, text, platform) {
             url = `https://graph.facebook.com/v18.0/me/messages`;
             data = { recipient: { id: to }, message: { text: text } };
         } 
-        // Web no requiere envío API aquí
 
         if (url) await axios.post(url, data, { headers: { Authorization: `Bearer ${token}` } });
-    } catch (error) {
-        console.error(`[Error Meta ${platform}]`, error.message);
-    }
-}
-
-function extraerTelefono(texto) {
-    const match = texto.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{8}\b/);
-    return match ? match[0].replace(/\D/g, '') : null;
+    } catch (error) { console.error(`[Error Meta ${platform}]`, error.message); }
 }
 
 export async function procesarMensaje(senderId, text, name, platform, campana = null) {
-    console.log(`[CEREBRO] Procesando mensaje de ${name} en ${platform}`);
+    console.log(`[CEREBRO] Procesando mensaje de ${name}: ${text}`);
 
-    // 1. Resolver nombre IG si es necesario (Usando la función exportada)
     if (platform === 'instagram' && (name === 'Usuario IG' || !name)) {
         name = await getInstagramUser(senderId);
     }
 
-    // 2. GUARDAR MENSAJE DEL USUARIO
-    try {
-        guardarMensaje(senderId, name, platform, 'user', text, campana);
-    } catch (err) {
-        console.error("[CEREBRO ERROR] Falló al guardar mensaje usuario:", err);
-    }
+    // 1. GUARDAR LO QUE DIJO EL USUARIO
+    guardarMensaje(senderId, name, platform, 'user', text, campana);
 
     try {
-        const lower = text.toLowerCase();
-        
-        // Comandos Admin
-        if (lower === 'zara reporte') { 
-            // Lógica de reporte simple
-            await sendMessage(senderId, "📊 Reporte: Revisa el Monitor Web (/monitor)", platform);
-            return;
-        }
+        // 2. RECUPERAR EL HISTORIAL (LA MEMORIA)
+        const chats = obtenerChats();
+        const historial = chats[senderId]?.mensajes || [];
 
-        // Detección Teléfono
-        const telefono = extraerTelefono(text);
-        if (telefono) {
-            const alerta = `🚨 *LEAD DETECTADO* (${platform})\n👤 ${name}\n📞 ${telefono}\n📣 Campaña: ${campana || 'Orgánico'}`;
-            for (const staff of NEGOCIO.staff_alertas) await sendMessage(staff, alerta, 'whatsapp');
-            
-            const resp = "¡Anotado! 📝 Una especialista te contactará a este número en breve.";
-            await sendMessage(senderId, resp, platform);
-            guardarMensaje(senderId, "Zara", platform, 'zara', resp, campana);
-            return resp;
-        }
+        // 3. PREPARAR CONTEXTO PARA LA IA
+        let contextoSistema = `${SYSTEM_PROMPT}\n\n[DATOS NEGOCIO]\n${JSON.stringify(NEGOCIO)}\n\n[PRODUCTOS Y PLANES]\n${PRODUCTOS}`;
+        if (campana) contextoSistema += `\n[IMPORTANTE: El cliente viene por el anuncio "${campana}". Enfócate en eso.]`;
 
-        // Prompt IA
-        let contexto = `${SYSTEM_PROMPT}\n[DATOS]\n${NEGOCIO.direccion}\n${NEGOCIO.horario}\n[CATALOGO]\n${PRODUCTOS}`;
-        if (campana) contexto += `\n[IMPORTANTE: Cliente viene por anuncio de "${campana}". Prioridad.]`;
+        // 4. CONVERTIR HISTORIAL A FORMATO OPENAI (Últimos 10 mensajes para dar contexto)
+        const historialIA = historial.slice(-10).map(m => ({
+            role: m.remite === 'zara' ? 'assistant' : 'user',
+            content: m.texto
+        }));
 
-        const messages = [{ role: "system", content: contexto }, { role: "user", content: `[${name}]: ${text}` }];
+        // 5. ENVIAR TODO AL CEREBRO (Sistema + Historial)
+        const messages = [
+            { role: "system", content: contextoSistema },
+            ...historialIA
+        ];
         
         const reply = await generarRespuestaIA(messages);
         
-        // Enviar respuesta
+        // 6. RESPONDER Y GUARDAR
         if (platform !== 'web') await sendMessage(senderId, reply, platform);
-        
-        // 3. GUARDAR RESPUESTA DE ZARA
         guardarMensaje(senderId, "Zara", platform, 'zara', reply, campana);
 
         return reply;
 
     } catch (e) {
-        console.error('Error Zara Lógica:', e);
-        return "Lo siento, tuve un error interno.";
+        console.error('Error Zara:', e);
+        return "Tuve un pequeño error técnico, ¿me lo repites?";
     }
 }
