@@ -9,9 +9,29 @@ dotenv.config();
 
 const metricas = { leads: new Set(), intencion: 0, llamadas: 0 };
 const usuariosPausados = new Set();
-// Memoria simple para recordar la campaña del usuario durante la sesión
-const campañasActivas = {}; 
+// Cache simple para no gastar peticiones a la API de Meta repetidamente
+const userCache = {};
 
+// --- MÓDULO QUERUBÍN: RECONOCIMIENTO DE USUARIOS ---
+export async function getInstagramUser(senderId) {
+    if (userCache[senderId]) return userCache[senderId]; // Retornar de memoria si ya lo conocemos
+
+    try {
+        const token = process.env.PAGE_ACCESS_TOKEN;
+        const url = `https://graph.facebook.com/v18.0/${senderId}?fields=name,profile_pic&access_token=${token}`;
+        const response = await axios.get(url);
+        
+        const nombre = response.data.name || "Amig@ de Instagram";
+        userCache[senderId] = nombre; // Guardar en memoria
+        console.log(`[Querubín] Identificado IG: ${nombre}`);
+        return nombre;
+    } catch (error) {
+        console.error("[Querubín Error] No se pudo obtener nombre IG:", error.message);
+        return "Usuario Instagram";
+    }
+}
+
+// --- FUNCIÓN DE ENVÍO ---
 export async function sendMessage(to, text, platform) {
     try {
         let url, data;
@@ -36,22 +56,12 @@ function extraerTelefono(texto) {
     return match ? match[0].replace(/\D/g, '') : null;
 }
 
-// Aceptamos el parámetro 'campana'
 export async function procesarMensaje(senderId, text, name, platform, campana = null) {
     try {
         const lower = text.toLowerCase();
         metricas.leads.add(senderId);
 
-        // Si llega una campaña nueva, la guardamos en memoria para este usuario
-        if (campana) {
-            campañasActivas[senderId] = campana;
-            console.log(`[Zara] Guardando contexto de campaña para ${senderId}: ${campana}`);
-        }
-
-        // Recuperamos la campaña si existe en memoria
-        const campañaUsuario = campañasActivas[senderId] || null;
-
-        // --- COMANDOS ADMIN ---
+        // Comandos Admin
         if (lower === 'zara reporte') {
             const msg = `📊 *REPORTE ZARA*\n👥 Leads: ${metricas.leads.size}\n🎯 Intención: ${metricas.intencion}\n📞 Fonos: ${metricas.llamadas}`;
             await sendMessage(senderId, msg, platform);
@@ -61,14 +71,14 @@ export async function procesarMensaje(senderId, text, name, platform, campana = 
         if (lower === 'zara on') { usuariosPausados.delete(senderId); await sendMessage(senderId, "✅ Activa.", platform); return; }
         if (usuariosPausados.has(senderId)) return;
 
-        // --- DETECCIÓN DE TELÉFONO ---
+        // Detección Teléfono
         const telefono = extraerTelefono(text);
         if (telefono) {
             metricas.llamadas++;
-            await sendMessage(senderId, "¡Perfecto! 📝 Guardé tu número. Una especialista te contactará en breve. ✨", platform);
+            await sendMessage(senderId, "¡Genial! 📝 Tengo tu contacto. Te llamaremos a la brevedad. ✨", platform);
             
-            const origenLead = campañaUsuario ? `Campaña ADS: ${campañaUsuario}` : `Orgánico (${platform})`;
-            const alerta = `🚨 *LEAD CAPTURADO* 🚨\n👤 ${name}\n📞 ${telefono}\n📢 Origen: ${origenLead}\n💬 Dijo: "${text}"`;
+            const origen = campana ? `Campaña ADS: ${campana}` : platform;
+            const alerta = `🚨 *LEAD CAPTURADO* 🚨\n👤 ${name}\n📞 ${telefono}\n📢 Origen: ${origen}\n💬 Dijo: "${text}"`;
             
             for (const staff of NEGOCIO.staff_alertas) { await sendMessage(staff, alerta, 'whatsapp'); }
             return;
@@ -76,21 +86,17 @@ export async function procesarMensaje(senderId, text, name, platform, campana = 
 
         if (lower.includes('precio') || lower.includes('agenda')) metricas.intencion++;
 
-        // --- CONTEXTO INTELIGENTE CON CAMPAÑA ---
-        let contextoAdicional = "";
-        if (campañaUsuario) {
-            // Instrucción secreta para Zara: Priorizar la venta de lo que vio en el anuncio
-            contextoAdicional = `\n[IMPORTANTE: ESTE CLIENTE VIENE DE UN ANUNCIO SOBRE: "${campañaUsuario}". ENFÓCATE EN VENDER ESO PRIMERO.]`;
-        }
+        // Contexto Campaña Ads
+        let contextoAds = "";
+        if (campana) contextoAds = `\n[NOTA: CLIENTE INTERESADO EN CAMPAÑA: "${campana}". PRIORIZA VENDER ESO.]`;
 
         const fullContext = `
         ${SYSTEM_PROMPT}
-        ${contextoAdicional}
+        ${contextoAds}
 
-        [DATOS DEL NEGOCIO]
-        Ubicación: ${NEGOCIO.direccion}
-        Horario: ${NEGOCIO.horario}
-        Agenda Web: ${NEGOCIO.agenda_link}
+        [NEGOCIO]
+        ${NEGOCIO.nombre} | ${NEGOCIO.direccion} | ${NEGOCIO.horario}
+        Agenda: ${NEGOCIO.agenda_link}
 
         [CATÁLOGO]
         ${PRODUCTOS}
@@ -98,7 +104,7 @@ export async function procesarMensaje(senderId, text, name, platform, campana = 
 
         const messages = [
             { role: "system", content: fullContext },
-            { role: "user", content: `[Cliente ${name}]: ${text}` }
+            { role: "user", content: `[Cliente: ${name}]: ${text}` }
         ];
         
         const reply = await generarRespuestaIA(messages);
