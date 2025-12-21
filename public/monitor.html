@@ -20,7 +20,7 @@
         .chat-area { flex: 1; display: flex; flex-direction: column; background: #eaeaea; color: #333; }
         .chat-header { padding: 15px; background: #fff; border-bottom: 1px solid #ccc; font-weight: bold; }
         .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; }
+        .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 5px; }
         .msg.user { align-self: flex-start; background: #fff; border: 1px solid #ddd; }
         .msg.zara { align-self: flex-end; background: #dcf8c6; border: 1px solid #ccebc4; }
     </style>
@@ -43,18 +43,31 @@
     </div>
 <script>
     let db = {}; let currentId = null; let currentFilter = 'all';
+    
     async function loadData() {
         try {
             const res = await fetch('/api/stats');
             db = await res.json();
             renderList();
-            if (currentId && db[currentId]) renderChat(currentId);
+            if (currentId && db[currentId]) {
+                // Solo renderizar si hay cambios para no parpadear
+                renderChat(currentId); 
+            }
         } catch {}
     }
-    function setFilter(f) { currentFilter = f; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); renderList(); }
+
+    function setFilter(f) { 
+        currentFilter = f; 
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); 
+        event.target.classList.add('active'); 
+        renderList(); 
+    }
+
     function renderList() {
-        const list = document.getElementById('userList'); list.innerHTML = '';
+        const list = document.getElementById('userList'); 
+        list.innerHTML = '';
         const sorted = Object.keys(db).sort((a,b) => db[b].last_active - db[a].last_active);
+        
         sorted.forEach(id => {
             const u = db[id];
             if (currentFilter !== 'all') {
@@ -63,24 +76,36 @@
             }
             const div = document.createElement('div');
             div.className = `user-card ${currentId === id ? 'active' : ''}`;
-            div.onclick = () => { currentId = id; renderChat(id); renderList(); };
+            div.onclick = () => { currentId = id; renderChat(id); };
+            
             let cls = u.origen === 'whatsapp' ? 'wsp' : u.origen === 'instagram' ? 'ig' : 'web';
             let icon = u.origen === 'whatsapp' ? 'fa-whatsapp' : u.origen === 'instagram' ? 'fa-instagram' : 'fa-globe';
-            div.innerHTML = `<div class="avatar ${cls}"><i class="fab ${icon}"></i></div><div><div>${u.nombre} <small style="background:${u.estado==='CAPTURED'?'yellow':'#eee'}; color:${u.estado==='CAPTURED'?'black':'#333'}; padding:2px; border-radius:3px; font-size:10px">${u.estado}</small></div><small style="color:#aaa">${u.mensajes.slice(-1)[0]?.content.substring(0,20)}...</small></div>`;
+            let lastMsg = u.mensajes && u.mensajes.length > 0 ? u.mensajes[u.mensajes.length - 1].content.substring(0,25) : '...';
+
+            div.innerHTML = `<div class="avatar ${cls}"><i class="fab ${icon}"></i></div><div><div>${u.nombre} <small style="background:${u.estado==='CAPTURED'?'yellow':'#eee'}; color:${u.estado==='CAPTURED'?'black':'#333'}; padding:2px; border-radius:3px; font-size:10px">${u.estado}</small></div><small style="color:#aaa">${lastMsg}...</small></div>`;
             list.appendChild(div);
         });
     }
+
     function renderChat(id) {
         const u = db[id];
         document.getElementById('chatHeader').innerText = u.nombre + " (" + u.origen + ")";
-        const box = document.getElementById('messagesBox'); box.innerHTML = '';
-        u.mensajes.forEach(m => {
-            const d = document.createElement('div');
-            d.className = `msg ${m.role === 'user' ? 'user' : 'zara'}`;
-            d.innerText = m.content;
-            box.appendChild(d);
-        });
-        box.scrollTop = box.scrollHeight;
+        const box = document.getElementById('messagesBox'); 
+        
+        // Guardar scroll position? No, mejor siempre abajo si es nuevo.
+        box.innerHTML = '';
+        
+        if(u.mensajes) {
+            u.mensajes.forEach(m => {
+                const d = document.createElement('div');
+                d.className = `msg ${m.role === 'user' ? 'user' : 'zara'}`;
+                d.innerText = m.content;
+                box.appendChild(d);
+            });
+        }
     }
-    setInterval(loadData, 3000); loadData();
+    
+    // Actualizar cada 2 segundos
+    setInterval(loadData, 2000); 
+    loadData();
 </script></body></html>

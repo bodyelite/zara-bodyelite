@@ -13,7 +13,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// CORS PERMISIVO (Para que Netlify no falle)
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(bodyParser.json());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,20 +44,16 @@ app.post("/webhook", async (req, res) => {
         // WHATSAPP
         if (body.object === "whatsapp_business_account") {
             const changes = body.entry?.[0]?.changes?.[0]?.value;
-            
             if (changes?.messages?.[0]) {
                 const msg = changes.messages[0];
                 
-                // DEDUPLICAR
                 if (processedIds.has(msg.id)) return;
                 processedIds.add(msg.id);
                 setTimeout(() => processedIds.delete(msg.id), 60000);
 
                 const senderId = msg.from;
                 const text = msg.text?.body;
-                
-                // NOMBRE (Corrección: extraer de changes.contacts)
-                const name = changes.contacts?.[0]?.profile?.name || "Amiga WSP";
+                const name = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
                 
                 if(text) await procesarNucleo(senderId, name, text, "whatsapp");
             }
@@ -61,7 +64,6 @@ app.post("/webhook", async (req, res) => {
             if (messaging && messaging.message && !messaging.message.is_echo && !messaging.delivery && !messaging.read) {
                 const msgId = messaging.message.mid;
                 
-                // DEDUPLICAR
                 if (processedIds.has(msgId)) return;
                 processedIds.add(msgId);
                 setTimeout(() => processedIds.delete(msgId), 60000);
@@ -74,7 +76,7 @@ app.post("/webhook", async (req, res) => {
                 }
             }
         }
-    } catch (e) { console.error("Webhook Error", e); }
+    } catch (e) { console.error(e); }
 });
 
 app.post("/webchat", async (req, res) => {
@@ -85,40 +87,30 @@ app.post("/webchat", async (req, res) => {
         // Procesar
         const respuesta = await procesarNucleo(uid, "Visitante Web", message, "web", true);
         
-        // Responder JSON estricto
-        res.status(200).json({ 
+        // JSON ESTRICTO PARA FRONTEND NETLIFY
+        res.json({ 
             response: respuesta, 
+            button: true, 
             link: NEGOCIO.agenda_link 
         });
     } catch (e) { 
-        console.error(e);
         res.status(500).json({ response: "Error de conexión ⚠️" }); 
     }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
     try {
-        // 1. Guardar INPUT en memoria
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
-        
-        // 2. Pensar
         const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
-        
-        // 3. Etiquetas
         const { texto, estado } = procesarEtiquetas(respuestaRaw, id, nombre, plataforma);
         
-        // 4. Guardar OUTPUT en memoria
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
-        // 5. Enviar a Meta (si no es web)
         if (!esWeb) {
             await enviarMensaje(id, texto, plataforma);
         }
         return texto;
-    } catch (e) { 
-        console.error("Core Error", e);
-        return "Dame un segundo 😅."; 
-    }
+    } catch (e) { return "Un segundo..."; }
 }
 
 const PORT = process.env.PORT || 3000;
