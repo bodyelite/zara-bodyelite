@@ -14,14 +14,32 @@ const sesionesWeb = {};
 app.use(cors());
 app.use(bodyParser.json());
 
-// WEBHOOKS
+// WEBHOOKS VERIFICACION
 app.get("/webhook", (req, res) => {
     if (req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
     else res.sendStatus(403);
 });
+
+// WEBHOOKS RECEPCION (FIX CRÍTICO: BUCLE DE ENTRADAS)
 app.post("/webhook", (req, res) => {
     res.sendStatus(200);
-    procesarEvento(req.body).catch(console.error);
+    
+    try {
+        const body = req.body;
+
+        // Validar que sea un evento de Meta
+        if (body.object) {
+            // Meta envía un array 'entry', hay que procesar cada uno
+            if (body.entry && body.entry.length > 0) {
+                body.entry.forEach(entry => {
+                    // Ahora sí pasamos la 'entry' limpia a app.js
+                    procesarEvento(entry).catch(err => console.error("❌ Error en procesarEvento:", err));
+                });
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error general en webhook:", e);
+    }
 });
 
 // WEBCHAT
@@ -33,9 +51,11 @@ app.post("/webchat", async (req, res) => {
     registrar(uid, "Visitante Web", message, "usuario", "web");
     sesionesWeb[uid].push({ role: "user", content: message });
     
+    // Web no tiene contexto de campaña, pasamos string vacío
     const rawReply = await generarRespuestaIA(sesionesWeb[uid].slice(-10), "Amiga", "");
     const cleanReply = rawReply.replace(/{.*?}/g, "").trim();
     
+    // Detectar alertas en Web también
     if (rawReply.includes("{HOT}") || rawReply.includes("{ALERT}")) {
         notifyStaff("Visitante Web", message, "WEB");
     }
@@ -58,7 +78,7 @@ app.post("/api/send-manual", async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MONITOR V2100 (CORREGIDO SIN ERROR DE SINTAXIS)
+// MONITOR V2100
 app.get("/monitor", (req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="es">
@@ -165,4 +185,4 @@ app.get("/monitor", (req, res) => {
 </script></body></html>`);
 });
 
-app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2100 - SIN ERRORES DE SINTAXIS"));
+app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2200 - WEBHOOK REPARADO"));
