@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { NEGOCIO } from '../config/business.js';
 dotenv.config();
 
-export async function enviarMensaje(to, text, platform, hasLink = false) {
+export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
     const token = process.env.PAGE_ACCESS_TOKEN;
     const phoneId = process.env.PHONE_NUMBER_ID;
 
@@ -13,15 +13,20 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
 
     try {
         if (platform === 'whatsapp') {
-            const finalBody = hasLink ? `${text}\n\n🔗 ${NEGOCIO.agenda_link}` : text;
+            const finalBody = hasLink ? `${text}\n\n👇 Reserva aquí:\n${NEGOCIO.agenda_link}` : text;
+            
             await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
-                messaging_product: "whatsapp", to: to, type: "text", text: { body: finalBody }
+                messaging_product: "whatsapp", 
+                to: to, 
+                type: "text", 
+                text: { body: finalBody }
             }, { headers });
         
         } else if (platform === 'instagram') {
             if (hasLink) {
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                    recipient: { id: to }, message: { text: text }
+                    recipient: { id: to }, 
+                    message: { text: text }
                 }, { headers });
 
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
@@ -33,7 +38,8 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
                                 template_type: "generic",
                                 elements: [{
                                     title: "Agenda tu Evaluación 📅",
-                                    subtitle: "Es gratis y con Asistencia IA",
+                                    subtitle: "Evaluación IA Gratis",
+                                    image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=600&q=80", 
                                     buttons: [{
                                         type: "web_url",
                                         url: NEGOCIO.agenda_link,
@@ -51,7 +57,7 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
             }
         }
     } catch (e) {
-        if(platform === 'instagram' && hasLink) {
+        if (platform === 'instagram' && hasLink) {
              await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                 recipient: { id: to }, message: { text: `${text}\n\n🔗 ${NEGOCIO.agenda_link}` }
             }, { headers });
@@ -68,5 +74,5 @@ export async function obtenerNombreIG(igId) {
 }
 
 export async function notificarStaff(id, nombre, canal, mensaje) {
-    console.log(`🔔 STAFF ALERT: Cliente ${nombre} (${canal}) solicita llamada. Info: ${mensaje}`);
+    console.log(`🚨 [STAFF ALERT] LLAMADA SOLICITADA: Cliente ${nombre} (${canal}) - ID: ${id}. Contexto: ${mensaje}`);
 }

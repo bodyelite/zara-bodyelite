@@ -18,26 +18,22 @@ try {
     }
 } catch (e) { memoryCache = {}; }
 
-export function leerDB() {
-    return memoryCache;
-}
+export function leerDB() { return memoryCache; }
 
 export function guardarMensaje(id, nombre, texto, role, origen, nuevoEstado = null) {
     if (!memoryCache[id]) {
         memoryCache[id] = { 
             nombre: nombre || "Cliente", 
             origen: origen, 
-            estado: "INICIO", 
             mensajes: [], 
             last_active: Date.now() 
         };
     }
 
-    if (nombre && nombre !== "Visitante" && nombre !== "Cliente") {
+    if (nombre && nombre.length > 2 && nombre !== "Visitante" && nombre !== "Cliente") {
         memoryCache[id].nombre = nombre;
     }
     
-    if (nuevoEstado) memoryCache[id].estado = nuevoEstado;
     memoryCache[id].last_active = Date.now();
 
     memoryCache[id].mensajes.push({ 
@@ -46,11 +42,11 @@ export function guardarMensaje(id, nombre, texto, role, origen, nuevoEstado = nu
         timestamp: Date.now() 
     });
     
-    if (memoryCache[id].mensajes.length > 40) memoryCache[id].mensajes.shift();
+    if (memoryCache[id].mensajes.length > 30) memoryCache[id].mensajes.shift();
 
     try {
         fs.writeFileSync(DB_FILE, JSON.stringify(memoryCache, null, 2));
-    } catch (e) { console.error("Disk Error:", e.message); }
+    } catch (e) { console.error("Error guardando DB:", e.message); }
 
     return memoryCache[id].mensajes;
 }

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { pensar } from "./core/brain.js";
 import { guardarMensaje, leerDB } from "./core/memory.js";
 import { procesarEtiquetas } from "./core/tags.js";
-import { enviarMensaje, obtenerNombreIG, notificarStaff } from "./channels/meta.js";
+import { enviarMensajeMeta, obtenerNombreIG, notificarStaff } from "./channels/meta.js";
 import { NEGOCIO } from "./config/business.js";
 import dotenv from 'dotenv';
 
@@ -23,7 +23,6 @@ const processedIds = new Set();
 
 app.get('/monitor', (req, res) => res.sendFile(path.join(__dirname, '../public/monitor.html')));
 app.get('/api/stats', (req, res) => res.json(leerDB()));
-
 app.get("/webhook", (req, res) => {
     if (req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
     else res.sendStatus(403);
@@ -42,10 +41,9 @@ app.post("/webhook", async (req, res) => {
                 
                 const senderId = msg.from;
                 const text = msg.text?.body;
-                const profileName = changes.contacts?.[0]?.profile?.name;
-                const name = profileName || null; 
+                const profileName = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
                 
-                if(text) await procesarNucleo(senderId, name, text, "whatsapp");
+                if(text) await procesarNucleo(senderId, profileName, text, "whatsapp");
             }
         } else if (body.object === "instagram") {
             const messaging = body.entry?.[0]?.messaging?.[0];
@@ -68,25 +66,22 @@ app.post("/webhook", async (req, res) => {
 app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
-        // Si no hay ID, generamos uno basado en la fecha (sesión efímera) pero consistente para la prueba inmediata
-        const uid = userId || 'web_session_fixed';
+        const uid = userId || 'web_guest_session';
         
-        // Detección básica de nombre en web
-        let nombreWeb = null;
-        if (message.length < 15 && !message.toLowerCase().includes("info") && !message.toLowerCase().includes("hola")) {
-            nombreWeb = message; 
+        let nombreWeb = "Visitante";
+        if (message.length < 20 && !message.toLowerCase().includes("info") && !message.toLowerCase().includes("hola")) {
+            nombreWeb = message;
         }
 
         const resultado = await procesarNucleo(uid, nombreWeb, message, "web", true);
         
         res.json({
-            response: resultado.texto,
-            reply: resultado.texto,
-            text: resultado.texto,
-            link: resultado.hasLink ? NEGOCIO.agenda_link : null
+            text: resultado.textoLimpio,
+            link: resultado.hasLink ? NEGOCIO.agenda_link : null,
+            reply: resultado.textoLimpio
         });
     } catch (e) { 
-        res.status(500).json({ response: "Dame un segundo..." }); 
+        res.status(500).json({ text: "Dame un segundo...", link: null }); 
     }
 });
 
@@ -94,27 +89,31 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
     try {
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
         
-        const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
+        const suffix = plataforma === "instagram" ? "(IG)" : "";
+        const respuestaRaw = await pensar(historial, nombre, suffix);
         
         const hasLink = respuestaRaw.includes("{LINK}");
         const notifyCall = respuestaRaw.includes("{CALL}");
-        let textoLimpio = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
+        const textoLimpio = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
         
         const { texto, estado } = procesarEtiquetas(textoLimpio, id, nombre, plataforma);
-        guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
+        guardarMensaje(id, nombre, textoLimpio, "zara", plataforma, estado);
         
-        if (notifyCall) await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
+        if (notifyCall) {
+            await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
+        }
 
         if (esWeb) {
-            return { texto, hasLink };
+            return { textoLimpio, hasLink };
         } else {
-            await enviarMensaje(id, texto, plataforma, hasLink);
-            return texto;
+            await enviarMensajeMeta(id, textoLimpio, plataforma, hasLink);
+            return { textoLimpio };
         }
     } catch (e) { 
-        return { texto: "Dame un segundo...", hasLink: false }; 
+        console.error("Nucleo Error:", e);
+        return { textoLimpio: "Dame un segundo...", hasLink: false }; 
     }
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`ZARA 5.0 LIVE PORT ${PORT}`));
+app.listen(PORT, () => console.log(`ZARA 5.0 REBOOT PORT ${PORT}`));
