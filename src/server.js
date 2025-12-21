@@ -13,14 +13,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-
-// CORS PERMISIVO (Para que Netlify no falle)
-app.use(cors({
-    origin: '*', 
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+app.use(cors());
 app.use(bodyParser.json());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,12 +34,10 @@ app.post("/webhook", async (req, res) => {
     try {
         const body = req.body;
         
-        // WHATSAPP
         if (body.object === "whatsapp_business_account") {
             const changes = body.entry?.[0]?.changes?.[0]?.value;
             if (changes?.messages?.[0]) {
                 const msg = changes.messages[0];
-                
                 if (processedIds.has(msg.id)) return;
                 processedIds.add(msg.id);
                 setTimeout(() => processedIds.delete(msg.id), 60000);
@@ -54,16 +45,13 @@ app.post("/webhook", async (req, res) => {
                 const senderId = msg.from;
                 const text = msg.text?.body;
                 const name = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
-                
                 if(text) await procesarNucleo(senderId, name, text, "whatsapp");
             }
         }
-        // INSTAGRAM
         else if (body.object === "instagram") {
             const messaging = body.entry?.[0]?.messaging?.[0];
-            if (messaging && messaging.message && !messaging.message.is_echo && !messaging.delivery && !messaging.read) {
+            if (messaging && messaging.message && !messaging.message.is_echo) {
                 const msgId = messaging.message.mid;
-                
                 if (processedIds.has(msgId)) return;
                 processedIds.add(msgId);
                 setTimeout(() => processedIds.delete(msgId), 60000);
@@ -84,17 +72,16 @@ app.post("/webchat", async (req, res) => {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest';
         
-        // Procesar
-        const respuesta = await procesarNucleo(uid, "Visitante Web", message, "web", true);
+        // Timeout de seguridad de 5 segundos para la web
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
+        const processPromise = procesarNucleo(uid, "Visitante Web", message, "web", true);
+
+        const respuesta = await Promise.race([processPromise, timeoutPromise]);
         
-        // JSON ESTRICTO PARA FRONTEND NETLIFY
-        res.json({ 
-            response: respuesta, 
-            button: true, 
-            link: NEGOCIO.agenda_link 
-        });
-    } catch (e) { 
-        res.status(500).json({ response: "Error de conexión ⚠️" }); 
+        res.json({ response: respuesta, link: NEGOCIO.agenda_link });
+    } catch (e) {
+        console.error("Webchat Error:", e);
+        res.json({ response: "¡Hola! Estoy revisando agenda, dame un segundo... (Intenta de nuevo)", link: NEGOCIO.agenda_link });
     }
 });
 
@@ -103,14 +90,11 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
         const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
         const { texto, estado } = procesarEtiquetas(respuestaRaw, id, nombre, plataforma);
-        
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
-        if (!esWeb) {
-            await enviarMensaje(id, texto, plataforma);
-        }
+        if (!esWeb) await enviarMensaje(id, texto, plataforma);
         return texto;
-    } catch (e) { return "Un segundo..."; }
+    } catch (e) { return "Un momento..."; }
 }
 
 const PORT = process.env.PORT || 3000;
