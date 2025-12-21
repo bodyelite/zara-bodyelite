@@ -70,44 +70,46 @@ app.post("/webchat", async (req, res) => {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest';
         
-        const respuestaFull = await procesarNucleo(uid, null, message, "web", true);
+        // WEB: Esperamos el objeto { response, link }
+        const resultado = await procesarNucleo(uid, null, message, "web", true);
         
-        res.json(respuestaFull); 
-    } catch (e) { res.status(500).json({ error: "Error" }); }
+        res.json(resultado); 
+    } catch (e) { 
+        console.error("Web Error:", e);
+        res.status(500).json({ response: "Un momento, por favor...", link: null }); 
+    }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
     try {
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
         
-        let respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
+        const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
         
-        // Detección de Tags
+        // Detección y Limpieza
         const hasLink = respuestaRaw.includes("{LINK}");
         const notifyCall = respuestaRaw.includes("{CALL}");
-        
-        // Limpieza de texto
         let textoLimpio = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
         
         const { texto, estado } = procesarEtiquetas(textoLimpio, id, nombre, plataforma);
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
-        // Notificación Staff
-        if (notifyCall) {
-            await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
-        }
+        // Notificación
+        if (notifyCall) await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
 
-        // Estructura de respuesta
+        // Retorno según canal
         if (esWeb) {
             return {
                 response: texto,
-                link: hasLink ? NEGOCIO.agenda_link : null // Solo envía link si el tag estaba
+                link: hasLink ? NEGOCIO.agenda_link : null
             };
         } else {
             await enviarMensaje(id, texto, plataforma, hasLink);
             return texto;
         }
-    } catch (e) { return esWeb ? { response: "Un momento..." } : "Un momento..."; }
+    } catch (e) { 
+        return esWeb ? { response: "Dame un segundo..." } : "Dame un segundo..."; 
+    }
 }
 
 const PORT = process.env.PORT || 3000;

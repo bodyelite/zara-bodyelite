@@ -13,7 +13,7 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
 
     try {
         if (platform === 'whatsapp') {
-            // WSP: Texto + Link pegado (No hay botones nativos fáciles)
+            // WSP: Texto Limpio + Link abajo
             const finalBody = hasLink ? `${text}\n\n🔗 ${NEGOCIO.agenda_link}` : text;
             await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
                 messaging_product: "whatsapp", to: to, type: "text", text: { body: finalBody }
@@ -21,23 +21,30 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
         
         } else if (platform === 'instagram') {
             if (hasLink) {
-                // IG: Intento de Botón (Generic Template)
+                // IG: Generic Template (Tarjeta con Botón)
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to },
                     message: {
                         attachment: {
                             type: "template",
                             payload: {
-                                template_type: "button",
-                                text: text,
-                                buttons: [{
-                                    type: "web_url",
-                                    url: NEGOCIO.agenda_link,
-                                    title: "Agendar Aquí 📅"
+                                template_type: "generic",
+                                elements: [{
+                                    title: "Agenda tu Evaluación 📅",
+                                    subtitle: "Es gratis y con Asistencia IA",
+                                    buttons: [{
+                                        type: "web_url",
+                                        url: NEGOCIO.agenda_link,
+                                        title: "Reservar Ahora"
+                                    }]
                                 }]
                             }
                         }
                     }
+                }, { headers });
+                // Enviamos el texto antes de la tarjeta para mantener contexto
+                await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
+                    recipient: { id: to }, message: { text: text }
                 }, { headers });
             } else {
                 // IG: Texto normal
@@ -46,9 +53,9 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
                 }, { headers });
             }
         }
-    } catch (e) { 
-        console.error("Meta Send Error:", e.response ? e.response.data : e.message);
-        // Fallback si falla el template de IG
+    } catch (e) {
+        console.error("Meta Error:", e.message);
+        // Fallback de seguridad
         if(platform === 'instagram' && hasLink) {
              await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                 recipient: { id: to }, message: { text: `${text}\n\n🔗 ${NEGOCIO.agenda_link}` }
@@ -65,7 +72,6 @@ export async function obtenerNombreIG(igId) {
     } catch { return "Usuario IG"; }
 }
 
-export async function notificarStaff(clienteId, clienteNombre, plataforma, mensajeUsuario) {
-    console.log(`🚨 ALERTA STAFF: El cliente ${clienteNombre} (${plataforma}) solicitó llamada.`);
-    // Aquí podrías agregar un envío de WSP real a tu número si tienes una API externa configurada.
+export async function notificarStaff(id, nombre, canal, mensaje) {
+    console.log(`🔔 STAFF ALERT: Cliente ${nombre} (${canal}) quiere llamada. Info: ${mensaje}`);
 }
