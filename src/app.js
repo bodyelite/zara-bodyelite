@@ -11,8 +11,6 @@ export async function procesarEvento(entry) {
     try {
         if (platform === "whatsapp") {
             const change = entry.changes[0].value;
-            
-            // FILTRO DE SEGURIDAD: Si no es mensaje (ej: status update), ignorar
             if (!change.messages || change.messages.length === 0) return;
             
             const msg = change.messages[0];
@@ -28,26 +26,42 @@ export async function procesarEvento(entry) {
 
         if (!text) return;
 
-        console.log(`📨 [${platform.toUpperCase()}] Mensaje de ${senderName}: ${text}`);
-        
-        // 1. Guardar mensaje usuario
-        registrar(senderId, senderName, text, "usuario", platform);
+        console.log(`📨 [ENTRADA ${platform}] De: ${senderName} | Msg: ${text}`);
 
+        // 1. INTENTAR GUARDAR EN MEMORIA
+        try {
+            registrar(senderId, senderName, text, "usuario", platform);
+        } catch (err) {
+            console.error("❌ ERROR CRÍTICO MEMORIA (USUARIO):", err);
+        }
+
+        // 2. CONTEXTO IA
         if (!sesiones[senderId]) sesiones[senderId] = [];
         sesiones[senderId].push({ role: "user", content: text });
 
-        // 2. Generar respuesta
-        const reply = await generarRespuestaIA(sesiones[senderId].slice(-10));
-        console.log(`🤖 [IA] Responde: ${reply}`);
+        // 3. GENERAR RESPUESTA
+        let reply;
+        try {
+            reply = await generarRespuestaIA(sesiones[senderId].slice(-10));
+        } catch (err) {
+            console.error("❌ ERROR OPENAI:", err);
+            reply = "Estoy teniendo un pequeño problema técnico, dame un segundo. ⏳";
+        }
         
-        // 3. Enviar a Meta
+        console.log(`🤖 [SALIDA IA] ${reply}`);
+
+        // 4. ENVIAR A META
         await sendMessage(senderId, reply, platform);
-        
-        // 4. Guardar respuesta Zara
+
+        // 5. GUARDAR RESPUESTA IA
         sesiones[senderId].push({ role: "assistant", content: reply });
-        registrar(senderId, "Zara", reply, "zara", platform);
+        try {
+            registrar(senderId, "Zara", reply, "zara", platform);
+        } catch (err) {
+            console.error("❌ ERROR CRÍTICO MEMORIA (ZARA):", err);
+        }
 
     } catch (e) {
-        console.error("❌ ERROR EN PROCESAR EVENTO:", e);
+        console.error("❌❌ ERROR GENERAL EN APP.JS:", e);
     }
 }
