@@ -1,4 +1,4 @@
-export const PRODUCTOS = \`
+export const PRODUCTOS = `
 [DICCIONARIO DE VENTA - USA ESTAS DEFINICIONES]
 
 1. **PLAN LIPO EXPRESS ($432.000)**
@@ -26,4 +26,4 @@ export const PRODUCTOS = \`
 - **HIFU:** "Lifting sin cirugía. Tensa la piel desde adentro".
 - **LIPOLÁSER:** "Láser frío que disuelve la grasa sin dolor".
 - **PINK GLOW:** "Vitaminas que te dejan cara de descansada al instante".
-\`;
+`;

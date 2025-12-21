@@ -8,7 +8,6 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function generarRespuestaIA(historial, nombreCliente, contextoExtra = "") {
     try {
-        // CONSTRUCCIÓN DEL PROMPT FINAL
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
@@ -29,7 +28,7 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: instrucciones }, ...historial],
-            temperature: 0.5, // Balance perfecto entre creatividad y obediencia
+            temperature: 0.5,
             max_tokens: 200,
         });
         
