@@ -28,7 +28,6 @@ app.get("/webhook", (req, res) => {
     else res.sendStatus(403);
 });
 
-// WEBHOOK META
 app.post("/webhook", async (req, res) => {
     res.sendStatus(200);
     try {
@@ -39,7 +38,6 @@ app.post("/webhook", async (req, res) => {
                 const msg = changes.messages[0];
                 if (processedIds.has(msg.id)) return;
                 processedIds.add(msg.id);
-                
                 const senderId = msg.from;
                 const text = msg.text?.body;
                 const profileName = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
@@ -51,7 +49,6 @@ app.post("/webhook", async (req, res) => {
                 const msgId = messaging.message.mid;
                 if (processedIds.has(msgId)) return;
                 processedIds.add(msgId);
-                
                 const senderId = messaging.sender.id;
                 const text = messaging.message.text;
                 if(text) {
@@ -63,7 +60,6 @@ app.post("/webhook", async (req, res) => {
     } catch (e) { console.error(e); }
 });
 
-// WEBCHAT
 app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
@@ -75,7 +71,7 @@ app.post("/webchat", async (req, res) => {
 
         const resultado = await procesarNucleo(uid, nombreWeb, message, "web", true);
         
-        // RESPUESTA SIMPLE: Todo va en 'text' (incluso el botón HTML)
+        // AQUÍ ESTÁ EL BOTÓN HTML PARA WEB
         res.json({
             text: resultado.textoFinal,
             reply: resultado.textoFinal
@@ -93,30 +89,24 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         
         const hasLink = respuestaRaw.includes("{LINK}");
         const notifyCall = respuestaRaw.includes("{CALL}");
-        
-        // Limpiamos etiquetas internas
         let textoBase = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
         
-        // Guardamos en memoria el texto limpio
         const { texto, estado } = procesarEtiquetas(textoBase, id, nombre, plataforma);
         guardarMensaje(id, nombre, textoBase, "zara", plataforma, estado);
         
         if (notifyCall) await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
 
-        // LÓGICA DE SALIDA DIFERENCIADA
         let textoFinal = textoBase;
 
         if (esWeb && hasLink) {
-            // INYECCIÓN HTML PARA WEB: Creamos un botón visual real
+            // WEB: Inyección de botón HTML
             textoFinal += `<br><br><a href="${NEGOCIO.agenda_link}" target="_blank" style="background-color:#d4af37; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">📅 RESERVAR AQUÍ</a>`;
         } else if (!esWeb) {
-            // META: Delegamos al módulo de canales
             await enviarMensajeMeta(id, textoBase, plataforma, hasLink);
         }
 
         return { textoFinal };
     } catch (e) { 
-        console.error("Nucleo Error:", e);
         return { textoFinal: "Dame un segundo..." }; 
     }
 }
