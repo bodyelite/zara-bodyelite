@@ -8,31 +8,20 @@ export async function enviarMensaje(to, text, platform) {
 
     if (!token) return console.error("MISSING ENV: PAGE_ACCESS_TOKEN");
 
-    const headers = { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-    };
+    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
     try {
         if (platform === 'whatsapp') {
             if (!phoneId) return console.error("MISSING ENV: PHONE_NUMBER_ID");
             await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
-                messaging_product: "whatsapp", 
-                to: to, 
-                type: "text",
-                text: { body: text }
+                messaging_product: "whatsapp", to: to, type: "text", text: { body: text }
             }, { headers });
-            console.log(`[WSP] SENT: ${to}`);
         } else if (platform === 'instagram') {
             await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                recipient: { id: to }, 
-                message: { text: text }
+                recipient: { id: to }, message: { text: text }
             }, { headers });
-            console.log(`[IG] SENT: ${to}`);
         }
-    } catch (e) {
-        console.error(`ERROR ${platform}:`, e.response ? e.response.data : e.message);
-    }
+    } catch (e) {}
 }
 
 export async function obtenerNombreIG(igId) {
@@ -43,6 +32,4 @@ export async function obtenerNombreIG(igId) {
     } catch { return "Usuario IG"; }
 }
 
-export async function notificarStaff(cliente, motivo, origen) {
-    console.log(`[STAFF] ${cliente}: ${motivo}`);
-}
+export async function notificarStaff(cliente, motivo, origen) {}

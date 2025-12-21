@@ -13,7 +13,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
 app.use(bodyParser.json());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,29 +33,23 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(200);
     try {
         const body = req.body;
-        
         if (body.object === "whatsapp_business_account") {
             const changes = body.entry?.[0]?.changes?.[0]?.value;
             if (changes?.messages?.[0]) {
                 const msg = changes.messages[0];
                 if (processedIds.has(msg.id)) return;
                 processedIds.add(msg.id);
-                setTimeout(() => processedIds.delete(msg.id), 60000);
-
                 const senderId = msg.from;
                 const text = msg.text?.body;
                 const name = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
                 if(text) await procesarNucleo(senderId, name, text, "whatsapp");
             }
-        }
-        else if (body.object === "instagram") {
+        } else if (body.object === "instagram") {
             const messaging = body.entry?.[0]?.messaging?.[0];
             if (messaging && messaging.message && !messaging.message.is_echo) {
                 const msgId = messaging.message.mid;
                 if (processedIds.has(msgId)) return;
                 processedIds.add(msgId);
-                setTimeout(() => processedIds.delete(msgId), 60000);
-
                 const senderId = messaging.sender.id;
                 const text = messaging.message.text;
                 if(text) {
@@ -71,17 +65,16 @@ app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest';
+        const respuesta = await procesarNucleo(uid, "Visitante Web", message, "web", true);
         
-        // Timeout de seguridad de 5 segundos para la web
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
-        const processPromise = procesarNucleo(uid, "Visitante Web", message, "web", true);
-
-        const respuesta = await Promise.race([processPromise, timeoutPromise]);
-        
-        res.json({ response: respuesta, link: NEGOCIO.agenda_link });
-    } catch (e) {
-        console.error("Webchat Error:", e);
-        res.json({ response: "¡Hola! Estoy revisando agenda, dame un segundo... (Intenta de nuevo)", link: NEGOCIO.agenda_link });
+        res.json({ 
+            response: respuesta, 
+            reply: respuesta,
+            text: respuesta,
+            link: NEGOCIO.agenda_link 
+        });
+    } catch (e) { 
+        res.status(500).json({ error: "Error" }); 
     }
 });
 
@@ -94,7 +87,7 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         
         if (!esWeb) await enviarMensaje(id, texto, plataforma);
         return texto;
-    } catch (e) { return "Un momento..."; }
+    } catch (e) { return "Dame un momento..."; }
 }
 
 const PORT = process.env.PORT || 3000;
