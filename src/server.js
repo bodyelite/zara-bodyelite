@@ -39,16 +39,18 @@ app.post("/webchat", async (req, res) => {
     
     const rawReply = await generarRespuestaIA(sesionesWeb[uid].slice(-10), "Amiga", "");
     
-    // Limpieza de etiquetas
+    let estado = "LEAD";
+    if (rawReply.includes("{HOT}")) estado = "HOT";
+    if (rawReply.includes("{CALL}")) estado = "CAPTURED";
+
     const cleanReply = rawReply.replace(/{.*?}/g, "").trim();
     
-    // Alerta solo si pide llamada en la web
-    if (rawReply.includes("{CALL}") || rawReply.includes("{ALERT}")) {
+    if (rawReply.includes("{CALL}")) {
         notifyStaff("Visitante Web", message, "WEB");
     }
 
     sesionesWeb[uid].push({ role: "assistant", content: cleanReply });
-    registrar(uid, null, cleanReply, "zara", "web");
+    registrar(uid, null, cleanReply, "zara", "web", estado);
     
     const mostrar = cleanReply.toLowerCase().includes("agendar") || cleanReply.toLowerCase().includes("link");
     res.json({ response: cleanReply, button: mostrar, link: NEGOCIO.agenda_link });
@@ -86,7 +88,8 @@ app.get("/monitor", (req, res) => {
         .contact.active { background: #e9edef; border-left: 5px solid #00a884; }
         .avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-size: 20px; position: relative; }
         .details { flex: 1; min-width: 0; }
-        .name { font-weight: 600; font-size: 14px; color: #111; }
+        .name { font-weight: 600; font-size: 14px; color: #111; display:flex; justify-content:space-between; }
+        .status-tag { font-size:10px; padding:2px 6px; border-radius:4px; color:white; }
         .preview { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .main { flex: 1; display: flex; flex-direction: column; background: #efeae2; }
         .chat-header { height: 60px; background: #f0f2f5; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #ddd; font-weight: bold; }
@@ -148,9 +151,17 @@ app.get("/monitor", (req, res) => {
             if(org==='whatsapp'){ bg='#25D366'; ico='fa-whatsapp'; }
             if(org==='instagram'){ bg='#E1306C'; ico='fa-instagram'; }
             
+            // STATUS BADGE
+            let stBg = '#999'; let stTxt = c.estado || 'LEAD';
+            if(stTxt==='HOT') stBg='#ff3b30';
+            if(stTxt==='CAPTURED') stBg='#000';
+            
             html += \`<div class="contact \${curId===id?'active':''}" onclick="openChat('\${id}', '\${org}')">
                 <div class="avatar" style="background:\${bg}"><i class="fab \${ico}"></i></div>
-                <div class="details"><div class="name">\${c.nombre}</div><div class="preview">\${c.mensajes.slice(-1)[0]?.texto.substring(0,30)||''}</div></div>
+                <div class="details">
+                    <div class="name"><span>\${c.nombre}</span><span class="status-tag" style="background:\${stBg}">\${stTxt}</span></div>
+                    <div class="preview">\${c.mensajes.slice(-1)[0]?.texto.substring(0,30)||''}</div>
+                </div>
             </div>\`;
         });
         list.innerHTML=html;
@@ -170,4 +181,4 @@ app.get("/monitor", (req, res) => {
 </script></body></html>`);
 });
 
-app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2500 - ALERTA SOLO LLAMADA"));
+app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2800 - FLUJO VENTA PERFECTO"));

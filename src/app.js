@@ -37,27 +37,27 @@ export async function procesarEvento(entry) {
         if (!sesiones[senderId]) sesiones[senderId] = [];
         sesiones[senderId].push({ role: "user", content: text });
 
+        // IA
         const rawReply = await generarRespuestaIA(sesiones[senderId].slice(-10), senderName, campaignContext);
         
-        // Limpieza de TODAS las etiquetas posibles
-        let cleanReply = rawReply
-            .replace("{HOT}", "")
-            .replace("{WARM}", "")
-            .replace("{COLD}", "")
-            .replace("{CALL}", "")
-            .replace("{ALERT}", "")
-            .trim();
+        // DETECTAR ESTADO
+        let estado = "LEAD";
+        if (rawReply.includes("{HOT}")) estado = "HOT";
+        if (rawReply.includes("{CALL}")) estado = "CAPTURED";
+        
+        // LIMPIEZA
+        let cleanReply = rawReply.replace(/{.*?}/g, "").trim();
 
-        // LÓGICA DE ALERTA: Solo si la IA decidió que es {CALL} (tiene número) o {ALERT}
-        if (rawReply.includes("{CALL}") || rawReply.includes("{ALERT}")) {
-            console.log("🚨 ALERTA REAL DETECTADA");
+        // ALERTA SOLO SI ES {CALL} (Número entregado)
+        if (rawReply.includes("{CALL}")) {
+            console.log("🚨 NÚMERO RECIBIDO - ALERTA STAFF");
             notifyStaff(senderName, text, platform);
         }
 
         await sendMessage(senderId, cleanReply, platform);
         
         sesiones[senderId].push({ role: "assistant", content: cleanReply });
-        registrar(senderId, "Zara", cleanReply, "zara", platform);
+        registrar(senderId, "Zara", cleanReply, "zara", platform, estado);
 
     } catch (e) { console.error("❌ Error App:", e); }
 }

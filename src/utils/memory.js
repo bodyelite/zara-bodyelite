@@ -10,21 +10,19 @@ const DATA_PATH = path.join(BASE_DIR, "chats.json");
 if (!fs.existsSync(BASE_DIR)) { try { fs.mkdirSync(BASE_DIR, { recursive: true }); } catch (e) {} }
 
 const BACKUP = {
-  "status": { "nombre": "System", "origen": "web", "mensajes": [] }
+  "status": { "nombre": "System", "origen": "web", "estado": "System", "mensajes": [] }
 };
 
-export function registrar(id, nombre, texto, tipo, origen) {
+export function registrar(id, nombre, texto, tipo, origen, estado = null) {
     let chats = leerChats();
     
-    if (!chats[id]) chats[id] = { nombre: nombre || "Anónimo", origen, mensajes: [] };
+    if (!chats[id]) chats[id] = { nombre: nombre || "Anónimo", origen, estado: "NUEVO", mensajes: [] };
     
-    // CORRECCIÓN CRÍTICA: Solo actualizamos el nombre si habla el USUARIO.
-    // Si habla Zara o el Staff (Human), NO tocamos el nombre del chat.
-    if (tipo === 'usuario' && nombre) {
-        chats[id].nombre = nombre;
-    }
-    // Si el origen cambia (ej: de web a wsp), lo actualizamos
+    if (tipo === 'usuario' && nombre) chats[id].nombre = nombre;
     if (origen) chats[id].origen = origen;
+    
+    // Actualizar estado si la IA lo detectó (HOT, CALL, LEAD)
+    if (estado) chats[id].estado = estado; 
     
     chats[id].mensajes.push({ texto, tipo, timestamp: Date.now() });
     
