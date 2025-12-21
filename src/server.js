@@ -19,6 +19,9 @@ app.use(bodyParser.json());
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../public')));
 
+// DEDUPLICADOR DE MENSAJES (RAM)
+const processedIds = new Set();
+
 app.get('/monitor', (req, res) => res.sendFile(path.join(__dirname, '../public/monitor.html')));
 app.get('/api/stats', (req, res) => res.json(leerDB()));
 
@@ -31,23 +34,41 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(200);
     try {
         const body = req.body;
-        // WSP
+        
+        // WHATSAPP
         if (body.object === "whatsapp_business_account") {
             const changes = body.entry?.[0]?.changes?.[0]?.value;
             if (changes?.messages?.[0]) {
                 const msg = changes.messages[0];
+                
+                // FILTRO DE DUPLICADOS WSP
+                if (processedIds.has(msg.id)) return;
+                processedIds.add(msg.id);
+                setTimeout(() => processedIds.delete(msg.id), 60000); 
+
                 const senderId = msg.from;
                 const text = msg.text?.body;
                 const name = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
+                
                 if(text) await procesarNucleo(senderId, name, text, "whatsapp");
             }
         }
-        // IG
+        // INSTAGRAM
         else if (body.object === "instagram") {
             const messaging = body.entry?.[0]?.messaging?.[0];
-            if (messaging && !messaging.message?.is_echo && !messaging.delivery && !messaging.read) {
+            
+            // FILTRO DE ECOS Y ENTREGAS
+            if (messaging && messaging.message && !messaging.message.is_echo && !messaging.delivery && !messaging.read) {
+                
+                // FILTRO DE DUPLICADOS IG (mid)
+                const msgId = messaging.message.mid;
+                if (processedIds.has(msgId)) return;
+                processedIds.add(msgId);
+                setTimeout(() => processedIds.delete(msgId), 60000);
+
                 const senderId = messaging.sender.id;
-                const text = messaging.message?.text;
+                const text = messaging.message.text;
+                
                 if(text) {
                     const name = await obtenerNombreIG(senderId);
                     await procesarNucleo(senderId, name, text, "instagram");
@@ -61,9 +82,20 @@ app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest';
+        
+        // Procesar y esperar respuesta
         const respuesta = await procesarNucleo(uid, "Visitante Web", message, "web", true);
-        res.json({ response: respuesta, link: NEGOCIO.agenda_link });
-    } catch (e) { res.status(500).json({ error: "Error" }); }
+        
+        // FORMATO EXACTO PARA TU FRONTEND
+        res.json({ 
+            response: respuesta, 
+            button: true, 
+            link: NEGOCIO.agenda_link 
+        });
+    } catch (e) { 
+        console.error(e);
+        res.status(500).json({ error: "Error interno" }); 
+    }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
@@ -71,12 +103,18 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
         const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
         const { texto, estado } = procesarEtiquetas(respuestaRaw, id, nombre, plataforma);
+        
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
-        if (!esWeb) await enviarMensaje(id, texto, plataforma);
+        if (!esWeb) {
+            await enviarMensaje(id, texto, plataforma);
+        }
         return texto;
-    } catch (e) { return "Dame un segundo 😅."; }
+    } catch (e) { 
+        console.error("Core Error", e);
+        return "Dame un segundo 😅."; 
+    }
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`ZARA 5.0 (OLD VARS COMPATIBLE) PORT ${PORT}`));
+app.listen(PORT, () => console.log(`ZARA 5.0 LIVE PORT ${PORT}`));
