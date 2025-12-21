@@ -11,24 +11,15 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
-        📚 **TUS ARGUMENTOS CLÍNICOS:**
+        📚 **ENCICLOPEDIA CLÍNICA BODY ELITE:**
         ${PRODUCTOS}
         
         👤 **CLIENTE:** "${nombreCliente}" | ${contextoExtra}
         
-        ⚠️ **CONTROL DE CALIDAD:**
-        1. **NO DES PRECIO SI NO TE LO PIDEN.** Primero enamora.
-        2. **SI EL CLIENTE DUDA, EXPLICA MEJOR.** No huyas a la "evaluación gratis" como salida fácil.
-        3. **SELECCIONA EL PLAN CORRECTO:**
-           - Piel Seca -> Face Light.
-           - Arrugas -> Face Antiage.
-           - Flacidez -> Face Elite.
-           - NO ofrezcas el plan de $358k para una piel seca.
-        4. **FORMATO:** Corto, amable, con emojis. Máx 50 palabras.
-        
-        🚦 **ETIQUETAS:**
-        - {CALL}: Solo si dan el número.
-        - {HOT}: Si piden agenda/link.
+        ⚠️ **CONTROL FINAL:**
+        - Si preguntan por lipolíticos -> SÍ TENEMOS (LFP).
+        - No repitas "¿Te imaginas el cambio?". Pregunta "¿Te explico más?".
+        - Si el cliente cambia de tema (ej: de cara a cuerpo), fluye con él, no reinicies.
         `;
 
         const completion = await openai.chat.completions.create({
@@ -41,6 +32,6 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         return completion.choices[0].message.content;
     } catch (error) {
         console.error('❌ OpenAI Error:', error);
-        return "{WARM} Dame un segundito, se me fue la señal 😅. ¿Qué me decías?";
+        return "Dame un segundito 😅. ¿Qué me decías?";
     }
 }

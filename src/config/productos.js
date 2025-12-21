@@ -1,34 +1,33 @@
 export const PRODUCTOS = `
-[MAPA DE DIAGNÓSTICO: SÍNTOMA -> SOLUCIÓN]
+[DICCIONARIO DE TECNOLOGÍAS - (LO QUE REALMENTE USAMOS)]
 
-1. **SÍNTOMA: "Piel seca", "Apagada", "Sin vida"**
-   👉 **PLAN IDEAL:** Plan Face Light ($128.800).
-   - *Qué es:* Un "shot" de vida. Radiofrecuencia + Pink Glow (Vitaminas).
-   - *La Ilusión:* "Es como darle un vaso de agua gigante a tu piel. Queda jugosa y con brillo al instante."
+1. **LFP (LIPOLÍTICOS / ENZIMAS):** - *Qué es:* Microinyecciones de enzimas que disuelven grasa localizada.
+   - *Explicación Zara:* "Son enzimas inteligentes (LFP) que inyectamos en la grasita dura. Lo que hacen es 'romper' el tejido adiposo para que la máquina lo termine de eliminar más rápido."
+   - *Uso:* Se usa en papada y zonas corporales difíciles.
 
-2. **SÍNTOMA: "Arrugas", "Patas de gallo", "Frente marcada"**
-   👉 **PLAN IDEAL:** Plan Face Antiage ($281.600).
-   - *Qué es:* Botox + HIFU.
-   - *La Ilusión:* "Borramos el cansancio. El Botox relaja la arruga y el HIFU tensa la piel para que te veas fresca, no estirada."
+2. **HIFU 12D:**
+   - *Qué es:* Ultrasonido de alta intensidad.
+   - *Explicación Zara:* "Es un tensado profundo. Imagina que 'corcheteamos' la piel al músculo desde adentro para que no se caiga. Es lo más parecido a un lifting sin cirugía."
 
-3. **SÍNTOMA: "Flacidez", "Cara caída", "Quiero un cambio total"**
-   👉 **PLAN IDEAL:** Plan Face Elite ($358.400).
-   - *Qué es:* Lifting Express (1 mes). Botox + HIFU + Pink Glow.
-   - *La Ilusión:* "Es el paquete completo. Levantamos pómulos, borramos arrugas e iluminamos la piel. Te quitas 5 años de encima."
+3. **LIPOLÁSER:**
+   - *Qué es:* Láser de diodo.
+   - *Explicación Zara:* "Es un láser que permeabiliza la célula de grasa. Literalmente la vacía, como si le sacaras el aire a un globo, reduciendo centímetros."
 
-4. **SÍNTOMA: "Papada", "Perfil borrado"**
-   👉 **PLAN IDEAL:** Plan Lipo Papada ($313.600).
-   - *Qué es:* HIFU focalizado en mentón.
-   - *La Ilusión:* "Definimos tu perfil. Pegamos la piel al músculo para que esa grasita desaparezca de las fotos."
+4. **PINK GLOW:**
+   - *Qué es:* Mesoterapia facial (Vitaminas + Péptidos).
+   - *Explicación Zara:* "Es alimento puro para tu piel. Hidrata, despigmenta y te da un brillo de 'piel sana' inmediato."
 
-5. **SÍNTOMA: "Guata", "Rollitos", "Cuerpo"**
-   👉 **PLAN IDEAL:** Plan Lipo Express ($432.000).
-   - *Qué es:* HIFU + Lipoláser.
-   - *La Ilusión:* "Derrite grasa y tensa la piel a la vez. No quedas suelta, quedas compacta."
+[PLANES - MAPA DE SOLUCIONES]
 
-[DICCIONARIO DE TECNOLOGÍAS (PARA EXPLICAR)]
-- **Pink Glow:** "Un cóctel de 50 vitaminas que ilumina tu cara de inmediato."
-- **HIFU:** "Ultrasonido que tensa la piel desde adentro, como un broche interno."
-- **Lipoláser:** "Láser frío que vacía la célula de grasa sin dolor."
-- **Botox:** "Relaja el músculo para que la arruga no se marque."
+- **SI EL PROBLEMA ES FLACIDEZ / CARA CAÍDA:**
+  👉 **Plan Face Elite ($358.400):** La combinación maestra. HIFU (Tensa) + Botox (Arrugas) + Pink Glow (Piel).
+
+- **SI EL PROBLEMA ES PIEL SECA / APAGADA:**
+  👉 **Plan Face Light ($128.800):** Solo calidad de piel. Radiofrecuencia + Pink Glow.
+
+- **SI EL PROBLEMA ES GUATA / GRASA ABDOMINAL:**
+  👉 **Plan Lipo Express ($432.000):** El "mata grasa". Combina HIFU (para que no cuelgue) + Lipoláser (para vaciar) + LFP (Enzimas, si corresponde).
+
+- **SI EL PROBLEMA ES PAPADA:**
+  👉 **Plan Lipo Papada ($313.600):** HIFU + LFP (Enzimas) para definir mandíbula.
 `;
