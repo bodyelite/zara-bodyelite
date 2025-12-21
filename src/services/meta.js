@@ -1,35 +1,45 @@
 import fetch from "node-fetch";
+import { NEGOCIO } from "../config/negocio.js";
+
+const TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const PHONE_ID = process.env.PHONE_NUMBER_ID;
 
 export async function sendMessage(to, text, platform) {
-    const token = process.env.PAGE_ACCESS_TOKEN;
-    const phoneId = process.env.PHONE_NUMBER_ID;
     const url = platform === "whatsapp" 
-        ? `https://graph.facebook.com/v19.0/${phoneId}/messages` 
+        ? `https://graph.facebook.com/v19.0/${PHONE_ID}/messages` 
         : `https://graph.facebook.com/v19.0/me/messages`;
         
     const body = platform === "whatsapp" 
-        ? { messaging_product: "whatsapp", to, type: "text", text: { body: text } } 
-        : { recipient: { id: to }, message: { text } };
+        ? { messaging_product: "whatsapp", recipient_type: "individual", to: to, type: "text", text: { body: text } } 
+        : { recipient: { id: to }, message: { text: text } };
         
     try {
         await fetch(url, { 
             method: "POST", 
-            headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }, 
+            headers: { "Authorization": `Bearer ${TOKEN}`, "Content-Type": "application/json" }, 
             body: JSON.stringify(body) 
         });
     } catch (e) {
-        console.error("Error enviando mensaje Meta:", e);
+        console.error("❌ Error enviando mensaje:", e);
     }
 }
 
-// ESTA ES LA FUNCIÓN QUE APP.JS ESTABA BUSCANDO CON OTRO NOMBRE
 export async function getIgUserInfo(userId) {
     try {
-        const token = process.env.PAGE_ACCESS_TOKEN;
-        const res = await fetch(`https://graph.facebook.com/v19.0/${userId}?fields=name&access_token=${token}`);
+        const res = await fetch(`https://graph.facebook.com/v19.0/${userId}?fields=name&access_token=${TOKEN}`);
         const data = await res.json(); 
-        return data.name || "Usuario IG";
-    } catch (e) { 
-        return "Usuario IG"; 
+        return data.name || "Amiga";
+    } catch (e) { return "Amiga"; }
+}
+
+// NUEVA FUNCIÓN: ALERTA AL STAFF (Dueños)
+export async function notifyStaff(cliente, mensaje, canal) {
+    const staffNumbers = NEGOCIO.staff_alertas;
+    const alerta = `🚨 *ALERTA ZARA* 🚨\nCliente: ${cliente}\nCanal: ${canal}\nDice: "${mensaje}"\n\n👉 ¡Atender rápido!`;
+    
+    console.log(`🔔 ENVIANDO ALERTA A STAFF (${staffNumbers.length} números)`);
+    
+    for (const number of staffNumbers) {
+        await sendMessage(number, alerta, "whatsapp");
     }
 }
