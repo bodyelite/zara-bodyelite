@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 
-const RENDER_DISK_PATH = '/opt/render/project/src/data';
+const RENDER_PATH = '/opt/render/project/src/data';
 const LOCAL_PATH = path.join(process.cwd(), 'data');
-const DATA_DIR = fs.existsSync('/opt/render/project/src') ? RENDER_DISK_PATH : LOCAL_PATH;
+const DATA_DIR = fs.existsSync('/opt/render/project/src') ? RENDER_PATH : LOCAL_PATH;
 const DB_FILE = path.join(DATA_DIR, 'chats_db.json');
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -25,25 +25,32 @@ export function leerDB() {
 export function guardarMensaje(id, nombre, texto, role, origen, nuevoEstado = null) {
     if (!memoryCache[id]) {
         memoryCache[id] = { 
-            nombre: nombre || "Anónimo", 
+            nombre: nombre || "Cliente", 
             origen: origen, 
-            estado: "LEAD", 
+            estado: "INICIO", 
             mensajes: [], 
             last_active: Date.now() 
         };
     }
 
-    if (nombre && nombre !== "Amiga WSP" && nombre !== "Usuario IG") memoryCache[id].nombre = nombre;
+    if (nombre && nombre !== "Visitante" && nombre !== "Cliente") {
+        memoryCache[id].nombre = nombre;
+    }
+    
     if (nuevoEstado) memoryCache[id].estado = nuevoEstado;
     memoryCache[id].last_active = Date.now();
 
-    memoryCache[id].mensajes.push({ role, content: texto, timestamp: Date.now() });
+    memoryCache[id].mensajes.push({ 
+        role, 
+        content: texto, 
+        timestamp: Date.now() 
+    });
     
-    if (memoryCache[id].mensajes.length > 50) memoryCache[id].mensajes.shift();
+    if (memoryCache[id].mensajes.length > 40) memoryCache[id].mensajes.shift();
 
     try {
         fs.writeFileSync(DB_FILE, JSON.stringify(memoryCache, null, 2));
-    } catch (e) { console.error("Error escritura disco:", e.message); }
+    } catch (e) { console.error("Disk Error:", e.message); }
 
     return memoryCache[id].mensajes;
 }

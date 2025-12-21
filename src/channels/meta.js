@@ -20,12 +20,10 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
         
         } else if (platform === 'instagram') {
             if (hasLink) {
-                // 1. Texto primero (Contexto)
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to }, message: { text: text }
                 }, { headers });
 
-                // 2. Tarjeta con Botón después (Acción)
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to },
                     message: {

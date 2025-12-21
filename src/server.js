@@ -68,12 +68,12 @@ app.post("/webhook", async (req, res) => {
 app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
-        // WEB: Usamos ID dinámico si no viene, para evitar mezcla de sesiones en pruebas
-        const uid = userId || `web_${Date.now()}`;
+        // Si no hay ID, generamos uno basado en la fecha (sesión efímera) pero consistente para la prueba inmediata
+        const uid = userId || 'web_session_fixed';
         
-        // WEB: Detectamos si el mensaje es corto (nombre) para pasarlo como nombre
+        // Detección básica de nombre en web
         let nombreWeb = null;
-        if (message.length < 15 && !message.toLowerCase().includes("info")) {
+        if (message.length < 15 && !message.toLowerCase().includes("info") && !message.toLowerCase().includes("hola")) {
             nombreWeb = message; 
         }
 
