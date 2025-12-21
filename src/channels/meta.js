@@ -13,22 +13,20 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
 
     try {
         if (platform === 'whatsapp') {
+            // WSP: Texto + Link limpio abajo
             const finalBody = hasLink ? `${text}\n\n👇 Reserva aquí:\n${NEGOCIO.agenda_link}` : text;
-            
             await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
-                messaging_product: "whatsapp", 
-                to: to, 
-                type: "text", 
-                text: { body: finalBody }
+                messaging_product: "whatsapp", to: to, type: "text", text: { body: finalBody }
             }, { headers });
         
         } else if (platform === 'instagram') {
-            if (hasLink) {
-                await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                    recipient: { id: to }, 
-                    message: { text: text }
-                }, { headers });
+            // 1. Enviar el Texto primero
+            await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
+                recipient: { id: to }, message: { text: text }
+            }, { headers });
 
+            // 2. Si hay link, enviar TARJETA CON BOTÓN (Generic Template)
+            if (hasLink) {
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to },
                     message: {
@@ -37,29 +35,28 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
                             payload: {
                                 template_type: "generic",
                                 elements: [{
-                                    title: "Agenda tu Evaluación 📅",
-                                    subtitle: "Evaluación IA Gratis",
-                                    image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=600&q=80", 
+                                    title: "Agenda Online",
+                                    subtitle: "Evaluación Gratis con IA",
+                                    // Usamos una imagen muy estable (placeholder) para asegurar que IG no la rechace
+                                    image_url: "https://placehold.co/600x300/d4af37/ffffff/png?text=Body+Elite",
                                     buttons: [{
                                         type: "web_url",
                                         url: NEGOCIO.agenda_link,
-                                        title: "Reservar Ahora"
+                                        title: "Reservar Cita 📅"
                                     }]
                                 }]
                             }
                         }
                     }
                 }, { headers });
-            } else {
-                await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                    recipient: { id: to }, message: { text: text }
-                }, { headers });
             }
         }
     } catch (e) {
+        console.error("Meta Error (Fallback):", e.message);
+        // Si falla la tarjeta en IG, enviamos el link en texto como último recurso
         if (platform === 'instagram' && hasLink) {
              await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                recipient: { id: to }, message: { text: `${text}\n\n🔗 ${NEGOCIO.agenda_link}` }
+                recipient: { id: to }, message: { text: `🔗 Link de Agenda:\n${NEGOCIO.agenda_link}` }
             }, { headers });
         }
     }
@@ -74,5 +71,5 @@ export async function obtenerNombreIG(igId) {
 }
 
 export async function notificarStaff(id, nombre, canal, mensaje) {
-    console.log(`🚨 [STAFF ALERT] LLAMADA SOLICITADA: Cliente ${nombre} (${canal}) - ID: ${id}. Contexto: ${mensaje}`);
+    console.log(`🚨 STAFF ALERT: ${nombre} (${canal}) pide llamada: ${mensaje}`);
 }

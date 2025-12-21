@@ -28,6 +28,7 @@ app.get("/webhook", (req, res) => {
     else res.sendStatus(403);
 });
 
+// WEBHOOK META
 app.post("/webhook", async (req, res) => {
     res.sendStatus(200);
     try {
@@ -42,7 +43,6 @@ app.post("/webhook", async (req, res) => {
                 const senderId = msg.from;
                 const text = msg.text?.body;
                 const profileName = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
-                
                 if(text) await procesarNucleo(senderId, profileName, text, "whatsapp");
             }
         } else if (body.object === "instagram") {
@@ -63,11 +63,11 @@ app.post("/webhook", async (req, res) => {
     } catch (e) { console.error(e); }
 });
 
+// WEBCHAT
 app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest_session';
-        
         let nombreWeb = "Visitante";
         if (message.length < 20 && !message.toLowerCase().includes("info") && !message.toLowerCase().includes("hola")) {
             nombreWeb = message;
@@ -75,43 +75,49 @@ app.post("/webchat", async (req, res) => {
 
         const resultado = await procesarNucleo(uid, nombreWeb, message, "web", true);
         
+        // RESPUESTA SIMPLE: Todo va en 'text' (incluso el botón HTML)
         res.json({
-            text: resultado.textoLimpio,
-            link: resultado.hasLink ? NEGOCIO.agenda_link : null,
-            reply: resultado.textoLimpio
+            text: resultado.textoFinal,
+            reply: resultado.textoFinal
         });
     } catch (e) { 
-        res.status(500).json({ text: "Dame un segundo...", link: null }); 
+        res.status(500).json({ text: "Dame un segundo..." }); 
     }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
     try {
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
-        
         const suffix = plataforma === "instagram" ? "(IG)" : "";
         const respuestaRaw = await pensar(historial, nombre, suffix);
         
         const hasLink = respuestaRaw.includes("{LINK}");
         const notifyCall = respuestaRaw.includes("{CALL}");
-        const textoLimpio = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
         
-        const { texto, estado } = procesarEtiquetas(textoLimpio, id, nombre, plataforma);
-        guardarMensaje(id, nombre, textoLimpio, "zara", plataforma, estado);
+        // Limpiamos etiquetas internas
+        let textoBase = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
         
-        if (notifyCall) {
-            await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
+        // Guardamos en memoria el texto limpio
+        const { texto, estado } = procesarEtiquetas(textoBase, id, nombre, plataforma);
+        guardarMensaje(id, nombre, textoBase, "zara", plataforma, estado);
+        
+        if (notifyCall) await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
+
+        // LÓGICA DE SALIDA DIFERENCIADA
+        let textoFinal = textoBase;
+
+        if (esWeb && hasLink) {
+            // INYECCIÓN HTML PARA WEB: Creamos un botón visual real
+            textoFinal += `<br><br><a href="${NEGOCIO.agenda_link}" target="_blank" style="background-color:#d4af37; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">📅 RESERVAR AQUÍ</a>`;
+        } else if (!esWeb) {
+            // META: Delegamos al módulo de canales
+            await enviarMensajeMeta(id, textoBase, plataforma, hasLink);
         }
 
-        if (esWeb) {
-            return { textoLimpio, hasLink };
-        } else {
-            await enviarMensajeMeta(id, textoLimpio, plataforma, hasLink);
-            return { textoLimpio };
-        }
+        return { textoFinal };
     } catch (e) { 
         console.error("Nucleo Error:", e);
-        return { textoLimpio: "Dame un segundo...", hasLink: false }; 
+        return { textoFinal: "Dame un segundo..." }; 
     }
 }
 
