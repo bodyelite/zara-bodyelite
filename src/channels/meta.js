@@ -20,7 +20,12 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
         
         } else if (platform === 'instagram') {
             if (hasLink) {
-                // IG: Tarjeta con Botón
+                // 1. Texto primero (Contexto)
+                await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
+                    recipient: { id: to }, message: { text: text }
+                }, { headers });
+
+                // 2. Tarjeta con Botón después (Acción)
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to },
                     message: {
@@ -41,10 +46,6 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
                         }
                     }
                 }, { headers });
-                // Enviamos el texto ANTES para mantener el contexto
-                await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                    recipient: { id: to }, message: { text: text }
-                }, { headers });
             } else {
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to }, message: { text: text }
@@ -52,7 +53,6 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
             }
         }
     } catch (e) {
-        // Fallback de seguridad
         if(platform === 'instagram' && hasLink) {
              await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                 recipient: { id: to }, message: { text: `${text}\n\n🔗 ${NEGOCIO.agenda_link}` }

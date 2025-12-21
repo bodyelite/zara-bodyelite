@@ -68,12 +68,17 @@ app.post("/webhook", async (req, res) => {
 app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
-        const uid = userId || 'web_guest';
+        // WEB: Usamos ID dinámico si no viene, para evitar mezcla de sesiones en pruebas
+        const uid = userId || `web_${Date.now()}`;
         
-        // PROCESAMIENTO WEB
-        const resultado = await procesarNucleo(uid, null, message, "web", true);
+        // WEB: Detectamos si el mensaje es corto (nombre) para pasarlo como nombre
+        let nombreWeb = null;
+        if (message.length < 15 && !message.toLowerCase().includes("info")) {
+            nombreWeb = message; 
+        }
+
+        const resultado = await procesarNucleo(uid, nombreWeb, message, "web", true);
         
-        // FORMATO UNIVERSAL PARA EVITAR ERRORES DE FRONTEND
         res.json({
             response: resultado.texto,
             reply: resultado.texto,
@@ -81,7 +86,6 @@ app.post("/webchat", async (req, res) => {
             link: resultado.hasLink ? NEGOCIO.agenda_link : null
         });
     } catch (e) { 
-        console.error("Web Error:", e);
         res.status(500).json({ response: "Dame un segundo..." }); 
     }
 });
