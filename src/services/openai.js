@@ -11,29 +11,36 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
-        📚 **ARGUMENTOS CLÍNICOS (ÚSALOS):**
+        📚 **TUS ARGUMENTOS CLÍNICOS:**
         ${PRODUCTOS}
         
         👤 **CLIENTE:** "${nombreCliente}" | ${contextoExtra}
         
-        ⚠️ **INSTRUCCIÓN DE CONTROL:**
-        - **ETIQUETAS:**
-          * {CALL}: Úsala SOLO si el cliente te da su número explícitamente o dice "llámenme".
-          * {HOT}: Si pide el link o dice "voy a agendar".
-        - **TONO:** Experta, Segura, Chilena, Amable.
-        - **FORMATO:** No uses listas numeradas aburridas. Conversa.
+        ⚠️ **CONTROL DE CALIDAD:**
+        1. **NO DES PRECIO SI NO TE LO PIDEN.** Primero enamora.
+        2. **SI EL CLIENTE DUDA, EXPLICA MEJOR.** No huyas a la "evaluación gratis" como salida fácil.
+        3. **SELECCIONA EL PLAN CORRECTO:**
+           - Piel Seca -> Face Light.
+           - Arrugas -> Face Antiage.
+           - Flacidez -> Face Elite.
+           - NO ofrezcas el plan de $358k para una piel seca.
+        4. **FORMATO:** Corto, amable, con emojis. Máx 50 palabras.
+        
+        🚦 **ETIQUETAS:**
+        - {CALL}: Solo si dan el número.
+        - {HOT}: Si piden agenda/link.
         `;
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: instrucciones }, ...historial],
             temperature: 0.5, 
-            max_tokens: 220, 
+            max_tokens: 250, 
         });
         
         return completion.choices[0].message.content;
     } catch (error) {
         console.error('❌ OpenAI Error:', error);
-        return "Dame un segundito, se me fue la señal 😅. ¿Qué me decías?";
+        return "{WARM} Dame un segundito, se me fue la señal 😅. ¿Qué me decías?";
     }
 }

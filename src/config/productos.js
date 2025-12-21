@@ -1,38 +1,34 @@
 export const PRODUCTOS = `
-[ARGUMENTOS CLÍNICOS DE VENTA - USA ESTO PARA EXPLICAR]
+[MAPA DE DIAGNÓSTICO: SÍNTOMA -> SOLUCIÓN]
 
-1. **HIFU 12D (La Joya):**
-   - *Técnico:* Ultrasonido focalizado de alta intensidad que llega a la capa SMAS (la misma que tocan los cirujanos).
-   - *Explicación Zara:* "Genera puntos de calor profundo que contraen la malla interna de tu piel. Es literalmente volver a 'pegar' la piel al músculo, logrando un lifting real sin cortes."
-   - *Sensación:* Calor profundo, no dolor.
+1. **SÍNTOMA: "Piel seca", "Apagada", "Sin vida"**
+   👉 **PLAN IDEAL:** Plan Face Light ($128.800).
+   - *Qué es:* Un "shot" de vida. Radiofrecuencia + Pink Glow (Vitaminas).
+   - *La Ilusión:* "Es como darle un vaso de agua gigante a tu piel. Queda jugosa y con brillo al instante."
 
-2. **LIPOLÁSER (La Escultura):**
-   - *Técnico:* Láser de diodo frío que permeabiliza la membrana del adipocito.
-   - *Explicación Zara:* "El láser estimula a la célula de grasa para que se vacíe por sí sola. No la rompemos traumáticamente, simplemente hacemos que tu cuerpo elimine esa reserva de forma natural."
-   - *Resultado:* Reducción de centímetros pura.
+2. **SÍNTOMA: "Arrugas", "Patas de gallo", "Frente marcada"**
+   👉 **PLAN IDEAL:** Plan Face Antiage ($281.600).
+   - *Qué es:* Botox + HIFU.
+   - *La Ilusión:* "Borramos el cansancio. El Botox relaja la arruga y el HIFU tensa la piel para que te veas fresca, no estirada."
 
-3. **PINK GLOW (La Luz):**
-   - *Técnico:* Mesoterapia con 50 principios activos (Vitaminas, péptidos, ácido hialurónico).
-   - *Explicación Zara:* "Es un cóctel de nutrición directa a la dermis. Hidrata, despigmenta y devuelve esa luz de 'piel descansada' que se pierde con el estrés."
+3. **SÍNTOMA: "Flacidez", "Cara caída", "Quiero un cambio total"**
+   👉 **PLAN IDEAL:** Plan Face Elite ($358.400).
+   - *Qué es:* Lifting Express (1 mes). Botox + HIFU + Pink Glow.
+   - *La Ilusión:* "Es el paquete completo. Levantamos pómulos, borramos arrugas e iluminamos la piel. Te quitas 5 años de encima."
 
-[PLANES - PRECIOS Y FOCO]
+4. **SÍNTOMA: "Papada", "Perfil borrado"**
+   👉 **PLAN IDEAL:** Plan Lipo Papada ($313.600).
+   - *Qué es:* HIFU focalizado en mentón.
+   - *La Ilusión:* "Definimos tu perfil. Pegamos la piel al músculo para que esa grasita desaparezca de las fotos."
 
-- **PLAN FACE ELITE ($358.400):** *Lifting Express (1 mes).*
-  - Ideal para: Flacidez y cara cansada.
-  - Mix: Botox (relaja) + HIFU (tensa) + Pink Glow (ilumina).
-  - *Gancho:* "Es el favorito porque ataca todo a la vez: arruga, flacidez y calidad de piel."
+5. **SÍNTOMA: "Guata", "Rollitos", "Cuerpo"**
+   👉 **PLAN IDEAL:** Plan Lipo Express ($432.000).
+   - *Qué es:* HIFU + Lipoláser.
+   - *La Ilusión:* "Derrite grasa y tensa la piel a la vez. No quedas suelta, quedas compacta."
 
-- **PLAN LIPO EXPRESS ($432.000):** *Reducción Corporal (8 semanas).*
-  - Ideal para: Guatita general o post-parto.
-  - Mix: HIFU + Lipoláser.
-  - *Gancho:* "Baja volumen y pega la piel al mismo tiempo para que no quedes suelta."
-
-- **PLAN LIPO FOCALIZADA ($348.800):** *Detalle (4-6 semanas).*
-  - Ideal para: Ese rollo específico (sostén/banano) que no baja con gimnasio.
-
-- **PLAN FACE ANTIAGE ($281.600):** *Solo Arrugas.*
-  - Ideal para: Líneas marcadas. (Botox + HIFU).
-
-- **PLAN LIPO PAPADA ($313.600):** *Perfilado.*
-  - Ideal para: Borrar la papada y definir el borde de la mandíbula.
+[DICCIONARIO DE TECNOLOGÍAS (PARA EXPLICAR)]
+- **Pink Glow:** "Un cóctel de 50 vitaminas que ilumina tu cara de inmediato."
+- **HIFU:** "Ultrasonido que tensa la piel desde adentro, como un broche interno."
+- **Lipoláser:** "Láser frío que vacía la célula de grasa sin dolor."
+- **Botox:** "Relaja el músculo para que la arruga no se marque."
 `;
