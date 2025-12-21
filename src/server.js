@@ -180,5 +180,3 @@ app.get("/monitor", (req, res) => {
     setInterval(load, 2000); load();
 </script></body></html>`);
 });
-
-app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2800 - FLUJO VENTA PERFECTO"));

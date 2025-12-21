@@ -1,7 +1,8 @@
 export const PRODUCTOS = `
 [DICCIONARIO DE TECNOLOGÍAS - (LO QUE REALMENTE USAMOS)]
 
-1. **LFP (LIPOLÍTICOS / ENZIMAS):** - *Qué es:* Microinyecciones de enzimas que disuelven grasa localizada.
+1. **LFP (LIPOLÍTICOS / ENZIMAS):**
+   - *Qué es:* Microinyecciones de enzimas que disuelven grasa localizada.
    - *Explicación Zara:* "Son enzimas inteligentes (LFP) que inyectamos en la grasita dura. Lo que hacen es 'romper' el tejido adiposo para que la máquina lo termine de eliminar más rápido."
    - *Uso:* Se usa en papada y zonas corporales difíciles.
 
@@ -15,7 +16,7 @@ export const PRODUCTOS = `
 
 4. **PINK GLOW:**
    - *Qué es:* Mesoterapia facial (Vitaminas + Péptidos).
-   - *Explicación Zara:* "Es alimento puro para tu piel. Hidrata, despigmenta y te da un brillo de 'piel sana' inmediato."
+   - *Explicación Zara:* "Es alimento puro para tu piel. Hidrata, despigmenta y devuelve el brillo de 'piel sana' inmediato."
 
 [PLANES - MAPA DE SOLUCIONES]
 
