@@ -32,13 +32,11 @@ export async function getIgUserInfo(userId) {
     } catch (e) { return "Amiga"; }
 }
 
-// NUEVA FUNCIÓN: ALERTA AL STAFF (Dueños)
+// ALERTA AL STAFF
 export async function notifyStaff(cliente, mensaje, canal) {
     const staffNumbers = NEGOCIO.staff_alertas;
     const alerta = `🚨 *ALERTA ZARA* 🚨\nCliente: ${cliente}\nCanal: ${canal}\nDice: "${mensaje}"\n\n👉 ¡Atender rápido!`;
-    
-    console.log(`🔔 ENVIANDO ALERTA A STAFF (${staffNumbers.length} números)`);
-    
+    console.log(`🔔 ALERTA STAFF`);
     for (const number of staffNumbers) {
         await sendMessage(number, alerta, "whatsapp");
     }

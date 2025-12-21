@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { procesarEvento } from "./app.js";
 import { generarRespuestaIA } from "./services/openai.js";
 import { leerChats, registrar } from "./utils/memory.js";
-import { sendMessage, notifyStaff } from "./services/meta.js"; // Importamos notifyStaff
+import { sendMessage, notifyStaff } from "./services/meta.js";
 import { NEGOCIO } from "./config/negocio.js";
 
 dotenv.config();
@@ -33,13 +33,9 @@ app.post("/webchat", async (req, res) => {
     registrar(uid, "Visitante Web", message, "usuario", "web");
     sesionesWeb[uid].push({ role: "user", content: message });
     
-    // Web no tiene campañas complejas por ahora, pasamos contexto vacío
     const rawReply = await generarRespuestaIA(sesionesWeb[uid].slice(-10), "Amiga", "");
-    
-    // Limpieza de tags para la web también
     const cleanReply = rawReply.replace(/{.*?}/g, "").trim();
     
-    // Detección de alerta en web
     if (rawReply.includes("{HOT}") || rawReply.includes("{ALERT}")) {
         notifyStaff("Visitante Web", message, "WEB");
     }
@@ -62,9 +58,9 @@ app.post("/api/send-manual", async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MONITOR V2000 - DEFINITIVO
+// MONITOR V2100 (CORREGIDO SIN ERROR DE SINTAXIS)
 app.get("/monitor", (req, res) => {
-    res.send(\`<!DOCTYPE html>
+    res.send(`<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -166,7 +162,7 @@ app.get("/monitor", (req, res) => {
         load();
     }
     setInterval(load, 2000); load();
-</script></body></html>\`);
+</script></body></html>`);
 });
 
-app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2000 - CEREBRO CONECTADO"));
+app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2100 - SIN ERRORES DE SINTAXIS"));

@@ -8,25 +8,24 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function generarRespuestaIA(historial, nombreCliente, contextoExtra = "") {
     try {
-        // CONSTRUCCIÓN DEL CEREBRO: Personalidad + Catálogo + Datos del Cliente
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
-        📚 **TU CONOCIMIENTO CLÍNICO (PRODUCTOS REALES):**
+        📚 **CONOCIMIENTO CLÍNICO (Precios Reales):**
         ${PRODUCTOS}
         
-        👤 **CLIENTE ACTUAL:**
+        👤 **CLIENTE:**
         - Nombre: ${nombreCliente}
         - Contexto: ${contextoExtra}
         
         ⚠️ **RECORDATORIO:**
         - Usa siempre el nombre "${nombreCliente}".
-        - Si piden precio, dalo exacto según la lista.
-        - ¡Cierra con doble opción!
+        - Si piden precio, dalo exacto.
+        - ¡Cierre con doble opción!
         `;
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o", // Usamos el modelo más inteligente para ventas
+            model: "gpt-4o",
             messages: [{ role: "system", content: instrucciones }, ...historial],
             temperature: 0.7,
         });
@@ -34,6 +33,6 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         return completion.choices[0].message.content;
     } catch (error) {
         console.error('❌ OpenAI Error:', error);
-        return "¡Hola preciosa! 💖 Estoy revisando mi agenda un segundo, ¿me repites porfa?";
+        return "¡Hola preciosa! 💖 Dame un segundo que estoy revisando la agenda.";
     }
 }
