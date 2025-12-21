@@ -11,30 +11,28 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
-        📚 **TUS FICHAS TÉCNICAS:**
+        📚 **MANUAL DE DIAGNÓSTICO:**
         ${PRODUCTOS}
         
-        👤 **DATOS DEL CLIENTE:**
-        - Nombre: "${nombreCliente}"
-        - Contexto: ${contextoExtra}
+        👤 **PACIENTE:** "${nombreCliente}" | ${contextoExtra}
         
-        ⚠️ **INSTRUCCIÓN FINAL AL MODELO:**
-        - Respeta el **MAPA DE VENTA** de personalidad.js paso a paso.
-        - NO inventes precios. Usa los de la lista.
-        - Si el cliente pregunta precio, SIEMPRE ofrece la **Evaluación Gratis** en la misma respuesta.
-        - Sé breve. Máximo 40-50 palabras por mensaje.
+        ⚠️ **REGLAS CRÍTICAS:**
+        1. **NO VENDAS SIN SABER QUÉ DUELE.** Si no sabes el síntoma, PREGUNTA.
+        2. **RESPETA LAS CONTRAINDICACIONES.** Si dice "No Botox", ofrece Face Light.
+        3. **SEDUCCIÓN:** Explica el beneficio ("te quita cara de cansada") antes que la máquina ("Pink Glow").
+        4. **LARGO:** Mantén respuestas de chat (máx 40 palabras), amigables y con 1 emoji.
         `;
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: instrucciones }, ...historial],
-            temperature: 0.5,
+            temperature: 0.4, // Precisión clínica
             max_tokens: 200,
         });
         
         return completion.choices[0].message.content;
     } catch (error) {
         console.error('❌ OpenAI Error:', error);
-        return "{WARM} Dame un segundito, se me fue la señal 😅. ¿Qué me decías?";
+        return "{WARM} Dame un segundito 😅. ¿Qué me decías?";
     }
 }
