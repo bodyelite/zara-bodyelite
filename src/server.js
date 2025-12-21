@@ -23,7 +23,7 @@ app.post("/webhook", (req, res) => {
     res.sendStatus(200);
     try {
         const body = req.body;
-        if (body.object && body.entry && body.entry.length > 0) {
+        if (body.object && body.entry) {
             body.entry.forEach(entry => procesarEvento(entry).catch(console.error));
         }
     } catch (e) { console.error(e); }
@@ -34,19 +34,20 @@ app.post("/webchat", async (req, res) => {
     const uid = userId || 'web_user';
     if (!sesionesWeb[uid]) sesionesWeb[uid] = [];
     
-    // Registrar usuario con nombre genérico si es nuevo
     registrar(uid, "Visitante Web", message, "usuario", "web");
     sesionesWeb[uid].push({ role: "user", content: message });
     
     const rawReply = await generarRespuestaIA(sesionesWeb[uid].slice(-10), "Amiga", "");
+    
+    // Limpieza de etiquetas
     const cleanReply = rawReply.replace(/{.*?}/g, "").trim();
     
-    if (rawReply.includes("{HOT}") || rawReply.includes("{ALERT}")) {
+    // Alerta solo si pide llamada en la web
+    if (rawReply.includes("{CALL}") || rawReply.includes("{ALERT}")) {
         notifyStaff("Visitante Web", message, "WEB");
     }
 
     sesionesWeb[uid].push({ role: "assistant", content: cleanReply });
-    // Al registrar a Zara, pasamos null en nombre para no sobreescribir
     registrar(uid, null, cleanReply, "zara", "web");
     
     const mostrar = cleanReply.toLowerCase().includes("agendar") || cleanReply.toLowerCase().includes("link");
@@ -54,12 +55,10 @@ app.post("/webchat", async (req, res) => {
 });
 
 app.get("/api/chats", (req, res) => res.json(leerChats()));
-
 app.post("/api/send-manual", async (req, res) => {
     const { id, text, origen } = req.body;
     try {
         if (origen === "whatsapp") await sendMessage(id, text, "whatsapp");
-        // Al enviar manual, pasamos NULL como nombre para que NO se borre el nombre del cliente
         registrar(id, null, text, "zara", origen);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -171,4 +170,4 @@ app.get("/monitor", (req, res) => {
 </script></body></html>`);
 });
 
-app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2300 - PERSONALIDAD CORREGIDA"));
+app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2500 - ALERTA SOLO LLAMADA"));
