@@ -5,7 +5,10 @@ dotenv.config();
 export async function enviarMensaje(to, text, platform) {
     const token = platform === 'whatsapp' ? process.env.WHATSAPP_TOKEN : process.env.PAGE_ACCESS_TOKEN;
     
-    if (!token) return console.error(`NO TOKEN FOR ${platform}`);
+    if (!token) {
+        console.error(`CRITICAL ERROR: MISSING TOKEN FOR ${platform}`);
+        return;
+    }
 
     const headers = { 
         'Authorization': `Bearer ${token}`,
@@ -19,14 +22,17 @@ export async function enviarMensaje(to, text, platform) {
                 to: to, 
                 text: { body: text }
             }, { headers });
+            console.log(`SUCCESS: WSP SENT TO ${to}`);
         } else if (platform === 'instagram') {
             await axios.post(`https://graph.facebook.com/v21.0/me/messages`, {
                 recipient: { id: to }, 
                 message: { text: text }
             }, { headers });
+            console.log(`SUCCESS: IG SENT TO ${to}`);
         }
     } catch (e) {
-        console.error(`ERROR SENDING ${platform}`, e.response ? e.response.data : e.message);
+        const err = e.response ? JSON.stringify(e.response.data) : e.message;
+        console.error(`FAILED SENDING ${platform}:`, err);
     }
 }
 

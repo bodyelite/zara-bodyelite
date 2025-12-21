@@ -1,19 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 
+let memoryCache = {};
 const DB_PATH = path.join(process.cwd(), 'chats_db.json');
 
-if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, JSON.stringify({}));
+try {
+    if (fs.existsSync(DB_PATH)) {
+        memoryCache = JSON.parse(fs.readFileSync(DB_PATH));
+    }
+} catch (e) {}
 
 export function leerDB() {
-    try { return JSON.parse(fs.readFileSync(DB_PATH)); } catch { return {}; }
+    return memoryCache;
 }
 
 export function guardarMensaje(id, nombre, texto, role, origen, nuevoEstado = null) {
-    const db = leerDB();
-    
-    if (!db[id]) {
-        db[id] = { 
+    if (!memoryCache[id]) {
+        memoryCache[id] = { 
             nombre: nombre || "Anónimo", 
             origen: origen, 
             estado: "LEAD", 
@@ -22,13 +25,17 @@ export function guardarMensaje(id, nombre, texto, role, origen, nuevoEstado = nu
         };
     }
 
-    if (nombre && db[id].nombre === "Anónimo") db[id].nombre = nombre;
-    if (nuevoEstado) db[id].estado = nuevoEstado;
-    db[id].last_active = Date.now();
+    if (nombre && memoryCache[id].nombre === "Anónimo") memoryCache[id].nombre = nombre;
+    if (nuevoEstado) memoryCache[id].estado = nuevoEstado;
+    memoryCache[id].last_active = Date.now();
 
-    db[id].mensajes.push({ role, content: texto, timestamp: Date.now() });
-    if (db[id].mensajes.length > 20) db[id].mensajes.shift();
+    memoryCache[id].mensajes.push({ role, content: texto, timestamp: Date.now() });
+    
+    if (memoryCache[id].mensajes.length > 30) memoryCache[id].mensajes.shift();
 
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-    return db[id].mensajes;
+    try {
+        fs.writeFileSync(DB_PATH, JSON.stringify(memoryCache, null, 2));
+    } catch (e) {}
+
+    return memoryCache[id].mensajes;
 }
