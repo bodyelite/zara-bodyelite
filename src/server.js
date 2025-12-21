@@ -39,9 +39,13 @@ app.post("/webhook", async (req, res) => {
                 const msg = changes.messages[0];
                 if (processedIds.has(msg.id)) return;
                 processedIds.add(msg.id);
+                
                 const senderId = msg.from;
                 const text = msg.text?.body;
-                const name = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
+                // MEJORA: Si no hay nombre público, usar null para que el cerebro no fuerce un nombre falso.
+                const profileName = changes.contacts?.[0]?.profile?.name;
+                const name = profileName || null; 
+                
                 if(text) await procesarNucleo(senderId, name, text, "whatsapp");
             }
         } else if (body.object === "instagram") {
@@ -50,6 +54,7 @@ app.post("/webhook", async (req, res) => {
                 const msgId = messaging.message.mid;
                 if (processedIds.has(msgId)) return;
                 processedIds.add(msgId);
+                
                 const senderId = messaging.sender.id;
                 const text = messaging.message.text;
                 if(text) {
@@ -65,7 +70,8 @@ app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest';
-        const respuesta = await procesarNucleo(uid, "Visitante Web", message, "web", true);
+        // En web no solemos tener nombre, pasamos null para que sea neutral o pregunte si es necesario.
+        const respuesta = await procesarNucleo(uid, null, message, "web", true);
         
         res.json({ 
             response: respuesta, 
@@ -73,15 +79,16 @@ app.post("/webchat", async (req, res) => {
             text: respuesta,
             link: NEGOCIO.agenda_link 
         });
-    } catch (e) { 
-        res.status(500).json({ error: "Error" }); 
-    }
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
     try {
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
+        
+        // El cerebro recibe el nombre real o null.
         const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
+        
         const { texto, estado } = procesarEtiquetas(respuestaRaw, id, nombre, plataforma);
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
