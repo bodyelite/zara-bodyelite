@@ -14,71 +14,57 @@ const sesionesWeb = {};
 app.use(cors());
 app.use(bodyParser.json());
 
-// WEBHOOKS VERIFICACION
 app.get("/webhook", (req, res) => {
     if (req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
     else res.sendStatus(403);
 });
 
-// WEBHOOKS RECEPCION (FIX CRÍTICO: BUCLE DE ENTRADAS)
 app.post("/webhook", (req, res) => {
     res.sendStatus(200);
-    
     try {
         const body = req.body;
-
-        // Validar que sea un evento de Meta
-        if (body.object) {
-            // Meta envía un array 'entry', hay que procesar cada uno
-            if (body.entry && body.entry.length > 0) {
-                body.entry.forEach(entry => {
-                    // Ahora sí pasamos la 'entry' limpia a app.js
-                    procesarEvento(entry).catch(err => console.error("❌ Error en procesarEvento:", err));
-                });
-            }
+        if (body.object && body.entry && body.entry.length > 0) {
+            body.entry.forEach(entry => procesarEvento(entry).catch(console.error));
         }
-    } catch (e) {
-        console.error("❌ Error general en webhook:", e);
-    }
+    } catch (e) { console.error(e); }
 });
 
-// WEBCHAT
 app.post("/webchat", async (req, res) => {
     const { message, userId } = req.body;
     const uid = userId || 'web_user';
     if (!sesionesWeb[uid]) sesionesWeb[uid] = [];
     
+    // Registrar usuario con nombre genérico si es nuevo
     registrar(uid, "Visitante Web", message, "usuario", "web");
     sesionesWeb[uid].push({ role: "user", content: message });
     
-    // Web no tiene contexto de campaña, pasamos string vacío
     const rawReply = await generarRespuestaIA(sesionesWeb[uid].slice(-10), "Amiga", "");
     const cleanReply = rawReply.replace(/{.*?}/g, "").trim();
     
-    // Detectar alertas en Web también
     if (rawReply.includes("{HOT}") || rawReply.includes("{ALERT}")) {
         notifyStaff("Visitante Web", message, "WEB");
     }
 
     sesionesWeb[uid].push({ role: "assistant", content: cleanReply });
-    registrar(uid, "Zara", cleanReply, "zara", "web");
+    // Al registrar a Zara, pasamos null en nombre para no sobreescribir
+    registrar(uid, null, cleanReply, "zara", "web");
     
     const mostrar = cleanReply.toLowerCase().includes("agendar") || cleanReply.toLowerCase().includes("link");
     res.json({ response: cleanReply, button: mostrar, link: NEGOCIO.agenda_link });
 });
 
-// API
 app.get("/api/chats", (req, res) => res.json(leerChats()));
+
 app.post("/api/send-manual", async (req, res) => {
     const { id, text, origen } = req.body;
     try {
         if (origen === "whatsapp") await sendMessage(id, text, "whatsapp");
-        registrar(id, "Human", text, "zara", origen);
+        // Al enviar manual, pasamos NULL como nombre para que NO se borre el nombre del cliente
+        registrar(id, null, text, "zara", origen);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MONITOR V2100
 app.get("/monitor", (req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="es">
@@ -185,4 +171,4 @@ app.get("/monitor", (req, res) => {
 </script></body></html>`);
 });
 
-app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2200 - WEBHOOK REPARADO"));
+app.listen(process.env.PORT || 3000, () => console.log("🚀 Zara V2300 - PERSONALIDAD CORREGIDA"));

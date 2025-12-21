@@ -8,31 +8,32 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function generarRespuestaIA(historial, nombreCliente, contextoExtra = "") {
     try {
+        // INYECCIÓN DE PERSONALIDAD "BKN" Y RESTRICCIÓN DE LONGITUD
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
-        📚 **CONOCIMIENTO CLÍNICO (Precios Reales):**
+        📚 **TUS PRODUCTOS Y PRECIOS (NO INVENTES):**
         ${PRODUCTOS}
         
-        👤 **CLIENTE:**
-        - Nombre: ${nombreCliente}
-        - Contexto: ${contextoExtra}
+        👤 **CLIENTE ACTUAL:** "${nombreCliente}"
+        🌍 **CONTEXTO:** ${contextoExtra}
         
-        ⚠️ **RECORDATORIO:**
-        - Usa siempre el nombre "${nombreCliente}".
-        - Si piden precio, dalo exacto.
-        - ¡Cierre con doble opción!
+        🔥 **REGLAS DE ORO (ESTRICTAS):**
+        1. **CERO LADRILLOS:** Tu respuesta debe ser CORTA (Máx 40 palabras).
+        2. **TONO:** Eres cercana, experta y "bkn". Usa emojis pero no parezcas un folleto. Habla como una amiga chilena experta.
+        3. **PRECIOS:** Si preguntan "desde", di el menor precio de la categoría. Si preguntan uno específico, da el precio exacto.
+        4. **NO REPITAS SALUDOS:** Si en el historial ya saludaste, ve directo al grano.
+        5. **CIERRE:** Siempre termina con una pregunta o doble opción para que el cliente responda.
         `;
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: instrucciones }, ...historial],
-            temperature: 0.7,
+            temperature: 0.6, // Bajamos un poco para que no alucine tanto
         });
         
         return completion.choices[0].message.content;
     } catch (error) {
-        console.error('❌ OpenAI Error:', error);
-        return "¡Hola preciosa! 💖 Dame un segundo que estoy revisando la agenda.";
+        return "¡Ups! Se me fue la señal un segundo 😅. ¿Me repites?";
     }
 }
