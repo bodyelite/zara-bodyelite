@@ -5,7 +5,7 @@ dotenv.config();
 export async function enviarMensaje(to, text, platform) {
     const token = platform === 'whatsapp' ? process.env.WHATSAPP_TOKEN : process.env.PAGE_ACCESS_TOKEN;
     
-    if (!token) return console.error(`NO TOKEN FOR ${platform}`);
+    if (!token) return console.error(`NO TOKEN FOR ${platform} - CHECK .ENV`);
 
     const headers = { 
         'Authorization': `Bearer ${token}`,
