@@ -12,21 +12,30 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
     try {
+        // --- WHATSAPP ---
         if (platform === 'whatsapp') {
-            // WSP: Texto + Link limpio abajo
             const finalBody = hasLink ? `${text}\n\n👇 Reserva aquí:\n${NEGOCIO.agenda_link}` : text;
             await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
-                messaging_product: "whatsapp", to: to, type: "text", text: { body: finalBody }
+                messaging_product: "whatsapp", 
+                to: to, 
+                type: "text", 
+                text: { body: finalBody }
             }, { headers });
         
+        // --- INSTAGRAM ---
         } else if (platform === 'instagram') {
-            // 1. Enviar el Texto primero
+            
+            // 1. Enviamos el texto primero (Contexto)
             await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                recipient: { id: to }, message: { text: text }
+                recipient: { id: to }, 
+                message: { text: text }
             }, { headers });
 
-            // 2. Si hay link, enviar TARJETA CON BOTÓN (Generic Template)
+            // 2. Si hay link, enviamos TARJETA CON BOTÓN (Generic Template)
             if (hasLink) {
+                // Usamos una imagen de servidor estático seguro (Imgur/Unsplash directo) para que Meta no la rechace
+                const imageUrl = "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
+                
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to },
                     message: {
@@ -35,14 +44,13 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
                             payload: {
                                 template_type: "generic",
                                 elements: [{
-                                    title: "Agenda Online",
-                                    subtitle: "Evaluación Gratis con IA",
-                                    // Usamos una imagen muy estable (placeholder) para asegurar que IG no la rechace
-                                    image_url: "https://placehold.co/600x300/d4af37/ffffff/png?text=Body+Elite",
+                                    title: "Reserva tu Hora 📅",
+                                    subtitle: "Evaluación Gratis + Asistencia IA",
+                                    image_url: imageUrl,
                                     buttons: [{
                                         type: "web_url",
                                         url: NEGOCIO.agenda_link,
-                                        title: "Reservar Cita 📅"
+                                        title: "Agendar Aquí"
                                     }]
                                 }]
                             }
@@ -52,9 +60,9 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
             }
         }
     } catch (e) {
-        console.error("Meta Error (Fallback):", e.message);
-        // Si falla la tarjeta en IG, enviamos el link en texto como último recurso
+        // Fallback silencioso: Si falla el botón, enviamos el link limpio
         if (platform === 'instagram' && hasLink) {
+             console.error("Error enviando botón IG, usando fallback texto:", e.message);
              await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                 recipient: { id: to }, message: { text: `🔗 Link de Agenda:\n${NEGOCIO.agenda_link}` }
             }, { headers });
@@ -71,5 +79,5 @@ export async function obtenerNombreIG(igId) {
 }
 
 export async function notificarStaff(id, nombre, canal, mensaje) {
-    console.log(`🚨 STAFF ALERT: ${nombre} (${canal}) pide llamada: ${mensaje}`);
+    console.log(`🚨 [STAFF ALERT] LLAMADA SOLICITADA: Cliente ${nombre} (${canal}) - ID: ${id}. Contexto: ${mensaje}`);
 }
