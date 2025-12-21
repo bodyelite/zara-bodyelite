@@ -1,14 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-
+// MEMORIA RAM PURA (SOLUCIONA EL PROBLEMA DE HISTORIAL VACIO)
 let memoryCache = {};
-const DB_PATH = path.join(process.cwd(), 'chats_db.json');
-
-try {
-    if (fs.existsSync(DB_PATH)) {
-        memoryCache = JSON.parse(fs.readFileSync(DB_PATH));
-    }
-} catch (e) {}
 
 export function leerDB() {
     return memoryCache;
@@ -31,11 +22,8 @@ export function guardarMensaje(id, nombre, texto, role, origen, nuevoEstado = nu
 
     memoryCache[id].mensajes.push({ role, content: texto, timestamp: Date.now() });
     
-    if (memoryCache[id].mensajes.length > 30) memoryCache[id].mensajes.shift();
-
-    try {
-        fs.writeFileSync(DB_PATH, JSON.stringify(memoryCache, null, 2));
-    } catch (e) {}
+    // Mantiene ultimos 40 mensajes en RAM
+    if (memoryCache[id].mensajes.length > 40) memoryCache[id].mensajes.shift();
 
     return memoryCache[id].mensajes;
 }
