@@ -37,14 +37,20 @@ export async function procesarEvento(entry) {
         if (!sesiones[senderId]) sesiones[senderId] = [];
         sesiones[senderId].push({ role: "user", content: text });
 
-        // IA
         const rawReply = await generarRespuestaIA(sesiones[senderId].slice(-10), senderName, campaignContext);
         
-        // LIMPIEZA DE ETIQUETAS
-        let cleanReply = rawReply.replace(/{.*?}/g, "").trim();
+        // Limpieza de TODAS las etiquetas posibles
+        let cleanReply = rawReply
+            .replace("{HOT}", "")
+            .replace("{WARM}", "")
+            .replace("{COLD}", "")
+            .replace("{CALL}", "")
+            .replace("{ALERT}", "")
+            .trim();
 
-        // ALERTA SOLO SI PIDE LLAMADA
+        // LÓGICA DE ALERTA: Solo si la IA decidió que es {CALL} (tiene número) o {ALERT}
         if (rawReply.includes("{CALL}") || rawReply.includes("{ALERT}")) {
+            console.log("🚨 ALERTA REAL DETECTADA");
             notifyStaff(senderName, text, platform);
         }
 
