@@ -9,7 +9,6 @@ export async function procesarEvento(entry) {
     let senderId, text, senderName, campaignContext = "";
 
     try {
-        // --- 1. EXTRACCIÓN ---
         if (platform === "whatsapp") {
             const change = entry.changes[0].value;
             if (!change.messages || change.messages.length === 0) return;
@@ -38,28 +37,17 @@ export async function procesarEvento(entry) {
         if (!sesiones[senderId]) sesiones[senderId] = [];
         sesiones[senderId].push({ role: "user", content: text });
 
-        // --- 2. CEREBRO ---
+        // IA
         const rawReply = await generarRespuestaIA(sesiones[senderId].slice(-10), senderName, campaignContext);
         
-        // --- 3. LÓGICA DE ALERTA CORREGIDA (SOLO CALL O ALERT) ---
-        let cleanReply = rawReply;
-        
-        // Limpiamos TODAS las etiquetas para el usuario
-        cleanReply = rawReply
-            .replace("{HOT}", "")
-            .replace("{WARM}", "")
-            .replace("{COLD}", "")
-            .replace("{CALL}", "")
-            .replace("{ALERT}", "")
-            .trim();
+        // LIMPIEZA DE ETIQUETAS
+        let cleanReply = rawReply.replace(/{.*?}/g, "").trim();
 
-        // Solo disparamos notificación si es URGENTE REAL
+        // ALERTA SOLO SI PIDE LLAMADA
         if (rawReply.includes("{CALL}") || rawReply.includes("{ALERT}")) {
-            console.log("🚨 ALERTA DISPARADA: El usuario pidió llamada o tiene problema.");
             notifyStaff(senderName, text, platform);
         }
 
-        // --- 4. RESPUESTA ---
         await sendMessage(senderId, cleanReply, platform);
         
         sesiones[senderId].push({ role: "assistant", content: cleanReply });

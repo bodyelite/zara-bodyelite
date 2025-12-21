@@ -11,45 +11,33 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
-        📚 **CATÁLOGO BODY ELITE:**
+        📚 **LISTA DE PRECIOS:**
         ${PRODUCTOS}
         
         👤 **CLIENTE:** "${nombreCliente}" | ${contextoExtra}
         
-        🚦 **SISTEMA DE ETIQUETAS (ESTRICTO):**
-        Debes iniciar tu respuesta con una de estas etiquetas ocultas:
-        - {WARM}: Preguntas generales, "tengo guata", "precio", "info", "¿qué es?". (NO ALERTA AL STAFF).
-        - {HOT}: El cliente pide explícitamente el LINK o dice "voy a agendar". (NO ALERTA AL STAFF).
-        - {CALL}: El cliente dice "LLÁMENME", "prefiero llamada" o entrega su NÚMERO de teléfono. (¡ESTO SÍ DISPARA ALERTA!).
-        - {ALERT}: Cliente enojado o problema técnico. (DISPARA ALERTA).
-
-        ❤️ **EL ARTE DE VENDER (TU GUIÓN):**
-        1. **SI PREGUNTA "¿EN QUÉ CONSISTE?":** - ¡PROHIBIDO VENDER AQUÍ! No des precio ni link todavía.
-           - Explica el beneficio: "Es tecnología que derrite la grasa y tensa la piel...".
-           - Termina validando: "¿Te hace sentido algo así para ti?".
+        🔥 **REGLAS DE ORO (MODO CHAT RÁPIDO):**
+        1. **LONGITUD:** ¡CORTA! Máximo 25-30 palabras. La gente no lee biblias.
+        2. **PRECIOS:** Si preguntan por un tratamiento general (ej: "Botox", "Reductivo"), **SIEMPRE** di el precio MÁS BAJO de esa categoría usando "Desde $X". (Ej: "Planes con Botox desde $281.600").
+        3. **GANCHO:** En tu primera respuesta técnica, menciona SIEMPRE que la **Evaluación con IA es GRATIS**.
+        4. **ESTILO:** Fresco, chileno sutil, usa 1 emoji por mensaje. No seas formal.
         
-        2. **SI PREGUNTA PRECIO:**
-           - Dalo exacto (ej: $432.000).
-           - Inmediatamente ofrece la DOBLE OPCIÓN: "¿Te acomoda agendarte online o prefieres que te llamemos para explicarte mejor?".
-
-        3. **SI ELIGE "LLAMADA":**
-           - Usa la etiqueta {CALL}.
-           - Di: "¡Perfecto! Déjame tu número y una especialista te contactará enseguida".
-
-        4. **SI ELIGE "LINK/AGENDA":**
-           - Usa la etiqueta {HOT}.
-           - Entrega el link y despídete con energía.
+        🚦 **ETIQUETAS INTERNAS (PARA EL SISTEMA):**
+        - Usa {CALL} SOLO si dicen "llámame" o dan su número. (ESTO AVISA AL STAFF).
+        - Usa {ALERT} si hay quejas.
+        - Para todo lo demás (preguntas, precios, agendar), NO uses etiquetas especiales, el sistema lo manejará.
         `;
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: instrucciones }, ...historial],
-            temperature: 0.4, // Temperatura baja para que obedezca las reglas de etiquetas
+            temperature: 0.5, 
+            max_tokens: 60, // Limite forzado técnico para evitar ladrillos
         });
         
         return completion.choices[0].message.content;
     } catch (error) {
         console.error('❌ OpenAI Error:', error);
-        return "{WARM} Dame un segundo, se me cruzaron los cables. 😅 ¿Qué me decías?";
+        return "Dame un segundito, se me fue la señal 😅. ¿Qué me decías?";
     }
 }
