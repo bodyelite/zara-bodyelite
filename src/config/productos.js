@@ -1,23 +1,29 @@
-export const PRODUCTOS = `
-[PLANES CORPORALES]
-- Plan Lipo Body Elite ($664.000): 8-10 semanas. El más completo. Reduce grasa + Tensa piel + Marca músculo.
-- Plan Lipo Express ($432.000): 8 semanas. Ideal para bajar centímetros rápido y modelar. (HIFU + Lipoláser + Reafirmante).
-- Plan Lipo Reductiva ($480.000): 10 semanas. Full quemadores para bajar tallas agresivamente.
-- Plan Lipo Focalizada ($348.800): 4-6 semanas. Para ese "rollito" rebelde específico.
-- Plan Body Tensor ($232.000): Solo Flacidez. Ideal post-parto o piel suelta.
-- Plan Push Up Glúteos ($376.000): Levanta y redondea la cola sin relleno (músculo).
+export const PRODUCTOS = \`
+[DICCIONARIO DE VENTA - USA ESTAS DEFINICIONES]
 
-[PLANES FACIALES]
-- Plan Full Face ($584.000): 2 meses. Renovación total (Botox + HIFU + Piel).
-- Plan Face Elite ($358.400): 1 mes. Lifting Express (Botox + HIFU + Pink Glow).
-- Plan Lipo Papada ($313.600): Elimina la grasa bajo el mentón y define el perfil.
-- Plan Face Antiage ($281.600): Borra arrugas (Botox + HIFU).
-- Plan Face Inicia ($270.400): Mix de inicio (Vitaminas + HIFU).
+1. **PLAN LIPO EXPRESS ($432.000)**
+   - *Para quién:* Quien quiere bajar "guatita" o rollos rápido (8 semanas).
+   - *Cómo explicarlo:* "Combina HIFU y Lipoláser. Es como 'derretir' la grasa y luego 'planchar' la piel para que quede pegadita".
 
-[DICCIONARIO TECNOLÓGICO (EXPLICA ASÍ DE SIMPLE)]
-- HIFU 12D: Ultrasonido que tensa la piel desde adentro. Es como un "lifting sin cirugía". No duele, solo sientes calorcito.
-- LIPOLÁSER: Láser frío que "derrite" la grasa para que el cuerpo la elimine sola.
-- PROSCULPT (EMS): Ondas que hacen 20.000 abdominales en 30 minutos. Levanta glúteos y marca músculo.
-- PINK GLOW: Vitaminas que iluminan la piel al instante. Te quita la cara de cansada.
-- BOTOX: Relaja el músculo para que no se marque la arruga. Usamos dosis justas para que te veas natural, no congelada.
-`;
+2. **PLAN LIPO FOCALIZADA ($348.800)**
+   - *Para quién:* Quien tiene UN rollo rebelde (ej: el del sostén o banano).
+   - *Cómo explicarlo:* "Atacamos directo esa zona difícil que no baja con gimnasio".
+
+3. **PLAN FACE ELITE ($358.400)**
+   - *Para quién:* Quien quiere verse más joven en 1 mes (Lifting Express).
+   - *Qué incluye:* BOTOX + HIFU + PINK GLOW. (¡Sí tiene Pink Glow!).
+   - *Cómo explicarlo:* "Es un refresh total. El Botox relaja, el HIFU levanta y el Pink Glow te da una luz increíble a la piel".
+
+4. **PLAN LIPO PAPADA ($313.600)**
+   - *Para quién:* Quien quiere definir el perfil y borrar la papada.
+   - *Cómo explicarlo:* "Usamos HIFU para 'pegar' la piel al músculo y eliminar esa grasita que molesta en las fotos".
+
+5. **PLAN FULL FACE ($584.000)**
+   - *Para quién:* Renovación total (2 meses).
+   - *Cómo explicarlo:* "Es nuestro plan más completo. Rejuvenece todo el rostro, borra manchas, arrugas y flacidez".
+
+[TECNOLOGÍAS SIMPLIFICADAS]
+- **HIFU:** "Lifting sin cirugía. Tensa la piel desde adentro".
+- **LIPOLÁSER:** "Láser frío que disuelve la grasa sin dolor".
+- **PINK GLOW:** "Vitaminas que te dejan cara de descansada al instante".
+\`;
