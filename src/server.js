@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { pensar } from "./core/brain.js";
 import { guardarMensaje, leerDB } from "./core/memory.js";
 import { procesarEtiquetas } from "./core/tags.js";
-import { enviarMensaje, obtenerNombreIG } from "./channels/meta.js";
+import { enviarMensaje, obtenerNombreIG, notificarStaff } from "./channels/meta.js";
 import { NEGOCIO } from "./config/business.js";
 import dotenv from 'dotenv';
 
@@ -42,7 +42,6 @@ app.post("/webhook", async (req, res) => {
                 
                 const senderId = msg.from;
                 const text = msg.text?.body;
-                // MEJORA: Si no hay nombre público, usar null para que el cerebro no fuerce un nombre falso.
                 const profileName = changes.contacts?.[0]?.profile?.name;
                 const name = profileName || null; 
                 
@@ -70,15 +69,10 @@ app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest';
-        // En web no solemos tener nombre, pasamos null para que sea neutral o pregunte si es necesario.
-        const respuesta = await procesarNucleo(uid, null, message, "web", true);
         
-        res.json({ 
-            response: respuesta, 
-            reply: respuesta,
-            text: respuesta,
-            link: NEGOCIO.agenda_link 
-        });
+        const respuestaFull = await procesarNucleo(uid, null, message, "web", true);
+        
+        res.json(respuestaFull); 
     } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
@@ -86,15 +80,34 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
     try {
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
         
-        // El cerebro recibe el nombre real o null.
-        const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
+        let respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
         
-        const { texto, estado } = procesarEtiquetas(respuestaRaw, id, nombre, plataforma);
+        // Detección de Tags
+        const hasLink = respuestaRaw.includes("{LINK}");
+        const notifyCall = respuestaRaw.includes("{CALL}");
+        
+        // Limpieza de texto
+        let textoLimpio = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
+        
+        const { texto, estado } = procesarEtiquetas(textoLimpio, id, nombre, plataforma);
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
-        if (!esWeb) await enviarMensaje(id, texto, plataforma);
-        return texto;
-    } catch (e) { return "Dame un momento..."; }
+        // Notificación Staff
+        if (notifyCall) {
+            await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
+        }
+
+        // Estructura de respuesta
+        if (esWeb) {
+            return {
+                response: texto,
+                link: hasLink ? NEGOCIO.agenda_link : null // Solo envía link si el tag estaba
+            };
+        } else {
+            await enviarMensaje(id, texto, plataforma, hasLink);
+            return texto;
+        }
+    } catch (e) { return esWeb ? { response: "Un momento..." } : "Un momento..."; }
 }
 
 const PORT = process.env.PORT || 3000;
