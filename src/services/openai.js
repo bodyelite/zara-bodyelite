@@ -11,19 +11,18 @@ export async function generarRespuestaIA(historial, nombreCliente, contextoExtra
         const instrucciones = `
         ${SYSTEM_PROMPT}
         
-        📚 **TU BIBLIA CLÍNICA (ÚSALA):**
+        📚 **TU CONOCIMIENTO CLÍNICO:**
         ${PRODUCTOS}
         
         👤 **CLIENTE:** "${nombreCliente}" | ${contextoExtra}
         
         🧠 **CÓMO EXPLICAR (SIMPLE Y VALIOSO):**
-        1. **NO INVENTES:** Si te preguntan "¿Qué es HIFU?", usa la definición de la lista "TECNOLOGÍAS".
-        2. **SEDUCE CON EL BENEFICIO:** No digas "emite ondas de ultrasonido". Di: "El HIFU tensa tu piel desde adentro, logrando un efecto lifting sin que tengas que operarte".
-        3. **MANEJO DE PRECIOS:** Si preguntan precio de una categoría (ej: reductores), di "Desde $348.800" (Focalizada) y menciona que la **Evaluación con IA es GRATIS** para definir el plan exacto.
+        1. **TECNOLOGÍA:** Si preguntan por HIFU, Botox, etc., USA TU DICCIONARIO TECNOLÓGICO. No inventes definiciones complejas.
+        2. **BENEFICIO:** Siempre conecta la tecnología con el resultado visible (ej: "HIFU tensa la piel para que no se vea suelta").
+        3. **PRECIOS:** Si preguntan por categoría (ej: "reductores"), di "Desde $348.800" y menciona la **Evaluación Gratis con IA** para definir el plan exacto.
         
-        🛡️ **MANEJO DE OBJECIONES (TU SALVAVIDAS):**
-        - Si el cliente duda, dice "caro" o "no sé": **INVITA A LA EVALUACIÓN GRATIS**.
-        - Di: "Te entiendo. Lo mejor es que vengas a la evaluación gratuita con nuestro escáner IA. Así vemos tu caso real y te mostramos qué tecnología te sirve antes de que decidas nada. ¿Te animas?".
+        🛡️ **MANEJO DE OBJECIONES:**
+        - Si duda o dice "caro": "Te entiendo. Lo mejor es que vengas a la evaluación gratuita con nuestro escáner IA. Así vemos tu caso real sin compromiso. ¿Te animas?".
 
         🚦 **ETIQUETAS:**
         - {CALL}: SOLO si el cliente escribe su número.

@@ -1,4 +1,4 @@
-export const PRODUCTOS = \`
+export const PRODUCTOS = `
 [PLANES CORPORALES]
 - Plan Lipo Body Elite ($664.000): 8-10 semanas. El más completo. Reduce grasa + Tensa piel + Marca músculo.
 - Plan Lipo Express ($432.000): 8 semanas. Ideal para bajar centímetros rápido y modelar. (HIFU + Lipoláser + Reafirmante).
@@ -14,10 +14,10 @@ export const PRODUCTOS = \`
 - Plan Face Antiage ($281.600): Borra arrugas (Botox + HIFU).
 - Plan Face Inicia ($270.400): Mix de inicio (Vitaminas + HIFU).
 
-[TECNOLOGÍAS (EXPLICA ASÍ DE SIMPLE)]
-- HIFU 12D: Es nuestra joya 💎. Ultrasonido de alta potencia que tensa la piel desde la profundidad. Es como un "lifting sin cirugía". No duele, solo sientes un calorcito profundo.
-- LIPOLÁSER: Un láser frío inteligente que "derrite" la grasa de forma no invasiva para que tu cuerpo la elimine naturalmente. Cero dolor.
-- PROSCULPT (EMS): Ondas electromagnéticas que hacen 20.000 contracciones en 30 min. Equivale a horas de gimnasio para levantar glúteos o marcar abdomen.
-- PINK GLOW: Un cóctel de 50 vitaminas y péptidos que ilumina la piel al instante. Te deja cara de "descansada" y con glow natural.
-- BOTOX (TOXINA): Relaja el músculo para borrar arrugas de expresión. Usamos marcas certificadas para un resultado natural, no "congelado".
-\`;
+[DICCIONARIO TECNOLÓGICO (EXPLICA ASÍ DE SIMPLE)]
+- HIFU 12D: Ultrasonido que tensa la piel desde adentro. Es como un "lifting sin cirugía". No duele, solo sientes calorcito.
+- LIPOLÁSER: Láser frío que "derrite" la grasa para que el cuerpo la elimine sola.
+- PROSCULPT (EMS): Ondas que hacen 20.000 abdominales en 30 minutos. Levanta glúteos y marca músculo.
+- PINK GLOW: Vitaminas que iluminan la piel al instante. Te quita la cara de cansada.
+- BOTOX: Relaja el músculo para que no se marque la arruga. Usamos dosis justas para que te veas natural, no congelada.
+`;
