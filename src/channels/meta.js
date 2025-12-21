@@ -13,7 +13,6 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
 
     try {
         if (platform === 'whatsapp') {
-            // WSP: Texto Limpio + Link abajo
             const finalBody = hasLink ? `${text}\n\n🔗 ${NEGOCIO.agenda_link}` : text;
             await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
                 messaging_product: "whatsapp", to: to, type: "text", text: { body: finalBody }
@@ -21,7 +20,7 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
         
         } else if (platform === 'instagram') {
             if (hasLink) {
-                // IG: Generic Template (Tarjeta con Botón)
+                // IG: Tarjeta con Botón
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to },
                     message: {
@@ -42,19 +41,17 @@ export async function enviarMensaje(to, text, platform, hasLink = false) {
                         }
                     }
                 }, { headers });
-                // Enviamos el texto antes de la tarjeta para mantener contexto
+                // Enviamos el texto ANTES para mantener el contexto
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to }, message: { text: text }
                 }, { headers });
             } else {
-                // IG: Texto normal
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to }, message: { text: text }
                 }, { headers });
             }
         }
     } catch (e) {
-        console.error("Meta Error:", e.message);
         // Fallback de seguridad
         if(platform === 'instagram' && hasLink) {
              await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
@@ -73,5 +70,5 @@ export async function obtenerNombreIG(igId) {
 }
 
 export async function notificarStaff(id, nombre, canal, mensaje) {
-    console.log(`🔔 STAFF ALERT: Cliente ${nombre} (${canal}) quiere llamada. Info: ${mensaje}`);
+    console.log(`🔔 STAFF ALERT: Cliente ${nombre} (${canal}) solicita llamada. Info: ${mensaje}`);
 }

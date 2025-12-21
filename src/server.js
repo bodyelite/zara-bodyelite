@@ -70,13 +70,19 @@ app.post("/webchat", async (req, res) => {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest';
         
-        // WEB: Esperamos el objeto { response, link }
+        // PROCESAMIENTO WEB
         const resultado = await procesarNucleo(uid, null, message, "web", true);
         
-        res.json(resultado); 
+        // FORMATO UNIVERSAL PARA EVITAR ERRORES DE FRONTEND
+        res.json({
+            response: resultado.texto,
+            reply: resultado.texto,
+            text: resultado.texto,
+            link: resultado.hasLink ? NEGOCIO.agenda_link : null
+        });
     } catch (e) { 
         console.error("Web Error:", e);
-        res.status(500).json({ response: "Un momento, por favor...", link: null }); 
+        res.status(500).json({ response: "Dame un segundo..." }); 
     }
 });
 
@@ -86,7 +92,6 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         
         const respuestaRaw = await pensar(historial, nombre, plataforma === "instagram" ? "(IG)" : "");
         
-        // Detección y Limpieza
         const hasLink = respuestaRaw.includes("{LINK}");
         const notifyCall = respuestaRaw.includes("{CALL}");
         let textoLimpio = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
@@ -94,21 +99,16 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         const { texto, estado } = procesarEtiquetas(textoLimpio, id, nombre, plataforma);
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
-        // Notificación
         if (notifyCall) await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
 
-        // Retorno según canal
         if (esWeb) {
-            return {
-                response: texto,
-                link: hasLink ? NEGOCIO.agenda_link : null
-            };
+            return { texto, hasLink };
         } else {
             await enviarMensaje(id, texto, plataforma, hasLink);
             return texto;
         }
     } catch (e) { 
-        return esWeb ? { response: "Dame un segundo..." } : "Dame un segundo..."; 
+        return { texto: "Dame un segundo...", hasLink: false }; 
     }
 }
 
