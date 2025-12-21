@@ -1,22 +1,23 @@
-export const PRODUCTOS = `
-[PLANES DE TRANSFORMACIÓN CORPORAL]
-- 🔥 Plan Lipo Body Elite ($664.000): El Plan Estrella. Transformación total en 8-10 semanas. Ataca: Grasa + Flacidez + Músculo (HIFU 12D + EMS + Lipoláser).
-- 🚀 Plan Lipo Express ($432.000): Reductivo Rápido. Ideal para bajar centímetros en 8 semanas. Reducir contorno y reafirmar. (RECOMENDAR DE ENTRADA).
-- ⚡️ Plan Lipo Reductiva ($480.000): Full Quemadores. Protocolo intensivo 10 semanas para reducir tallas agresivamente.
-- 🎯 Plan Lipo Focalizada ($348.800): Zonas Difíciles. Para ese rollito rebelde (sostén, banano, rodillas).
-- 🧘‍♀️ Plan Body Tensor ($232.000): Adiós Flacidez. Perfecto para piel suelta post-parto o baja de peso.
+export const PRODUCTOS = \`
+[PLANES CORPORALES]
+- Plan Lipo Body Elite ($664.000): 8-10 semanas. El más completo. Reduce grasa + Tensa piel + Marca músculo.
+- Plan Lipo Express ($432.000): 8 semanas. Ideal para bajar centímetros rápido y modelar. (HIFU + Lipoláser + Reafirmante).
+- Plan Lipo Reductiva ($480.000): 10 semanas. Full quemadores para bajar tallas agresivamente.
+- Plan Lipo Focalizada ($348.800): 4-6 semanas. Para ese "rollito" rebelde específico.
+- Plan Body Tensor ($232.000): Solo Flacidez. Ideal post-parto o piel suelta.
+- Plan Push Up Glúteos ($376.000): Levanta y redondea la cola sin relleno (músculo).
 
-[GLÚTEOS Y MUSCULATURA]
-- 🍑 Plan Push Up Glúteos ($376.000): Efecto Gimnasio. Levantamiento real en 8 semanas con electromagnetismo.
-- 💪 Plan Body Fitness ($360.000): Definición Muscular. Para marcar "calugas" si ya eres delgada.
+[PLANES FACIALES]
+- Plan Full Face ($584.000): 2 meses. Renovación total (Botox + HIFU + Piel).
+- Plan Face Elite ($358.400): 1 mes. Lifting Express (Botox + HIFU + Pink Glow).
+- Plan Lipo Papada ($313.600): Elimina la grasa bajo el mentón y define el perfil.
+- Plan Face Antiage ($281.600): Borra arrugas (Botox + HIFU).
+- Plan Face Inicia ($270.400): Mix de inicio (Vitaminas + HIFU).
 
-[ROSTRO Y REJUVENECIMIENTO]
-- 👑 Plan Full Face ($584.000): La Joya. Renovación total en 2 meses (Botox + HIFU Lifting + Calidad Piel).
-- ✨ Plan Face Elite ($358.400): Rejuvenecimiento Express. Efecto lifting en 1 mes (Botox + HIFU).
-- 💎 Plan Lipo Papada ($313.600): Perfilado. Elimina grasa de papada y define mandíbula.
-- ⏳ Plan Face Antiage ($281.600): Freno al tiempo. Borrar arrugas y nutrir.
-- 🧼 Limpieza Facial Full ($120.000): Pack 3 sesiones profundas. Detox facial.
-
-[DEPILACIÓN]
-- ⚡️ Depilación Full ($259.200): Pack 6 sesiones Láser Definitivo. Libertad total.
-`;
+[TECNOLOGÍAS (EXPLICA ASÍ DE SIMPLE)]
+- HIFU 12D: Es nuestra joya 💎. Ultrasonido de alta potencia que tensa la piel desde la profundidad. Es como un "lifting sin cirugía". No duele, solo sientes un calorcito profundo.
+- LIPOLÁSER: Un láser frío inteligente que "derrite" la grasa de forma no invasiva para que tu cuerpo la elimine naturalmente. Cero dolor.
+- PROSCULPT (EMS): Ondas electromagnéticas que hacen 20.000 contracciones en 30 min. Equivale a horas de gimnasio para levantar glúteos o marcar abdomen.
+- PINK GLOW: Un cóctel de 50 vitaminas y péptidos que ilumina la piel al instante. Te deja cara de "descansada" y con glow natural.
+- BOTOX (TOXINA): Relaja el músculo para borrar arrugas de expresión. Usamos marcas certificadas para un resultado natural, no "congelado".
+\`;
