@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Zara 5.0 Radar</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: sans-serif; background: #1a1a2e; color: #fff; margin: 0; display: flex; height: 100vh; }
+        .sidebar { width: 350px; background: #16213e; border-right: 1px solid #0f3460; display: flex; flex-direction: column; }
+        .header { padding: 20px; background: #0f3460; text-align: center; font-weight: bold; border-bottom: 2px solid #e94560; }
+        .filters { display: flex; padding: 10px; gap: 5px; overflow-x: auto; }
+        .filter-btn { flex: 1; padding: 8px; cursor: pointer; background: #1a1a2e; color: #ccc; border:none; border-radius: 4px; font-size: 11px; white-space: nowrap; }
+        .filter-btn.active { background: #e94560; color: white; }
+        .user-list { flex: 1; overflow-y: auto; }
+        .user-card { padding: 15px; border-bottom: 1px solid #2a2a4e; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .user-card:hover { background: #1f1f3a; }
+        .user-card.active { background: #0f3460; border-left: 4px solid #e94560; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .wsp { background: #25d366; } .ig { background: #e1306c; } .web { background: #3498db; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #eaeaea; color: #333; }
+        .chat-header { padding: 15px; background: #fff; border-bottom: 1px solid #ccc; font-weight: bold; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; }
+        .msg.user { align-self: flex-start; background: #fff; border: 1px solid #ddd; }
+        .msg.zara { align-self: flex-end; background: #dcf8c6; border: 1px solid #ccebc4; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="header">ZARA 5.0 RADAR</div>
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('all')">TODO</button>
+            <button class="filter-btn" onclick="setFilter('whatsapp')">WSP</button>
+            <button class="filter-btn" onclick="setFilter('instagram')">IG</button>
+            <button class="filter-btn" onclick="setFilter('web')">WEB</button>
+            <button class="filter-btn" onclick="setFilter('captured')">⚠️ ALERTAS</button>
+        </div>
+        <div class="user-list" id="userList"></div>
+    </div>
+    <div class="chat-area">
+        <div class="chat-header" id="chatHeader">Selecciona un chat...</div>
+        <div class="messages" id="messagesBox"></div>
+    </div>
+<script>
+    let db = {}; let currentId = null; let currentFilter = 'all';
+    async function loadData() {
+        try {
+            const res = await fetch('/api/stats');
+            db = await res.json();
+            renderList();
+            if (currentId && db[currentId]) renderChat(currentId);
+        } catch {}
+    }
+    function setFilter(f) { currentFilter = f; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); renderList(); }
+    function renderList() {
+        const list = document.getElementById('userList'); list.innerHTML = '';
+        const sorted = Object.keys(db).sort((a,b) => db[b].last_active - db[a].last_active);
+        sorted.forEach(id => {
+            const u = db[id];
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'captured' && u.estado !== 'CAPTURED') return;
+                if (currentFilter !== 'captured' && u.origen !== currentFilter) return;
+            }
+            const div = document.createElement('div');
+            div.className = `user-card ${currentId === id ? 'active' : ''}`;
+            div.onclick = () => { currentId = id; renderChat(id); renderList(); };
+            let cls = u.origen === 'whatsapp' ? 'wsp' : u.origen === 'instagram' ? 'ig' : 'web';
+            let icon = u.origen === 'whatsapp' ? 'fa-whatsapp' : u.origen === 'instagram' ? 'fa-instagram' : 'fa-globe';
+            div.innerHTML = `<div class="avatar ${cls}"><i class="fab ${icon}"></i></div><div><div>${u.nombre} <small style="background:${u.estado==='CAPTURED'?'yellow':'#eee'}; color:${u.estado==='CAPTURED'?'black':'#333'}; padding:2px; border-radius:3px; font-size:10px">${u.estado}</small></div><small style="color:#aaa">${u.mensajes.slice(-1)[0]?.content.substring(0,20)}...</small></div>`;
+            list.appendChild(div);
+        });
+    }
+    function renderChat(id) {
+        const u = db[id];
+        document.getElementById('chatHeader').innerText = u.nombre + " (" + u.origen + ")";
+        const box = document.getElementById('messagesBox'); box.innerHTML = '';
+        u.mensajes.forEach(m => {
+            const d = document.createElement('div');
+            d.className = `msg ${m.role === 'user' ? 'user' : 'zara'}`;
+            d.innerText = m.content;
+            box.appendChild(d);
+        });
+        box.scrollTop = box.scrollHeight;
+    }
+    setInterval(loadData, 3000); loadData();
+</script></body></html>
