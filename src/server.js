@@ -71,7 +71,7 @@ app.post("/webchat", async (req, res) => {
 
         const resultado = await procesarNucleo(uid, nombreWeb, message, "web", true);
         
-        // AQUÍ ESTÁ EL BOTÓN HTML PARA WEB
+        // RESPUESTA + BOTÓN HTML INYECTADO
         res.json({
             text: resultado.textoFinal,
             reply: resultado.textoFinal
@@ -99,7 +99,7 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         let textoFinal = textoBase;
 
         if (esWeb && hasLink) {
-            // WEB: Inyección de botón HTML
+            // WEB: Botón HTML
             textoFinal += `<br><br><a href="${NEGOCIO.agenda_link}" target="_blank" style="background-color:#d4af37; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">📅 RESERVAR AQUÍ</a>`;
         } else if (!esWeb) {
             await enviarMensajeMeta(id, textoBase, plataforma, hasLink);

@@ -13,20 +13,23 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
 
     try {
         if (platform === 'whatsapp') {
-            // WSP: Texto + Link limpio abajo
+            // WSP: Link limpio
             const finalBody = hasLink ? `${text}\n\n👇 Reserva aquí:\n${NEGOCIO.agenda_link}` : text;
             await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
                 messaging_product: "whatsapp", to: to, type: "text", text: { body: finalBody }
             }, { headers });
         
         } else if (platform === 'instagram') {
-            // 1. Texto (Contexto)
+            // IG: Enviamos Texto primero
             await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                 recipient: { id: to }, message: { text: text }
             }, { headers });
 
-            // 2. Tarjeta con Botón (ESTA ES LA PARTE QUE FALTABA)
+            // IG: TARJETA CON BOTÓN (Generic Template)
             if (hasLink) {
+                // Usamos una imagen de WIKIMEDIA (servidores ultra rápidos y públicos) para evitar rechazos de Meta
+                const imagenSegura = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Crystal_Clear_app_date.png/480px-Crystal_Clear_app_date.png";
+                
                 await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
                     recipient: { id: to },
                     message: {
@@ -35,14 +38,13 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
                             payload: {
                                 template_type: "generic",
                                 elements: [{
-                                    title: "Agenda tu Hora 📅",
-                                    subtitle: "Evaluación Gratis",
-                                    // Imagen segura de Unsplash
-                                    image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=600&q=80",
+                                    title: "Agenda Online",
+                                    subtitle: "Evaluación Gratis con IA",
+                                    image_url: imagenSegura,
                                     buttons: [{
                                         type: "web_url",
                                         url: NEGOCIO.agenda_link,
-                                        title: "Reservar Aquí"
+                                        title: "📅 Agendar"
                                     }]
                                 }]
                             }
@@ -52,10 +54,10 @@ export async function enviarMensajeMeta(to, text, platform, hasLink = false) {
             }
         }
     } catch (e) {
-        // Fallback
+        // Si todo falla, enviamos el link cortado
         if (platform === 'instagram' && hasLink) {
              await axios.post(`https://graph.facebook.com/v19.0/me/messages`, {
-                recipient: { id: to }, message: { text: `🔗 Link: ${NEGOCIO.agenda_link}` }
+                recipient: { id: to }, message: { text: `👇 Link Agenda:\n${NEGOCIO.agenda_link}` }
             }, { headers });
         }
     }
