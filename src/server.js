@@ -19,10 +19,7 @@ app.use(bodyParser.json());
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/monitor', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/monitor.html'));
-});
-
+app.get('/monitor', (req, res) => res.sendFile(path.join(__dirname, '../public/monitor.html')));
 app.get('/api/stats', (req, res) => res.json(leerDB()));
 
 app.get("/webhook", (req, res) => {
@@ -34,31 +31,30 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(200);
     try {
         const body = req.body;
-        
+        // WSP
         if (body.object === "whatsapp_business_account") {
-            const entry = body.entry?.[0]?.changes?.[0]?.value;
-            if (entry?.messages?.[0]) {
-                const msg = entry.messages[0];
+            const changes = body.entry?.[0]?.changes?.[0]?.value;
+            if (changes?.messages?.[0]) {
+                const msg = changes.messages[0];
                 const senderId = msg.from;
                 const text = msg.text?.body;
-                const name = entry.contacts?.[0]?.profile?.name || "Amiga WSP";
-                
+                const name = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
                 if(text) await procesarNucleo(senderId, name, text, "whatsapp");
             }
         }
+        // IG
         else if (body.object === "instagram") {
-            const entry = body.entry?.[0];
-            const messaging = entry?.messaging?.[0];
-            if (messaging && messaging.message && !messaging.message.is_echo) {
+            const messaging = body.entry?.[0]?.messaging?.[0];
+            if (messaging && !messaging.message?.is_echo && !messaging.delivery && !messaging.read) {
                 const senderId = messaging.sender.id;
-                const text = messaging.message.text;
+                const text = messaging.message?.text;
                 if(text) {
                     const name = await obtenerNombreIG(senderId);
                     await procesarNucleo(senderId, name, text, "instagram");
                 }
             }
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Webhook Error", e); }
 });
 
 app.post("/webchat", async (req, res) => {
@@ -67,9 +63,7 @@ app.post("/webchat", async (req, res) => {
         const uid = userId || 'web_guest';
         const respuesta = await procesarNucleo(uid, "Visitante Web", message, "web", true);
         res.json({ response: respuesta, link: NEGOCIO.agenda_link });
-    } catch (e) {
-        res.status(500).json({ error: "Error" });
-    }
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
@@ -79,14 +73,10 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         const { texto, estado } = procesarEtiquetas(respuestaRaw, id, nombre, plataforma);
         guardarMensaje(id, nombre, texto, "zara", plataforma, estado);
         
-        if (!esWeb) {
-            await enviarMensaje(id, texto, plataforma);
-        }
+        if (!esWeb) await enviarMensaje(id, texto, plataforma);
         return texto;
-    } catch (e) {
-        return "Dame un segundo 😅.";
-    }
+    } catch (e) { return "Dame un segundo 😅."; }
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`ZARA 5.0 LIVE PORT ${PORT}`));
+app.listen(PORT, () => console.log(`ZARA 5.0 (OLD VARS COMPATIBLE) PORT ${PORT}`));
