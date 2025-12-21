@@ -6,59 +6,45 @@ const sesiones = {};
 
 export async function procesarEvento(entry) {
     const platform = entry.changes ? "whatsapp" : "instagram";
-    let senderId, text, senderName, campaignContext = "";
+    let senderId, text, senderName;
 
     try {
         if (platform === "whatsapp") {
             const change = entry.changes[0].value;
-            if (!change.messages || change.messages.length === 0) return;
+            if (!change.messages) return;
             const msg = change.messages[0];
             senderId = msg.from;
             senderName = change.contacts?.[0]?.profile?.name || "Amiga";
             text = msg.text?.body;
-            if (change.messages[0].referral) campaignContext = `Ads: ${change.messages[0].referral.headline}`;
         } else {
             if (entry.messaging?.[0]?.message?.is_echo) return;
             const msgObj = entry.messaging[0];
             senderId = msgObj.sender.id;
             senderName = await getIgUserInfo(senderId);
             text = msgObj.message?.text;
-            if (msgObj.postback?.referral || msgObj.referral) {
-                const ref = msgObj.postback?.referral || msgObj.referral;
-                campaignContext = `Ads IG (ID: ${ref.ad_id || 'N/A'})`;
-            }
         }
 
         if (!text) return;
 
-        const textoRegistro = campaignContext ? `[CAMPAÑA] ${text}` : text;
-        // Importante: No pasamos estado aquí para no sobrescribir
-        registrar(senderId, senderName, textoRegistro, "usuario", platform);
+        registrar(senderId, senderName, text, "usuario", platform);
 
         if (!sesiones[senderId]) sesiones[senderId] = [];
         sesiones[senderId].push({ role: "user", content: text });
 
-        // IA
-        const rawReply = await generarRespuestaIA(sesiones[senderId].slice(-10), senderName, campaignContext);
+        const rawReply = await generarRespuestaIA(sesiones[senderId].slice(-10), senderName);
         
-        // DETECTAR ESTADO
         let estado = "LEAD";
         if (rawReply.includes("{HOT}")) estado = "HOT";
         if (rawReply.includes("{CALL}")) estado = "CAPTURED";
         
-        // LIMPIEZA
-        let cleanReply = rawReply.replace(/{.*?}/g, "").trim();
+        const cleanReply = rawReply.replace(/{.*?}/g, "").trim();
 
-        // ALERTA SOLO SI ES {CALL} (Número entregado)
-        if (rawReply.includes("{CALL}")) {
-            console.log("🚨 NÚMERO RECIBIDO - ALERTA STAFF");
-            notifyStaff(senderName, text, platform);
-        }
+        if (rawReply.includes("{CALL}")) notifyStaff(senderName, text, platform);
 
         await sendMessage(senderId, cleanReply, platform);
         
         sesiones[senderId].push({ role: "assistant", content: cleanReply });
         registrar(senderId, "Zara", cleanReply, "zara", platform, estado);
 
-    } catch (e) { console.error("❌ Error App:", e); }
+    } catch (e) { console.error("Error App:", e); }
 }

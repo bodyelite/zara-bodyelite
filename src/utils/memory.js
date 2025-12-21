@@ -1,39 +1,20 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import fs from 'fs';
+const DB_FILE = 'chats_db.json';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const BASE_DIR = path.join(__dirname, "../../data");
-const DATA_PATH = path.join(BASE_DIR, "chats.json");
-
-if (!fs.existsSync(BASE_DIR)) { try { fs.mkdirSync(BASE_DIR, { recursive: true }); } catch (e) {} }
-
-const BACKUP = {
-  "status": { "nombre": "System", "origen": "web", "estado": "System", "mensajes": [] }
-};
-
-export function registrar(id, nombre, texto, tipo, origen, estado = null) {
-    let chats = leerChats();
-    
-    if (!chats[id]) chats[id] = { nombre: nombre || "Anónimo", origen, estado: "NUEVO", mensajes: [] };
-    
-    if (tipo === 'usuario' && nombre) chats[id].nombre = nombre;
-    if (origen) chats[id].origen = origen;
-    
-    // Actualizar estado si la IA lo detectó (HOT, CALL, LEAD)
-    if (estado) chats[id].estado = estado; 
-    
-    chats[id].mensajes.push({ texto, tipo, timestamp: Date.now() });
-    
-    if (chats[id].mensajes.length > 50) chats[id].mensajes.shift();
-    
-    try { fs.writeFileSync(DATA_PATH, JSON.stringify(chats, null, 2)); } catch (e) {}
-}
+if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify({}));
 
 export function leerChats() {
-    try {
-        if (!fs.existsSync(DATA_PATH)) return BACKUP;
-        return JSON.parse(fs.readFileSync(DATA_PATH, "utf-8"));
-    } catch (e) { return BACKUP; }
+    try { return JSON.parse(fs.readFileSync(DB_FILE)); } catch { return {}; }
+}
+
+export function registrar(id, nombre, texto, tipo, origen, estado = "LEAD") {
+    const db = leerChats();
+    if (!db[id]) db[id] = { nombre: nombre || "Desconocido", origen, estado, mensajes: [], timestamp: Date.now() };
+    
+    if (nombre && db[id].nombre === "Desconocido") db[id].nombre = nombre;
+    if (estado !== "LEAD") db[id].estado = estado;
+
+    db[id].mensajes.push({ tipo, texto, timestamp: Date.now() });
+    db[id].timestamp = Date.now();
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }

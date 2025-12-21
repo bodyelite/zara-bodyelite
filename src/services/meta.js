@@ -1,43 +1,28 @@
-import fetch from "node-fetch";
-import { NEGOCIO } from "../config/negocio.js";
-
-const TOKEN = process.env.PAGE_ACCESS_TOKEN;
-const PHONE_ID = process.env.PHONE_NUMBER_ID;
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export async function sendMessage(to, text, platform) {
-    const url = platform === "whatsapp" 
-        ? `https://graph.facebook.com/v19.0/${PHONE_ID}/messages` 
-        : `https://graph.facebook.com/v19.0/me/messages`;
-        
-    const body = platform === "whatsapp" 
-        ? { messaging_product: "whatsapp", recipient_type: "individual", to: to, type: "text", text: { body: text } } 
-        : { recipient: { id: to }, message: { text: text } };
-        
     try {
-        await fetch(url, { 
-            method: "POST", 
-            headers: { "Authorization": `Bearer ${TOKEN}`, "Content-Type": "application/json" }, 
-            body: JSON.stringify(body) 
-        });
-    } catch (e) {
-        console.error("❌ Error enviando mensaje:", e);
-    }
+        if (platform === 'whatsapp') {
+            await axios.post(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+                messaging_product: "whatsapp", to: to, text: { body: text }
+            }, { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } });
+        } else if (platform === 'instagram') {
+            await axios.post(`https://graph.facebook.com/v21.0/me/messages`, {
+                recipient: { id: to }, message: { text: text }
+            }, { headers: { Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}` } });
+        }
+    } catch (e) { console.error(`Error enviando a ${platform}`, e); }
 }
 
-export async function getIgUserInfo(userId) {
+export async function getIgUserInfo(igId) {
     try {
-        const res = await fetch(`https://graph.facebook.com/v19.0/${userId}?fields=name&access_token=${TOKEN}`);
-        const data = await res.json(); 
-        return data.name || "Amiga";
-    } catch (e) { return "Amiga"; }
+        const r = await axios.get(`https://graph.facebook.com/v21.0/${igId}?fields=name,username&access_token=${process.env.PAGE_ACCESS_TOKEN}`);
+        return r.data.name || r.data.username || "Amiga";
+    } catch { return "Amiga"; }
 }
 
-// ALERTA AL STAFF
-export async function notifyStaff(cliente, mensaje, canal) {
-    const staffNumbers = NEGOCIO.staff_alertas;
-    const alerta = `🚨 *ALERTA ZARA* 🚨\nCliente: ${cliente}\nCanal: ${canal}\nDice: "${mensaje}"\n\n👉 ¡Atender rápido!`;
-    console.log(`🔔 ALERTA STAFF`);
-    for (const number of staffNumbers) {
-        await sendMessage(number, alerta, "whatsapp");
-    }
+export async function notifyStaff(cliente, mensaje, origen) {
+    console.log(`ALERTA STAFF: ${cliente} desde ${origen}`);
 }

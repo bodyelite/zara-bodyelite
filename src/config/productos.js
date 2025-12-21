@@ -1,34 +1,38 @@
 export const PRODUCTOS = `
-[DICCIONARIO DE TECNOLOGÍAS - (LO QUE REALMENTE USAMOS)]
+[MANUAL CLÍNICO BODY ELITE]
 
-1. **LFP (LIPOLÍTICOS / ENZIMAS):**
-   - *Qué es:* Microinyecciones de enzimas que disuelven grasa localizada.
-   - *Explicación Zara:* "Son enzimas inteligentes (LFP) que inyectamos en la grasita dura. Lo que hacen es 'romper' el tejido adiposo para que la máquina lo termine de eliminar más rápido."
-   - *Uso:* Se usa en papada y zonas corporales difíciles.
+1. **LFP (ENZIMAS / LIPOLÍTICOS):**
+   - *Qué es:* Microinyecciones de enzimas recombinantes (PBSerum).
+   - *Acción:* Rompen la fibrosis y disuelven grasa localizada difícil.
+   - *Uso:* Papada y zonas corporales rebeldes.
 
-2. **HIFU 12D:**
-   - *Qué es:* Ultrasonido de alta intensidad.
-   - *Explicación Zara:* "Es un tensado profundo. Imagina que 'corcheteamos' la piel al músculo desde adentro para que no se caiga. Es lo más parecido a un lifting sin cirugía."
+2. **HIFU 12D (TENSADO):**
+   - *Qué es:* Ultrasonido de Alta Intensidad.
+   - *Acción:* Genera contracción en el SMAS (capa profunda). Pega la piel al músculo.
 
-3. **LIPOLÁSER:**
-   - *Qué es:* Láser de diodo.
-   - *Explicación Zara:* "Es un láser que permeabiliza la célula de grasa. Literalmente la vacía, como si le sacaras el aire a un globo, reduciendo centímetros."
+3. **LIPOLÁSER (REDUCCIÓN):**
+   - *Qué es:* Láser de Diodo Frío.
+   - *Acción:* Permeabiliza la membrana del adipocito para vaciar la grasa sin romper la célula.
 
-4. **PINK GLOW:**
-   - *Qué es:* Mesoterapia facial (Vitaminas + Péptidos).
-   - *Explicación Zara:* "Es alimento puro para tu piel. Hidrata, despigmenta y devuelve el brillo de 'piel sana' inmediato."
+4. **PINK GLOW (CALIDAD DE PIEL):**
+   - *Qué es:* Mesoterapia de 50 principios activos.
+   - *Acción:* Hidratación profunda y luminosidad inmediata.
 
-[PLANES - MAPA DE SOLUCIONES]
+[MAPA DE RECETAS]
 
-- **SI EL PROBLEMA ES FLACIDEZ / CARA CAÍDA:**
-  👉 **Plan Face Elite ($358.400):** La combinación maestra. HIFU (Tensa) + Botox (Arrugas) + Pink Glow (Piel).
+- **SÍNTOMA: "PIEL SECA / APAGADA"**
+  👉 **Plan Face Light ($128.800):** Radiofrecuencia + Pink Glow.
+  *Argumento:* Necesitas nutrición, no tensión. Es un shot de vida para tu piel.
 
-- **SI EL PROBLEMA ES PIEL SECA / APAGADA:**
-  👉 **Plan Face Light ($128.800):** Solo calidad de piel. Radiofrecuencia + Pink Glow.
+- **SÍNTOMA: "FLACIDEZ / CARA CAÍDA"**
+  👉 **Plan Face Elite ($358.400):** HIFU + Botox + Pink Glow.
+  *Argumento:* Atacamos las 3 capas: Músculo, Piel profunda y Superficie.
 
-- **SI EL PROBLEMA ES GUATA / GRASA ABDOMINAL:**
-  👉 **Plan Lipo Express ($432.000):** El "mata grasa". Combina HIFU (para que no cuelgue) + Lipoláser (para vaciar) + LFP (Enzimas, si corresponde).
+- **SÍNTOMA: "GUATA / ROLLITOS"**
+  👉 **Plan Lipo Express ($432.000):** HIFU + Lipoláser + (Enzimas si es necesario).
+  *Argumento:* Vaciamos la grasa y tensamos la piel a la vez para que no quedes suelta.
 
-- **SI EL PROBLEMA ES PAPADA:**
-  👉 **Plan Lipo Papada ($313.600):** HIFU + LFP (Enzimas) para definir mandíbula.
+- **SÍNTOMA: "PAPADA"**
+  👉 **Plan Lipo Papada ($313.600):** HIFU + Enzimas (LFP).
+  *Argumento:* Disolvemos la grasa y definimos el borde de la mandíbula.
 `;
