@@ -1,35 +1,38 @@
 export const PRODUCTOS = `
-[GUÍA DE DIAGNÓSTICO - USA ESTO PARA RECETAR]
+[ARGUMENTOS CLÍNICOS DE VENTA - USA ESTO PARA EXPLICAR]
 
-🟢 **SI EL CLIENTE TIENE: "PIEL SECA", "APAGADA", "SIN BRILLO"**
-👉 **RECETA: Plan Face Light ($128.800)**
-   - *Qué hace:* Full Hidratación y "Glow".
-   - *Tecnología:* Radiofrecuencia + Pink Glow (Vitaminas).
-   - *Clave:* NO TIENE BOTOX. Ideal para pieles jóvenes o deshidratadas.
+1. **HIFU 12D (La Joya):**
+   - *Técnico:* Ultrasonido focalizado de alta intensidad que llega a la capa SMAS (la misma que tocan los cirujanos).
+   - *Explicación Zara:* "Genera puntos de calor profundo que contraen la malla interna de tu piel. Es literalmente volver a 'pegar' la piel al músculo, logrando un lifting real sin cortes."
+   - *Sensación:* Calor profundo, no dolor.
 
-🟡 **SI EL CLIENTE TIENE: "FLACIDEZ", "CARA CAÍDA", "PAPADA"**
-👉 **RECETA A: Plan Face Elite ($358.400)** (Lifting Completo)
-   - *Qué hace:* Levanta y tensa.
-   - *Tecnología:* HIFU 12D + Botox + Pink Glow.
-👉 **RECETA B: Plan Lipo Papada ($313.600)** (Solo Papada)
-   - *Qué hace:* Elimina la grasa bajo el mentón y define el perfil.
+2. **LIPOLÁSER (La Escultura):**
+   - *Técnico:* Láser de diodo frío que permeabiliza la membrana del adipocito.
+   - *Explicación Zara:* "El láser estimula a la célula de grasa para que se vacíe por sí sola. No la rompemos traumáticamente, simplemente hacemos que tu cuerpo elimine esa reserva de forma natural."
+   - *Resultado:* Reducción de centímetros pura.
 
-🔴 **SI EL CLIENTE TIENE: "ARRUGAS", "PATAS DE GALLO", "LINEAS DE EXPRESIÓN"**
-👉 **RECETA: Plan Face Antiage ($281.600)**
-   - *Qué hace:* Borra arrugas específicas.
-   - *Tecnología:* Botox + HIFU.
+3. **PINK GLOW (La Luz):**
+   - *Técnico:* Mesoterapia con 50 principios activos (Vitaminas, péptidos, ácido hialurónico).
+   - *Explicación Zara:* "Es un cóctel de nutrición directa a la dermis. Hidrata, despigmenta y devuelve esa luz de 'piel descansada' que se pierde con el estrés."
 
-🔵 **SI EL CLIENTE TIENE: "ROLLITOS", "MICHELINES", "GRASA LOCALIZADA"**
-👉 **RECETA: Plan Lipo Focalizada ($348.800)**
-   - *Qué hace:* Ataca directo esa zona difícil (ej: sostén, banano).
+[PLANES - PRECIOS Y FOCO]
 
-🟣 **SI EL CLIENTE TIENE: "GUATA", "SOBREPESO GENERAL", "POST PARTO"**
-👉 **RECETA: Plan Lipo Express ($432.000)**
-   - *Qué hace:* Reducción de centímetros y tensado de piel en 8 semanas.
+- **PLAN FACE ELITE ($358.400):** *Lifting Express (1 mes).*
+  - Ideal para: Flacidez y cara cansada.
+  - Mix: Botox (relaja) + HIFU (tensa) + Pink Glow (ilumina).
+  - *Gancho:* "Es el favorito porque ataca todo a la vez: arruga, flacidez y calidad de piel."
 
-[DICCIONARIO TÉCNICO SIMPLE]
-- HIFU: "Lifting sin cirugía que tensa la piel".
-- PINK GLOW: "Shot de vitaminas para iluminar la cara".
-- BOTOX: "Relaja el músculo para suavizar expresiones".
-- LIPOLÁSER: "Derrite la grasa sin dolor".
+- **PLAN LIPO EXPRESS ($432.000):** *Reducción Corporal (8 semanas).*
+  - Ideal para: Guatita general o post-parto.
+  - Mix: HIFU + Lipoláser.
+  - *Gancho:* "Baja volumen y pega la piel al mismo tiempo para que no quedes suelta."
+
+- **PLAN LIPO FOCALIZADA ($348.800):** *Detalle (4-6 semanas).*
+  - Ideal para: Ese rollo específico (sostén/banano) que no baja con gimnasio.
+
+- **PLAN FACE ANTIAGE ($281.600):** *Solo Arrugas.*
+  - Ideal para: Líneas marcadas. (Botox + HIFU).
+
+- **PLAN LIPO PAPADA ($313.600):** *Perfilado.*
+  - Ideal para: Borrar la papada y definir el borde de la mandíbula.
 `;
