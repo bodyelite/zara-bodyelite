@@ -32,6 +32,7 @@ export async function procesarEvento(entry) {
         if (!text) return;
 
         const textoRegistro = campaignContext ? `[CAMPAÑA] ${text}` : text;
+        // Importante: No pasamos estado aquí para no sobrescribir
         registrar(senderId, senderName, textoRegistro, "usuario", platform);
 
         if (!sesiones[senderId]) sesiones[senderId] = [];
