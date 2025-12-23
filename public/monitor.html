@@ -5,47 +5,33 @@
     <title>ZARA 5.0 RADAR</title>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* SIDEBAR */
         #sidebar { width: 320px; background: #1e1e1e; border-right: 1px solid #333; display: flex; flex-direction: column; }
         .header { padding: 15px; background: #252525; border-bottom: 1px solid #333; }
         .header h2 { margin: 0; font-size: 18px; color: #fff; }
-        
-        /* TABS */
         .tabs { display: flex; background: #1e1e1e; padding: 10px; gap: 5px; }
         .tab { flex: 1; padding: 8px; text-align: center; background: #333; cursor: pointer; border-radius: 4px; font-size: 12px; color: #aaa; transition: 0.2s; }
         .tab.active { background: #E91E63; color: white; font-weight: bold; }
         .tab[data-filter="whatsapp"].active { background: #25D366; }
         .tab[data-filter="instagram"].active { background: #C13584; }
         .tab[data-filter="web"].active { background: #3498db; }
-        
-        /* LISTA */
         #user-list { flex: 1; overflow-y: auto; }
         .user-card { padding: 15px; border-bottom: 1px solid #2a2a2a; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
         .user-card:hover { background: #2a2a2a; }
         .user-card.active { background: #333; border-left: 4px solid #E91E63; }
-        
         .u-name { font-weight: bold; font-size: 14px; display: block; }
         .u-meta { font-size: 11px; color: #888; margin-top: 4px; }
         .tag { font-size: 9px; padding: 2px 4px; border-radius: 3px; margin-left: 5px; text-transform: uppercase; }
-        
-        /* Colores Tags */
         .tag.whatsapp { background: #25D366; color: #000; }
         .tag.instagram { background: #C13584; color: #fff; }
         .tag.web { background: #3498db; color: #fff; }
-
-        /* CHAT AREA */
         #chat-area { flex: 1; display: flex; flex-direction: column; background: #0d0d0d; }
         #chat-header { padding: 15px; background: #252525; border-bottom: 1px solid #333; font-weight: bold; }
         #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        
         .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 14px; line-height: 1.4; position: relative; }
         .msg-user { align-self: flex-start; background: #202c33; color: #e9edef; border-radius: 0 10px 10px 10px; }
         .msg-zara { align-self: flex-end; background: #005c4b; color: #e9edef; border-radius: 10px 0 10px 10px; }
         .msg-human { align-self: flex-end; background: #a88b20; color: #fff; }
         .msg-meta { font-size: 10px; color: #8696a0; text-align: right; margin-top: 5px; display: block; }
-
-        /* INPUT AREA */
         #input-area { padding: 15px; background: #202c33; display: none; border-top: 1px solid #333; }
         .input-box { display: flex; gap: 10px; }
         input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #2a3942; color: white; outline: none; }
@@ -65,11 +51,11 @@
     <div id="user-list"></div>
 </div>
 <div id="chat-area">
-    <div id="chat-header">Selecciona un chat</div>
+    <div id="chat-header">Esperando mensajes...</div>
     <div id="messages"></div>
     <div id="input-area">
         <div class="input-box">
-            <input type="text" id="manualMsg" placeholder="Escribir respuesta manual (Solo WSP)..." onkeypress="handleKey(event)">
+            <input type="text" id="manualMsg" placeholder="Responder (Solo WSP)..." onkeypress="handleKey(event)">
             <button onclick="sendReply()">ENVIAR</button>
         </div>
     </div>
@@ -91,23 +77,17 @@
             const res = await fetch('/api/stats');
             dbData = await res.json();
             renderList();
-            
             if(selectedUser && dbData[selectedUser]) {
-                // Actualizar chat si hay nuevos mensajes
                 const u = dbData[selectedUser];
                 const msgsDiv = document.getElementById('messages');
-                if(msgsDiv.children.length !== u.mensajes.length) {
-                    renderChat(selectedUser);
-                }
+                if(msgsDiv.children.length !== u.mensajes.length) renderChat(selectedUser);
             }
-        } catch(e) { console.error("Error fetching data:", e); }
+        } catch(e) { console.error("Conexión perdida..."); }
     }
 
     function renderList() {
         const list = document.getElementById('user-list');
         list.innerHTML = '';
-        
-        // Convertir a array y ordenar seguro
         const sorted = Object.keys(dbData).sort((a,b) => {
             const tA = dbData[a].mensajes[dbData[a].mensajes.length-1]?.timestamp || 0;
             const tB = dbData[b].mensajes[dbData[b].mensajes.length-1]?.timestamp || 0;
@@ -115,62 +95,46 @@
         });
 
         sorted.forEach(uid => {
-            try {
-                const u = dbData[uid];
-                // Si la plataforma viene vacía, asumimos whatsapp para que no se rompa el filtro
-                const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
+            const u = dbData[uid];
+            const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
+            if(currentFilter !== 'ALL' && plat !== currentFilter) return;
 
-                if(currentFilter !== 'ALL' && plat !== currentFilter) return;
-
-                const div = document.createElement('div');
-                div.className = `user-card ${selectedUser === uid ? 'active' : ''}`;
-                div.onclick = () => { selectedUser = uid; renderChat(uid); };
-                
-                const lastMsg = u.mensajes.length > 0 ? u.mensajes[u.mensajes.length-1].content.substring(0,25) + '...' : 'Nuevo usuario';
-                
-                div.innerHTML = `
-                    <div>
-                        <span class="u-name">${u.nombre || 'Cliente'} <span class="tag ${plat}">${plat}</span></span>
-                        <div class="u-meta">${lastMsg}</div>
-                    </div>`;
-                list.appendChild(div);
-            } catch(err) {
-                console.error("Error renderizando item:", err);
-            }
+            const div = document.createElement('div');
+            div.className = `user-card ${selectedUser === uid ? 'active' : ''}`;
+            div.onclick = () => { selectedUser = uid; renderChat(uid); };
+            
+            const lastMsg = u.mensajes.length > 0 ? u.mensajes[u.mensajes.length-1].content.substring(0,25) + '...' : 'Nuevo';
+            
+            div.innerHTML = `<div><span class="u-name">${u.nombre || 'Cliente'} <span class="tag ${plat}">${plat}</span></span><div class="u-meta">${lastMsg}</div></div>`;
+            list.appendChild(div);
         });
     }
 
     function renderChat(uid) {
-        try {
-            const u = dbData[uid];
-            const msgsDiv = document.getElementById('messages');
-            const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
+        const u = dbData[uid];
+        const msgsDiv = document.getElementById('messages');
+        const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
+        
+        document.getElementById('chat-header').innerText = `${u.nombre} (${plat})`;
+        msgsDiv.innerHTML = '';
+        
+        u.mensajes.forEach(m => {
+            const div = document.createElement('div');
+            let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
+            if(m.estado === 'human_reply') type = 'msg-human';
             
-            document.getElementById('chat-header').innerText = `${u.nombre || 'Cliente'} (${plat})`;
+            let content = m.content || "";
+            if(content.includes('http')) content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK]</span>');
             
-            msgsDiv.innerHTML = '';
-            u.mensajes.forEach(m => {
-                const div = document.createElement('div');
-                let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
-                if(m.estado === 'human_reply') type = 'msg-human';
-                
-                let content = m.content || "";
-                if(content.includes('http') || content.includes('agenda')) {
-                    content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK ENVIADO]</span>');
-                }
-                
-                const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                div.className = `msg ${type}`;
-                div.innerHTML = `${content} <span class="msg-meta">${time}</span>`;
-                msgsDiv.appendChild(div);
-            });
-            msgsDiv.scrollTop = msgsDiv.scrollHeight;
+            const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            div.className = `msg ${type}`;
+            div.innerHTML = `${content} <span class="msg-meta">${time}</span>`;
+            msgsDiv.appendChild(div);
+        });
+        msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
-            // Mostrar Input SOLO si es Whatsapp
-            const inputArea = document.getElementById('input-area');
-            if(plat === 'whatsapp') inputArea.style.display = 'block';
-            else inputArea.style.display = 'none';
-        } catch(e) { console.error("Error renderChat:", e); }
+        const inputArea = document.getElementById('input-area');
+        inputArea.style.display = (plat === 'whatsapp') ? 'block' : 'none';
     }
 
     async function sendReply() {
@@ -179,12 +143,10 @@
         if(!text || !selectedUser) return;
         
         const u = dbData[selectedUser];
-        const plat = u.plataforma || 'whatsapp';
-        
         await fetch('/api/reply', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ id: selectedUser, text, platform: plat, name: u.nombre })
+            body: JSON.stringify({ id: selectedUser, text, platform: u.plataforma || 'whatsapp', name: u.nombre })
         });
         input.value = '';
         fetchStats();
@@ -193,7 +155,7 @@
     function handleKey(e) { if(e.key === 'Enter') sendReply(); }
 
     fetchStats();
-    setInterval(fetchStats, 3000);
+    setInterval(fetchStats, 2000);
 </script>
 </body>
 </html>
