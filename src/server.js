@@ -41,7 +41,7 @@ app.post('/api/reply', async (req, res) => {
 });
 
 app.get('/agenda', (req, res) => {
-    res.send(`<!DOCTYPE html><html lang="es"><head><meta property="og:title" content="📅 Agenda Online Body Elite" /><meta property="og:description" content="Reserva tu Evaluación Presencial con IA aquí." /><meta property="og:url" content="${NEGOCIO.agenda_link}" /><script>window.location.href = "${NEGOCIO.agenda_link}";</script></head><body>Redirigiendo...</body></html>`);
+    res.send(`<!DOCTYPE html><html lang="es"><head><meta property="og:title" content="📅 Agenda Presencial Body Elite" /><meta property="og:description" content="Reserva tu Evaluación Presencial con IA en Peñalolén." /><meta property="og:url" content="${NEGOCIO.agenda_link}" /><script>window.location.href = "${NEGOCIO.agenda_link}";</script></head><body>Redirigiendo...</body></html>`);
 });
 
 app.get("/webhook", (req, res) => {

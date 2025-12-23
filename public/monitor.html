@@ -4,99 +4,175 @@
     <meta charset="UTF-8">
     <title>ZARA 5.0 RADAR</title>
     <style>
-        body { background: #1a1a1a; color: #fff; font-family: monospace; display: flex; height: 100vh; margin: 0; }
-        #sidebar { width: 300px; background: #111; border-right: 1px solid #333; overflow-y: auto; }
-        #chat-area { flex: 1; display: flex; flex-direction: column; background: #222; }
-        .user-item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; }
-        .user-item:hover { background: #333; }
-        .user-item.active { background: #004d40; }
-        .platform-tag { font-size: 10px; padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
-        .wsp { background: #25D366; color: #000; } .ig { background: #C13584; } .web { background: #3498db; }
-        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 70%; padding: 10px; border-radius: 5px; font-size: 14px; position: relative; }
-        .msg-user { align-self: flex-start; background: #333; }
-        .msg-zara { align-self: flex-end; background: #004d40; border: 1px solid #00695c; }
-        .timestamp { font-size: 9px; color: #aaa; margin-top: 5px; display: block; text-align: right; }
-        #reply-box { padding: 15px; background: #111; border-top: 1px solid #333; display: none; }
-        input { width: 80%; padding: 10px; background: #333; border: none; color: white; }
-        button { padding: 10px; background: #004d40; color: white; border: none; cursor: pointer; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* SIDEBAR */
+        #sidebar { width: 320px; background: #1e1e1e; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .header { padding: 15px; border-bottom: 1px solid #333; background: #252525; }
+        .header h2 { margin: 0; font-size: 18px; color: #fff; }
+        
+        /* TABS FILTROS */
+        .tabs { display: flex; padding: 10px; gap: 5px; background: #1e1e1e; }
+        .tab { flex: 1; padding: 8px; text-align: center; background: #333; cursor: pointer; border-radius: 4px; font-size: 12px; color: #aaa; }
+        .tab.active { background: #E91E63; color: white; font-weight: bold; } /* WSP Pink/Green hybrid style */
+        .tab[data-filter="whatsapp"].active { background: #25D366; }
+        .tab[data-filter="instagram"].active { background: #C13584; }
+        .tab[data-filter="web"].active { background: #3498db; }
+
+        /* LISTA USUARIOS */
+        #user-list { flex: 1; overflow-y: auto; }
+        .user-card { padding: 15px; border-bottom: 1px solid #2a2a2a; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+        .user-card:hover { background: #2a2a2a; }
+        .user-card.active { background: #333; border-left: 4px solid #E91E63; }
+        .u-name { font-weight: bold; font-size: 14px; display: block; }
+        .u-meta { font-size: 11px; color: #888; margin-top: 4px; }
+        .tag { font-size: 9px; padding: 2px 4px; border-radius: 3px; margin-left: 5px; }
+        .tag.whatsapp { background: #25D366; color: #000; }
+        .tag.instagram { background: #C13584; color: #fff; }
+        .tag.web { background: #3498db; color: #fff; }
+
+        /* CHAT AREA */
+        #chat-area { flex: 1; display: flex; flex-direction: column; background: #0d0d0d; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-opacity: 0.05; }
+        #chat-header { padding: 15px; background: #252525; border-bottom: 1px solid #333; font-weight: bold; }
+        
+        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 14px; line-height: 1.4; position: relative; }
+        
+        .msg-user { align-self: flex-start; background: #202c33; color: #e9edef; border-radius: 0 10px 10px 10px; }
+        .msg-zara { align-self: flex-end; background: #005c4b; color: #e9edef; border-radius: 10px 0 10px 10px; }
+        .msg-human { align-self: flex-end; background: #a88b20; color: #fff; } /* Manual reply */
+
+        .msg-meta { font-size: 10px; color: #8696a0; text-align: right; margin-top: 5px; display: block; }
+
+        /* INPUT AREA */
+        #input-area { padding: 15px; background: #202c33; display: none; border-top: 1px solid #333; }
+        .input-box { display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #2a3942; color: white; outline: none; }
+        button { padding: 10px 20px; border-radius: 20px; border: none; background: #00a884; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background: #008f6f; }
+
+        .link-placeholder { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px; display: inline-block; font-weight: bold; color: #ffeb3b; }
     </style>
 </head>
 <body>
-    <div id="sidebar"></div>
-    <div id="chat-area">
-        <div id="messages"></div>
-        <div id="reply-box">
-            <input type="text" id="manualInput" placeholder="Escribir respuesta manual...">
+
+<div id="sidebar">
+    <div class="header"><h2>ZARA 5.0 RADAR</h2></div>
+    <div class="tabs">
+        <div class="tab active" onclick="setFilter('ALL')" data-filter="ALL">TODO</div>
+        <div class="tab" onclick="setFilter('whatsapp')" data-filter="whatsapp">WSP</div>
+        <div class="tab" onclick="setFilter('instagram')" data-filter="instagram">IG</div>
+        <div class="tab" onclick="setFilter('web')" data-filter="web">WEB</div>
+    </div>
+    <div id="user-list"></div>
+</div>
+
+<div id="chat-area">
+    <div id="chat-header">Selecciona un chat</div>
+    <div id="messages"></div>
+    <div id="input-area">
+        <div class="input-box">
+            <input type="text" id="manualMsg" placeholder="Escribir respuesta manual (Solo WSP)..." onkeypress="handleKey(event)">
             <button onclick="sendReply()">ENVIAR</button>
         </div>
     </div>
-    <script>
-        let currentUser = null;
-        let currentPlatform = null;
-        let currentName = null;
-        
-        async function loadData() {
+</div>
+
+<script>
+    let dbData = {};
+    let currentFilter = 'ALL';
+    let selectedUser = null;
+
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.tab[data-filter="${filter}"]`).classList.add('active');
+        renderList();
+    }
+
+    async function fetchStats() {
+        try {
             const res = await fetch('/api/stats');
-            const db = await res.json();
-            const sb = document.getElementById('sidebar');
-            sb.innerHTML = '';
+            dbData = await res.json();
+            renderList();
+            if(selectedUser) renderChat(selectedUser);
+        } catch(e) { console.error(e); }
+    }
+
+    function renderList() {
+        const list = document.getElementById('user-list');
+        list.innerHTML = '';
+        
+        Object.keys(dbData).reverse().forEach(uid => {
+            const u = dbData[uid];
+            if(currentFilter !== 'ALL' && u.plataforma !== currentFilter) return;
+
+            const div = document.createElement('div');
+            div.className = `user-card ${selectedUser === uid ? 'active' : ''}`;
+            div.onclick = () => { selectedUser = uid; renderChat(uid); renderList(); };
             
-            Object.keys(db).forEach(uid => {
-                const u = db[uid];
-                const div = document.createElement('div');
-                div.className = `user-item ${currentUser === uid ? 'active' : ''}`;
-                div.innerHTML = `<strong>${u.nombre}</strong> <span class="platform-tag ${u.plataforma}">${u.plataforma}</span><br><small>${u.mensajes.length} msgs</small>`;
-                div.onclick = () => renderChat(uid, u);
-                sb.appendChild(div);
-            });
-            if(currentUser && db[currentUser]) renderChat(currentUser, db[currentUser]);
-        }
-
-        function renderChat(uid, user) {
-            currentUser = uid;
-            currentPlatform = user.plataforma;
-            currentName = user.nombre;
-            const msgs = document.getElementById('messages');
-            msgs.innerHTML = '';
+            const lastMsg = u.mensajes[u.mensajes.length-1]?.content.substring(0,30) + '...';
             
-            user.mensajes.forEach(m => {
-                const d = document.createElement('div');
-                d.className = `msg ${m.role === 'user' ? 'msg-user' : 'msg-zara'}`;
-                
-                // Filtro para monitor: Si es link, mostrar texto simple
-                let content = m.content;
-                if(content.includes("http") || content.includes("agenda")) content = "🔗 [LINK / BOTÓN ENVIADO]";
-                
-                // Fecha
-                const date = new Date(m.timestamp || Date.now());
-                const timeStr = date.toLocaleTimeString() + ' ' + date.toLocaleDateString();
+            div.innerHTML = `
+                <div>
+                    <span class="u-name">${u.nombre} <span class="tag ${u.plataforma}">${u.plataforma}</span></span>
+                    <div class="u-meta">${lastMsg}</div>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
 
-                d.innerHTML = `${content} <span class="timestamp">${timeStr}</span>`;
-                msgs.appendChild(d);
-            });
-            msgs.scrollTop = msgs.scrollHeight;
+    function renderChat(uid) {
+        const u = dbData[uid];
+        const msgsDiv = document.getElementById('messages');
+        document.getElementById('chat-header').innerText = `${u.nombre} (${u.plataforma})`;
+        
+        msgsDiv.innerHTML = '';
+        u.mensajes.forEach(m => {
+            const div = document.createElement('div');
+            let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
+            if(m.estado === 'human_reply') type = 'msg-human';
 
-            // Solo mostrar input si es Whatsapp
-            const replyBox = document.getElementById('reply-box');
-            if (user.plataforma === 'whatsapp') replyBox.style.display = 'block';
-            else replyBox.style.display = 'none';
-        }
+            let content = m.content;
+            // Ocultar links largos en monitor
+            if(content.includes('http') || content.includes('agenda')) {
+                content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK ENVIADO]</span>');
+            }
 
-        async function sendReply() {
-            const txt = document.getElementById('manualInput').value;
-            if(!txt) return;
-            await fetch('/api/reply', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id: currentUser, text: txt, platform: currentPlatform, name: currentName })
-            });
-            document.getElementById('manualInput').value = '';
-            loadData();
-        }
+            const time = new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            div.className = `msg ${type}`;
+            div.innerHTML = `${content} <span class="msg-meta">${time}</span>`;
+            msgsDiv.appendChild(div);
+        });
+        msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
-        setInterval(loadData, 2000);
-        loadData();
-    </script>
+        // Mostrar Input solo si es Whatsapp
+        const inputArea = document.getElementById('input-area');
+        if(u.plataforma === 'whatsapp') inputArea.style.display = 'block';
+        else inputArea.style.display = 'none';
+    }
+
+    async function sendReply() {
+        const input = document.getElementById('manualMsg');
+        const text = input.value;
+        if(!text || !selectedUser) return;
+        
+        const u = dbData[selectedUser];
+        await fetch('/api/reply', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id: selectedUser, text, platform: u.plataforma, name: u.nombre })
+        });
+        input.value = '';
+        fetchStats();
+    }
+
+    function handleKey(e) { if(e.key === 'Enter') sendReply(); }
+
+    setInterval(fetchStats, 2000);
+    fetchStats();
+</script>
 </body>
 </html>

@@ -28,13 +28,13 @@ export async function pensar(historial, nombre, suffix = "") {
             .replace("{TECNOLOGIAS}", datos.tecnologias)
             .replace("{BENEFICIO}", datos.beneficio)
             .replace("{DIRECCION}", faq.direccion)
-            .replace("{DETALLE_EVAL}", faq.detalle_eval);
+            .replace("{TIPO_EVAL}", faq.tipo)
+            .replace("{DETALLE_EVAL}", faq.detalle);
 
-        // Inyectamos instrucción extra si el usuario pregunta detalles específicos para romper el bucle
-        if (ultimoMensaje.includes("donde") || ultimoMensaje.includes("como") || ultimoMensaje.includes("online") || ultimoMensaje.includes("app") || ultimoMensaje.includes("ubicacion")) {
-            script += "\n\nIMPORTANTE: El usuario está preguntando detalles de la evaluación (dónde es, cómo es, si es online). USA EL CASO A. NO USES EL GUION DE PRECIOS AHORA.";
+        if (ultimoMensaje.includes("donde") || ultimoMensaje.includes("como") || ultimoMensaje.includes("online") || ultimoMensaje.includes("ubicacion") || ultimoMensaje.includes("app")) {
+            script += "\n\nINSTRUCCIÓN: El cliente pregunta detalles logísticos. USA EL CASO A. NO uses el guion de precio ahora.";
         } else {
-            script += "\n\nIMPORTANTE: El usuario sigue el flujo normal. USA EL CASO B (Fase que corresponda).";
+            script += "\n\nINSTRUCCIÓN: El cliente sigue el flujo. USA EL CASO B.";
         }
 
         const messages = [

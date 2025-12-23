@@ -4,7 +4,7 @@ export const CLINICA = {
         precio: "$128.800",
         duracion: "1 sesión",
         tecnologias: "Vitaminas, Enzimas LFP y Radiofrecuencia",
-        beneficio: "revitalizar tu piel y dar efecto glow"
+        beneficio: "revitalizar tu piel y dar efecto glow inmediato"
     },
     "push_up": {
         plan: "Push Up",
@@ -21,7 +21,8 @@ export const CLINICA = {
         beneficio: "reducir medidas y reafirmar"
     },
     "faq": {
-        direccion: "La evaluación es 100% presencial en nuestra clínica ubicada en Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas).",
-        detalle_eval: "La evaluación dura 30 minutos. Analizamos tu cuerpo y rostro con tecnologías de Inteligencia Artificial para construir un diagnóstico certero y ajustado a tu necesidad."
+        direccion: "Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas).",
+        tipo: "100% presencial",
+        detalle: "Dura 30 minutos. Analizamos tu cuerpo y rostro con tecnologías de Inteligencia Artificial para un diagnóstico certero."
     }
 };
