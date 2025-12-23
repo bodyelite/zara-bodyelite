@@ -132,7 +132,6 @@
             let content = m.content || "";
             if(content.includes('http')) content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK]</span>');
             
-            // FECHA + HORA
             const date = m.timestamp ? new Date(m.timestamp) : new Date();
             const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             

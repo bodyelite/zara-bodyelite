@@ -25,12 +25,10 @@ const BASE_URL = process.env.RENDER_EXTERNAL_URL || "https://zara-bodyelite-1.on
 app.get('/monitor', (req, res) => res.sendFile(path.join(__dirname, '../public/monitor.html')));
 app.get('/api/stats', (req, res) => res.json(leerDB()));
 
-// Endpoint para responder desde Monitor
 app.post('/api/reply', async (req, res) => {
     try {
         const { id, text, platform, name } = req.body;
         
-        // COMANDOS DE CONTROL
         if (text.toLowerCase().trim() === 'zara off') {
             toggleZara(id, false);
             guardarMensaje(id, name, "🔴 [SISTEMA] ZARA DESACTIVADA", "system", platform);
@@ -42,7 +40,6 @@ app.post('/api/reply', async (req, res) => {
             return res.json({ status: "enabled" });
         }
 
-        // Enviar mensaje real al usuario
         await enviarMensajeMeta(id, text, platform, false, null);
         guardarMensaje(id, name || "Cliente", text, "zara", platform, "human_reply");
         
@@ -106,15 +103,12 @@ app.post("/webchat", async (req, res) => {
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
     try {
-        // 1. Guardar mensaje usuario
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
         
-        // 2. VERIFICAR SI ZARA ESTÁ ENCENDIDA
         if (!isZaraActive(id)) {
-            return { textoFinal: "" }; // Silencio absoluto si está OFF
+            return { textoFinal: "" };
         }
 
-        // 3. Pensar
         const suffix = plataforma === "instagram" ? "(IG)" : "";
         const respuestaRaw = await pensar(historial, nombre, suffix);
         

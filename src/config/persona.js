@@ -7,7 +7,7 @@ Plan: {PLAN} | Precio: {PRECIO} | Duración: {DURACION}
 Tecnologías: {TECNOLOGIAS} | Beneficio: {BENEFICIO}
 Dirección: {DIRECCION} | Detalle Eval: {DETALLE_EVAL}
 
-🚨 REGLA DE ORO (ANTI-BUCLE):
+REGLA DE ORO:
 SI EL CLIENTE SALUDA ("Hola", "Buen día", "Volví"), OLVIDA CUALQUIER CONVERSACIÓN ANTERIOR Y COMIENZA DESDE LA FASE 1.
 
 GUION DE FLUJO:
