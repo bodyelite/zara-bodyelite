@@ -16,15 +16,15 @@ export async function pensar(historial, nombre, suffix = "") {
         const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
         
         let productoDetectado = "tratamiento";
-        if (ultimoMensaje.includes("pink glow")) productoDetectado = "Pink Glow";
+        if (ultimoMensaje.includes("pink glow") || ultimoMensaje.includes("pinkglow")) productoDetectado = "Pink Glow";
         else if (ultimoMensaje.includes("hifu")) productoDetectado = "HIFU 12D";
         else if (ultimoMensaje.includes("lipo")) productoDetectado = "Lipo Enzimática";
         else if (ultimoMensaje.includes("push")) productoDetectado = "Push Up";
         
-        systemPrompt = systemPrompt.replace("{PRODUCTO_DETECTADO}", productoDetectado);
+        systemPrompt = systemPrompt.replace(/{PRODUCTO_DETECTADO}/g, productoDetectado);
 
         const messages = [
-            { role: "system", content: systemPrompt + "\n\nINFORMACIÓN TÉCNICA:\n" + CLINICA },
+            { role: "system", content: systemPrompt + "\n\nINFORMACIÓN TÉCNICA Y PRECIOS:\n" + CLINICA },
             ...historial.map(m => ({ role: m.role === 'zara' ? 'assistant' : 'user', content: m.content }))
         ];
 
@@ -32,12 +32,12 @@ export async function pensar(historial, nombre, suffix = "") {
             model: "gpt-4o", 
             messages: messages,
             temperature: 0.3, 
-            max_tokens: 300
+            max_tokens: 350
         });
 
         return completion.choices[0].message.content + " " + suffix;
     } catch (error) {
         console.error("Error Brain:", error);
-        return "¡Hola! Estoy revisando la disponibilidad en tiempo real, dame un segundo... 📅";
+        return "¡Hola! Dame un segundo para revisar la información... 📅";
     }
 }
