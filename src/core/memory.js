@@ -15,7 +15,7 @@ try {
         db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
     }
 } catch (e) {
-    console.error(e);
+    db = {};
 }
 
 export function guardarMensaje(id, nombre, content, role, plataforma = "whatsapp", estado = "normal") {
