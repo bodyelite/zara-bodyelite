@@ -1,21 +1,23 @@
-export const CLINICA = `
-[DATOS PARA GUION DE VENTAS]
-
-PRODUCTO: PINK GLOW (ROSTRO)
-- Plan: FACE LIGTH
-- Precio: $128.800
-- Duración: "1 sesión multicomponente (aprox 1 semana)"
-- Tecnologías: "Vitaminas para hidratar, Enzimas para textura y Radiofrecuencia para firmeza"
-
-PRODUCTO: PUSH UP (GLÚTEOS)
-- Plan: PUSH UP
-- Precio: $376.000
-- Duración: "aprox 10 a 12 semanas"
-- Tecnologías: "Radiofrecuencia para piel, EMS Sculptor para dar forma y HIFU para tensar"
-
-PRODUCTO: LIPO / REDUCTIVO
-- Plan: LIPO EXPRESS
-- Precio: $432.000
-- Duración: "aprox 8 semanas"
-- Tecnologías: "HIFU para quemar grasa y Prosculpt para tonificar"
-`;
+export const CLINICA = {
+    "pink_glow": {
+        plan: "Face Ligth",
+        precio: "$128.800",
+        duracion: "1 sesión",
+        tecnologias: "Vitaminas, Enzimas LFP y Radiofrecuencia",
+        beneficio: "revitalizar tu piel y dar efecto glow"
+    },
+    "push_up": {
+        plan: "Push Up",
+        precio: "$376.000",
+        duracion: "6 semanas",
+        tecnologias: "Radiofrecuencia, EMS Sculptor y HIFU 12D",
+        beneficio: "levantar y dar forma a los glúteos"
+    },
+    "lipo_express": {
+        plan: "Lipo Express",
+        precio: "$432.000",
+        duracion: "8 semanas",
+        tecnologias: "HIFU para quemar grasa, Prosculpt para tonificar y Radiofrecuencia",
+        beneficio: "reducir medidas y reafirmar"
+    }
+};
