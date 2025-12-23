@@ -1,52 +1,63 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const RENDER_PATH = '/opt/render/project/src/data';
-const LOCAL_PATH = path.join(process.cwd(), 'data');
-const DATA_DIR = fs.existsSync('/opt/render/project/src') ? RENDER_PATH : LOCAL_PATH;
-const DB_FILE = path.join(DATA_DIR, 'chats_db.json');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DB_PATH = path.join(__dirname, '../../data/chat_history.json');
 
-if (!fs.existsSync(DATA_DIR)) {
-    try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+// Asegurar que existe la carpeta data
+if (!fs.existsSync(path.dirname(DB_PATH))) {
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 }
 
-let memoryCache = {};
-
-try {
-    if (fs.existsSync(DB_FILE)) {
-        memoryCache = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    }
-} catch (e) { memoryCache = {}; }
-
-export function leerDB() { return memoryCache; }
-
-export function guardarMensaje(id, nombre, texto, role, origen, nuevoEstado = null) {
-    if (!memoryCache[id]) {
-        memoryCache[id] = { 
-            nombre: nombre || "Cliente", 
-            origen: origen, 
-            mensajes: [], 
-            last_active: Date.now() 
-        };
-    }
-
-    if (nombre && nombre.length > 2 && nombre !== "Visitante" && nombre !== "Cliente") {
-        memoryCache[id].nombre = nombre;
-    }
-    
-    memoryCache[id].last_active = Date.now();
-
-    memoryCache[id].mensajes.push({ 
-        role, 
-        content: texto, 
-        timestamp: Date.now() 
-    });
-    
-    if (memoryCache[id].mensajes.length > 30) memoryCache[id].mensajes.shift();
-
+// Cargar DB en memoria
+let db = {};
+if (fs.existsSync(DB_PATH)) {
     try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(memoryCache, null, 2));
-    } catch (e) { console.error("Error guardando DB:", e.message); }
+        db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+    } catch (e) {
+        console.error("Error leyendo DB, iniciando limpia:", e);
+        db = {};
+    }
+}
 
-    return memoryCache[id].mensajes;
+export function guardarMensaje(id, nombre, content, role, plataforma = "whatsapp", estado = "normal") {
+    try {
+        // Si el usuario no existe, crearlo
+        if (!db[id]) {
+            db[id] = { nombre, plataforma, mensajes: [] };
+        } 
+        
+        // CORRECCIÓN CLAVE: Actualizar siempre la plataforma y nombre por si cambiaron o eran undefined
+        db[id].plataforma = plataforma;
+        db[id].nombre = nombre;
+
+        const mensaje = {
+            role,
+            content,
+            timestamp: Date.now(),
+            estado
+        };
+
+        db[id].mensajes.push(mensaje);
+        
+        // Mantener historial manejable (últimos 50 mensajes)
+        if (db[id].mensajes.length > 50) {
+            db[id].mensajes = db[id].mensajes.slice(-50);
+        }
+
+        // Guardar en disco (Asíncrono para no bloquear)
+        fs.writeFile(DB_PATH, JSON.stringify(db, null, 2), (err) => {
+            if (err) console.error("Error guardando DB:", err);
+        });
+
+        return db[id].mensajes;
+    } catch (error) {
+        console.error("Error en guardarMensaje:", error);
+        return [];
+    }
+}
+
+export function leerDB() {
+    return db;
 }
