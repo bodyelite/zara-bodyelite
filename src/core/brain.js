@@ -24,14 +24,14 @@ export async function pensar(historial, nombre, suffix = "") {
         systemPrompt = systemPrompt.replace(/{PRODUCTO_DETECTADO}/g, productoDetectado);
 
         const messages = [
-            { role: "system", content: systemPrompt + "\n\nTABLA DE PRECIOS:\n" + CLINICA },
+            { role: "system", content: systemPrompt + "\n\nINFORMACIÓN TÉCNICA:\n" + CLINICA },
             ...historial.map(m => ({ role: m.role === 'zara' ? 'assistant' : 'user', content: m.content }))
         ];
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o", 
             messages: messages,
-            temperature: 0.1, 
+            temperature: 0.0, 
             max_tokens: 350
         });
 
