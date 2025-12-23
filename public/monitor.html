@@ -12,25 +12,24 @@
         .tab { flex: 1; padding: 8px; text-align: center; background: #333; cursor: pointer; border-radius: 4px; font-size: 12px; color: #aaa; transition: 0.2s; }
         .tab.active { background: #E91E63; color: white; font-weight: bold; }
         .tab[data-filter="whatsapp"].active { background: #25D366; }
-        .tab[data-filter="instagram"].active { background: #C13584; }
-        .tab[data-filter="web"].active { background: #3498db; }
         #user-list { flex: 1; overflow-y: auto; }
         .user-card { padding: 15px; border-bottom: 1px solid #2a2a2a; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
-        .user-card:hover { background: #2a2a2a; }
         .user-card.active { background: #333; border-left: 4px solid #E91E63; }
         .u-name { font-weight: bold; font-size: 14px; display: block; }
         .u-meta { font-size: 11px; color: #888; margin-top: 4px; }
         .tag { font-size: 9px; padding: 2px 4px; border-radius: 3px; margin-left: 5px; text-transform: uppercase; }
         .tag.whatsapp { background: #25D366; color: #000; }
-        .tag.instagram { background: #C13584; color: #fff; }
-        .tag.web { background: #3498db; color: #fff; }
+        .status-dot { height: 8px; width: 8px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .on { background-color: #25D366; box-shadow: 0 0 5px #25D366; }
+        .off { background-color: #f44336; }
         #chat-area { flex: 1; display: flex; flex-direction: column; background: #0d0d0d; }
-        #chat-header { padding: 15px; background: #252525; border-bottom: 1px solid #333; font-weight: bold; }
+        #chat-header { padding: 15px; background: #252525; border-bottom: 1px solid #333; font-weight: bold; display: flex; justify-content: space-between; }
         #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 14px; line-height: 1.4; position: relative; }
         .msg-user { align-self: flex-start; background: #202c33; color: #e9edef; border-radius: 0 10px 10px 10px; }
         .msg-zara { align-self: flex-end; background: #005c4b; color: #e9edef; border-radius: 10px 0 10px 10px; }
         .msg-human { align-self: flex-end; background: #a88b20; color: #fff; }
+        .msg-sys { align-self: center; background: #333; color: #aaa; font-size: 11px; border-radius: 20px; padding: 5px 15px; }
         .msg-meta { font-size: 10px; color: #8696a0; text-align: right; margin-top: 5px; display: block; }
         #input-area { padding: 15px; background: #202c33; display: none; border-top: 1px solid #333; }
         .input-box { display: flex; gap: 10px; }
@@ -51,11 +50,11 @@
     <div id="user-list"></div>
 </div>
 <div id="chat-area">
-    <div id="chat-header">Esperando mensajes...</div>
+    <div id="chat-header"><span>Selecciona un chat</span> <span id="zara-status"></span></div>
     <div id="messages"></div>
     <div id="input-area">
         <div class="input-box">
-            <input type="text" id="manualMsg" placeholder="Responder (Solo WSP)..." onkeypress="handleKey(event)">
+            <input type="text" id="manualMsg" placeholder="Escribe 'zara off' para apagar..." onkeypress="handleKey(event)">
             <button onclick="sendReply()">ENVIAR</button>
         </div>
     </div>
@@ -82,7 +81,7 @@
                 const msgsDiv = document.getElementById('messages');
                 if(msgsDiv.children.length !== u.mensajes.length) renderChat(selectedUser);
             }
-        } catch(e) { console.error("Conexión perdida..."); }
+        } catch(e) { console.error("..."); }
     }
 
     function renderList() {
@@ -104,8 +103,13 @@
             div.onclick = () => { selectedUser = uid; renderChat(uid); };
             
             const lastMsg = u.mensajes.length > 0 ? u.mensajes[u.mensajes.length-1].content.substring(0,25) + '...' : 'Nuevo';
+            const statusClass = (u.zara_active !== false) ? 'on' : 'off';
             
-            div.innerHTML = `<div><span class="u-name">${u.nombre || 'Cliente'} <span class="tag ${plat}">${plat}</span></span><div class="u-meta">${lastMsg}</div></div>`;
+            div.innerHTML = `<div>
+                <span class="status-dot ${statusClass}"></span>
+                <span class="u-name">${u.nombre || 'Cliente'} <span class="tag ${plat}">${plat}</span></span>
+                <div class="u-meta">${lastMsg}</div>
+            </div>`;
             list.appendChild(div);
         });
     }
@@ -114,21 +118,26 @@
         const u = dbData[uid];
         const msgsDiv = document.getElementById('messages');
         const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
+        const zaraState = (u.zara_active !== false) ? "🟢 ZARA ON" : "🔴 ZARA OFF";
         
-        document.getElementById('chat-header').innerText = `${u.nombre} (${plat})`;
+        document.getElementById('chat-header').innerHTML = `<span>${u.nombre} (${plat})</span> <span>${zaraState}</span>`;
         msgsDiv.innerHTML = '';
         
         u.mensajes.forEach(m => {
             const div = document.createElement('div');
             let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
             if(m.estado === 'human_reply') type = 'msg-human';
+            if(m.role === 'system') type = 'msg-sys';
             
             let content = m.content || "";
             if(content.includes('http')) content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK]</span>');
             
-            const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            // FECHA + HORA
+            const date = m.timestamp ? new Date(m.timestamp) : new Date();
+            const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
             div.className = `msg ${type}`;
-            div.innerHTML = `${content} <span class="msg-meta">${time}</span>`;
+            div.innerHTML = `${content} <span class="msg-meta">${dateStr}</span>`;
             msgsDiv.appendChild(div);
         });
         msgsDiv.scrollTop = msgsDiv.scrollHeight;

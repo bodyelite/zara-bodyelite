@@ -4,9 +4,9 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from 'url';
 import { pensar } from "./core/brain.js";
-import { guardarMensaje, leerDB } from "./core/memory.js";
+import { guardarMensaje, leerDB, toggleZara, isZaraActive } from "./core/memory.js";
 import { procesarEtiquetas } from "./core/tags.js";
-import { enviarMensajeMeta, obtenerNombreIG, notificarStaff } from "./channels/meta.js";
+import { enviarMensajeMeta, obtenerNombreIG } from "./channels/meta.js";
 import { NEGOCIO } from "./config/business.js";
 import dotenv from 'dotenv';
 
@@ -25,23 +25,35 @@ const BASE_URL = process.env.RENDER_EXTERNAL_URL || "https://zara-bodyelite-1.on
 app.get('/monitor', (req, res) => res.sendFile(path.join(__dirname, '../public/monitor.html')));
 app.get('/api/stats', (req, res) => res.json(leerDB()));
 
+// Endpoint para responder desde Monitor
 app.post('/api/reply', async (req, res) => {
     try {
         const { id, text, platform, name } = req.body;
-        if (!text || !id) return res.status(400).send("Faltan datos");
         
+        // COMANDOS DE CONTROL
+        if (text.toLowerCase().trim() === 'zara off') {
+            toggleZara(id, false);
+            guardarMensaje(id, name, "🔴 [SISTEMA] ZARA DESACTIVADA", "system", platform);
+            return res.json({ status: "disabled" });
+        }
+        if (text.toLowerCase().trim() === 'zara on') {
+            toggleZara(id, true);
+            guardarMensaje(id, name, "🟢 [SISTEMA] ZARA ACTIVADA", "system", platform);
+            return res.json({ status: "enabled" });
+        }
+
+        // Enviar mensaje real al usuario
         await enviarMensajeMeta(id, text, platform, false, null);
         guardarMensaje(id, name || "Cliente", text, "zara", platform, "human_reply");
         
         res.json({ status: "ok" });
     } catch (e) {
-        console.error(e);
-        res.status(500).send("Error enviando mensaje manual");
+        res.status(500).send("Error");
     }
 });
 
 app.get('/agenda', (req, res) => {
-    res.send(`<!DOCTYPE html><html lang="es"><head><meta property="og:title" content="📅 Agenda Presencial Body Elite" /><meta property="og:description" content="Reserva tu Evaluación Presencial con IA en Peñalolén." /><meta property="og:url" content="${NEGOCIO.agenda_link}" /><script>window.location.href = "${NEGOCIO.agenda_link}";</script></head><body>Redirigiendo...</body></html>`);
+    res.send(`<!DOCTYPE html><html lang="es"><head><meta property="og:title" content="📅 Agenda Presencial Body Elite" /><meta property="og:description" content="Reserva tu Evaluación Presencial con IA." /><meta property="og:url" content="${NEGOCIO.agenda_link}" /><script>window.location.href = "${NEGOCIO.agenda_link}";</script></head><body>Redirigiendo...</body></html>`);
 });
 
 app.get("/webhook", (req, res) => {
@@ -87,17 +99,23 @@ app.post("/webchat", async (req, res) => {
     try {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest_session';
-        let nombreWeb = "Visitante";
-        const resultado = await procesarNucleo(uid, nombreWeb, message, "web", true);
-        res.json({ text: resultado.textoFinal, reply: resultado.textoFinal });
-    } catch (e) { res.status(500).json({ text: "Dame un segundo..." }); }
+        const resultado = await procesarNucleo(uid, "Visitante", message, "web", true);
+        res.json({ text: resultado.textoFinal });
+    } catch (e) { res.status(500).json({ text: "..." }); }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
     try {
+        // 1. Guardar mensaje usuario
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
-        const suffix = plataforma === "instagram" ? "(IG)" : "";
         
+        // 2. VERIFICAR SI ZARA ESTÁ ENCENDIDA
+        if (!isZaraActive(id)) {
+            return { textoFinal: "" }; // Silencio absoluto si está OFF
+        }
+
+        // 3. Pensar
+        const suffix = plataforma === "instagram" ? "(IG)" : "";
         const respuestaRaw = await pensar(historial, nombre, suffix);
         
         const hasLink = respuestaRaw.includes("{LINK}");
@@ -116,7 +134,7 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         }
 
         return { textoFinal };
-    } catch (e) { return { textoFinal: "Dame un segundo..." }; }
+    } catch (e) { return { textoFinal: "..." }; }
 }
 
 const PORT = process.env.PORT || 3000;

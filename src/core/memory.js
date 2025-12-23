@@ -10,23 +10,27 @@ if (!fs.existsSync(path.dirname(DB_PATH))) {
 }
 
 let db = {};
+// Carga segura: Intentamos leer, si falla, iniciamos vacío pero no sobrescribimos a menos que sea necesario
 try {
     if (fs.existsSync(DB_PATH)) {
-        const raw = fs.readFileSync(DB_PATH, 'utf-8');
-        db = JSON.parse(raw);
+        db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
     }
 } catch (e) {
-    db = {};
+    console.error("Error leyendo DB:", e);
+    // No reseteamos db = {} aquí para evitar borrar datos en memoria si solo falló la lectura de disco momentánea
 }
 
 export function guardarMensaje(id, nombre, content, role, plataforma = "whatsapp", estado = "normal") {
     try {
         if (!db[id]) {
-            db[id] = { nombre, plataforma, mensajes: [] };
-        } 
+            // Por defecto Zara nace ENCENDIDA (true)
+            db[id] = { nombre, plataforma, zara_active: true, mensajes: [] };
+        }
         
-        db[id].plataforma = plataforma || "whatsapp"; 
+        // Actualizar metadatos
+        db[id].plataforma = plataforma || "whatsapp";
         db[id].nombre = nombre || "Cliente";
+        if (db[id].zara_active === undefined) db[id].zara_active = true;
 
         const mensaje = {
             role,
@@ -37,15 +41,30 @@ export function guardarMensaje(id, nombre, content, role, plataforma = "whatsapp
 
         db[id].mensajes.push(mensaje);
         
-        if (db[id].mensajes.length > 50) {
-            db[id].mensajes = db[id].mensajes.slice(-50);
+        // Mantener historial saludable (últimos 60 mensajes)
+        if (db[id].mensajes.length > 60) {
+            db[id].mensajes = db[id].mensajes.slice(-60);
         }
 
         fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
         return db[id].mensajes;
     } catch (error) {
+        console.error("Error guardando:", error);
         return [];
     }
+}
+
+export function toggleZara(id, status) {
+    if (db[id]) {
+        db[id].zara_active = status;
+        fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+        return true;
+    }
+    return false;
+}
+
+export function isZaraActive(id) {
+    return db[id] ? db[id].zara_active : true;
 }
 
 export function leerDB() {
