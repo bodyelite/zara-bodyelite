@@ -1,29 +1,21 @@
 export const CLINICA = `
-[VADEMÉCUM TÉCNICO Y COMERCIAL 2025]
+[VADEMÉCUM DE PLANES 2025]
 
-💰 **TABLA DE PRECIOS "DESDE" / PROMOS (GANCHOS):**
-(Usa estos valores para anclar el precio antes de dar el valor del plan completo)
-- **Pink Glow:** Desde **$89.000** (Valor Sesión Individual / Promo).
-- **HIFU 12D:** Desde **$150.000** (Zona Rostro).
-- **Lipopapada:** Desde **$120.000** (Sesión).
-- **Tratamientos Corporales:** Planes desde **$250.000**.
+📊 **CATEGORÍA: ROSTRO (Rejuvenecimiento / Calidad de Piel)**
+- **PLAN DE ENTRADA (EL "DESDE"):** Plan Face Light -> **$250.000**.
+- **PLAN FULL FACE (PREMIUM):** $584.000 (Incluye Pink Glow, Enzimas, HIFU, Botox).
+- *Dolores:* Arrugas, flacidez, piel apagada, manchas.
 
-📦 **PLANES COMPLETOS (UPSELL - LO QUE QUEREMOS VENDER):**
+📊 **CATEGORÍA: CUERPO (Glúteos / Abdomen / Piernas)**
+- **PLAN DE ENTRADA (EL "DESDE"):** Plan Corporal Base -> **$250.000**.
+- **PLAN PUSH UP GLÚTEOS:** $376.000.
+- **PLAN LIPO EXPRESS:** $432.000.
+- *Dolores:* Celulitis, flacidez, grasa localizada.
 
-1. **PLAN PUSH UP GLÚTEOS ($376.000):**
-   - Objetivo: Lifting de glúteos sin volumen.
-   - Mix: HIFU 12D + Prosculpt (12) + RF (4).
-   - Duración: 10 semanas.
+📊 **CATEGORÍA: PAPADA**
+- **PLAN DE ENTRADA:** Plan Lipo Papada Light -> **$250.000**.
+- *Dolores:* Grasa bajo el mentón, perfilado.
 
-2. **PLAN LIPO EXPRESS ($432.000):**
-   - Objetivo: Reducción rápida y firmeza.
-   - Mix: HIFU + Prosculpt (8) + RF (8). (Sin enzimas).
-
-3. **PLAN FULL FACE ($584.000):**
-   - Objetivo: Rejuvenecimiento total (La solución completa para Pink Glow).
-   - Mix: HIFU 12D + Enzimas + Pink Glow + Botox + RF.
-   - Beneficio: Ahorras vs sesiones sueltas.
-
-🎁 **DIFERENCIADOR (SIEMPRE MENCIONAR):**
-- **Evaluación con Asistencia IA:** GRATIS. Personaliza el tratamiento para asegurar resultados.
+🎁 **DIFERENCIADOR (SIEMPRE INCLUIDO):**
+- **Evaluación con Asistencia IA:** GRATIS.
 `;
