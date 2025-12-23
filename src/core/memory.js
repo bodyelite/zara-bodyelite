@@ -1,17 +1,22 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = path.join(DB_DIR, 'chat_history.json');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// CORRECCION CRÍTICA: La ruta ahora apunta a src/data donde está montado el disco en Render
+const DB_PATH = path.join(__dirname, '../data/chat_history.json');
 
-if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+// Asegurar que el directorio existe
+const dirPath = path.dirname(DB_PATH);
+if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
 }
 
 let db = {};
 try {
     if (fs.existsSync(DB_PATH)) {
-        db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+        const rawData = fs.readFileSync(DB_PATH, 'utf-8');
+        db = JSON.parse(rawData);
     }
 } catch (e) {
     db = {};
