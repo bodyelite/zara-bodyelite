@@ -1,21 +1,24 @@
 export const CLINICA = `
-[VADEMÉCUM DE PLANES 2025]
+[LISTA OFICIAL - VALORES SUMADOS COLUMNA J]
 
-📊 **CATEGORÍA: ROSTRO (Rejuvenecimiento / Calidad de Piel)**
-- **PLAN DE ENTRADA (EL "DESDE"):** Plan Face Light -> **$250.000**.
-- **PLAN FULL FACE (PREMIUM):** $584.000 (Incluye Pink Glow, Enzimas, HIFU, Botox).
-- *Dolores:* Arrugas, flacidez, piel apagada, manchas.
+💆‍♀️ **CATEGORÍA ROSTRO / PINK GLOW:**
+1. **PLAN FACE LIGTH ("Desde"): $128.800**
+   - *Componentes:* LFP ($32.000) + Pink Glow ($76.800) + RF ($20.000).
+   - *Uso:* Plan de entrada para quienes buscan "Pink Glow".
 
-📊 **CATEGORÍA: CUERPO (Glúteos / Abdomen / Piernas)**
-- **PLAN DE ENTRADA (EL "DESDE"):** Plan Corporal Base -> **$250.000**.
-- **PLAN PUSH UP GLÚTEOS:** $376.000.
-- **PLAN LIPO EXPRESS:** $432.000.
-- *Dolores:* Celulitis, flacidez, grasa localizada.
+2. **PLAN FULL FACE (Premium): $584.000**
+   - *Componentes:* HIFU ($89.600) + LFP ($64.000) + Pink Glow ($230.400) + Toxina ($160.000) + RF ($40.000).
 
-📊 **CATEGORÍA: PAPADA**
-- **PLAN DE ENTRADA:** Plan Lipo Papada Light -> **$250.000**.
-- *Dolores:* Grasa bajo el mentón, perfilado.
+🍑 **CATEGORÍA CUERPO / REDUCTIVOS:**
+1. **PLAN BODY TENSOR ("Desde"): $232.000**
+   - *Uso:* Referencia base para tratamientos corporales.
 
-🎁 **DIFERENCIADOR (SIEMPRE INCLUIDO):**
-- **Evaluación con Asistencia IA:** GRATIS.
+2. **PLAN PUSH UP (Glúteos): $376.000**
+   - *Componentes:* HIFU ($56.000) + RF ($80.000) + Prosculpt ($240.000).
+
+3. **PLAN LIPO EXPRESS (Reductivo): $432.000**
+   - *Componentes:* HIFU ($112.000) + RF ($160.000) + Prosculpt ($160.000).
+
+🎁 **DIFERENCIADOR:**
+- **Evaluación con Asistencia IA:** GRATIS. Personaliza el plan para no pagar de más.
 `;

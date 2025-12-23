@@ -10,34 +10,33 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function pensar(historial, nombre, suffix = "") {
     try {
         const nombreReal = (nombre && nombre !== "Cliente" && nombre !== "Visitante") ? nombre : "estimada/o";
-        
         let systemPrompt = PROMPT_MAESTRO.replace("{NOMBRE_CLIENTE}", nombreReal);
         
         const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
+        let productoDetectado = "Tratamiento";
         
-        let productoDetectado = "tratamiento";
-        if (ultimoMensaje.includes("pink glow") || ultimoMensaje.includes("pinkglow")) productoDetectado = "Pink Glow";
-        else if (ultimoMensaje.includes("hifu")) productoDetectado = "HIFU 12D";
-        else if (ultimoMensaje.includes("lipo")) productoDetectado = "Lipo Enzimática";
-        else if (ultimoMensaje.includes("push")) productoDetectado = "Push Up";
+        if (ultimoMensaje.includes("pink")) productoDetectado = "Pink Glow";
+        else if (ultimoMensaje.includes("hifu")) productoDetectado = "HIFU Facial";
+        else if (ultimoMensaje.includes("lipo") || ultimoMensaje.includes("express")) productoDetectado = "Lipo Express";
+        else if (ultimoMensaje.includes("gluteo") || ultimoMensaje.includes("push")) productoDetectado = "Push Up";
+        else if (ultimoMensaje.includes("cuerpo")) productoDetectado = "Corporal";
         
         systemPrompt = systemPrompt.replace(/{PRODUCTO_DETECTADO}/g, productoDetectado);
 
         const messages = [
-            { role: "system", content: systemPrompt + "\n\nINFORMACIÓN TÉCNICA Y PRECIOS:\n" + CLINICA },
+            { role: "system", content: systemPrompt + "\n\nTABLA DE PRECIOS EXACTOS:\n" + CLINICA },
             ...historial.map(m => ({ role: m.role === 'zara' ? 'assistant' : 'user', content: m.content }))
         ];
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o", 
             messages: messages,
-            temperature: 0.3, 
+            temperature: 0.1, 
             max_tokens: 350
         });
 
         return completion.choices[0].message.content + " " + suffix;
     } catch (error) {
-        console.error("Error Brain:", error);
-        return "¡Hola! Dame un segundo para revisar la información... 📅";
+        return "¡Hola! Estoy validando los planes, dame un segundo... 📅";
     }
 }
