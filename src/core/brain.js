@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { PROMPT_MAESTRO } from '../config/persona.js';
 import { CLINICA } from '../config/clinic.js';
+import { NEGOCIO } from '../config/business.js';
 
 dotenv.config();
 
@@ -11,7 +12,6 @@ export async function pensar(historial, nombre, suffix = "") {
     try {
         const nombreReal = (nombre && nombre !== "Cliente") ? nombre : "";
         const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
-        const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
         
         let key = "pink_glow";
         if (historialTexto.includes("push") || historialTexto.includes("gluteo")) key = "push_up";
@@ -29,13 +29,8 @@ export async function pensar(historial, nombre, suffix = "") {
             .replace("{BENEFICIO}", datos.beneficio)
             .replace("{DIRECCION}", faq.direccion)
             .replace("{TIPO_EVAL}", faq.tipo)
-            .replace("{DETALLE_EVAL}", faq.detalle);
-
-        if (ultimoMensaje.includes("donde") || ultimoMensaje.includes("como") || ultimoMensaje.includes("online") || ultimoMensaje.includes("ubicacion") || ultimoMensaje.includes("app")) {
-            script += "\n\nINSTRUCCIÓN: El cliente pregunta detalles logísticos. USA EL CASO A. NO uses el guion de precio ahora.";
-        } else {
-            script += "\n\nINSTRUCCIÓN: El cliente sigue el flujo. USA EL CASO B.";
-        }
+            .replace("{DETALLE_EVAL}", faq.detalle)
+            .replace("{LINK_AGENDA}", NEGOCIO.agenda_link); 
 
         const messages = [
             { role: "system", content: script },

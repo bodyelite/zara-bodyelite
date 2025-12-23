@@ -112,19 +112,17 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         const suffix = plataforma === "instagram" ? "(IG)" : "";
         const respuestaRaw = await pensar(historial, nombre, suffix);
         
-        const hasLink = respuestaRaw.includes("{LINK}");
-        let textoBase = respuestaRaw.replace("{LINK}", "").trim();
+        let textoBase = respuestaRaw.trim();
         
         const { texto, estado } = procesarEtiquetas(textoBase, id, nombre, plataforma);
         guardarMensaje(id, nombre, textoBase, "zara", plataforma, estado);
         
         let textoFinal = textoBase;
 
-        if (esWeb && hasLink) {
+        if (esWeb && textoBase.includes("http")) {
             textoFinal += `<br><br><a href="${NEGOCIO.agenda_link}" target="_blank" style="background-color:#d4af37; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">📅 RESERVAR AQUÍ</a>`;
         } else if (!esWeb) {
-            const shortLink = `${BASE_URL}/agenda`;
-            await enviarMensajeMeta(id, textoBase, plataforma, hasLink, shortLink);
+            await enviarMensajeMeta(id, textoBase, plataforma, false, null);
         }
 
         return { textoFinal };
