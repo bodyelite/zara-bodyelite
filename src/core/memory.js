@@ -5,32 +5,31 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = path.join(__dirname, '../../data/chat_history.json');
 
-// Asegurar que existe la carpeta data
+// Asegurar carpeta data
 if (!fs.existsSync(path.dirname(DB_PATH))) {
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 }
 
-// Cargar DB en memoria
+// Cargar DB
 let db = {};
 if (fs.existsSync(DB_PATH)) {
     try {
         db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
     } catch (e) {
-        console.error("Error leyendo DB, iniciando limpia:", e);
+        console.error("Error crítico leyendo DB:", e);
         db = {};
     }
 }
 
 export function guardarMensaje(id, nombre, content, role, plataforma = "whatsapp", estado = "normal") {
     try {
-        // Si el usuario no existe, crearlo
         if (!db[id]) {
             db[id] = { nombre, plataforma, mensajes: [] };
         } 
         
-        // CORRECCIÓN CLAVE: Actualizar siempre la plataforma y nombre por si cambiaron o eran undefined
-        db[id].plataforma = plataforma;
-        db[id].nombre = nombre;
+        // ACTUALIZAR SIEMPRE LA PLATAFORMA (Para corregir undefineds antiguos)
+        db[id].plataforma = plataforma || "whatsapp"; 
+        db[id].nombre = nombre || "Cliente";
 
         const mensaje = {
             role,
@@ -41,23 +40,27 @@ export function guardarMensaje(id, nombre, content, role, plataforma = "whatsapp
 
         db[id].mensajes.push(mensaje);
         
-        // Mantener historial manejable (últimos 50 mensajes)
         if (db[id].mensajes.length > 50) {
             db[id].mensajes = db[id].mensajes.slice(-50);
         }
 
-        // Guardar en disco (Asíncrono para no bloquear)
         fs.writeFile(DB_PATH, JSON.stringify(db, null, 2), (err) => {
-            if (err) console.error("Error guardando DB:", err);
+            if (err) console.error("Error escritura DB:", err);
         });
 
         return db[id].mensajes;
     } catch (error) {
-        console.error("Error en guardarMensaje:", error);
+        console.error("Error guardarMensaje:", error);
         return [];
     }
 }
 
 export function leerDB() {
-    return db;
+    // AL LEER, SI HAY DATOS VIEJOS SIN PLATAFORMA, LOS PARCHAMOS EN MEMORIA
+    const safeDB = { ...db };
+    Object.keys(safeDB).forEach(key => {
+        if (!safeDB[key].plataforma) safeDB[key].plataforma = "whatsapp";
+        if (!safeDB[key].nombre) safeDB[key].nombre = "Cliente";
+    });
+    return safeDB;
 }

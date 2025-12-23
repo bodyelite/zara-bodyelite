@@ -33,7 +33,6 @@
         .tag.whatsapp { background: #25D366; color: #000; }
         .tag.instagram { background: #C13584; color: #fff; }
         .tag.web { background: #3498db; color: #fff; }
-        .tag.undefined { background: #555; color: #ccc; } 
 
         /* CHAT AREA */
         #chat-area { flex: 1; display: flex; flex-direction: column; background: #0d0d0d; }
@@ -92,22 +91,23 @@
             const res = await fetch('/api/stats');
             dbData = await res.json();
             renderList();
-            // Mantener chat abierto si llega mensaje nuevo
+            
             if(selectedUser && dbData[selectedUser]) {
+                // Actualizar chat si hay nuevos mensajes
                 const u = dbData[selectedUser];
-                // Solo renderizar si hay nuevos mensajes para evitar parpadeo input
                 const msgsDiv = document.getElementById('messages');
                 if(msgsDiv.children.length !== u.mensajes.length) {
                     renderChat(selectedUser);
                 }
             }
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Error fetching data:", e); }
     }
 
     function renderList() {
         const list = document.getElementById('user-list');
         list.innerHTML = '';
         
+        // Convertir a array y ordenar seguro
         const sorted = Object.keys(dbData).sort((a,b) => {
             const tA = dbData[a].mensajes[dbData[a].mensajes.length-1]?.timestamp || 0;
             const tB = dbData[b].mensajes[dbData[b].mensajes.length-1]?.timestamp || 0;
@@ -115,57 +115,62 @@
         });
 
         sorted.forEach(uid => {
-            const u = dbData[uid];
-            // Normalizar plataforma (por si viene undefined)
-            const plat = u.plataforma ? u.plataforma.toLowerCase() : 'undefined';
-            
-            // Filtro estricto
-            if(currentFilter !== 'ALL' && plat !== currentFilter) return;
+            try {
+                const u = dbData[uid];
+                // Si la plataforma viene vacía, asumimos whatsapp para que no se rompa el filtro
+                const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
 
-            const div = document.createElement('div');
-            div.className = `user-card ${selectedUser === uid ? 'active' : ''}`;
-            div.onclick = () => { selectedUser = uid; renderChat(uid); };
-            
-            const lastMsg = u.mensajes.length > 0 ? u.mensajes[u.mensajes.length-1].content.substring(0,25) + '...' : 'Sin mensajes';
-            
-            div.innerHTML = `
-                <div>
-                    <span class="u-name">${u.nombre} <span class="tag ${plat}">${plat}</span></span>
-                    <div class="u-meta">${lastMsg}</div>
-                </div>`;
-            list.appendChild(div);
+                if(currentFilter !== 'ALL' && plat !== currentFilter) return;
+
+                const div = document.createElement('div');
+                div.className = `user-card ${selectedUser === uid ? 'active' : ''}`;
+                div.onclick = () => { selectedUser = uid; renderChat(uid); };
+                
+                const lastMsg = u.mensajes.length > 0 ? u.mensajes[u.mensajes.length-1].content.substring(0,25) + '...' : 'Nuevo usuario';
+                
+                div.innerHTML = `
+                    <div>
+                        <span class="u-name">${u.nombre || 'Cliente'} <span class="tag ${plat}">${plat}</span></span>
+                        <div class="u-meta">${lastMsg}</div>
+                    </div>`;
+                list.appendChild(div);
+            } catch(err) {
+                console.error("Error renderizando item:", err);
+            }
         });
     }
 
     function renderChat(uid) {
-        const u = dbData[uid];
-        const msgsDiv = document.getElementById('messages');
-        const plat = u.plataforma ? u.plataforma.toLowerCase() : 'undefined';
-        
-        document.getElementById('chat-header').innerText = `${u.nombre} (${plat})`;
-        
-        msgsDiv.innerHTML = '';
-        u.mensajes.forEach(m => {
-            const div = document.createElement('div');
-            let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
-            if(m.estado === 'human_reply') type = 'msg-human';
+        try {
+            const u = dbData[uid];
+            const msgsDiv = document.getElementById('messages');
+            const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
             
-            let content = m.content;
-            if(content.includes('http') || content.includes('agenda')) {
-                content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK ENVIADO]</span>');
-            }
+            document.getElementById('chat-header').innerText = `${u.nombre || 'Cliente'} (${plat})`;
             
-            const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-            div.className = `msg ${type}`;
-            div.innerHTML = `${content} <span class="msg-meta">${time}</span>`;
-            msgsDiv.appendChild(div);
-        });
-        msgsDiv.scrollTop = msgsDiv.scrollHeight;
+            msgsDiv.innerHTML = '';
+            u.mensajes.forEach(m => {
+                const div = document.createElement('div');
+                let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
+                if(m.estado === 'human_reply') type = 'msg-human';
+                
+                let content = m.content || "";
+                if(content.includes('http') || content.includes('agenda')) {
+                    content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK ENVIADO]</span>');
+                }
+                
+                const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                div.className = `msg ${type}`;
+                div.innerHTML = `${content} <span class="msg-meta">${time}</span>`;
+                msgsDiv.appendChild(div);
+            });
+            msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
-        // Mostrar Input SOLO si es Whatsapp
-        const inputArea = document.getElementById('input-area');
-        if(plat === 'whatsapp') inputArea.style.display = 'block';
-        else inputArea.style.display = 'none';
+            // Mostrar Input SOLO si es Whatsapp
+            const inputArea = document.getElementById('input-area');
+            if(plat === 'whatsapp') inputArea.style.display = 'block';
+            else inputArea.style.display = 'none';
+        } catch(e) { console.error("Error renderChat:", e); }
     }
 
     async function sendReply() {
@@ -174,10 +179,12 @@
         if(!text || !selectedUser) return;
         
         const u = dbData[selectedUser];
+        const plat = u.plataforma || 'whatsapp';
+        
         await fetch('/api/reply', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ id: selectedUser, text, platform: u.plataforma, name: u.nombre })
+            body: JSON.stringify({ id: selectedUser, text, platform: plat, name: u.nombre })
         });
         input.value = '';
         fetchStats();
@@ -185,7 +192,6 @@
 
     function handleKey(e) { if(e.key === 'Enter') sendReply(); }
 
-    // Cargar inicialmente
     fetchStats();
     setInterval(fetchStats, 3000);
 </script>
