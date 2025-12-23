@@ -24,7 +24,7 @@ export async function pensar(historial, nombre, suffix = "") {
         systemPrompt = systemPrompt.replace(/{PRODUCTO_DETECTADO}/g, productoDetectado);
 
         const messages = [
-            { role: "system", content: systemPrompt + "\n\nTABLA DE PRECIOS EXACTOS:\n" + CLINICA },
+            { role: "system", content: systemPrompt + "\n\nTABLA DE PRECIOS:\n" + CLINICA },
             ...historial.map(m => ({ role: m.role === 'zara' ? 'assistant' : 'user', content: m.content }))
         ];
 
