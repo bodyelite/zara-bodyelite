@@ -122,7 +122,12 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         if (esWeb && hasLink) {
             textoFinal += `<br><br><a href="${NEGOCIO.agenda_link}" target="_blank" style="background-color:#d4af37; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">📅 RESERVAR AQUÍ</a>`;
         } else if (!esWeb) {
-            await enviarMensajeMeta(id, textoBase, plataforma, hasLink, null);
+            // CORRECCIÓN FINAL:
+            // Si es WhatsApp, mandamos 'false' en hasLink para que NO agregue el footer (la IA ya puso el link).
+            // Si es Instagram, mandamos 'true' para que SÍ ponga la tarjeta visual.
+            const enviarFooter = (plataforma === 'instagram' && hasLink);
+            
+            await enviarMensajeMeta(id, textoBase, plataforma, enviarFooter, null);
         }
 
         return { textoFinal };
