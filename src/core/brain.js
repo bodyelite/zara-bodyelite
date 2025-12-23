@@ -9,43 +9,69 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function pensar(historial, nombre, suffix = "") {
     try {
-        const nombreReal = (nombre && nombre !== "Cliente" && nombre !== "Visitante") ? nombre : "estimada/o";
-        let systemPrompt = PROMPT_MAESTRO.replace("{NOMBRE_CLIENTE}", nombreReal);
+        const nombreReal = (nombre && nombre !== "Cliente") ? nombre : "estimada/o";
+        let script = PROMPT_MAESTRO.replace("{NOMBRE_CLIENTE}", nombreReal);
         
-        const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
-        let productoDetectado = "tratamiento";
-        let beneficio = "revitalizar tu piel";
-        let tecno = "tecnología avanzada";
+        // DETECCIÓN INTELIGENTE PARA LLENAR EL GUION
+        const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
         
-        if (ultimoMensaje.includes("pink") || ultimoMensaje.includes("face")) {
-            productoDetectado = "Pink Glow";
-            beneficio = "dar efecto piel de porcelana y brillo inmediato";
-            tecno = "Vitaminas para hidratar, Enzimas para textura y Radiofrecuencia para firmeza";
-        } else if (ultimoMensaje.includes("push") || ultimoMensaje.includes("gluteo")) {
-            productoDetectado = "Push Up";
-            beneficio = "levantar y dar forma a los glúteos";
-            tecno = "Radiofrecuencia para piel, EMS Sculptor para dar forma y HIFU para tensar";
-        } else if (ultimoMensaje.includes("lipo") || ultimoMensaje.includes("reduc")) {
-            productoDetectado = "Lipo Express";
-            beneficio = "reducir medidas y reafirmar";
-            tecno = "HIFU para quemar grasa y Prosculpt para tonificar";
+        let datos = {
+            producto: "Tratamiento",
+            plan: "General",
+            beneficio: "mejorar tu piel",
+            tecnos: "tecnología avanzada",
+            precio: "$128.800",
+            duracion: "varias semanas"
+        };
+
+        if (historialTexto.includes("pink") || historialTexto.includes("face")) {
+            datos = {
+                producto: "Pink Glow",
+                plan: "Face Ligth",
+                beneficio: "dar efecto piel de porcelana y brillo inmediato",
+                tecnos: "Vitaminas para hidratar, Enzimas para textura y Radiofrecuencia para firmeza",
+                precio: "$128.800",
+                duracion: "1 sesión multicomponente"
+            };
+        } else if (historialTexto.includes("push") || historialTexto.includes("gluteo")) {
+            datos = {
+                producto: "Push Up",
+                plan: "Push Up",
+                beneficio: "levantar y dar forma a los glúteos",
+                tecnos: "Radiofrecuencia para piel, EMS Sculptor para dar forma y HIFU para tensar",
+                precio: "$376.000",
+                duracion: "10 a 12 semanas"
+            };
+        } else if (historialTexto.includes("lipo") || historialTexto.includes("reduc") || historialTexto.includes("grasa")) {
+            datos = {
+                producto: "Lipo Express",
+                plan: "Lipo Express",
+                beneficio: "reducir medidas y reafirmar",
+                tecnos: "HIFU para quemar grasa y Prosculpt para tonificar",
+                precio: "$432.000",
+                duracion: "8 semanas"
+            };
         }
-        
-        systemPrompt = systemPrompt
-            .replace("{PRODUCTO_DETECTADO}", productoDetectado)
-            .replace("{BENEFICIO_CORTO}", beneficio)
-            .replace("{TECNOLOGIAS_BREVES}", tecno);
+
+        // REEMPLAZO VARIABLES EN EL GUION
+        script = script
+            .replace("{PRODUCTO_DETECTADO}", datos.producto)
+            .replace("{BENEFICIO}", datos.beneficio)
+            .replace("{TECNOLOGIAS}", datos.tecnos)
+            .replace("{PLAN_NOMBRE}", datos.plan)
+            .replace("{PRECIO}", datos.precio)
+            .replace("{DURACION}", datos.duracion);
 
         const messages = [
-            { role: "system", content: systemPrompt + "\n\nDATOS:\n" + CLINICA },
+            { role: "system", content: script },
             ...historial.map(m => ({ role: m.role === 'zara' ? 'assistant' : 'user', content: m.content }))
         ];
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o", 
+            model: "gpt-4o",
             messages: messages,
-            temperature: 0.0, 
-            max_tokens: 300
+            temperature: 0.0, // TEMPERATURA 0 PARA QUE NO INVENTE NADA
+            max_tokens: 250
         });
 
         return completion.choices[0].message.content + " " + suffix;

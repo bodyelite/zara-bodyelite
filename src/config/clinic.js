@@ -1,24 +1,21 @@
 export const CLINICA = `
-[VADEMÉCUM EXACTO PARA ZARA]
+[DATOS PARA GUION DE VENTAS]
 
-1. PLAN FACE LIGTH (Pink Glow): $128.800
-   - Duración: 1 Sesión Multicomponente.
-   - Mix: Vitaminas + Enzimas + RF.
+PRODUCTO: PINK GLOW (ROSTRO)
+- Plan: FACE LIGTH
+- Precio: $128.800
+- Duración: "1 sesión multicomponente (aprox 1 semana)"
+- Tecnologías: "Vitaminas para hidratar, Enzimas para textura y Radiofrecuencia para firmeza"
 
-2. PLAN FULL FACE (Rejuvenecimiento): $584.000
-   - Duración: 2 a 3 Semanas.
-   - Mix: HIFU + Botox + Pink Glow.
+PRODUCTO: PUSH UP (GLÚTEOS)
+- Plan: PUSH UP
+- Precio: $376.000
+- Duración: "aprox 10 a 12 semanas"
+- Tecnologías: "Radiofrecuencia para piel, EMS Sculptor para dar forma y HIFU para tensar"
 
-3. PLAN PUSH UP (Glúteos): $376.000
-   - Duración: 10 a 12 semanas.
-   - Mix: HIFU + Prosculpt + Radiofrecuencia.
-
-4. PLAN LIPO EXPRESS (Reductivo): $432.000
-   - Duración: 8 semanas.
-   - Mix: HIFU + Prosculpt + Radiofrecuencia.
-
-5. PLAN BODY TENSOR (Firmeza Base): $232.000
-   - Duración: 6 semanas.
-
-NOTA: La Evaluación con Asistencia IA es GRATIS y ajusta la duración exacta.
+PRODUCTO: LIPO / REDUCTIVO
+- Plan: LIPO EXPRESS
+- Precio: $432.000
+- Duración: "aprox 8 semanas"
+- Tecnologías: "HIFU para quemar grasa y Prosculpt para tonificar"
 `;
