@@ -79,23 +79,28 @@
             if(selectedUser && dbData[selectedUser]) {
                 const u = dbData[selectedUser];
                 const msgsDiv = document.getElementById('messages');
+                // Renderizar solo si hay cambios en la cantidad de mensajes para no interrumpir
                 if(msgsDiv.children.length !== u.mensajes.length) renderChat(selectedUser);
             }
-        } catch(e) { console.error("..."); }
+        } catch(e) { console.error("Conexión..."); }
     }
 
     function renderList() {
         const list = document.getElementById('user-list');
         list.innerHTML = '';
+        
+        // Ordenar seguro
         const sorted = Object.keys(dbData).sort((a,b) => {
-            const tA = dbData[a].mensajes[dbData[a].mensajes.length-1]?.timestamp || 0;
-            const tB = dbData[b].mensajes[dbData[b].mensajes.length-1]?.timestamp || 0;
+            const tA = dbData[a].mensajes && dbData[a].mensajes.length > 0 ? dbData[a].mensajes[dbData[a].mensajes.length-1].timestamp : 0;
+            const tB = dbData[b].mensajes && dbData[b].mensajes.length > 0 ? dbData[b].mensajes[dbData[b].mensajes.length-1].timestamp : 0;
             return tB - tA;
         });
 
         sorted.forEach(uid => {
             const u = dbData[uid];
+            // BACKUP: Si la plataforma viene nula, la tratamos como whatsapp en el frontend también
             const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
+            
             if(currentFilter !== 'ALL' && plat !== currentFilter) return;
 
             const div = document.createElement('div');
@@ -123,22 +128,24 @@
         document.getElementById('chat-header').innerHTML = `<span>${u.nombre} (${plat})</span> <span>${zaraState}</span>`;
         msgsDiv.innerHTML = '';
         
-        u.mensajes.forEach(m => {
-            const div = document.createElement('div');
-            let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
-            if(m.estado === 'human_reply') type = 'msg-human';
-            if(m.role === 'system') type = 'msg-sys';
-            
-            let content = m.content || "";
-            if(content.includes('http')) content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK]</span>');
-            
-            const date = m.timestamp ? new Date(m.timestamp) : new Date();
-            const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            div.className = `msg ${type}`;
-            div.innerHTML = `${content} <span class="msg-meta">${dateStr}</span>`;
-            msgsDiv.appendChild(div);
-        });
+        if(u.mensajes) {
+            u.mensajes.forEach(m => {
+                const div = document.createElement('div');
+                let type = m.role === 'user' ? 'msg-user' : 'msg-zara';
+                if(m.estado === 'human_reply') type = 'msg-human';
+                if(m.role === 'system') type = 'msg-sys';
+                
+                let content = m.content || "";
+                if(content.includes('http')) content = content.replace(/https?:\/\/[^\s]+/g, '<span class="link-placeholder">🔗 [LINK]</span>');
+                
+                const date = m.timestamp ? new Date(m.timestamp) : new Date();
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                div.className = `msg ${type}`;
+                div.innerHTML = `${content} <span class="msg-meta">${dateStr}</span>`;
+                msgsDiv.appendChild(div);
+            });
+        }
         msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
         const inputArea = document.getElementById('input-area');
