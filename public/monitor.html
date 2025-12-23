@@ -79,17 +79,14 @@
             if(selectedUser && dbData[selectedUser]) {
                 const u = dbData[selectedUser];
                 const msgsDiv = document.getElementById('messages');
-                // Renderizar solo si hay cambios en la cantidad de mensajes para no interrumpir
                 if(msgsDiv.children.length !== u.mensajes.length) renderChat(selectedUser);
             }
-        } catch(e) { console.error("Conexión..."); }
+        } catch(e) { console.error("..."); }
     }
 
     function renderList() {
         const list = document.getElementById('user-list');
         list.innerHTML = '';
-        
-        // Ordenar seguro
         const sorted = Object.keys(dbData).sort((a,b) => {
             const tA = dbData[a].mensajes && dbData[a].mensajes.length > 0 ? dbData[a].mensajes[dbData[a].mensajes.length-1].timestamp : 0;
             const tB = dbData[b].mensajes && dbData[b].mensajes.length > 0 ? dbData[b].mensajes[dbData[b].mensajes.length-1].timestamp : 0;
@@ -98,7 +95,7 @@
 
         sorted.forEach(uid => {
             const u = dbData[uid];
-            // BACKUP: Si la plataforma viene nula, la tratamos como whatsapp en el frontend también
+            // SI VIENE SIN PLATAFORMA, ASUMIR WHATSAPP
             const plat = u.plataforma ? u.plataforma.toLowerCase() : 'whatsapp';
             
             if(currentFilter !== 'ALL' && plat !== currentFilter) return;
