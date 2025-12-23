@@ -20,9 +20,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../public')));
 
 const processedIds = new Set();
+const BASE_URL = process.env.RENDER_EXTERNAL_URL || "https://zara-bodyelite-1.onrender.com";
 
 app.get('/monitor', (req, res) => res.sendFile(path.join(__dirname, '../public/monitor.html')));
 app.get('/api/stats', (req, res) => res.json(leerDB()));
+
+app.get('/agenda', (req, res) => {
+    res.send(`<!DOCTYPE html><html lang="es"><head><meta property="og:title" content="📅 Agenda Online Body Elite" /><meta property="og:description" content="Reserva tu Evaluación Gratuita con IA aquí." /><meta property="og:image" content="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=600&q=80" /><meta property="og:url" content="${NEGOCIO.agenda_link}" /><script>window.location.href = "${NEGOCIO.agenda_link}";</script></head><body>Redirigiendo...</body></html>`);
+});
+
 app.get("/webhook", (req, res) => {
     if (req.query["hub.verify_token"] === process.env.VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
     else res.sendStatus(403);
@@ -38,9 +44,11 @@ app.post("/webhook", async (req, res) => {
                 const msg = changes.messages[0];
                 if (processedIds.has(msg.id)) return;
                 processedIds.add(msg.id);
+                
                 const senderId = msg.from;
                 const text = msg.text?.body;
-                const profileName = changes.contacts?.[0]?.profile?.name || "Cliente WSP";
+                const profileName = changes.contacts?.[0]?.profile?.name || "Cliente";
+                
                 if(text) await procesarNucleo(senderId, profileName, text, "whatsapp");
             }
         } else if (body.object === "instagram") {
@@ -65,26 +73,16 @@ app.post("/webchat", async (req, res) => {
         const { message, userId } = req.body;
         const uid = userId || 'web_guest_session';
         let nombreWeb = "Visitante";
-        if (message.length < 20 && !message.toLowerCase().includes("info") && !message.toLowerCase().includes("hola")) {
-            nombreWeb = message;
-        }
-
         const resultado = await procesarNucleo(uid, nombreWeb, message, "web", true);
-        
-        // RESPUESTA + BOTÓN HTML INYECTADO
-        res.json({
-            text: resultado.textoFinal,
-            reply: resultado.textoFinal
-        });
-    } catch (e) { 
-        res.status(500).json({ text: "Dame un segundo..." }); 
-    }
+        res.json({ text: resultado.textoFinal, reply: resultado.textoFinal });
+    } catch (e) { res.status(500).json({ text: "Dame un segundo..." }); }
 });
 
 async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = false) {
     try {
         const historial = guardarMensaje(id, nombre, textoUsuario, "user", plataforma);
         const suffix = plataforma === "instagram" ? "(IG)" : "";
+        
         const respuestaRaw = await pensar(historial, nombre, suffix);
         
         const hasLink = respuestaRaw.includes("{LINK}");
@@ -99,17 +97,15 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         let textoFinal = textoBase;
 
         if (esWeb && hasLink) {
-            // WEB: Botón HTML
             textoFinal += `<br><br><a href="${NEGOCIO.agenda_link}" target="_blank" style="background-color:#d4af37; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">📅 RESERVAR AQUÍ</a>`;
         } else if (!esWeb) {
-            await enviarMensajeMeta(id, textoBase, plataforma, hasLink);
+            const shortLink = `${BASE_URL}/agenda`;
+            await enviarMensajeMeta(id, textoBase, plataforma, hasLink, shortLink);
         }
 
         return { textoFinal };
-    } catch (e) { 
-        return { textoFinal: "Dame un segundo..." }; 
-    }
+    } catch (e) { return { textoFinal: "Dame un segundo..." }; }
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`ZARA 5.0 REBOOT PORT ${PORT}`));
+app.listen(PORT, () => console.log(`ZARA 5.0 FINAL PORT ${PORT}`));
