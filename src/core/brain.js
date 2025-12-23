@@ -20,7 +20,6 @@ export async function pensar(historial, nombre, suffix = "") {
         const datos = CLINICA[key];
         const faq = CLINICA["faq"];
 
-        // Forzamos la inyección de la URL cruda para evitar que la IA la modifique
         let script = PROMPT_MAESTRO
             .replace("{NOMBRE_CLIENTE}", nombreReal)
             .replace("{PLAN}", datos.plan)

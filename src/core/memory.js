@@ -3,20 +3,21 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// CORRECCION CRÍTICA: La ruta ahora apunta a src/data donde está montado el disco en Render
-const DB_PATH = path.join(__dirname, '../data/chat_history.json');
 
-// Asegurar que el directorio existe
-const dirPath = path.dirname(DB_PATH);
-if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
+const RENDER_DISK_PATH = '/opt/render/project/src/data';
+const LOCAL_DISK_PATH = path.join(__dirname, '../../data');
+
+const DB_DIR = fs.existsSync(RENDER_DISK_PATH) ? RENDER_DISK_PATH : LOCAL_DISK_PATH;
+const DB_PATH = path.join(DB_DIR, 'chat_history.json');
+
+if (!fs.existsSync(DB_DIR)) {
+    fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
 let db = {};
 try {
     if (fs.existsSync(DB_PATH)) {
-        const rawData = fs.readFileSync(DB_PATH, 'utf-8');
-        db = JSON.parse(rawData);
+        db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
     }
 } catch (e) {
     db = {};
