@@ -1,25 +1,24 @@
 export const CLINICA = `
-[LISTA DE PRECIOS PARA ZARA - ENFOQUE EN PLANES DE ENTRADA]
+[VADEMÉCUM EXACTO PARA ZARA]
 
-CATEGORIA ROSTRO / PINK GLOW:
-1. PLAN FACE LIGTH (Plan de Entrada): $128.800
-   (Componentes: Enzimas LFP + Pink Glow + Radiofrecuencia)
-   Uso: Ideal para quien busca "Vitaminas" o "Pink Glow".
+1. PLAN FACE LIGTH (Pink Glow): $128.800
+   - Duración: 1 Sesión Multicomponente.
+   - Mix: Vitaminas + Enzimas + RF.
 
-2. PLAN FULL FACE (Plan Premium): $584.000
-   (Componentes: HIFU + Toxina + etc.)
-   Nota: NO ofrecer de entrada. Solo si el cliente pide "lo más completo".
+2. PLAN FULL FACE (Rejuvenecimiento): $584.000
+   - Duración: 2 a 3 Semanas.
+   - Mix: HIFU + Botox + Pink Glow.
 
-CATEGORIA CUERPO:
-1. PLAN BODY TENSOR (Entrada): $232.000
-   Uso: Base para flacidez.
+3. PLAN PUSH UP (Glúteos): $376.000
+   - Duración: 10 a 12 semanas.
+   - Mix: HIFU + Prosculpt + Radiofrecuencia.
 
-2. PLAN PUSH UP (Glúteos): $376.000
-   Uso: Específico glúteos.
+4. PLAN LIPO EXPRESS (Reductivo): $432.000
+   - Duración: 8 semanas.
+   - Mix: HIFU + Prosculpt + Radiofrecuencia.
 
-3. PLAN LIPO EXPRESS: $432.000
-   Uso: Reductivo intensivo.
+5. PLAN BODY TENSOR (Firmeza Base): $232.000
+   - Duración: 6 semanas.
 
-DIFERENCIADOR:
-- Evaluación IA: GRATIS. Herramienta de ahorro para el cliente.
+NOTA: La Evaluación con Asistencia IA es GRATIS y ajusta la duración exacta.
 `;

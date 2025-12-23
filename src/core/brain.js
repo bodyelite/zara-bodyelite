@@ -13,18 +13,31 @@ export async function pensar(historial, nombre, suffix = "") {
         let systemPrompt = PROMPT_MAESTRO.replace("{NOMBRE_CLIENTE}", nombreReal);
         
         const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
-        let productoDetectado = "Tratamiento";
+        let productoDetectado = "tratamiento";
+        let beneficio = "revitalizar tu piel";
+        let tecno = "tecnología avanzada";
         
-        if (ultimoMensaje.includes("pink")) productoDetectado = "Pink Glow";
-        else if (ultimoMensaje.includes("hifu")) productoDetectado = "HIFU Facial";
-        else if (ultimoMensaje.includes("lipo") || ultimoMensaje.includes("express")) productoDetectado = "Lipo Express";
-        else if (ultimoMensaje.includes("gluteo") || ultimoMensaje.includes("push")) productoDetectado = "Push Up";
-        else if (ultimoMensaje.includes("cuerpo")) productoDetectado = "Corporal";
+        if (ultimoMensaje.includes("pink") || ultimoMensaje.includes("face")) {
+            productoDetectado = "Pink Glow";
+            beneficio = "dar efecto piel de porcelana y brillo inmediato";
+            tecno = "Vitaminas para hidratar, Enzimas para textura y Radiofrecuencia para firmeza";
+        } else if (ultimoMensaje.includes("push") || ultimoMensaje.includes("gluteo")) {
+            productoDetectado = "Push Up";
+            beneficio = "levantar y dar forma a los glúteos";
+            tecno = "Radiofrecuencia para piel, EMS Sculptor para dar forma y HIFU para tensar";
+        } else if (ultimoMensaje.includes("lipo") || ultimoMensaje.includes("reduc")) {
+            productoDetectado = "Lipo Express";
+            beneficio = "reducir medidas y reafirmar";
+            tecno = "HIFU para quemar grasa y Prosculpt para tonificar";
+        }
         
-        systemPrompt = systemPrompt.replace(/{PRODUCTO_DETECTADO}/g, productoDetectado);
+        systemPrompt = systemPrompt
+            .replace("{PRODUCTO_DETECTADO}", productoDetectado)
+            .replace("{BENEFICIO_CORTO}", beneficio)
+            .replace("{TECNOLOGIAS_BREVES}", tecno);
 
         const messages = [
-            { role: "system", content: systemPrompt + "\n\nDATOS TÉCNICOS:\n" + CLINICA },
+            { role: "system", content: systemPrompt + "\n\nDATOS:\n" + CLINICA },
             ...historial.map(m => ({ role: m.role === 'zara' ? 'assistant' : 'user', content: m.content }))
         ];
 
@@ -32,11 +45,11 @@ export async function pensar(historial, nombre, suffix = "") {
             model: "gpt-4o", 
             messages: messages,
             temperature: 0.0, 
-            max_tokens: 350
+            max_tokens: 300
         });
 
         return completion.choices[0].message.content + " " + suffix;
     } catch (error) {
-        return "¡Hola! Estoy consultando la agenda, dame un segundo... 📅";
+        return "Dame un segundo... 📅";
     }
 }
