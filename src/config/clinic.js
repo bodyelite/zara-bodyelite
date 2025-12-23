@@ -19,5 +19,9 @@ export const CLINICA = {
         duracion: "8 semanas",
         tecnologias: "HIFU para quemar grasa, Prosculpt para tonificar y Radiofrecuencia",
         beneficio: "reducir medidas y reafirmar"
+    },
+    "faq": {
+        direccion: "La evaluación es 100% presencial en nuestra clínica ubicada en Av. Las Perdices 2990, Peñalolén (Strip Center Las Pircas).",
+        detalle_eval: "La evaluación dura 30 minutos. Analizamos tu cuerpo y rostro con tecnologías de Inteligencia Artificial para construir un diagnóstico certero y ajustado a tu necesidad."
     }
 };

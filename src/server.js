@@ -25,8 +25,23 @@ const BASE_URL = process.env.RENDER_EXTERNAL_URL || "https://zara-bodyelite-1.on
 app.get('/monitor', (req, res) => res.sendFile(path.join(__dirname, '../public/monitor.html')));
 app.get('/api/stats', (req, res) => res.json(leerDB()));
 
+app.post('/api/reply', async (req, res) => {
+    try {
+        const { id, text, platform, name } = req.body;
+        if (!text || !id) return res.status(400).send("Faltan datos");
+        
+        await enviarMensajeMeta(id, text, platform, false, null);
+        guardarMensaje(id, name || "Cliente", text, "zara", platform, "human_reply");
+        
+        res.json({ status: "ok" });
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("Error enviando mensaje manual");
+    }
+});
+
 app.get('/agenda', (req, res) => {
-    res.send(`<!DOCTYPE html><html lang="es"><head><meta property="og:title" content="📅 Agenda Online Body Elite" /><meta property="og:description" content="Reserva tu Evaluación Gratuita con IA aquí." /><meta property="og:image" content="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=600&q=80" /><meta property="og:url" content="${NEGOCIO.agenda_link}" /><script>window.location.href = "${NEGOCIO.agenda_link}";</script></head><body>Redirigiendo...</body></html>`);
+    res.send(`<!DOCTYPE html><html lang="es"><head><meta property="og:title" content="📅 Agenda Online Body Elite" /><meta property="og:description" content="Reserva tu Evaluación Presencial con IA aquí." /><meta property="og:url" content="${NEGOCIO.agenda_link}" /><script>window.location.href = "${NEGOCIO.agenda_link}";</script></head><body>Redirigiendo...</body></html>`);
 });
 
 app.get("/webhook", (req, res) => {
@@ -86,14 +101,11 @@ async function procesarNucleo(id, nombre, textoUsuario, plataforma, esWeb = fals
         const respuestaRaw = await pensar(historial, nombre, suffix);
         
         const hasLink = respuestaRaw.includes("{LINK}");
-        const notifyCall = respuestaRaw.includes("{CALL}");
-        let textoBase = respuestaRaw.replace("{LINK}", "").replace("{CALL}", "").trim();
+        let textoBase = respuestaRaw.replace("{LINK}", "").trim();
         
         const { texto, estado } = procesarEtiquetas(textoBase, id, nombre, plataforma);
         guardarMensaje(id, nombre, textoBase, "zara", plataforma, estado);
         
-        if (notifyCall) await notificarStaff(id, nombre || "Cliente", plataforma, textoUsuario);
-
         let textoFinal = textoBase;
 
         if (esWeb && hasLink) {

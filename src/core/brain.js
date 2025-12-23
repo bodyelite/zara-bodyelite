@@ -11,12 +11,14 @@ export async function pensar(historial, nombre, suffix = "") {
     try {
         const nombreReal = (nombre && nombre !== "Cliente") ? nombre : "";
         const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
+        const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
         
         let key = "pink_glow";
         if (historialTexto.includes("push") || historialTexto.includes("gluteo")) key = "push_up";
         else if (historialTexto.includes("lipo") || historialTexto.includes("reduc") || historialTexto.includes("express")) key = "lipo_express";
         
         const datos = CLINICA[key];
+        const faq = CLINICA["faq"];
 
         let script = PROMPT_MAESTRO
             .replace("{NOMBRE_CLIENTE}", nombreReal)
@@ -24,7 +26,16 @@ export async function pensar(historial, nombre, suffix = "") {
             .replace("{PRECIO}", datos.precio)
             .replace("{DURACION}", datos.duracion)
             .replace("{TECNOLOGIAS}", datos.tecnologias)
-            .replace("{BENEFICIO}", datos.beneficio);
+            .replace("{BENEFICIO}", datos.beneficio)
+            .replace("{DIRECCION}", faq.direccion)
+            .replace("{DETALLE_EVAL}", faq.detalle_eval);
+
+        // Inyectamos instrucción extra si el usuario pregunta detalles específicos para romper el bucle
+        if (ultimoMensaje.includes("donde") || ultimoMensaje.includes("como") || ultimoMensaje.includes("online") || ultimoMensaje.includes("app") || ultimoMensaje.includes("ubicacion")) {
+            script += "\n\nIMPORTANTE: El usuario está preguntando detalles de la evaluación (dónde es, cómo es, si es online). USA EL CASO A. NO USES EL GUION DE PRECIOS AHORA.";
+        } else {
+            script += "\n\nIMPORTANTE: El usuario sigue el flujo normal. USA EL CASO B (Fase que corresponda).";
+        }
 
         const messages = [
             { role: "system", content: script },
@@ -35,7 +46,7 @@ export async function pensar(historial, nombre, suffix = "") {
             model: "gpt-4o",
             messages: messages,
             temperature: 0.0,
-            max_tokens: 250
+            max_tokens: 300
         });
 
         return completion.choices[0].message.content + " " + suffix;
