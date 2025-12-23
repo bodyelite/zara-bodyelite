@@ -1,31 +1,25 @@
 export const CLINICA = `
-[LISTA OFICIAL DE PRECIOS Y TECNOLOGÍAS 2025]
+[LISTA DE PRECIOS PARA ZARA - ENFOQUE EN PLANES DE ENTRADA]
 
 CATEGORIA ROSTRO / PINK GLOW:
-
 1. PLAN FACE LIGTH (Plan de Entrada): $128.800
-   - Componentes: Enzimas LFP + Pink Glow + Radiofrecuencia.
-   - Explicación Técnica para Zara: Este es el tratamiento base. Combina la hidratación profunda del Pink Glow (vitaminas y péptidos) con Enzimas LFP para mejorar la textura superficial y Radiofrecuencia para activar colágeno y dar firmeza.
-   - Objetivo: Piel de porcelana, brillo inmediato y revitalización.
+   (Componentes: Enzimas LFP + Pink Glow + Radiofrecuencia)
+   Uso: Ideal para quien busca "Vitaminas" o "Pink Glow".
 
 2. PLAN FULL FACE (Plan Premium): $584.000
-   - Componentes: HIFU 12D + LFP + Pink Glow + Toxina + RF.
-   - Explicación Técnica: Tratamiento integral que suma levantamiento muscular (HIFU) y borrado de arrugas (Toxina) a la base del Face Ligth.
+   (Componentes: HIFU + Toxina + etc.)
+   Nota: NO ofrecer de entrada. Solo si el cliente pide "lo más completo".
 
-CATEGORIA CUERPO Y REDUCTIVOS:
-
-1. PLAN BODY TENSOR (Plan de Entrada): $232.000
-   - Componentes: HIFU 12D + Radiofrecuencia.
-   - Explicación Técnica: Enfocado 100% en firmeza y tensado de piel suelta.
+CATEGORIA CUERPO:
+1. PLAN BODY TENSOR (Entrada): $232.000
+   Uso: Base para flacidez.
 
 2. PLAN PUSH UP (Glúteos): $376.000
-   - Componentes: HIFU 12D + RF + Prosculpt.
-   - Explicación Técnica: Levanta glúteos (HIFU), mejora la piel (RF) y aumenta volumen muscular (Prosculpt).
+   Uso: Específico glúteos.
 
-3. PLAN LIPO EXPRESS (Reductivo): $432.000
-   - Componentes: HIFU 12D + RF + Prosculpt.
-   - Explicación Técnica: Destruye grasa, tensa la piel y tonifica el músculo en la misma sesión.
+3. PLAN LIPO EXPRESS: $432.000
+   Uso: Reductivo intensivo.
 
 DIFERENCIADOR:
-- Evaluación con Asistencia IA: GRATIS.
+- Evaluación IA: GRATIS. Herramienta de ahorro para el cliente.
 `;

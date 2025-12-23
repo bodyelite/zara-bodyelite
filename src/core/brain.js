@@ -24,7 +24,7 @@ export async function pensar(historial, nombre, suffix = "") {
         systemPrompt = systemPrompt.replace(/{PRODUCTO_DETECTADO}/g, productoDetectado);
 
         const messages = [
-            { role: "system", content: systemPrompt + "\n\nINFORMACIÓN TÉCNICA:\n" + CLINICA },
+            { role: "system", content: systemPrompt + "\n\nDATOS TÉCNICOS:\n" + CLINICA },
             ...historial.map(m => ({ role: m.role === 'zara' ? 'assistant' : 'user', content: m.content }))
         ];
 
@@ -37,6 +37,6 @@ export async function pensar(historial, nombre, suffix = "") {
 
         return completion.choices[0].message.content + " " + suffix;
     } catch (error) {
-        return "¡Hola! Estoy validando los planes, dame un segundo... 📅";
+        return "¡Hola! Estoy consultando la agenda, dame un segundo... 📅";
     }
 }
