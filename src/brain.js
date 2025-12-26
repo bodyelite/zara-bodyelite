@@ -28,11 +28,7 @@ export async function pensar(historial, nombreCompleto) {
         };
 
         let key = detectar(ultimoMensaje);
-        if (!key) {
-             const textoCompleto = mensajesUsuario.map(m => m.content.toLowerCase()).join(" ");
-             key = detectar(textoCompleto);
-        }
-
+        
         let systemPrompt = "";
         
         if (key) {
