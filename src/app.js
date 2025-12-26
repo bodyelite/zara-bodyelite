@@ -11,15 +11,12 @@ import { transmitir } from "./utils/stream.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- CORRECCIÓN RUTA SEGÚN TU IMAGEN (NO TOCAR RENDER) ---
-// Ruta absoluta que muestra tu configuración de Render Disk
+// RUTA SEGÚN TU CAPTURA DE RENDER
 const RENDER_DISK_PATH = "/opt/render/project/src/data/historial.json";
 const LOCAL_PATH = path.join(__dirname, "data", "historial.json");
-
-// Usamos la ruta de Render si existe la carpeta data ahí
 const DB_FILE = fs.existsSync("/opt/render/project/src/data") ? RENDER_DISK_PATH : LOCAL_PATH;
 
-// Asegurar que la carpeta exista antes de escribir
+// Asegurar carpeta
 const DB_DIR = path.dirname(DB_FILE);
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
 
@@ -56,7 +53,7 @@ setInterval(async () => {
                     const m = sesionesLocal[id][0].content.match(/\[Cliente: (.*?)\]/);
                     if (m) nom = m[1];
                 }
-                const msj = `${nom}, ¿sigues ahí? 🤔 Me quedé atenta por si te surgieron dudas.`;
+                const msj = `${nom}, ¿sigues ahí? 🤔`;
                 await sendMessage(id, msj, usuariosPlataforma[id] || "whatsapp");
                 estadosClientes[id] = 'recontactado';
                 sesionesLocal[id].push({ role: "assistant", content: msj });

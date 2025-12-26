@@ -11,7 +11,7 @@ export async function pensar(historial, nombreCompleto) {
     try {
         const nombrePila = nombreCompleto ? nombreCompleto.split(" ")[0] : "Hola";
         
-        // CORRECCIÓN CRÍTICA: Prioridad al último mensaje del usuario
+        // FILTRAR SOLO MENSAJES DE USUARIO
         const mensajesUsuario = historial.filter(m => m.role === 'user');
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         const textoCompleto = mensajesUsuario.map(m => m.content.toLowerCase()).join(" ");
@@ -23,29 +23,38 @@ export async function pensar(historial, nombreCompleto) {
             return null;
         };
 
-        let key = detectar(ultimoMensaje); // Prioridad cambio de tema
-        if (!key) key = detectar(textoCompleto); // Fallback contexto
+        let key = detectar(ultimoMensaje);
+        if (!key) key = detectar(textoCompleto);
 
         let systemPrompt = "";
         
         if (key) {
             const datos = CLINICA[key];
-            systemPrompt = PROMPT_VENTA
-                .replace(/{NOMBRE_CLIENTE}/g, nombrePila)
-                .replace(/{PLAN}/g, datos.plan)
-                .replace(/{PRECIO}/g, datos.precio)
-                .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
-                .replace(/{BENEFICIO}/g, datos.beneficio)
-                .replace(/{DIRECCION}/g, CLINICA.faq.direccion);
+            if (!datos) { // FALLBACK DE SEGURIDAD
+                key = "general";
+                systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
+            } else {
+                systemPrompt = PROMPT_VENTA
+                    .replace(/{NOMBRE_CLIENTE}/g, nombrePila)
+                    .replace(/{PLAN}/g, datos.plan)
+                    .replace(/{PRECIO}/g, datos.precio)
+                    .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
+                    .replace(/{BENEFICIO}/g, datos.beneficio)
+                    .replace(/{DIRECCION}/g, CLINICA.faq.direccion);
+            }
         } else {
             systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
         }
+
+        // LOG PARA DEBUG EN RENDER
+        console.log("CEREBRO ACTIVADO:", key);
+        console.log("PROMPT USADO:", systemPrompt.substring(0, 50) + "...");
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
             temperature: 0.1, 
-            max_tokens: 250
+            max_tokens: 200
         });
 
         return completion.choices[0].message.content;

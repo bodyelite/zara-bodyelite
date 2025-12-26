@@ -3,14 +3,15 @@ export const CLINICA = {
         plan: "Evaluación Diagnóstica",
         precio: "A evaluar",
         tecnologias: "Scanner IA",
-        beneficio: "un diagnóstico preciso"
+        beneficio: "un diagnóstico preciso",
+        duracion: "30 min"
     },
     "pink_glow": {
         plan: "Face Light (Glow)",
         precio: "$128.800",
         duracion: "1 sesión",
         tecnologias: "Vitaminas, Enzimas LFP y Radiofrecuencia",
-        beneficio: "revitalizar tu piel y eliminar arrugas finas"
+        beneficio: "eliminar arrugas finas y revitalizar la piel"
     },
     "push_up": {
         plan: "Push Up Glúteos",
