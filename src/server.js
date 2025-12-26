@@ -17,40 +17,39 @@ const MONITOR_HTML = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZARA MONITOR PRO</title>
     <style>
-        :root { --bg: #000; --sidebar: #111; --text: #fff; --accent: #00ff88; --hover: #222; }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        :root { --bg: #090909; --sidebar: #111; --text: #eee; --accent: #00ff88; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
-        .sidebar { width: 350px; background: var(--sidebar); border-right: 1px solid #333; display: flex; flex-direction: column; }
-        .header { padding: 15px; background: #000; border-bottom: 2px solid var(--accent); font-weight: 900; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
-        .status-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
+        .sidebar { width: 320px; background: var(--sidebar); border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .header { padding: 15px; border-bottom: 2px solid var(--accent); font-weight: 800; font-size: 1.1rem; letter-spacing: 1px; }
         
         .user-list { flex: 1; overflow-y: auto; }
-        .card { padding: 15px; border-bottom: 1px solid #222; display: flex; gap: 10px; cursor: pointer; transition: 0.2s; }
-        .card:hover { background: var(--hover); }
-        .card.active { background: #1a1a1a; border-left: 4px solid var(--accent); }
+        .card { padding: 15px; border-bottom: 1px solid #222; cursor: pointer; transition: 0.2s; display: flex; gap: 10px; }
+        .card:hover { background: #1a1a1a; }
+        .card.active { background: #1f1f1f; border-left: 3px solid var(--accent); }
+        .avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
-        .avatar { width: 45px; height: 45px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0; }
-        .info { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
-        .name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
-        .details { font-size: 0.8rem; color: #888; display: flex; gap: 5px; align-items: center; }
-        .preview { font-size: 0.85rem; color: #666; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .info { flex: 1; overflow: hidden; }
+        .name { font-weight: 600; font-size: 0.95rem; }
+        .preview { font-size: 0.8rem; color: #888; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .main { flex: 1; display: flex; flex-direction: column; background: #050505; }
-        .chat-header { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); font-size: 1.1rem; }
-        .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .main { flex: 1; display: flex; flex-direction: column; background: #000; }
+        .chat-head { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); }
+        .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         
-        .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
-        .msg.user { align-self: flex-start; background: #222; color: #ddd; border-bottom-left-radius: 2px; }
-        .msg.bot { align-self: flex-end; background: #003322; color: #fff; border: 1px solid #005533; border-bottom-right-radius: 2px; }
+        .msg { max-width: 70%; padding: 12px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; position: relative; }
+        .msg.user { align-self: flex-start; background: #222; border-bottom-left-radius: 2px; }
+        .msg.bot { align-self: flex-end; background: #00442a; border: 1px solid #006633; border-bottom-right-radius: 2px; color: #fff; }
+        .time { font-size: 0.65rem; color: #aaa; text-align: right; margin-top: 5px; opacity: 0.8; }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="header">ZARA LIVE <div class="status-dot"></div></div>
+        <div class="header">ZARA LIVE 🟢</div>
         <div class="user-list" id="list"></div>
     </div>
     <div class="main">
-        <div class="chat-header" id="chatTitle">Esperando actividad...</div>
+        <div class="chat-head" id="chatTitle">Esperando mensajes...</div>
         <div class="feed" id="feed"></div>
     </div>
     <script>
@@ -60,66 +59,69 @@ const MONITOR_HTML = `
         let users = {};
         let activeId = null;
 
-        fetch('/api/history').then(res => res.json()).then(data => {
+        // Cargar historial
+        fetch('/api/history').then(r => r.json()).then(data => {
             Object.keys(data).forEach(id => {
                 const hist = data[id];
                 if(hist.length > 0) {
                     let name = "Cliente";
-                    const match = hist[0].content.match(/\\[Cliente: (.*?)\\]/);
-                    if(match) name = match[1];
+                    const m = hist[0].content.match(/\\[Cliente: (.*?)\\]/);
+                    if(m) name = m[1];
                     
-                    const cleanHist = hist.map(m => ({ 
-                        role: m.role === 'assistant' ? 'bot' : 'user', 
-                        txt: m.content.replace(/\\[Cliente: .*?\\] /, '')
+                    const clean = hist.map(x => ({ 
+                        role: x.role === 'assistant' ? 'bot' : 'user', 
+                        txt: x.content.replace(/\\[Cliente: .*?\\] /, ''),
+                        time: '' // Historial antiguo no tiene hora guardada
                     }));
 
-                    users[id] = { name: name, phone: id, history: cleanHist };
-                    createCard(users[id], cleanHist[cleanHist.length-1].txt);
+                    users[id] = { name, phone: id, history: clean };
+                    createCard(users[id], clean[clean.length-1].txt);
                 }
             });
         });
 
-        const evtSource = new EventSource("/monitor-stream");
-        evtSource.onmessage = (e) => {
+        const evt = new EventSource("/monitor-stream");
+        evt.onmessage = (e) => {
             const d = JSON.parse(e.data);
-            if (d.tipo === "MENSAJE" || d.tipo === "RESPUESTA_ZARA") update(d);
-            else if (d.tipo === "RESERVA") alert("💰 NUEVA RESERVA: " + d.nombre);
+            if (d.tipo === "MENSAJE" || d.tipo === "RESPUESTA_ZARA" || d.tipo === "REACTIVACION") update(d);
         };
 
         function update(d) {
-            const id = d.telefono;
+            const id = d.telefono; // AHORA SÍ VIENE EL ID CORRECTO
+            if(!id) return;
+
             if (!users[id]) {
                 users[id] = { name: d.nombre || 'Cliente', phone: id, history: [] };
                 createCard(users[id], "...");
             }
             
-            const txt = d.tipo === "RESPUESTA_ZARA" ? d.texto : d.mensaje;
-            const role = d.tipo === "RESPUESTA_ZARA" ? 'bot' : 'user';
-            
+            const txt = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? d.texto : d.mensaje;
+            const role = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? 'bot' : 'user';
+            const time = d.timestamp || '';
+
             if(!d.restore) {
-                users[id].history.push({ role, txt });
-                if (activeId === id) renderBubble({ role, txt });
+                users[id].history.push({ role, txt, time });
+                if (activeId === id) renderBubble({ role, txt, time });
                 
                 const card = document.getElementById('c-' + id);
                 if(card) {
-                    card.querySelector('.preview').innerText = (role === 'bot' ? "🤖 " : "") + txt;
+                    card.querySelector('.preview').innerText = (role==='bot'?'🤖 ':'') + txt;
                     list.prepend(card);
                 }
             }
         }
 
-        function createCard(u, previewTxt) {
+        function createCard(u, prev) {
             if(document.getElementById('c-' + u.phone)) return;
             const div = document.createElement('div');
             div.className = 'card';
             div.id = 'c-' + u.phone;
             div.onclick = () => select(u.phone);
             div.innerHTML = \`
-                <div class="avatar">\${u.name.charAt(0)}</div>
+                <div class="avatar">\${u.name[0]}</div>
                 <div class="info">
                     <div class="name">\${u.name}</div>
-                    <div class="details">+\${u.phone}</div>
-                    <div class="preview">\${previewTxt}</div>
+                    <div class="preview">\${prev}</div>
                 </div>\`;
             list.prepend(div);
         }
@@ -130,14 +132,14 @@ const MONITOR_HTML = `
             document.getElementById('c-' + id).classList.add('active');
             chatTitle.innerText = users[id].name;
             feed.innerHTML = '';
-            users[id].history.forEach(m => renderBubble(m));
+            users[id].history.forEach(renderBubble);
             feed.scrollTop = feed.scrollHeight;
         }
 
         function renderBubble(m) {
             const d = document.createElement('div');
             d.className = 'msg ' + m.role;
-            d.innerText = m.txt;
+            d.innerHTML = m.txt + (m.time ? \`<div class="time">\${m.time}</div>\` : '');
             feed.appendChild(d);
             feed.scrollTop = feed.scrollHeight;
         }
@@ -160,7 +162,4 @@ app.post("/reservo-webhook", async (req, res) => {
   try { await procesarReserva(req.body); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
 });
 
-app.listen(PORT, () => {
-    console.log(`🟢 ZARA 6.0 LIVE en puerto ${PORT}`);
-    console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
-});
+app.listen(PORT, () => console.log(\`🟢 ZARA 6.0 LIVE \${PORT}\`));

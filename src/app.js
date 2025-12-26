@@ -29,6 +29,9 @@ function guardar() {
     try { fs.writeFileSync(DB_FILE, JSON.stringify(sesionesLocal, null, 2)); } catch (e) {}
 }
 
+// HELPER HORA
+const getHora = () => new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+
 export const metricas = { leads_wsp: new Set(), leads_ig: new Set() };
 export const ultimasRespuestas = {}; 
 export const estadosClientes = {}; 
@@ -40,6 +43,7 @@ function getPhone(txt) {
   return m ? m[0].replace(/\D/g, '') : null;
 }
 
+// --- RECORDATORIO 2 HORAS ---
 setInterval(async () => {
     const now = Date.now();
     for (const [id, last] of Object.entries(ultimasRespuestas)) {
@@ -50,12 +54,22 @@ setInterval(async () => {
                     const m = sesionesLocal[id][0].content.match(/\[Cliente: (.*?)\]/);
                     if (m) nom = m[1];
                 }
-                const msj = `${nom}, ¿sigues ahí? 🤔`;
+                
+                // TEXTO EXACTO QUE PEDISTE
+                const msj = `${nom}, me quedé pensando si había resuelto todas tus dudas... 🤔 ¿Prefieres que te llamemos para explicarte mejor?`;
+                
                 await sendMessage(id, msj, usuariosPlataforma[id] || "whatsapp");
                 estadosClientes[id] = 'recontactado';
                 sesionesLocal[id].push({ role: "assistant", content: msj });
                 guardar();
-                transmitir({ tipo: "REACTIVACION", nombre: nom, telefono: id });
+                
+                transmitir({ 
+                    tipo: "REACTIVACION", 
+                    nombre: nom, 
+                    telefono: id, 
+                    timestamp: getHora(),
+                    texto: msj 
+                });
             } catch (e) {}
         }
     }
@@ -76,7 +90,15 @@ export async function procesarEvento(entry) {
 
   if (!sesionesLocal[id]) sesionesLocal[id] = [];
 
-  transmitir({ tipo: "MENSAJE", nombre: name, telefono: id, mensaje: text || "Audio", linkFoto: `https://wa.me/${id}` });
+  // ENVIO AL MONITOR (Usuario)
+  transmitir({ 
+      tipo: "MENSAJE", 
+      nombre: name, 
+      telefono: id, 
+      mensaje: text || "Audio", 
+      linkFoto: `https://wa.me/${id}`,
+      timestamp: getHora()
+  });
 
   const now = Date.now();
   if ((now - (ultimasRespuestas[id] || 0)) < 2000) return; 
@@ -90,7 +112,7 @@ export async function procesarEvento(entry) {
           const path = await downloadFile(url, `audio_${id}.ogg`);
           text = await transcribirAudio(path); 
           fs.unlinkSync(path);
-          transmitir({ tipo: "TRANSCRIPCION", texto: text });
+          transmitir({ tipo: "TRANSCRIPCION", texto: text, telefono: id });
       }
   }
 
@@ -98,21 +120,25 @@ export async function procesarEvento(entry) {
   const low = text.toLowerCase().trim();
   if (low.includes("link") || low.includes("agenda")) estadosClientes[id] = 'agendado';
 
-  // DETECCIÓN DE TELÉFONO PARA ALERTA
   const ph = getPhone(text);
   if (ph) {
     estadosClientes[id] = 'agendado';
-    const alerta = `🚨 LEAD CONFIRMADO: ${name} - ${ph}`;
+    const alerta = `🚨 NUEVO LEAD: ${name} - ${ph}`;
     for (const n of NEGOCIO.staff_alertas) { try { await sendMessage(n, alerta); } catch(e) {} }
     
-    // CONFIRMACIÓN AL CLIENTE (FINAL DE FLUJO)
     const msjFinal = "¡Anotado! 📝 Ya le pasé tu contacto a mis compañeras. Te llamarán muy pronto. ¡Gracias por confiar en Body Elite! ✨";
     await sendMessage(id, msjFinal, platform);
     
-    // IMPORTANTE: Guardar en historial y monitor
     sesionesLocal[id].push({ role: "assistant", content: msjFinal });
     guardar();
-    transmitir({ tipo: "RESPUESTA_ZARA", nombre: "Zara", texto: msjFinal });
+    
+    transmitir({ 
+        tipo: "RESPUESTA_ZARA", 
+        nombre: "Zara", 
+        telefono: id, // ID CORRECTO
+        texto: msjFinal,
+        timestamp: getHora()
+    });
     return;
   }
 
@@ -125,8 +151,14 @@ export async function procesarEvento(entry) {
   
   await sendMessage(id, respuesta, platform);
   
-  // FIX MONITOR: ENVIAR NOMBRE "Zara"
-  transmitir({ tipo: "RESPUESTA_ZARA", nombre: "Zara", texto: respuesta });
+  // ENVIO AL MONITOR (Bot) - FIX: INCLUIR ID DEL CLIENTE
+  transmitir({ 
+      tipo: "RESPUESTA_ZARA", 
+      nombre: "Zara", 
+      telefono: id, // ESTO ARREGLA QUE APAREZCA EN EL CHAT CORRECTO
+      texto: respuesta,
+      timestamp: getHora()
+  });
   
   sesionesLocal[id].push({ role: "assistant", content: respuesta });
   guardar();
