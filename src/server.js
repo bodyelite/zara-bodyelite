@@ -15,7 +15,7 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZARA MONITOR PRO</title>
+    <title>ZARA MONITOR</title>
     <style>
         :root { --bg: #090909; --sidebar: #111; --text: #eee; --accent: #00ff88; }
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
@@ -35,7 +35,7 @@ const MONITOR_HTML = `
 
         .main { flex: 1; display: flex; flex-direction: column; background: #000; }
         .chat-head { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
-        #chatPhone { font-size: 1.2rem; background: #00442a; padding: 5px 15px; border-radius: 5px; color: #fff; }
+        #chatPhone { font-size: 1.2rem; background: #00442a; padding: 5px 15px; border-radius: 5px; color: #fff; text-decoration: none; }
         
         .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         
@@ -43,7 +43,6 @@ const MONITOR_HTML = `
         .msg.user { align-self: flex-start; background: #222; border-bottom-left-radius: 2px; }
         .msg.bot { align-self: flex-end; background: #00442a; border: 1px solid #006633; border-bottom-right-radius: 2px; color: #fff; }
         .time { font-size: 0.65rem; color: #aaa; text-align: right; margin-top: 5px; opacity: 0.8; font-family: monospace; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2px; }
-        .phone-alert { color: #ffeb3b; font-weight: bold; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -54,7 +53,7 @@ const MONITOR_HTML = `
     <div class="main">
         <div class="chat-head">
             <span id="chatTitle">Selecciona un chat</span>
-            <span id="chatPhone"></span>
+            <a id="chatPhone" href="#" target="_blank">...</a>
         </div>
         <div class="feed" id="feed"></div>
     </div>
@@ -71,12 +70,12 @@ const MONITOR_HTML = `
                 const hist = data[id];
                 if(hist.length > 0) {
                     let name = "Cliente";
-                    const m = hist[0].content.match(/\[Cliente: (.*?)\]/);
+                    const m = hist[0].content.match(/\\[Cliente: (.*?)\\]/);
                     if(m) name = m[1];
                     
                     const clean = hist.map(x => ({ 
                         role: x.role === 'assistant' ? 'bot' : 'user', 
-                        txt: x.content.replace(/\[Cliente: .*?\] /, ''),
+                        txt: x.content.replace(/\\[Cliente: .*?\\] /, ''),
                         time: x.timestamp || '' 
                     }));
 
@@ -137,8 +136,11 @@ const MONITOR_HTML = `
             activeId = id;
             document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
             document.getElementById('c-' + id).classList.add('active');
+            
             chatTitle.innerText = users[id].name;
             chatPhone.innerText = '+' + users[id].phone;
+            chatPhone.href = "https://wa.me/" + users[id].phone;
+            
             feed.innerHTML = '';
             users[id].history.forEach(renderBubble);
             feed.scrollTop = feed.scrollHeight;
@@ -147,8 +149,7 @@ const MONITOR_HTML = `
         function renderBubble(m) {
             const d = document.createElement('div');
             d.className = 'msg ' + m.role;
-            let content = m.txt;
-            d.innerHTML = content + (m.time ? \`<div class="time">\${m.time}</div>\` : '');
+            d.innerHTML = m.txt + (m.time ? \`<div class="time">\${m.time}</div>\` : '');
             feed.appendChild(d);
             feed.scrollTop = feed.scrollHeight;
         }

@@ -14,13 +14,18 @@ const __dirname = path.dirname(__filename);
 const RENDER_DISK_PATH = "/opt/render/project/src/data/historial.json";
 const LOCAL_PATH = path.join(__dirname, "data", "historial.json");
 const DB_FILE = fs.existsSync("/opt/render/project/src/data") ? RENDER_DISK_PATH : LOCAL_PATH;
+
 const DB_DIR = path.dirname(DB_FILE);
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
 
 let sesionesLocal = {};
 try {
-    if (fs.existsSync(DB_FILE)) sesionesLocal = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
-    else fs.writeFileSync(DB_FILE, JSON.stringify({}));
+    if (fs.existsSync(DB_FILE)) {
+        const data = fs.readFileSync(DB_FILE, "utf8");
+        sesionesLocal = data ? JSON.parse(data) : {};
+    } else {
+        fs.writeFileSync(DB_FILE, JSON.stringify({}));
+    }
 } catch (e) { sesionesLocal = {}; }
 
 export const getSesiones = () => sesionesLocal;
@@ -96,7 +101,8 @@ export async function procesarEvento(entry) {
       nombre: name, 
       telefono: id, 
       mensaje: text || "Audio", 
-      timestamp: ts
+      timestamp: ts,
+      linkFoto: `https://wa.me/${id}`
   });
 
   const now = Date.now();
