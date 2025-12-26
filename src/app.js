@@ -29,7 +29,6 @@ function guardar() {
     try { fs.writeFileSync(DB_FILE, JSON.stringify(sesionesLocal, null, 2)); } catch (e) {}
 }
 
-// HELPER HORA
 const getHora = () => new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
 export const metricas = { leads_wsp: new Set(), leads_ig: new Set() };
@@ -43,7 +42,6 @@ function getPhone(txt) {
   return m ? m[0].replace(/\D/g, '') : null;
 }
 
-// --- RECORDATORIO 2 HORAS ---
 setInterval(async () => {
     const now = Date.now();
     for (const [id, last] of Object.entries(ultimasRespuestas)) {
@@ -55,7 +53,6 @@ setInterval(async () => {
                     if (m) nom = m[1];
                 }
                 
-                // TEXTO EXACTO QUE PEDISTE
                 const msj = `${nom}, me quedé pensando si había resuelto todas tus dudas... 🤔 ¿Prefieres que te llamemos para explicarte mejor?`;
                 
                 await sendMessage(id, msj, usuariosPlataforma[id] || "whatsapp");
@@ -90,7 +87,6 @@ export async function procesarEvento(entry) {
 
   if (!sesionesLocal[id]) sesionesLocal[id] = [];
 
-  // ENVIO AL MONITOR (Usuario)
   transmitir({ 
       tipo: "MENSAJE", 
       nombre: name, 
@@ -135,7 +131,7 @@ export async function procesarEvento(entry) {
     transmitir({ 
         tipo: "RESPUESTA_ZARA", 
         nombre: "Zara", 
-        telefono: id, // ID CORRECTO
+        telefono: id,
         texto: msjFinal,
         timestamp: getHora()
     });
@@ -151,11 +147,10 @@ export async function procesarEvento(entry) {
   
   await sendMessage(id, respuesta, platform);
   
-  // ENVIO AL MONITOR (Bot) - FIX: INCLUIR ID DEL CLIENTE
   transmitir({ 
       tipo: "RESPUESTA_ZARA", 
       nombre: "Zara", 
-      telefono: id, // ESTO ARREGLA QUE APAREZCA EN EL CHAT CORRECTO
+      telefono: id, 
       texto: respuesta,
       timestamp: getHora()
   });
@@ -163,6 +158,7 @@ export async function procesarEvento(entry) {
   sesionesLocal[id].push({ role: "assistant", content: respuesta });
   guardar();
 }
+
 export async function procesarReserva(d) {
     if (d.status !== "CONFIRMADO") return;
     transmitir({ tipo: "RESERVA", nombre: d.clientName });

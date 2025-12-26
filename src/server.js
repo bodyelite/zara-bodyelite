@@ -59,7 +59,6 @@ const MONITOR_HTML = `
         let users = {};
         let activeId = null;
 
-        // Cargar historial
         fetch('/api/history').then(r => r.json()).then(data => {
             Object.keys(data).forEach(id => {
                 const hist = data[id];
@@ -71,7 +70,7 @@ const MONITOR_HTML = `
                     const clean = hist.map(x => ({ 
                         role: x.role === 'assistant' ? 'bot' : 'user', 
                         txt: x.content.replace(/\\[Cliente: .*?\\] /, ''),
-                        time: '' // Historial antiguo no tiene hora guardada
+                        time: ''
                     }));
 
                     users[id] = { name, phone: id, history: clean };
@@ -87,7 +86,7 @@ const MONITOR_HTML = `
         };
 
         function update(d) {
-            const id = d.telefono; // AHORA SÍ VIENE EL ID CORRECTO
+            const id = d.telefono;
             if(!id) return;
 
             if (!users[id]) {
@@ -162,4 +161,7 @@ app.post("/reservo-webhook", async (req, res) => {
   try { await procesarReserva(req.body); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
 });
 
-app.listen(PORT, () => console.log(\`🟢 ZARA 6.0 LIVE \${PORT}\`));
+app.listen(PORT, () => {
+    console.log(`🟢 ZARA 6.0 LIVE en puerto ${PORT}`);
+    console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
+});
