@@ -15,10 +15,11 @@ export async function pensar(historial, nombreCompleto) {
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         
         const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
-        const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero") || ultimoMensaje.includes("celular");
+        const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
+        const afirmacion = ultimoMensaje === "si" || ultimoMensaje.includes("si ") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno");
 
         const detectar = (txt) => {
-            if (txt.includes("facial") || txt.includes("face") || txt.includes("cara") || txt.includes("rostro") || txt.includes("piel") || txt.includes("arrugas") || txt.includes("manchas") || txt.includes("glow")) return "pink_glow";
+            if (txt.includes("facial") || txt.includes("face") || txt.includes("cara") || txt.includes("rostro") || txt.includes("piel") || txt.includes("arrugas") || txt.includes("glow")) return "pink_glow";
             if (txt.includes("push") || txt.includes("gluteo") || txt.includes("trasero") || txt.includes("cola") || txt.includes("nalga") || txt.includes("celulitis")) return "push_up";
             if (txt.includes("lipo") || txt.includes("reduc") || txt.includes("grasa") || txt.includes("guata") || txt.includes("abdomen") || txt.includes("rollitos") || txt.includes("peso")) return "lipo_express";
             if (txt.includes("depila") || txt.includes("laser") || txt.includes("vello")) return "depilacion";
@@ -26,7 +27,6 @@ export async function pensar(historial, nombreCompleto) {
         };
 
         let key = detectar(ultimoMensaje);
-
         if (!key) {
              const textoCompleto = mensajesUsuario.map(m => m.content.toLowerCase()).join(" ");
              key = detectar(textoCompleto);
@@ -42,9 +42,13 @@ export async function pensar(historial, nombreCompleto) {
                 let basePrompt = PROMPT_VENTA;
                 
                 if (pideLlamada) {
-                    basePrompt += "\n\n🚨 INSTRUCCIÓN SUPREMA: EL CLIENTE PIDIÓ LLAMADA. PIDE SU NÚMERO. NO ENVÍES EL LINK.";
+                    basePrompt += "\n\n🚨 CLIENTE PIDE LLAMADA. PIDE SU NÚMERO. NO ENVÍES EL LINK.";
                 } else if (pidePrecio) {
-                    basePrompt += "\n\n🚨 INSTRUCCIÓN: CLIENTE PIDE PRECIO. EJECUTA EL PILAR 3 (PRECIO + EVALUACIÓN IA) Y EL PILAR 4 (CIERRE DOBLE).";
+                    basePrompt += "\n\n🚨 CLIENTE PIDE PRECIO. SALTA AL PASO 3 (PRECIO + PREGUNTA IA).";
+                } else if (afirmacion) {
+                    basePrompt += "\n\n🚨 EL CLIENTE DIJO 'SÍ'. REVISA QUÉ LE PREGUNTASTE ANTES Y DALE EL SIGUIENTE PASO DEL GUION (NO TE SALTES PASOS).";
+                } else {
+                    basePrompt += "\n\n🚨 CLIENTE PIDE INFO. EMPIEZA POR EL PASO 1 (GANCHO + ¿QUIERES SABER CÓMO FUNCIONA?). NO DES PRECIO AÚN.";
                 }
 
                 systemPrompt = basePrompt
@@ -58,9 +62,7 @@ export async function pensar(historial, nombreCompleto) {
             }
         } else {
             if (pidePrecio) {
-                systemPrompt = `ERES ZARA. EL CLIENTE PIDIÓ PRECIO PERO NO SABES DE QUÉ.
-                RESPONDE CON EL PILAR 1 (INDAGACIÓN):
-                "¡Hola ${nombrePila}! 👋 Los valores dependen de lo que necesites. ¿Tu objetivo es Corporal (Rollitos/Glúteos) 🍑 o Facial ✨? Cuéntame para darte el plan exacto."`;
+                 systemPrompt = `ERES ZARA. RESPONDE SOLO ESTO: "¡Hola ${nombrePila}! 👋 Los valores dependen de tu objetivo. ¿Buscas Corporal 🍑 o Facial ✨? Cuéntame."`;
             } else {
                 systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
             }
@@ -69,8 +71,8 @@ export async function pensar(historial, nombreCompleto) {
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
-            temperature: 0.2, 
-            max_tokens: 350
+            temperature: 0.1, 
+            max_tokens: 150
         });
 
         return completion.choices[0].message.content;
