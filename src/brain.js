@@ -91,8 +91,8 @@ export async function pensar(historial, nombreCompleto) {
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: promptFinal }, ...historial],
-            temperature: 0.1, 
-            max_tokens: 200
+            temperature: 0.0, 
+            max_tokens: 85
         });
 
         return completion.choices[0].message.content;
