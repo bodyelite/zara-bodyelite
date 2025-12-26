@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Evaluación IA | Body Elite</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2068') no-repeat center center fixed; background-size: cover; height: 100vh; width: 100vw; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #z-c { position: relative; width: 100%; max-width: 450px; height: 100%; background: #fff; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        @media (min-width: 481px) { #z-c { height: 85vh; border-radius: 20px; } }
+        #z-header { background: #111827; padding: 15px; color: white; display: flex; align-items: center; gap: 15px; }
+        .z-avatar img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #22c55e; }
+        #z-b { flex: 1; background: #efeae2; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 12px 16px; border-radius: 12px; max-width: 85%; font-size: 15px; line-height: 1.5; }
+        .bot { align-self: flex-start; background: #fff; color: #111; border-top-left-radius: 0; }
+        .user { align-self: flex-end; background: #d9fdd3; color: #111; border-top-right-radius: 0; }
+        .btn-agenda { display: inline-block; margin-top: 10px; padding: 10px 20px; background: #f97316; color: white; text-decoration: none; font-weight: bold; border-radius: 25px; text-align: center; width: 100%; }
+        .input-area { background: #fff; padding: 15px; display: flex; gap: 10px; border-top: 1px solid #eee; }
+        input { flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #ddd; outline: none; background: #f9fafb; font-size: 16px; }
+        button { background: #075e54; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="z-c">
+        <div id="z-header"><div class="z-avatar"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200"></div><div><div style="font-weight:bold; font-size:16px;">Zara</div><div style="font-size:12px; opacity:0.8">Coach Body Elite</div></div></div>
+        <div id="z-b"></div>
+        <div class="input-area"><input id="z-i" type="text" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') send()"><button onclick="send()">➤</button></div>
+    </div>
+<script>
+    const API_URL = 'https://zara-bodyelite-1.onrender.com/webchat';
+    const urlParams = new URLSearchParams(window.location.search);
+    const REF = urlParams.get('ref') || null;
+    let sessionUser = localStorage.getItem('zara_id');
+    if (!sessionUser) { sessionUser = "Visitante " + Math.floor(Math.random() * 1000); localStorage.setItem('zara_id', sessionUser); }
+
+    window.onload = function() {
+        let saludo = "¡Hola! 👋 Bienvenida a Body Elite. Soy Zara, tu Coach Estética.<br><br>¿Cómo te llamas para poder ayudarte mejor? 😊";
+        if (REF) saludo = "¡Hola! 👋 Veo que te interesa el **" + REF.replace(/_/g, ' ').toUpperCase() + "**.<br><br>Soy Zara. ¿Con quién tengo el gusto? ✨";
+        setTimeout(() => addMsg(saludo, 'bot'), 600);
+    };
+
+    function formatText(text) {
+        return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="btn-agenda">$1</a>');
+    }
+
+    async function send() {
+        const inp = document.getElementById('z-i'); const txt = inp.value.trim(); if(!txt) return;
+        addMsg(txt, 'user'); inp.value = '';
+        try {
+            const loadId = 'load'+Date.now(); document.getElementById('z-b').innerHTML += `<div id="${loadId}" style="font-size:12px;color:#888;margin:5px 15px">Escribiendo...</div>`; scrollToBottom();
+            const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ message: txt, userName: sessionUser, ref: REF }) });
+            const data = await res.json();
+            document.getElementById(loadId).remove(); if (data.reply) addMsg(data.reply, 'bot');
+        } catch (e) { document.querySelector('div[id^="load"]')?.remove(); addMsg("⚠️ Error de conexión", 'bot'); }
+    }
+    function addMsg(text, type) { document.getElementById('z-b').innerHTML += `<div class="msg ${type}">${formatText(text)}</div>`; scrollToBottom(); }
+    function scrollToBottom() { const box = document.getElementById('z-b'); box.scrollTop = box.scrollHeight; }
+</script>
+</body>
+</html>
