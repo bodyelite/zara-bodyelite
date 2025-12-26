@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { procesarEvento, procesarReserva, getSesiones } from "./app.js"; 
+import { procesarEvento, procesarReserva, getSesiones, getStatus, toggleBot } from "./app.js"; 
 import { conectarCliente } from "./utils/stream.js";
 
 const app = express();
@@ -15,9 +15,9 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZARA MONITOR</title>
+    <title>ZARA MONITOR PRO</title>
     <style>
-        :root { --bg: #090909; --sidebar: #111; --text: #eee; --accent: #00ff88; }
+        :root { --bg: #090909; --sidebar: #111; --text: #eee; --accent: #00ff88; --danger: #ff4444; }
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
         .sidebar { width: 320px; background: var(--sidebar); border-right: 1px solid #333; display: flex; flex-direction: column; }
@@ -30,13 +30,21 @@ const MONITOR_HTML = `
         .avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
         .info { flex: 1; overflow: hidden; }
-        .name { font-weight: 600; font-size: 0.95rem; }
+        .name { font-weight: 600; font-size: 0.95rem; display: flex; justify-content: space-between; }
         .preview { font-size: 0.8rem; color: #888; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
+        
         .main { flex: 1; display: flex; flex-direction: column; background: #000; }
         .chat-head { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
-        #chatPhone { font-size: 1.2rem; background: #00442a; padding: 5px 15px; border-radius: 5px; color: #fff; text-decoration: none; }
         
+        .controls { display: flex; gap: 10px; align-items: center; }
+        #chatPhone { font-size: 1rem; background: #333; padding: 5px 10px; border-radius: 5px; color: #fff; text-decoration: none; }
+        
+        #toggleBtn { 
+            padding: 5px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; 
+            background: var(--accent); color: #000; transition: 0.2s;
+        }
+        #toggleBtn.off { background: var(--danger); color: #fff; }
+
         .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         
         .msg { max-width: 70%; padding: 12px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; position: relative; }
@@ -53,7 +61,10 @@ const MONITOR_HTML = `
     <div class="main">
         <div class="chat-head">
             <span id="chatTitle">Selecciona un chat</span>
-            <a id="chatPhone" href="#" target="_blank">...</a>
+            <div class="controls" id="controls" style="display:none;">
+                <a id="chatPhone" href="#" target="_blank">...</a>
+                <button id="toggleBtn" onclick="toggleCurrent()">ZARA ON</button>
+            </div>
         </div>
         <div class="feed" id="feed"></div>
     </div>
@@ -62,10 +73,20 @@ const MONITOR_HTML = `
         const feed = document.getElementById('feed');
         const chatTitle = document.getElementById('chatTitle');
         const chatPhone = document.getElementById('chatPhone');
+        const controls = document.getElementById('controls');
+        const toggleBtn = document.getElementById('toggleBtn');
+        
         let users = {};
         let activeId = null;
+        let botStatus = {};
 
-        fetch('/api/history').then(r => r.json()).then(data => {
+        Promise.all([
+            fetch('/api/history').then(r => r.json()),
+            fetch('/api/status').then(r => r.json())
+        ]).then(([data, status]) => {
+            botStatus = status;
+            
+            let sortedUsers = [];
             Object.keys(data).forEach(id => {
                 const hist = data[id];
                 if(hist.length > 0) {
@@ -78,10 +99,20 @@ const MONITOR_HTML = `
                         txt: x.content.replace(/\\[Cliente: .*?\\] /, ''),
                         time: x.timestamp || '' 
                     }));
-
-                    users[id] = { name, phone: id, history: clean };
-                    createCard(users[id], clean[clean.length-1].txt);
+                    
+                    sortedUsers.push({
+                        id: id,
+                        name: name,
+                        phone: id,
+                        history: clean,
+                        lastMsg: clean[clean.length-1]
+                    });
                 }
+            });
+
+            sortedUsers.forEach(u => {
+                users[u.id] = u;
+                createCard(u, u.lastMsg.txt);
             });
         });
 
@@ -112,7 +143,7 @@ const MONITOR_HTML = `
                 if(card) {
                     let prev = (role==='bot'?'🤖 ':'') + txt;
                     card.querySelector('.preview').innerText = prev;
-                    list.prepend(card);
+                    list.prepend(card); 
                 }
             }
         }
@@ -129,7 +160,7 @@ const MONITOR_HTML = `
                     <div class="name">\${u.name}</div>
                     <div class="preview">\${prev}</div>
                 </div>\`;
-            list.prepend(div);
+            list.prepend(div); 
         }
 
         function select(id) {
@@ -140,6 +171,9 @@ const MONITOR_HTML = `
             chatTitle.innerText = users[id].name;
             chatPhone.innerText = '+' + users[id].phone;
             chatPhone.href = "https://wa.me/" + users[id].phone;
+            controls.style.display = "flex";
+            
+            updateToggleBtn(id);
             
             feed.innerHTML = '';
             users[id].history.forEach(renderBubble);
@@ -153,6 +187,20 @@ const MONITOR_HTML = `
             feed.appendChild(d);
             feed.scrollTop = feed.scrollHeight;
         }
+        
+        function updateToggleBtn(id) {
+            const status = botStatus[id] !== false; 
+            toggleBtn.innerText = status ? "ZARA: ON 🟢" : "ZARA: OFF 🔴";
+            toggleBtn.className = status ? "" : "off";
+        }
+
+        window.toggleCurrent = async function() {
+            if(!activeId) return;
+            const res = await fetch('/api/toggle-bot?id=' + activeId, { method: 'POST' });
+            const newState = await res.json();
+            botStatus[activeId] = newState.status;
+            updateToggleBtn(activeId);
+        }
     </script>
 </body>
 </html>
@@ -160,7 +208,18 @@ const MONITOR_HTML = `
 
 app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/history", (req, res) => res.json(getSesiones()));
+app.get("/api/status", (req, res) => res.json(getStatus()));
 app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
+app.post("/api/toggle-bot", (req, res) => {
+    const id = req.query.id;
+    if(id) {
+        const s = toggleBot(id);
+        res.json({ status: s });
+    } else {
+        res.sendStatus(400);
+    }
+});
+
 app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
   else res.sendStatus(403);

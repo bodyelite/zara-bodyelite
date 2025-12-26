@@ -11,27 +11,45 @@ import { transmitir } from "./utils/stream.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const RENDER_DISK_PATH = "/opt/render/project/src/data/historial.json";
-const LOCAL_PATH = path.join(__dirname, "data", "historial.json");
-const DB_FILE = fs.existsSync("/opt/render/project/src/data") ? RENDER_DISK_PATH : LOCAL_PATH;
+const RENDER_DISK_PATH = "/opt/render/project/src/data";
+const LOCAL_PATH = path.join(__dirname, "data");
+const DB_DIR = fs.existsSync(RENDER_DISK_PATH) ? RENDER_DISK_PATH : LOCAL_PATH;
 
-const DB_DIR = path.dirname(DB_FILE);
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+
+const HISTORY_FILE = path.join(DB_DIR, "historial.json");
+const STATUS_FILE = path.join(DB_DIR, "status.json");
 
 let sesionesLocal = {};
 try {
-    if (fs.existsSync(DB_FILE)) {
-        const data = fs.readFileSync(DB_FILE, "utf8");
-        sesionesLocal = data ? JSON.parse(data) : {};
-    } else {
-        fs.writeFileSync(DB_FILE, JSON.stringify({}));
+    if (fs.existsSync(HISTORY_FILE)) {
+        sesionesLocal = JSON.parse(fs.readFileSync(HISTORY_FILE, "utf8"));
     }
 } catch (e) { sesionesLocal = {}; }
 
+let botStatus = {};
+try {
+    if (fs.existsSync(STATUS_FILE)) {
+        botStatus = JSON.parse(fs.readFileSync(STATUS_FILE, "utf8"));
+    }
+} catch (e) { botStatus = {}; }
+
 export const getSesiones = () => sesionesLocal;
+export const getStatus = () => botStatus;
 
 function guardar() {
-    try { fs.writeFileSync(DB_FILE, JSON.stringify(sesionesLocal, null, 2)); } catch (e) {}
+    try { fs.writeFileSync(HISTORY_FILE, JSON.stringify(sesionesLocal, null, 2)); } catch (e) {}
+}
+
+function guardarStatus() {
+    try { fs.writeFileSync(STATUS_FILE, JSON.stringify(botStatus, null, 2)); } catch (e) {}
+}
+
+export function toggleBot(phone) {
+    const current = botStatus[phone] !== false; 
+    botStatus[phone] = !current;
+    guardarStatus();
+    return botStatus[phone];
 }
 
 const getFechaHora = () => new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -50,6 +68,8 @@ function getPhone(txt) {
 setInterval(async () => {
     const now = Date.now();
     for (const [id, last] of Object.entries(ultimasRespuestas)) {
+        if (botStatus[id] === false) continue;
+
         if ((now - last > 7200000) && estadosClientes[id] === 'activo') { 
             try {
                 let nom = "Hola";
@@ -104,6 +124,12 @@ export async function procesarEvento(entry) {
       timestamp: ts,
       linkFoto: `https://wa.me/${id}`
   });
+
+  if (botStatus[id] === false) {
+      sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ` + (text || "Audio"), timestamp: ts });
+      guardar();
+      return;
+  }
 
   const now = Date.now();
   if ((now - (ultimasRespuestas[id] || 0)) < 2000) return; 
