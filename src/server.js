@@ -15,13 +15,12 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZARA MONITOR 9.1</title>
+    <title>ZARA MONITOR 9.2</title>
     <style>
         :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --bubble-user: #222; --bubble-bot: #003322; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
-        /* SIDEBAR */
         .sidebar { width: 360px; background: var(--sidebar); border-right: 1px solid #222; display: flex; flex-direction: column; z-index: 20; }
         .header { padding: 20px; border-bottom: 2px solid var(--accent); font-weight: 900; font-size: 1.3rem; letter-spacing: 1px; background: #000; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
         .live-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse 1.5s infinite; }
@@ -40,7 +39,6 @@ const MONITOR_HTML = `
         .time-ago { font-size: 0.8rem; color: var(--accent); font-family: monospace; }
         .preview { font-size: 0.9rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* MAIN CHAT */
         .main { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; width: 100%; }
         .chat-head { padding: 15px; border-bottom: 1px solid #222; background: #0a0a0a; display: flex; justify-content: space-between; align-items: center; height: 70px; }
         
@@ -58,13 +56,11 @@ const MONITOR_HTML = `
         .msg.bot { align-self: flex-end; background: var(--bubble-bot); color: #fff; border: 1px solid #005533; border-bottom-right-radius: 2px; }
         .time { font-size: 0.7rem; color: rgba(255,255,255,0.4); text-align: right; margin-top: 5px; }
 
-        /* INPUT AREA */
         .input-area { padding: 15px; background: #0a0a0a; border-top: 1px solid #222; display: flex; gap: 10px; align-items: flex-end; }
         textarea { flex: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; font-size: 1rem; resize: none; height: 50px; outline: none; }
         textarea:focus { border-color: var(--accent); }
         .send-btn { width: 50px; height: 50px; background: var(--accent); border: none; border-radius: 8px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* MOBILE MODE */
         @media (max-width: 768px) {
             .sidebar { width: 100%; position: absolute; height: 100%; transition: transform 0.3s ease; }
             .sidebar.hidden { transform: translateX(-100%); }
@@ -76,7 +72,7 @@ const MONITOR_HTML = `
 </head>
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="header">ZARA 9.1 <div class="live-dot"></div></div>
+        <div class="header">ZARA 9.2 <div class="live-dot"></div></div>
         <div class="user-list" id="list"></div>
     </div>
     
@@ -118,13 +114,10 @@ const MONITOR_HTML = `
         let activeId = null;
         let botStatus = {};
 
-        // PARSER MEJORADO PARA: "26/12, 06:47 p. m."
         function getTimestamp(timeStr) {
             if (!timeStr) return 0;
             try {
-                // Limpieza de caracteres invisibles y espacios extra
                 let cleanStr = timeStr.replace(/\u00A0/g, ' ').trim();
-                
                 const parts = cleanStr.split(','); 
                 if (parts.length < 2) return 0;
 
@@ -133,15 +126,10 @@ const MONITOR_HTML = `
                 const month = parseInt(dateParts[1]) - 1; 
                 
                 let timeRaw = parts[1].trim(); 
-                
-                // Normalizar AM/PM
                 let isPM = timeRaw.toLowerCase().includes("p. m.") || timeRaw.toLowerCase().includes("pm");
                 let isAM = timeRaw.toLowerCase().includes("a. m.") || timeRaw.toLowerCase().includes("am");
                 
-                // Limpiar texto de hora
-                let timeClean = timeRaw.replace(/[a-z\.\s]/gi, ''); // Quita letras, puntos y espacios
-                
-                // Si timeClean quedó como "06:47", separamos
+                let timeClean = timeRaw.replace(/[a-z\.\s]/gi, ''); 
                 let hourPart = timeClean.substring(0, timeClean.indexOf(':'));
                 let minPart = timeClean.substring(timeClean.indexOf(':') + 1);
 
@@ -152,7 +140,6 @@ const MONITOR_HTML = `
                 if (isAM && hour === 12) hour = 0;
 
                 const now = new Date();
-                // Asumimos año actual. Si el mes del mensaje es mayor al actual, podría ser año pasado, pero simplificamos.
                 const d = new Date(now.getFullYear(), month, day, hour, min);
                 return d.getTime();
             } catch (e) { return 0; }
@@ -191,7 +178,6 @@ const MONITOR_HTML = `
                 }
             });
 
-            // ORDENAR: Mayor timestamp primero
             sortedUsers.sort((a, b) => b.sortTime - a.sortTime);
 
             sortedUsers.forEach(u => {
@@ -228,7 +214,6 @@ const MONITOR_HTML = `
                     let prev = (role==='bot'?'🤖 ':'') + txt;
                     card.querySelector('.preview').innerText = prev;
                     
-                    // Actualizar hora y mover al inicio
                     let timeShow = time.includes(',') ? time.split(',')[1] : time;
                     card.querySelector('.time-ago').innerText = timeShow;
                     list.prepend(card);
@@ -324,3 +309,41 @@ const MONITOR_HTML = `
     </script>
 </body>
 </html>
+`;
+
+app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
+app.get("/api/history", (req, res) => res.json(getSesiones()));
+app.get("/api/status", (req, res) => res.json(getStatus()));
+app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
+
+app.post("/api/toggle-bot", (req, res) => {
+    const id = req.query.id;
+    if(id) {
+        const s = toggleBot(id);
+        res.json({ status: s });
+    } else res.sendStatus(400);
+});
+
+app.post("/api/manual-msg", async (req, res) => {
+    const { phone, text } = req.body;
+    if(phone && text) {
+        const ok = await enviarMensajeManual(phone, text);
+        res.sendStatus(ok ? 200 : 500);
+    } else res.sendStatus(400);
+});
+
+app.get("/webhook", (req, res) => {
+  if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
+  else res.sendStatus(403);
+});
+app.post("/webhook", async (req, res) => {
+  try { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
+});
+app.post("/reservo-webhook", async (req, res) => {
+  try { await procesarReserva(req.body); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
+});
+
+app.listen(PORT, () => {
+    console.log(`🟢 ZARA 9.2 CONTROL TOTAL en puerto ${PORT}`);
+    console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
+});
