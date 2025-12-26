@@ -1,6 +1,9 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
-import { PROMPT_VENTA, PROMPT_TRIAGE } from './config/persona.js';
+import { 
+    PROMPT_TRIAGE, PASO_1_GANCHO, PASO_2_TECNOLOGIA, 
+    PASO_3_PRECIO, PASO_4_CIERRE, PASO_MIX_ESTRATEGA, RESPUESTA_LLAMADA 
+} from './config/persona.js';
 import { CLINICA } from './config/clinic.js';
 import { NEGOCIO } from './config/business.js';
 
@@ -11,21 +14,22 @@ export async function pensar(historial, nombreCompleto) {
     try {
         const nombrePila = nombreCompleto ? nombreCompleto.split(" ")[0] : "Hola";
         
-        // SOLO MIRAMOS EL ÚLTIMO MENSAJE
+        // 1. ANÁLISIS DEL ÚLTIMO MENSAJE
         const mensajesUsuario = historial.filter(m => m.role === 'user');
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         
-        // MAPA DE CONTEXTO
+        // DETECTORES DE INTENCIÓN
         const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
-        const preguntaComoFunciona = ultimoMensaje.includes("como") || ultimoMensaje.includes("funciona") || ultimoMensaje.includes("consiste") || ultimoMensaje.includes("que es") || ultimoMensaje.includes("tecnologia");
-        const respuestaEvaluacion = ultimoMensaje.includes("no") || ultimoMensaje.includes("si") || ultimoMensaje.includes("nunca") || ultimoMensaje.includes("evalua");
         const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
-
-        // DETECCIÓN MIXTO
+        const preguntaComo = ultimoMensaje.includes("como") || ultimoMensaje.includes("funciona") || ultimoMensaje.includes("consiste") || ultimoMensaje.includes("que es") || ultimoMensaje.includes("tecnologia");
+        const respuestaCierre = ultimoMensaje.includes("si") || ultimoMensaje.includes("no") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok");
+        
+        // DETECCIÓN DE MIX (Conflicto)
         const mencionaCuerpo = ultimoMensaje.includes("lipo") || ultimoMensaje.includes("reduc") || ultimoMensaje.includes("grasa") || ultimoMensaje.includes("rollito");
         const mencionaGluteo = ultimoMensaje.includes("push") || ultimoMensaje.includes("gluteo") || ultimoMensaje.includes("trasero");
         const esMix = mencionaCuerpo && mencionaGluteo;
 
+        // SELECCIÓN DE PLAN
         const detectar = (txt) => {
             if (txt.includes("facial") || txt.includes("face") || txt.includes("rostro")) return "pink_glow";
             if (txt.includes("push") || txt.includes("gluteo") || txt.includes("cola")) return "push_up";
@@ -33,53 +37,52 @@ export async function pensar(historial, nombreCompleto) {
             return null;
         };
 
-        let key = esMix ? "lipo_express" : detectar(ultimoMensaje); // Si es mix, usamos base Lipo pero el Prompt maneja el texto.
-        
-        // Si no hay key en el último mensaje, intentamos recuperar del historial reciente
+        // Buscamos tema en el último mensaje, o en el penúltimo si el último fue un "sí/no/precio"
+        let key = esMix ? "lipo_express" : detectar(ultimoMensaje);
         if (!key && mensajesUsuario.length > 1) {
-             const penultimo = mensajesUsuario[mensajesUsuario.length - 2].content.toLowerCase();
-             key = detectar(penultimo);
+             key = detectar(mensajesUsuario[mensajesUsuario.length - 2].content.toLowerCase());
         }
 
-        let systemPrompt = "";
-        
-        if (key) {
-            const datos = CLINICA[key];
-            let basePrompt = PROMPT_VENTA;
-            
-            // INSTRUCCIONES DE NAVEGACIÓN DE PASOS
-            if (pideLlamada) {
-                basePrompt += "\n\n🚨 CLIENTE PIDE LLAMADA. RESPONDE: '¡Claro! Déjame tu número 👇 y te llamamos ya.'";
-            } else if (pidePrecio) {
-                basePrompt += "\n\n🚨 CLIENTE ESTÁ EN PASO 3 (PRECIO). RESPONDE CON EL SCRIPT DEL PASO 3 EXACTO.";
-            } else if (preguntaComoFunciona) {
-                basePrompt += "\n\n🚨 CLIENTE ESTÁ EN PASO 2 (CÓMO FUNCIONA). RESPONDE CON EL SCRIPT DEL PASO 2 EXACTO. NO DES PRECIO AÚN.";
-            } else if (respuestaEvaluacion && historial.length > 2) { 
-                // Asumimos que si responde sí/no y ya hablamos, estamos en el cierre
-                basePrompt += "\n\n🚨 CLIENTE RESPONDIÓ SOBRE LA EVALUACIÓN. VE AL PASO 4 (CIERRE).";
-            } else if (esMix) {
-                basePrompt += "\n\n🚨 CLIENTE PIDE MIX. USA EL SCRIPT DE 'CASO ESPECIAL MIXTO - PASO 1'.";
-            } else {
-                // Por defecto, si pide info o saluda con intención
-                basePrompt += "\n\n🚨 INICIO DE VENTA. USA EL SCRIPT DEL PASO 1 (GANCHO).";
-            }
+        let promptFinal = "";
 
-            systemPrompt = basePrompt
-                .replace(/{PLAN}/g, datos.plan)
-                .replace(/{PRECIO}/g, datos.precio)
-                .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
-                .replace(/{BENEFICIO}/g, datos.beneficio)
-                .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
+        // LÓGICA DE SELECCIÓN DE PASO (STATE MACHINE)
+        if (pideLlamada) {
+            promptFinal = RESPUESTA_LLAMADA;
+        } else if (esMix) {
+            promptFinal = PASO_MIX_ESTRATEGA;
+        } else if (!key) {
+            promptFinal = PROMPT_TRIAGE; // Si no sé de qué hablamos, pregunto.
         } else {
-            // Si no hay tema, TRIAGE
-            systemPrompt = PROMPT_TRIAGE;
+            // Ya tenemos un plan (key), ahora elegimos el PASO
+            if (pidePrecio) {
+                promptFinal = PASO_3_PRECIO;
+            } else if (preguntaComo) {
+                promptFinal = PASO_2_TECNOLOGIA;
+            } else if (respuestaCierre && historial.length >= 4) {
+                // Si dice sí/no y ya hemos hablado un poco, es cierre
+                promptFinal = PASO_4_CIERRE;
+            } else {
+                // Por defecto, empezamos
+                promptFinal = PASO_1_GANCHO;
+            }
+        }
+
+        // INYECCIÓN DE DATOS AL PROMPT ELEGIDO
+        if (key && CLINICA[key]) {
+            const d = CLINICA[key];
+            promptFinal = promptFinal
+                .replace(/{PLAN}/g, d.plan)
+                .replace(/{BENEFICIO}/g, d.beneficio)
+                .replace(/{TECNOLOGIAS}/g, d.tecnologias)
+                .replace(/{PRECIO}/g, d.precio)
+                .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
         }
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
-            messages: [{ role: "system", content: systemPrompt }, ...historial],
+            messages: [{ role: "system", content: promptFinal }, ...historial], // AQUÍ ESTÁ EL TRUCO: Solo le pasamos el prompt de ese paso específico
             temperature: 0.1, 
-            max_tokens: 150
+            max_tokens: 200
         });
 
         return completion.choices[0].message.content;
