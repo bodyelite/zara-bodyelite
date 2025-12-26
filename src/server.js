@@ -9,14 +9,14 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
 app.use(bodyParser.json());
 
-// HTML DEL MONITOR "BONITO" RESTAURADO
-const MONITOR_HTML = \`
+// --- MONITOR VISUAL (RESTAURADO) ---
+const MONITOR_HTML = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZARA 6.0 LIVE</title>
+    <title>ZARA MONITOR PRO</title>
     <style>
         :root { --bg: #000; --sidebar: #111; --text: #fff; --accent: #00ff88; --hover: #222; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
@@ -34,7 +34,6 @@ const MONITOR_HTML = \`
         .info { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
         .name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
         .details { font-size: 0.8rem; color: #888; display: flex; gap: 5px; align-items: center; }
-        .btn-foto { color: var(--accent); text-decoration: none; border: 1px solid #333; padding: 1px 5px; border-radius: 4px; font-size: 0.7rem; }
         .preview { font-size: 0.85rem; color: #666; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .main { flex: 1; display: flex; flex-direction: column; background: #050505; }
@@ -44,7 +43,6 @@ const MONITOR_HTML = \`
         .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
         .msg.user { align-self: flex-start; background: #222; color: #ddd; border-bottom-left-radius: 2px; }
         .msg.bot { align-self: flex-end; background: #003322; color: #fff; border: 1px solid #005533; border-bottom-right-radius: 2px; }
-        .time { font-size: 0.7rem; color: #555; margin-top: 4px; display: block; text-align: right; }
     </style>
 </head>
 <body>
@@ -63,7 +61,7 @@ const MONITOR_HTML = \`
         let users = {};
         let activeId = null;
 
-        // Cargar historial
+        // Cargar historial inicial
         fetch('/api/history').then(res => res.json()).then(data => {
             Object.keys(data).forEach(id => {
                 const hist = data[id];
@@ -71,18 +69,16 @@ const MONITOR_HTML = \`
                     let name = "Cliente";
                     const match = hist[0].content.match(/\\[Cliente: (.*?)\\]/);
                     if(match) name = match[1];
-                    // Recuperar el último para la preview
-                    const last = hist[hist.length-1];
-                    const texto = last.content;
-                    const role = last.role === 'assistant' ? 'RESPUESTA_ZARA' : 'MENSAJE';
                     
-                    update({ tipo: role, nombre: name, telefono: id, mensaje: texto, texto: texto, restore: true });
-                    
-                    // Cargar historial interno
-                    users[id].history = hist.map(m => ({ 
+                    // Procesar historial completo
+                    const cleanHist = hist.map(m => ({ 
                         role: m.role === 'assistant' ? 'bot' : 'user', 
                         txt: m.content.replace(/\\[Cliente: .*?\\] /, '')
                     }));
+
+                    // Inicializar usuario
+                    users[id] = { name: name, phone: id, history: cleanHist };
+                    createCard(users[id], cleanHist[cleanHist.length-1].txt);
                 }
             });
         });
@@ -96,20 +92,21 @@ const MONITOR_HTML = \`
 
         function update(d) {
             const id = d.telefono;
+            // Si es mensaje nuevo, crear usuario si no existe
             if (!users[id]) {
                 users[id] = { name: d.nombre || 'Cliente', phone: id, history: [] };
-                createCard(users[id]);
+                createCard(users[id], "...");
             }
             
             const txt = d.tipo === "RESPUESTA_ZARA" ? d.texto : d.mensaje;
             const role = d.tipo === "RESPUESTA_ZARA" ? 'bot' : 'user';
             
-            // Si NO es restauración, lo agregamos al array y UI
+            // Evitar duplicados si es restauración
             if(!d.restore) {
                 users[id].history.push({ role, txt });
                 if (activeId === id) renderBubble({ role, txt });
                 
-                // Mover card al inicio
+                // Actualizar card y mover al inicio
                 const card = document.getElementById('c-' + id);
                 if(card) {
                     card.querySelector('.preview').innerText = (role === 'bot' ? "🤖 " : "") + txt;
@@ -118,7 +115,7 @@ const MONITOR_HTML = \`
             }
         }
 
-        function createCard(u) {
+        function createCard(u, previewTxt) {
             if(document.getElementById('c-' + u.phone)) return;
             const div = document.createElement('div');
             div.className = 'card';
@@ -129,7 +126,7 @@ const MONITOR_HTML = \`
                 <div class="info">
                     <div class="name">\${u.name}</div>
                     <div class="details">+\${u.phone}</div>
-                    <div class="preview">...</div>
+                    <div class="preview">\${previewTxt}</div>
                 </div>\`;
             list.prepend(div);
         }
@@ -154,7 +151,7 @@ const MONITOR_HTML = \`
     </script>
 </body>
 </html>
-\`;
+`;
 
 app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/history", (req, res) => res.json(getSesiones()));
@@ -172,4 +169,5 @@ app.post("/reservo-webhook", async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(\`🟢 ZARA 6.0 LIVE en puerto \${PORT}\`);
+    console.log(\`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor\`);
 });
