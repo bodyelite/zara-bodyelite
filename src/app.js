@@ -29,7 +29,7 @@ function guardar() {
     try { fs.writeFileSync(DB_FILE, JSON.stringify(sesionesLocal, null, 2)); } catch (e) {}
 }
 
-const getHora = () => new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+const getFechaHora = () => new Date().toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 export const metricas = { leads_wsp: new Set(), leads_ig: new Set() };
 export const ultimasRespuestas = {}; 
@@ -53,18 +53,20 @@ setInterval(async () => {
                     if (m) nom = m[1];
                 }
                 
-                const msj = `${nom}, me quedé pensando si había resuelto todas tus dudas... 🤔 ¿Prefieres que te llamemos para explicarte mejor?`;
-                
+                const msj = `${nom}, me quedé pensando si había resuelto todas tus dudas... 🤔 ¿Prefieres que te llamemos?`;
+                const ts = getFechaHora();
+
                 await sendMessage(id, msj, usuariosPlataforma[id] || "whatsapp");
                 estadosClientes[id] = 'recontactado';
-                sesionesLocal[id].push({ role: "assistant", content: msj });
+                
+                sesionesLocal[id].push({ role: "assistant", content: msj, timestamp: ts });
                 guardar();
                 
                 transmitir({ 
                     tipo: "REACTIVACION", 
                     nombre: nom, 
                     telefono: id, 
-                    timestamp: getHora(),
+                    timestamp: ts,
                     texto: msj 
                 });
             } catch (e) {}
@@ -86,14 +88,15 @@ export async function procesarEvento(entry) {
   } else return; 
 
   if (!sesionesLocal[id]) sesionesLocal[id] = [];
+  
+  const ts = getFechaHora();
 
   transmitir({ 
       tipo: "MENSAJE", 
       nombre: name, 
       telefono: id, 
       mensaje: text || "Audio", 
-      linkFoto: `https://wa.me/${id}`,
-      timestamp: getHora()
+      timestamp: ts
   });
 
   const now = Date.now();
@@ -125,7 +128,8 @@ export async function procesarEvento(entry) {
     const msjFinal = "¡Anotado! 📝 Ya le pasé tu contacto a mis compañeras. Te llamarán muy pronto. ¡Gracias por confiar en Body Elite! ✨";
     await sendMessage(id, msjFinal, platform);
     
-    sesionesLocal[id].push({ role: "assistant", content: msjFinal });
+    const tsFinal = getFechaHora();
+    sesionesLocal[id].push({ role: "assistant", content: msjFinal, timestamp: tsFinal });
     guardar();
     
     transmitir({ 
@@ -133,17 +137,18 @@ export async function procesarEvento(entry) {
         nombre: "Zara", 
         telefono: id,
         texto: msjFinal,
-        timestamp: getHora()
+        timestamp: tsFinal
     });
     return;
   }
 
-  sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ` + text });
+  sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ` + text, timestamp: ts });
   guardar(); 
 
   if (sesionesLocal[id].length > 16) sesionesLocal[id] = sesionesLocal[id].slice(-16);
 
   const respuesta = await pensar(sesionesLocal[id], name);
+  const tsResp = getFechaHora();
   
   await sendMessage(id, respuesta, platform);
   
@@ -152,10 +157,10 @@ export async function procesarEvento(entry) {
       nombre: "Zara", 
       telefono: id, 
       texto: respuesta,
-      timestamp: getHora()
+      timestamp: tsResp
   });
   
-  sesionesLocal[id].push({ role: "assistant", content: respuesta });
+  sesionesLocal[id].push({ role: "assistant", content: respuesta, timestamp: tsResp });
   guardar();
 }
 

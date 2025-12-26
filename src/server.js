@@ -34,13 +34,14 @@ const MONITOR_HTML = `
         .preview { font-size: 0.8rem; color: #888; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .main { flex: 1; display: flex; flex-direction: column; background: #000; }
-        .chat-head { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); }
+        .chat-head { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); display: flex; justify-content: space-between; }
         .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         
         .msg { max-width: 70%; padding: 12px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; position: relative; }
         .msg.user { align-self: flex-start; background: #222; border-bottom-left-radius: 2px; }
         .msg.bot { align-self: flex-end; background: #00442a; border: 1px solid #006633; border-bottom-right-radius: 2px; color: #fff; }
-        .time { font-size: 0.65rem; color: #aaa; text-align: right; margin-top: 5px; opacity: 0.8; }
+        .time { font-size: 0.65rem; color: #aaa; text-align: right; margin-top: 5px; opacity: 0.8; font-family: monospace; }
+        .phone-alert { color: #ffeb3b; font-weight: bold; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -49,13 +50,17 @@ const MONITOR_HTML = `
         <div class="user-list" id="list"></div>
     </div>
     <div class="main">
-        <div class="chat-head" id="chatTitle">Esperando mensajes...</div>
+        <div class="chat-head">
+            <span id="chatTitle">Selecciona un chat</span>
+            <span id="chatPhone"></span>
+        </div>
         <div class="feed" id="feed"></div>
     </div>
     <script>
         const list = document.getElementById('list');
         const feed = document.getElementById('feed');
         const chatTitle = document.getElementById('chatTitle');
+        const chatPhone = document.getElementById('chatPhone');
         let users = {};
         let activeId = null;
 
@@ -70,7 +75,7 @@ const MONITOR_HTML = `
                     const clean = hist.map(x => ({ 
                         role: x.role === 'assistant' ? 'bot' : 'user', 
                         txt: x.content.replace(/\\[Cliente: .*?\\] /, ''),
-                        time: ''
+                        time: x.timestamp || '' 
                     }));
 
                     users[id] = { name, phone: id, history: clean };
@@ -87,7 +92,7 @@ const MONITOR_HTML = `
 
         function update(d) {
             const id = d.telefono;
-            if(!id) return;
+            if(!id || id === 'undefined') return;
 
             if (!users[id]) {
                 users[id] = { name: d.nombre || 'Cliente', phone: id, history: [] };
@@ -96,7 +101,7 @@ const MONITOR_HTML = `
             
             const txt = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? d.texto : d.mensaje;
             const role = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? 'bot' : 'user';
-            const time = d.timestamp || '';
+            const time = d.timestamp || new Date().toLocaleTimeString();
 
             if(!d.restore) {
                 users[id].history.push({ role, txt, time });
@@ -104,7 +109,8 @@ const MONITOR_HTML = `
                 
                 const card = document.getElementById('c-' + id);
                 if(card) {
-                    card.querySelector('.preview').innerText = (role==='bot'?'🤖 ':'') + txt;
+                    let prev = (role==='bot'?'🤖 ':'') + txt;
+                    card.querySelector('.preview').innerText = prev;
                     list.prepend(card);
                 }
             }
@@ -130,6 +136,7 @@ const MONITOR_HTML = `
             document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
             document.getElementById('c-' + id).classList.add('active');
             chatTitle.innerText = users[id].name;
+            chatPhone.innerText = '+' + users[id].phone;
             feed.innerHTML = '';
             users[id].history.forEach(renderBubble);
             feed.scrollTop = feed.scrollHeight;
@@ -138,7 +145,14 @@ const MONITOR_HTML = `
         function renderBubble(m) {
             const d = document.createElement('div');
             d.className = 'msg ' + m.role;
-            d.innerHTML = m.txt + (m.time ? \`<div class="time">\${m.time}</div>\` : '');
+            
+            // Detectar telefono en el texto para resaltarlo
+            let content = m.txt;
+            if(m.role === 'user' && content.match(/\\d{8,9}/)) {
+                content += '<br><span class="phone-alert">📱 TELÉFONO DETECTADO</span>';
+            }
+            
+            d.innerHTML = content + (m.time ? \`<div class="time">\${m.time}</div>\` : '');
             feed.appendChild(d);
             feed.scrollTop = feed.scrollHeight;
         }
