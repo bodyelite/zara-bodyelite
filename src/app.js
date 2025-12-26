@@ -59,6 +59,28 @@ export const ultimasRespuestas = {};
 export const estadosClientes = {}; 
 export const usuariosPlataforma = {}; 
 
+export async function enviarMensajeManual(phone, texto) {
+    const ts = getFechaHora();
+    try {
+        await sendMessage(phone, texto, usuariosPlataforma[phone] || "whatsapp");
+        if (!sesionesLocal[phone]) sesionesLocal[phone] = [];
+        
+        sesionesLocal[phone].push({ role: "assistant", content: texto, timestamp: ts, manual: true });
+        guardar();
+        
+        transmitir({ 
+            tipo: "RESPUESTA_ZARA", 
+            nombre: "Humano", 
+            telefono: phone, 
+            texto: texto, 
+            timestamp: ts 
+        });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 function getPhone(txt) {
   if (!txt) return null;
   const m = txt.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{8,9}\b/); 
@@ -128,6 +150,8 @@ export async function procesarEvento(entry) {
   if (botStatus[id] === false) {
       sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ` + (text || "Audio"), timestamp: ts });
       guardar();
+      // Actualizar timestamp para ordenamiento
+      ultimasRespuestas[id] = Date.now(); 
       return;
   }
 
