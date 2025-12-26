@@ -98,12 +98,21 @@ export async function procesarEvento(entry) {
   const low = text.toLowerCase().trim();
   if (low.includes("link") || low.includes("agenda")) estadosClientes[id] = 'agendado';
 
+  // DETECCIÓN DE TELÉFONO PARA ALERTA
   const ph = getPhone(text);
   if (ph) {
     estadosClientes[id] = 'agendado';
-    const alerta = `🚨 NUEVO LEAD: ${name} - ${ph}`;
+    const alerta = `🚨 LEAD CONFIRMADO: ${name} - ${ph}`;
     for (const n of NEGOCIO.staff_alertas) { try { await sendMessage(n, alerta); } catch(e) {} }
-    await sendMessage(id, "¡Perfecto! 📞 Ya le pasé tu número a mis compañeras. Te llamarán en breve.", platform);
+    
+    // CONFIRMACIÓN AL CLIENTE (FINAL DE FLUJO)
+    const msjFinal = "¡Anotado! 📝 Ya le pasé tu contacto a mis compañeras. Te llamarán muy pronto. ¡Gracias por confiar en Body Elite! ✨";
+    await sendMessage(id, msjFinal, platform);
+    
+    // IMPORTANTE: Guardar en historial y monitor
+    sesionesLocal[id].push({ role: "assistant", content: msjFinal });
+    guardar();
+    transmitir({ tipo: "RESPUESTA_ZARA", nombre: "Zara", texto: msjFinal });
     return;
   }
 
@@ -115,7 +124,9 @@ export async function procesarEvento(entry) {
   const respuesta = await pensar(sesionesLocal[id], name);
   
   await sendMessage(id, respuesta, platform);
-  transmitir({ tipo: "RESPUESTA_ZARA", texto: respuesta });
+  
+  // FIX MONITOR: ENVIAR NOMBRE "Zara"
+  transmitir({ tipo: "RESPUESTA_ZARA", nombre: "Zara", texto: respuesta });
   
   sesionesLocal[id].push({ role: "assistant", content: respuesta });
   guardar();

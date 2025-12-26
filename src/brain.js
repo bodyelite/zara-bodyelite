@@ -37,10 +37,11 @@ export async function pensar(historial, nombreCompleto) {
                     .replace(/{NOMBRE_CLIENTE}/g, nombrePila)
                     .replace(/{PLAN}/g, datos.plan)
                     .replace(/{PRECIO}/g, datos.precio)
+                    .replace(/{DURACION}/g, datos.duracion) // NUEVO: DURACIÓN
                     .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
                     .replace(/{BENEFICIO}/g, datos.beneficio)
                     .replace(/{DIRECCION}/g, CLINICA.faq.direccion)
-                    .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link); // AHORA SÍ TIENE EL LINK
+                    .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
             }
         } else {
             systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
@@ -49,7 +50,7 @@ export async function pensar(historial, nombreCompleto) {
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
-            temperature: 0.3, // Un poco más de creatividad para la calidez
+            temperature: 0.3, 
             max_tokens: 300
         });
 

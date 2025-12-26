@@ -2,9 +2,9 @@ export const CLINICA = {
     "general": {
         plan: "Evaluación Diagnóstica",
         precio: "A evaluar",
+        duracion: "30 min",
         tecnologias: "Scanner IA",
-        beneficio: "un diagnóstico preciso",
-        duracion: "30 min"
+        beneficio: "un diagnóstico preciso"
     },
     "pink_glow": {
         plan: "Face Light (Glow)",
@@ -18,7 +18,7 @@ export const CLINICA = {
         precio: "$376.000",
         duracion: "6 semanas",
         tecnologias: "Radiofrecuencia, EMS Sculptor y HIFU",
-        beneficio: "levantar, aumentar y tonificar glúteos"
+        beneficio: "levantar y tonificar glúteos (sin volumen extra, solo firmeza)"
     },
     "lipo_express": {
         plan: "Lipo Express",
