@@ -64,7 +64,6 @@ const MONITOR_HTML = `
         #sendBtn { background: var(--accent); color: #000; border: none; border-radius: 8px; width: 50px; font-size: 1.5rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
         #sendBtn:hover { transform: scale(1.05); }
 
-        /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
             .sidebar { width: 100%; position: absolute; height: 100%; }
             .sidebar.hidden { display: none; }
@@ -121,15 +120,24 @@ const MONITOR_HTML = `
         let activeId = null;
         let botStatus = {};
 
-        function parseTime(timeStr) {
-            if(!timeStr) return 0;
-            // Formato esperado: "DD/MM, HH:MM"
-            // Hack simple: Extraer HH:MM y ordenar por eso si es del mismo dia,
-            // pero mejor ordenar por momento de llegada en el array original.
-            return timeStr; 
+        // Función para convertir fecha string "DD/MM, HH:MM" a timestamp numérico
+        function getTimestamp(timeStr) {
+            if (!timeStr) return 0; // Si no hay fecha, va al fondo
+            try {
+                // Formato esperado: "26/12, 17:52"
+                const [datePart, timePart] = timeStr.split(',');
+                if (!datePart || !timePart) return 0;
+                
+                const [day, month] = datePart.trim().split('/');
+                const [hour, min] = timePart.trim().split(':');
+                
+                const now = new Date();
+                // Asumimos año actual
+                const d = new Date(now.getFullYear(), parseInt(month)-1, parseInt(day), parseInt(hour), parseInt(min));
+                return d.getTime();
+            } catch (e) { return 0; }
         }
 
-        // FETCH INICIAL
         Promise.all([
             fetch('/api/history').then(r => r.json()),
             fetch('/api/status').then(r => r.json())
@@ -150,25 +158,28 @@ const MONITOR_HTML = `
                         time: x.timestamp || '' 
                     }));
                     
+                    const lastMsg = clean[clean.length-1];
+
                     sortedUsers.push({
                         id: id,
                         name: name,
                         phone: id,
                         history: clean,
-                        lastMsg: clean[clean.length-1]
+                        lastMsg: lastMsg,
+                        sortTime: getTimestamp(lastMsg.time) // Calculamos timestamp para ordenar
                     });
                 }
             });
 
-            // RENDERIZAR EN ORDEN INVERSO PARA QUE EL ÚLTIMO LEIDO QUEDE ARRIBA
-            // (El evento stream se encargará de reordenar dinámicamente)
-            sortedUsers.reverse().forEach(u => {
+            // ORDENAR: Mayor timestamp (más reciente) primero
+            sortedUsers.sort((a, b) => b.sortTime - a.sortTime);
+
+            sortedUsers.forEach(u => {
                 users[u.id] = u;
                 createCard(u, u.lastMsg.txt, u.lastMsg.time);
             });
         });
 
-        // STREAM
         const evt = new EventSource("/monitor-stream");
         evt.onmessage = (e) => {
             const d = JSON.parse(e.data);
@@ -195,13 +206,16 @@ const MONITOR_HTML = `
                     renderBubble({ role, txt, time });
                 }
                 
-                // REORDENAR: MOVER CARD AL INICIO
+                // REORDENAR VISUALMENTE
                 const card = document.getElementById('c-' + id);
                 if(card) {
                     let prev = (role==='bot'?'🤖 ':'') + txt;
                     card.querySelector('.preview').innerText = prev;
-                    card.querySelector('.time-ago').innerText = time.split(',')[1] || time;
+                    card.querySelector('.time-ago').innerText = time.includes(',') ? time.split(',')[1] : time;
+                    
+                    // Mover al principio de la lista (porque es el más nuevo)
                     list.prepend(card);
+                    
                     card.classList.add('flash');
                     setTimeout(() => card.classList.remove('flash'), 500);
                 }
@@ -226,30 +240,24 @@ const MONITOR_HTML = `
                     </div>
                     <div class="preview">\${prev}</div>
                 </div>\`;
-            list.prepend(div); 
+            // Append en lugar de Prepend en la carga inicial para respetar el orden del sort()
+            list.appendChild(div); 
         }
 
         function select(id) {
             activeId = id;
-            
-            // MOBILE UI
             if(window.innerWidth <= 768) {
                 sidebar.classList.add('hidden');
                 mainView.classList.add('active');
             }
-
             document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
             document.getElementById('c-' + id).classList.add('active');
-            
             chatTitle.innerText = users[id].name;
             chatPhone.innerText = '+' + users[id].phone;
             chatPhone.href = "https://wa.me/" + users[id].phone;
-            
             controls.style.display = "flex";
             inputArea.style.display = "flex";
-            
             updateToggleBtn(id);
-            
             feed.innerHTML = '';
             users[id].history.forEach(renderBubble);
             feed.scrollTop = feed.scrollHeight;
@@ -286,11 +294,8 @@ const MONITOR_HTML = `
         window.sendManual = async function() {
             const txt = msgInput.value.trim();
             if(!activeId || !txt) return;
-            
             msgInput.value = "";
-            // Optimistic update
-            renderBubble({ role: 'bot', txt: txt, time: new Date().toLocaleTimeString() });
-            
+            renderBubble({ role: 'bot', txt: txt, time: new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'}) });
             await fetch('/api/manual-msg', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
