@@ -29,7 +29,7 @@ function guardar() {
     try { fs.writeFileSync(DB_FILE, JSON.stringify(sesionesLocal, null, 2)); } catch (e) {}
 }
 
-const getFechaHora = () => new Date().toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const getFechaHora = () => new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 export const metricas = { leads_wsp: new Set(), leads_ig: new Set() };
 export const ultimasRespuestas = {}; 

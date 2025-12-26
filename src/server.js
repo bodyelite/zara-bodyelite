@@ -34,13 +34,15 @@ const MONITOR_HTML = `
         .preview { font-size: 0.8rem; color: #888; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .main { flex: 1; display: flex; flex-direction: column; background: #000; }
-        .chat-head { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); display: flex; justify-content: space-between; }
+        .chat-head { padding: 15px; border-bottom: 1px solid #333; font-weight: bold; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        #chatPhone { font-size: 1.2rem; background: #00442a; padding: 5px 15px; border-radius: 5px; color: #fff; }
+        
         .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         
         .msg { max-width: 70%; padding: 12px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; position: relative; }
         .msg.user { align-self: flex-start; background: #222; border-bottom-left-radius: 2px; }
         .msg.bot { align-self: flex-end; background: #00442a; border: 1px solid #006633; border-bottom-right-radius: 2px; color: #fff; }
-        .time { font-size: 0.65rem; color: #aaa; text-align: right; margin-top: 5px; opacity: 0.8; font-family: monospace; }
+        .time { font-size: 0.65rem; color: #aaa; text-align: right; margin-top: 5px; opacity: 0.8; font-family: monospace; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2px; }
         .phone-alert { color: #ffeb3b; font-weight: bold; font-size: 0.8rem; }
     </style>
 </head>
@@ -69,12 +71,12 @@ const MONITOR_HTML = `
                 const hist = data[id];
                 if(hist.length > 0) {
                     let name = "Cliente";
-                    const m = hist[0].content.match(/\\[Cliente: (.*?)\\]/);
+                    const m = hist[0].content.match(/\[Cliente: (.*?)\]/);
                     if(m) name = m[1];
                     
                     const clean = hist.map(x => ({ 
                         role: x.role === 'assistant' ? 'bot' : 'user', 
-                        txt: x.content.replace(/\\[Cliente: .*?\\] /, ''),
+                        txt: x.content.replace(/\[Cliente: .*?\] /, ''),
                         time: x.timestamp || '' 
                     }));
 
@@ -145,13 +147,7 @@ const MONITOR_HTML = `
         function renderBubble(m) {
             const d = document.createElement('div');
             d.className = 'msg ' + m.role;
-            
-            // Detectar telefono en el texto para resaltarlo
             let content = m.txt;
-            if(m.role === 'user' && content.match(/\\d{8,9}/)) {
-                content += '<br><span class="phone-alert">📱 TELÉFONO DETECTADO</span>';
-            }
-            
             d.innerHTML = content + (m.time ? \`<div class="time">\${m.time}</div>\` : '');
             feed.appendChild(d);
             feed.scrollTop = feed.scrollHeight;
