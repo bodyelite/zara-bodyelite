@@ -14,26 +14,25 @@ export async function pensar(historial, nombreCompleto) {
     try {
         const nombrePila = nombreCompleto ? nombreCompleto.split(" ")[0] : "Hola";
         
-        // 1. OBTENER MENSAJES CLAVE (USUARIO Y BOT ANTERIOR)
         const mensajesUsuario = historial.filter(m => m.role === 'user');
         const mensajesBot = historial.filter(m => m.role === 'assistant');
         
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         const ultimoBot = mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].content.toLowerCase() : "";
 
-        // 2. DETECTORES DE INTENCIÓN DEL USUARIO (LO QUE DICE AHORA)
+        // DETECCIONES
         const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo");
         const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
         const preguntaComo = ultimoMensaje.includes("como") || ultimoMensaje.includes("funciona") || ultimoMensaje.includes("consiste") || ultimoMensaje.includes("que es");
-        const afirmacion = ultimoMensaje === "si" || ultimoMensaje.includes("si ") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok") || ultimoMensaje.includes("dale");
+        const afirmacion = ultimoMensaje === "si" || ultimoMensaje.includes("si ") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok");
         const negacion = ultimoMensaje === "no" || ultimoMensaje.includes("no ");
 
-        // 3. DETECTOR DE CONTEXTO DEL BOT (LO QUE PREGUNTÓ ANTES) -> LA CLAVE DE LA ESCALERA
+        // CONTEXTO DE PREGUNTA ANTERIOR (ESCALERA)
         const botPreguntoFuncionamiento = ultimoBot.includes("como logramos") || ultimoBot.includes("como funciona") || ultimoBot.includes("resultados reales");
-        const botPreguntoPrecio = ultimoBot.includes("conocer el valor") || ultimoBot.includes("sobre el precio") || ultimoBot.includes("inversion");
+        const botPreguntoPrecio = ultimoBot.includes("conocer el valor") || ultimoBot.includes("sobre el valor") || ultimoBot.includes("inversion");
         const botPreguntoEvaluacion = ultimoBot.includes("evaluacion") || ultimoBot.includes("ahorrar asi") || ultimoBot.includes("te hace sentido");
 
-        // 4. DETECCIÓN DE TEMA (PLAN)
+        // DETECCIÓN DE MIX
         const mencionaCuerpo = ultimoMensaje.includes("lipo") || ultimoMensaje.includes("reduc") || ultimoMensaje.includes("grasa") || ultimoMensaje.includes("rollito");
         const mencionaGluteo = ultimoMensaje.includes("push") || ultimoMensaje.includes("gluteo") || ultimoMensaje.includes("trasero") || ultimoMensaje.includes("cola");
         const esMix = mencionaCuerpo && mencionaGluteo;
@@ -45,47 +44,43 @@ export async function pensar(historial, nombreCompleto) {
             return null;
         };
 
-        // Recuperar tema del historial si no está en el mensaje actual
-        let key = esMix ? "lipo_express" : detectar(ultimoMensaje);
+        // SI ES MIX, FORZAMOS LA LECTURA DE LA FICHA "mix_corporal"
+        let key = esMix ? "mix_corporal" : detectar(ultimoMensaje);
+        
+        // Si no hay key en este mensaje, miramos el anterior
         if (!key && mensajesUsuario.length > 1) {
              key = detectar(mensajesUsuario[mensajesUsuario.length - 2].content.toLowerCase());
         }
+        // Persistencia del Mix si ya estábamos hablando de eso
+        if (!key && historial.some(m => m.content.includes("Reloj de Arena"))) key = "mix_corporal";
 
-        // 5. MÁQUINA DE ESTADOS (LÓGICA DE ESCALERA)
         let promptFinal = "";
 
-        // INTERRUPCIONES PRIORITARIAS
         if (pideLlamada) {
             promptFinal = RESPUESTA_LLAMADA;
-        } else if (esMix) {
+        } else if (esMix && !preguntaComo && !pidePrecio) {
+            // Si recién detectamos el mix, lanzamos el gancho estratega
             promptFinal = PASO_MIX_ESTRATEGA;
         } else if (!key) {
             promptFinal = PROMPT_TRIAGE; 
-        
-        // SECUENCIA LÓGICA (EL PING-PONG REAL)
         } else {
+            // MÁQUINA DE ESTADOS
             if (pidePrecio) {
-                // Si el usuario pide precio explícitamente, vamos al Paso 3
                 promptFinal = PASO_3_PRECIO;
             } else if (preguntaComo) {
-                // Si el usuario pregunta cómo funciona, vamos al Paso 2
                 promptFinal = PASO_2_TECNOLOGIA;
             } else if (botPreguntoFuncionamiento && afirmacion) {
-                // ESTRUCTURA: Bot preguntó "¿Quieres saber cómo funciona?" + User "Sí" -> PASO 2
                 promptFinal = PASO_2_TECNOLOGIA;
             } else if (botPreguntoPrecio && afirmacion) {
-                // ESTRUCTURA: Bot preguntó "¿Quieres precio?" + User "Sí" -> PASO 3
                 promptFinal = PASO_3_PRECIO;
             } else if (botPreguntoEvaluacion && (afirmacion || negacion)) {
-                // ESTRUCTURA: Bot preguntó sobre evaluación + User responde lo que sea -> PASO 4
                 promptFinal = PASO_4_CIERRE;
             } else {
-                // Si no estamos en ninguno de los anteriores, asumimos inicio del ciclo (Hook)
                 promptFinal = PASO_1_GANCHO;
             }
         }
 
-        // 6. INYECCIÓN DE DATOS
+        // LEEMOS LA ENCICLOPEDIA (CLINIC.JS)
         if (key && CLINICA[key]) {
             const d = CLINICA[key];
             promptFinal = promptFinal
