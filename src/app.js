@@ -36,7 +36,6 @@ export const usuariosPlataforma = {};
 
 function getPhone(txt) {
   if (!txt) return null;
-  // REGEX MEJORADA: Detecta 8 o 9 dígitos seguidos, con o sin +56
   const m = txt.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{8,9}\b/); 
   return m ? m[0].replace(/\D/g, '') : null;
 }
@@ -99,17 +98,12 @@ export async function procesarEvento(entry) {
   const low = text.toLowerCase().trim();
   if (low.includes("link") || low.includes("agenda")) estadosClientes[id] = 'agendado';
 
-  // DETECCIÓN DE TELÉFONO (Prioridad Alta)
   const ph = getPhone(text);
   if (ph) {
     estadosClientes[id] = 'agendado';
-    const alerta = `🚨 NUEVO LEAD (WSP): ${name} - ${ph}`;
-    // ENVIAR ALERTA A CADA STAFF
-    for (const n of NEGOCIO.staff_alertas) {
-        try { await sendMessage(n, alerta, "whatsapp"); } catch(e) {}
-    }
-    // CONFIRMACIÓN AL CLIENTE (Hardcoded para asegurar respuesta inmediata)
-    await sendMessage(id, "¡Perfecto! 📞 Ya le pasé tu número a mis compañeras. Te llamarán en breve para coordinar.", platform);
+    const alerta = `🚨 NUEVO LEAD: ${name} - ${ph}`;
+    for (const n of NEGOCIO.staff_alertas) { try { await sendMessage(n, alerta); } catch(e) {} }
+    await sendMessage(id, "¡Perfecto! 📞 Ya le pasé tu número a mis compañeras. Te llamarán en breve.", platform);
     return;
   }
 
