@@ -15,14 +15,44 @@ export async function pensar(historial, nombreCompleto) {
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         const textoCompleto = mensajesUsuario.map(m => m.content.toLowerCase()).join(" ");
         
-        // DETECCIÓN: ¿PIDE PRECIO?
-        const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("vale") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
+        // 1. DETECCIÓN DE URGENCIA (PRECIO)
+        const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("vale") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale") || ultimoMensaje.includes("promocion") || ultimoMensaje.includes("cuanto");
 
-        // DETECCIÓN: ¿SABEMOS DE QUÉ HABLA?
+        // 2. DETECCIÓN DE TRATAMIENTO (DICCIONARIO AMPLIADO)
         const detectar = (txt) => {
-            if (txt.includes("face") || txt.includes("cara") || txt.includes("rostro") || txt.includes("piel") || txt.includes("arrugas") || txt.includes("manchas")) return "pink_glow";
-            if (txt.includes("push") || txt.includes("gluteo") || txt.includes("trasero") || txt.includes("cola") || txt.includes("nalga") || txt.includes("levantar")) return "push_up";
-            if (txt.includes("lipo") || txt.includes("reduc") || txt.includes("grasa") || txt.includes("guata") || txt.includes("abdomen") || txt.includes("michelines") || txt.includes("rollitos") || txt.includes("peso")) return "lipo_express";
+            // FACIAL (Pink Glow / Rejuvenecimiento)
+            if (
+                txt.includes("facial") || txt.includes("face") || txt.includes("cara") || 
+                txt.includes("rostro") || txt.includes("piel") || txt.includes("cutis") || 
+                txt.includes("arrugas") || txt.includes("manchas") || txt.includes("acne") || 
+                txt.includes("granos") || txt.includes("botox") || txt.includes("vitamina") || 
+                txt.includes("peeling") || txt.includes("rejuveneci") || txt.includes("nasogeniano") ||
+                txt.includes("ojeras") || txt.includes("papada") || txt.includes("hifu facial")
+            ) return "pink_glow";
+            
+            // GLÚTEOS (Push Up)
+            if (
+                txt.includes("push") || txt.includes("gluteo") || txt.includes("glúteo") || 
+                txt.includes("trasero") || txt.includes("cola") || txt.includes("nalga") || 
+                txt.includes("poto") || txt.includes("pompis") || txt.includes("levantar") || 
+                txt.includes("celulitis") || txt.includes("firmeza") || txt.includes("aumentar")
+            ) return "push_up";
+            
+            // REDUCTIVO / CORPORAL (Lipo Express)
+            if (
+                txt.includes("lipo") || txt.includes("reduc") || txt.includes("grasa") || 
+                txt.includes("guata") || txt.includes("barriga") || txt.includes("abdomen") || 
+                txt.includes("michelines") || txt.includes("rollitos") || txt.includes("peso") || 
+                txt.includes("gordit") || txt.includes("cintura") || txt.includes("modelar") || 
+                txt.includes("corporal") || txt.includes("body") || txt.includes("faja")
+            ) return "lipo_express";
+            
+            // DEPILACIÓN (Si preguntan, lo mandamos al menú general para no alucinar precios)
+            if (
+                txt.includes("depila") || txt.includes("laser") || txt.includes("vellos") || 
+                txt.includes("pelo") || txt.includes("soprano") || txt.includes("alexandrita")
+            ) return null; // Retorna NULL para activar el Menú Elegante (Triage)
+            
             return null;
         };
 
@@ -32,17 +62,16 @@ export async function pensar(historial, nombreCompleto) {
         let systemPrompt = "";
         
         if (key) {
-            // CONTEXTO ESPECÍFICO (Sabe qué quiere)
+            // CASO: TRATAMIENTO DETECTADO
             const datos = CLINICA[key];
             if (!datos) { 
-                // CASO RARO: Detectó algo pero no hay datos -> General
                 systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
             } else {
                 let basePrompt = PROMPT_VENTA;
                 
-                // SI PIDE PRECIO Y SABEMOS QUÉ ES -> ORDEN DIRECTA
+                // SI PIDE PRECIO -> ORDEN DIRECTA
                 if (pidePrecio) {
-                    basePrompt += "\n\n🚨 CLIENTE PIDE VALOR. DALE EL PRECIO ({PRECIO}) DIRECTAMENTE. NO USES LA PALABRA 'PROMO'.";
+                    basePrompt += "\n\n🚨 ALERTA: EL CLIENTE PIDE PRECIO. DALE EL VALOR ({PRECIO}) DIRECTAMENTE. NO USES LA PALABRA 'PROMO'.";
                 }
 
                 systemPrompt = basePrompt
@@ -55,14 +84,14 @@ export async function pensar(historial, nombreCompleto) {
                     .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
             }
         } else {
-            // NO HAY CONTEXTO (No nombró tratamiento)
+            // CASO: NO SE DETECTA TRATAMIENTO ESPECÍFICO
             if (pidePrecio) {
-                // CASO CRÍTICO: Pide precio pero no sabemos de qué -> MENÚ ELEGANTE
+                // Si pide precio pero no sabemos de qué -> MENÚ ELEGANTE
                 systemPrompt = PROMPT_VENTA
                     .replace(/{NOMBRE_CLIENTE}/g, nombrePila)
                     + "\n\n🚨 EL CLIENTE DIJO 'PRECIO' PERO NO SABEMOS DE QUÉ. EJECUTA EL 'CASO 1' (MENÚ ELEGANTE) MOSTRANDO LOS DOS VALORES (PUSH UP Y LIPO).";
             } else {
-                // Saludo normal
+                // Saludo / Triage normal
                 systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
             }
         }
