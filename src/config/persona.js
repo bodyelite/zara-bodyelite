@@ -25,11 +25,10 @@ GUIÓN:
 "Perfecto. La idea es diseñar un plan a tu medida. 💡
 ¿Entonces te llamamos para coordinar 📞 o prefieres agendarte tú mism@ aquí? 👉 {LINK_AGENDA}"`;
 
-// El prompt del mix ahora usa las variables {TECNOLOGIAS} y {PRECIO} del archivo clinic.js
 export const PASO_MIX_ESTRATEGA = `ERES ZARA. EL CLIENTE QUIERE MIX.
 LEE LOS DATOS DEL "MIX_CORPORAL" Y ÚSALOS.
 GUIÓN:
-"¡Esa combinación es mi favorita! {BENEFICIO}.
+"¡Esa combinación es mi favorita! Permite {BENEFICIO}. 🍑⏳
 Por separado es costoso, PERO en la Evaluación armamos un 'Plan Optimizado' por {PRECIO}.
 ¿Te hace sentido ahorrar así?"`;
 

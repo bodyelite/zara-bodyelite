@@ -10,6 +10,12 @@ import { NEGOCIO } from './config/business.js';
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// 1. FUNCIÓN DE LIMPIEZA (La clave para que no falle con tildes)
+function limpiarTexto(texto) {
+    if (!texto) return "";
+    return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 export async function pensar(historial, nombreCompleto) {
     try {
         const nombrePila = nombreCompleto ? nombreCompleto.split(" ")[0] : "Hola";
@@ -17,22 +23,23 @@ export async function pensar(historial, nombreCompleto) {
         const mensajesUsuario = historial.filter(m => m.role === 'user');
         const mensajesBot = historial.filter(m => m.role === 'assistant');
         
-        const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
-        const ultimoBot = mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].content.toLowerCase() : "";
+        // 2. APLICAMOS LIMPIEZA AQUÍ
+        const ultimoMensaje = limpiarTexto(mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content : "");
+        const ultimoBot = limpiarTexto(mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].content : "");
 
-        // DETECCIONES
+        // 3. DETECCIONES (Ahora funcionan aunque el cliente use tildes)
         const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo");
         const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
         const preguntaComo = ultimoMensaje.includes("como") || ultimoMensaje.includes("funciona") || ultimoMensaje.includes("consiste") || ultimoMensaje.includes("que es");
-        const afirmacion = ultimoMensaje === "si" || ultimoMensaje.includes("si ") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok");
-        const negacion = ultimoMensaje === "no" || ultimoMensaje.includes("no ");
+        const afirmacion = ultimoMensaje.includes("si") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok") || ultimoMensaje.includes("dale");
+        const negacion = ultimoMensaje.includes("no");
 
-        // CONTEXTO DE PREGUNTA ANTERIOR (ESCALERA)
+        // CONTEXTO DE PREGUNTA ANTERIOR (La Escalera)
         const botPreguntoFuncionamiento = ultimoBot.includes("como logramos") || ultimoBot.includes("como funciona") || ultimoBot.includes("resultados reales");
         const botPreguntoPrecio = ultimoBot.includes("conocer el valor") || ultimoBot.includes("sobre el valor") || ultimoBot.includes("inversion");
         const botPreguntoEvaluacion = ultimoBot.includes("evaluacion") || ultimoBot.includes("ahorrar asi") || ultimoBot.includes("te hace sentido");
 
-        // DETECCIÓN DE MIX
+        // DETECCIÓN DE MIX (Ahora detecta "glúteo" correctamente como "gluteo")
         const mencionaCuerpo = ultimoMensaje.includes("lipo") || ultimoMensaje.includes("reduc") || ultimoMensaje.includes("grasa") || ultimoMensaje.includes("rollito");
         const mencionaGluteo = ultimoMensaje.includes("push") || ultimoMensaje.includes("gluteo") || ultimoMensaje.includes("trasero") || ultimoMensaje.includes("cola");
         const esMix = mencionaCuerpo && mencionaGluteo;
@@ -44,27 +51,27 @@ export async function pensar(historial, nombreCompleto) {
             return null;
         };
 
-        // SI ES MIX, FORZAMOS LA LECTURA DE LA FICHA "mix_corporal"
+        // SELECCIÓN DE LLAVE
         let key = esMix ? "mix_corporal" : detectar(ultimoMensaje);
         
-        // Si no hay key en este mensaje, miramos el anterior
+        // Memoria corta (si no hay tema en este mensaje, mira el anterior)
         if (!key && mensajesUsuario.length > 1) {
-             key = detectar(mensajesUsuario[mensajesUsuario.length - 2].content.toLowerCase());
+             const penultimo = limpiarTexto(mensajesUsuario[mensajesUsuario.length - 2].content);
+             key = detectar(penultimo);
         }
-        // Persistencia del Mix si ya estábamos hablando de eso
+        // Persistencia del Mix
         if (!key && historial.some(m => m.content.includes("Reloj de Arena"))) key = "mix_corporal";
 
         let promptFinal = "";
 
+        // MÁQUINA DE ESTADOS
         if (pideLlamada) {
             promptFinal = RESPUESTA_LLAMADA;
         } else if (esMix && !preguntaComo && !pidePrecio) {
-            // Si recién detectamos el mix, lanzamos el gancho estratega
             promptFinal = PASO_MIX_ESTRATEGA;
         } else if (!key) {
             promptFinal = PROMPT_TRIAGE; 
         } else {
-            // MÁQUINA DE ESTADOS
             if (pidePrecio) {
                 promptFinal = PASO_3_PRECIO;
             } else if (preguntaComo) {
@@ -80,7 +87,7 @@ export async function pensar(historial, nombreCompleto) {
             }
         }
 
-        // LEEMOS LA ENCICLOPEDIA (CLINIC.JS)
+        // LEEMOS LA ENCICLOPEDIA
         if (key && CLINICA[key]) {
             const d = CLINICA[key];
             promptFinal = promptFinal
