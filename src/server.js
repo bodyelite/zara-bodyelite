@@ -14,71 +14,65 @@ const MONITOR_HTML = `
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZARA MONITOR PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZARA MONITOR 9.1</title>
     <style>
-        :root { --bg: #050505; --sidebar: #0f0f0f; --text: #ffffff; --accent: #00ff88; --danger: #ff3333; --bubble-user: #1f1f1f; --bubble-bot: #004d33; }
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --bubble-user: #222; --bubble-bot: #003322; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
-        .sidebar { width: 350px; background: var(--sidebar); border-right: 1px solid #333; display: flex; flex-direction: column; z-index: 10; }
-        .header { padding: 18px; border-bottom: 2px solid var(--accent); font-weight: 900; font-size: 1.2rem; letter-spacing: 0.5px; background: #000; display: flex; justify-content: space-between; align-items: center; }
-        .status-dot { width: 12px; height: 12px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .sidebar { width: 360px; background: var(--sidebar); border-right: 1px solid #222; display: flex; flex-direction: column; z-index: 20; }
+        .header { padding: 20px; border-bottom: 2px solid var(--accent); font-weight: 900; font-size: 1.3rem; letter-spacing: 1px; background: #000; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        .live-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        .user-list { flex: 1; overflow-y: auto; }
-        .card { padding: 18px; border-bottom: 1px solid #222; cursor: pointer; transition: background 0.2s; display: flex; gap: 12px; align-items: flex-start; }
-        .card:hover { background: #1a1a1a; }
-        .card.active { background: #1a1a1a; border-left: 4px solid var(--accent); }
-        .card.flash { background: #223322; transition: background 0.5s; }
+        .user-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #333 #000; }
+        .card { padding: 18px; border-bottom: 1px solid #1a1a1a; cursor: pointer; transition: 0.2s; display: flex; gap: 15px; align-items: flex-start; }
+        .card:hover { background: #111; }
+        .card.active { background: #161616; border-left: 4px solid var(--accent); }
+        .card.flash { background: #002211; transition: background 0.5s; }
         
-        .avatar { width: 45px; height: 45px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: #ccc; flex-shrink: 0; }
+        .avatar { width: 50px; height: 50px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; color: #fff; border: 1px solid #333; flex-shrink: 0; }
         .info { flex: 1; overflow: hidden; }
-        .top-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .top-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
         .name { font-weight: 700; font-size: 1rem; color: #fff; }
-        .time-ago { font-size: 0.75rem; color: var(--accent); font-weight: bold; }
-        .preview { font-size: 0.85rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .time-ago { font-size: 0.8rem; color: var(--accent); font-family: monospace; }
+        .preview { font-size: 0.9rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .main { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; }
-        .chat-head { padding: 15px 20px; border-bottom: 1px solid #333; background: #111; display: flex; justify-content: space-between; align-items: center; height: 70px; }
+        .main { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; width: 100%; }
+        .chat-head { padding: 15px; border-bottom: 1px solid #222; background: #0a0a0a; display: flex; justify-content: space-between; align-items: center; height: 70px; }
         
-        .back-btn { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; margin-right: 10px; }
-        .chat-info { display: flex; flex-direction: column; }
-        #chatTitle { font-weight: bold; font-size: 1.1rem; }
-        #chatPhone { font-size: 0.8rem; color: #aaa; text-decoration: none; margin-top: 2px; }
+        .back-btn { display: none; background: none; border: none; color: var(--accent); font-size: 2rem; padding: 0 15px 0 0; cursor: pointer; }
+        .chat-info h2 { margin: 0; font-size: 1.1rem; }
+        .chat-info a { color: #888; text-decoration: none; font-size: 0.9rem; }
         
-        .controls { display: flex; gap: 10px; }
-        #toggleBtn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; background: var(--accent); color: #000; font-size: 0.85rem; }
-        #toggleBtn.off { background: var(--danger); color: #fff; }
+        .controls button { padding: 8px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; font-size: 0.9rem; }
+        .controls button.off { background: var(--danger); color: #fff; }
 
-        .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+        .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #000; }
         
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; position: relative; word-wrap: break-word; }
-        .msg.user { align-self: flex-start; background: var(--bubble-user); color: #e0e0e0; border-bottom-left-radius: 2px; }
-        .msg.bot { align-self: flex-end; background: var(--bubble-bot); color: #fff; border: 1px solid #006644; border-bottom-right-radius: 2px; }
-        .time { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px; font-variant-numeric: tabular-nums; }
-        
-        .input-area { padding: 15px; background: #111; border-top: 1px solid #333; display: flex; gap: 10px; }
-        #msgInput { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; font-size: 1rem; resize: none; outline: none; height: 50px; }
-        #msgInput:focus { border-color: var(--accent); }
-        #sendBtn { background: var(--accent); color: #000; border: none; border-radius: 8px; width: 50px; font-size: 1.5rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-        #sendBtn:hover { transform: scale(1.05); }
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-size: 1rem; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .msg.user { align-self: flex-start; background: var(--bubble-user); color: #ddd; border-bottom-left-radius: 2px; border: 1px solid #333; }
+        .msg.bot { align-self: flex-end; background: var(--bubble-bot); color: #fff; border: 1px solid #005533; border-bottom-right-radius: 2px; }
+        .time { font-size: 0.7rem; color: rgba(255,255,255,0.4); text-align: right; margin-top: 5px; }
+
+        .input-area { padding: 15px; background: #0a0a0a; border-top: 1px solid #222; display: flex; gap: 10px; align-items: flex-end; }
+        textarea { flex: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; font-size: 1rem; resize: none; height: 50px; outline: none; }
+        textarea:focus { border-color: var(--accent); }
+        .send-btn { width: 50px; height: 50px; background: var(--accent); border: none; border-radius: 8px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         @media (max-width: 768px) {
-            .sidebar { width: 100%; position: absolute; height: 100%; }
-            .sidebar.hidden { display: none; }
-            .main { display: none; width: 100%; }
+            .sidebar { width: 100%; position: absolute; height: 100%; transition: transform 0.3s ease; }
+            .sidebar.hidden { transform: translateX(-100%); }
+            .main { width: 100%; display: none; }
             .main.active { display: flex; }
             .back-btn { display: block; }
-            .card { padding: 15px; }
-            .avatar { width: 40px; height: 40px; }
-            .msg { max-width: 85%; font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="header">ZARA 8.0 <div class="status-dot"></div></div>
+        <div class="header">ZARA 9.1 <div class="live-dot"></div></div>
         <div class="user-list" id="list"></div>
     </div>
     
@@ -100,7 +94,7 @@ const MONITOR_HTML = `
         
         <div class="input-area" id="inputArea" style="display:none;">
             <textarea id="msgInput" placeholder="Escribe como humano..."></textarea>
-            <button id="sendBtn" onclick="sendManual()">➤</button>
+            <button class="send-btn" onclick="sendManual()">➤</button>
         </div>
     </div>
 
@@ -120,20 +114,31 @@ const MONITOR_HTML = `
         let activeId = null;
         let botStatus = {};
 
-        // Función para convertir fecha string "DD/MM, HH:MM" a timestamp numérico
+        // PARSER ESPECÍFICO PARA: "26/12, 06:47 p. m."
         function getTimestamp(timeStr) {
-            if (!timeStr) return 0; // Si no hay fecha, va al fondo
+            if (!timeStr) return 0;
             try {
-                // Formato esperado: "26/12, 17:52"
-                const [datePart, timePart] = timeStr.split(',');
-                if (!datePart || !timePart) return 0;
+                // Separar fecha y hora
+                const parts = timeStr.split(','); 
+                if (parts.length < 2) return 0;
+
+                const dateParts = parts[0].trim().split('/');
+                const day = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1; // Mes 0-11
                 
-                const [day, month] = datePart.trim().split('/');
-                const [hour, min] = timePart.trim().split(':');
+                let timeRaw = parts[1].trim(); // "06:47 p. m."
+                let isPM = timeRaw.includes("p. m.") || timeRaw.includes("pm") || timeRaw.includes("PM");
+                let timeClean = timeRaw.replace("p. m.", "").replace("a. m.", "").replace("p.m.", "").replace("a.m.", "").trim();
                 
+                const timeParts = timeClean.split(':');
+                let hour = parseInt(timeParts[0]);
+                const min = parseInt(timeParts[1]);
+
+                if (isPM && hour < 12) hour += 12;
+                if (!isPM && hour === 12) hour = 0;
+
                 const now = new Date();
-                // Asumimos año actual
-                const d = new Date(now.getFullYear(), parseInt(month)-1, parseInt(day), parseInt(hour), parseInt(min));
+                const d = new Date(now.getFullYear(), month, day, hour, min);
                 return d.getTime();
             } catch (e) { return 0; }
         }
@@ -166,12 +171,12 @@ const MONITOR_HTML = `
                         phone: id,
                         history: clean,
                         lastMsg: lastMsg,
-                        sortTime: getTimestamp(lastMsg.time) // Calculamos timestamp para ordenar
+                        sortTime: getTimestamp(lastMsg.time)
                     });
                 }
             });
 
-            // ORDENAR: Mayor timestamp (más reciente) primero
+            // ORDENAR: Mayor timestamp primero
             sortedUsers.sort((a, b) => b.sortTime - a.sortTime);
 
             sortedUsers.forEach(u => {
@@ -197,23 +202,20 @@ const MONITOR_HTML = `
             
             const txt = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? d.texto : d.mensaje;
             const role = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? 'bot' : 'user';
-            const time = d.timestamp || new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
+            const time = d.timestamp || new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', hour12: true});
 
             if(!d.restore) {
                 users[id].history.push({ role, txt, time });
+                if (activeId === id) renderBubble({ role, txt, time });
                 
-                if (activeId === id) {
-                    renderBubble({ role, txt, time });
-                }
-                
-                // REORDENAR VISUALMENTE
                 const card = document.getElementById('c-' + id);
                 if(card) {
                     let prev = (role==='bot'?'🤖 ':'') + txt;
                     card.querySelector('.preview').innerText = prev;
-                    card.querySelector('.time-ago').innerText = time.includes(',') ? time.split(',')[1] : time;
                     
-                    // Mover al principio de la lista (porque es el más nuevo)
+                    // Actualizar hora y mover al inicio
+                    let timeShow = time.includes(',') ? time.split(',')[1] : time;
+                    card.querySelector('.time-ago').innerText = timeShow;
                     list.prepend(card);
                     
                     card.classList.add('flash');
@@ -240,7 +242,6 @@ const MONITOR_HTML = `
                     </div>
                     <div class="preview">\${prev}</div>
                 </div>\`;
-            // Append en lugar de Prepend en la carga inicial para respetar el orden del sort()
             list.appendChild(div); 
         }
 
@@ -295,7 +296,11 @@ const MONITOR_HTML = `
             const txt = msgInput.value.trim();
             if(!activeId || !txt) return;
             msgInput.value = "";
-            renderBubble({ role: 'bot', txt: txt, time: new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'}) });
+            
+            // Render optimista
+            const nowTime = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', hour12: true});
+            renderBubble({ role: 'bot', txt: txt, time: nowTime });
+            
             await fetch('/api/manual-msg', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -305,41 +310,3 @@ const MONITOR_HTML = `
     </script>
 </body>
 </html>
-`;
-
-app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
-app.get("/api/history", (req, res) => res.json(getSesiones()));
-app.get("/api/status", (req, res) => res.json(getStatus()));
-app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
-
-app.post("/api/toggle-bot", (req, res) => {
-    const id = req.query.id;
-    if(id) {
-        const s = toggleBot(id);
-        res.json({ status: s });
-    } else res.sendStatus(400);
-});
-
-app.post("/api/manual-msg", async (req, res) => {
-    const { phone, text } = req.body;
-    if(phone && text) {
-        const ok = await enviarMensajeManual(phone, text);
-        res.sendStatus(ok ? 200 : 500);
-    } else res.sendStatus(400);
-});
-
-app.get("/webhook", (req, res) => {
-  if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
-  else res.sendStatus(403);
-});
-app.post("/webhook", async (req, res) => {
-  try { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
-});
-app.post("/reservo-webhook", async (req, res) => {
-  try { await procesarReserva(req.body); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
-});
-
-app.listen(PORT, () => {
-    console.log(`🟢 ZARA 8.0 CONTROL TOTAL en puerto ${PORT}`);
-    console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
-});
