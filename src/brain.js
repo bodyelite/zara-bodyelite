@@ -15,6 +15,9 @@ export async function pensar(historial, nombreCompleto) {
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         const textoCompleto = mensajesUsuario.map(m => m.content.toLowerCase()).join(" ");
         
+        // DETECCIÓN DE URGENCIA / PRECIO
+        const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("vale") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
+
         const detectar = (txt) => {
             if (txt.includes("face") || txt.includes("cara") || txt.includes("rostro") || txt.includes("piel") || txt.includes("arrugas") || txt.includes("manchas")) return "pink_glow";
             if (txt.includes("push") || txt.includes("gluteo") || txt.includes("trasero") || txt.includes("cola") || txt.includes("nalga") || txt.includes("levantar")) return "push_up";
@@ -33,11 +36,18 @@ export async function pensar(historial, nombreCompleto) {
                 key = "general";
                 systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
             } else {
-                systemPrompt = PROMPT_VENTA
+                let basePrompt = PROMPT_VENTA;
+                
+                // INYECCIÓN DE ORDEN DIRECTA SI PIDE PRECIO
+                if (pidePrecio) {
+                    basePrompt += "\n\n🚨 ALERTA: EL CLIENTE PIDIÓ PRECIO DIRECTAMENTE. IGNORA LA EXPLICACIÓN TÉCNICA Y DALE EL VALOR AHORA MISMO.";
+                }
+
+                systemPrompt = basePrompt
                     .replace(/{NOMBRE_CLIENTE}/g, nombrePila)
                     .replace(/{PLAN}/g, datos.plan)
                     .replace(/{PRECIO}/g, datos.precio)
-                    .replace(/{DURACION}/g, datos.duracion) // NUEVO: DURACIÓN
+                    .replace(/{DURACION}/g, datos.duracion)
                     .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
                     .replace(/{BENEFICIO}/g, datos.beneficio)
                     .replace(/{DIRECCION}/g, CLINICA.faq.direccion)
@@ -50,7 +60,7 @@ export async function pensar(historial, nombreCompleto) {
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
-            temperature: 0.3, 
+            temperature: 0.2, 
             max_tokens: 300
         });
 
