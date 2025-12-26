@@ -11,74 +11,71 @@ export async function pensar(historial, nombreCompleto) {
     try {
         const nombrePila = nombreCompleto ? nombreCompleto.split(" ")[0] : "Hola";
         
-        // 1. SOLO MIRAMOS EL ÚLTIMO MENSAJE (CERO MEMORIA ZOMBIE)
+        // SOLO MIRAMOS EL ÚLTIMO MENSAJE
         const mensajesUsuario = historial.filter(m => m.role === 'user');
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         
-        // Detección de intenciones
-        const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
+        // DETECCIONES
+        const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo");
         const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
-        const preguntaZonas = ultimoMensaje.includes("zonas") || ultimoMensaje.includes("sesiones") || ultimoMensaje.includes("veces");
-        const afirmacion = ultimoMensaje === "si" || ultimoMensaje.includes("si ") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno");
+        const preguntaQueEs = ultimoMensaje.includes("que es") || ultimoMensaje.includes("consiste") || ultimoMensaje.includes("como funciona") || ultimoMensaje.includes("explicame");
+        const preguntaZonas = ultimoMensaje.includes("zona") || ultimoMensaje.includes("sesion");
         
-        // Detección de conflicto (Mix de tratamientos)
-        const mencionaCuerpo = ultimoMensaje.includes("lipo") || ultimoMensaje.includes("reduc") || ultimoMensaje.includes("grasa") || ultimoMensaje.includes("rollitos") || ultimoMensaje.includes("abdomen");
-        const mencionaGluteo = ultimoMensaje.includes("push") || ultimoMensaje.includes("gluteo") || ultimoMensaje.includes("cola") || ultimoMensaje.includes("nalga");
-        const esMix = mencionaCuerpo && mencionaGluteo;
+        // Detección de MIX (Conflicto de intereses)
+        const mencionaCuerpo = ultimoMensaje.includes("lipo") || ultimoMensaje.includes("reduc") || ultimoMensaje.includes("grasa") || ultimoMensaje.includes("rollito") || ultimoMensaje.includes("abdomen");
+        const mencionaGluteo = ultimoMensaje.includes("push") || ultimoMensaje.includes("gluteo") || ultimoMensaje.includes("trasero") || ultimoMensaje.includes("cola");
+        const esMix = (mencionaCuerpo && mencionaGluteo) || (historial.some(m => m.content.includes("Reloj de Arena")) && !pidePrecio && !preguntaQueEs && !preguntaZonas);
 
+        // Selección de tema base
         const detectar = (txt) => {
-            if (txt.includes("facial") || txt.includes("face") || txt.includes("cara") || txt.includes("rostro") || txt.includes("piel") || txt.includes("glow")) return "pink_glow";
-            if (txt.includes("push") || txt.includes("gluteo") || txt.includes("trasero") || txt.includes("cola") || txt.includes("nalga")) return "push_up";
-            if (txt.includes("lipo") || txt.includes("reduc") || txt.includes("grasa") || txt.includes("guata") || txt.includes("abdomen") || txt.includes("rollitos")) return "lipo_express";
-            if (txt.includes("depila") || txt.includes("laser") || txt.includes("vello")) return "depilacion";
+            if (txt.includes("facial") || txt.includes("face") || txt.includes("rostro") || txt.includes("piel")) return "pink_glow";
+            if (txt.includes("push") || txt.includes("gluteo") || txt.includes("cola")) return "push_up";
+            if (txt.includes("lipo") || txt.includes("rollito") || txt.includes("grasa")) return "lipo_express";
             return null;
         };
-
-        // Solo detectamos tema en el ÚLTIMO mensaje. Si no hay, no hay.
-        let key = esMix ? "lipo_express" : detectar(ultimoMensaje); // Si es mix, cargamos base Lipo pero el Prompt manejará el Mix.
         
+        let key = detectar(ultimoMensaje);
         let systemPrompt = "";
-        
-        if (key) {
-            const datos = CLINICA[key];
-            if (!datos) { 
-                systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
-            } else {
-                let basePrompt = PROMPT_VENTA;
-                
-                if (esMix) {
-                    basePrompt += "\n\n🚨 ALERTA CRÍTICA: EL CLIENTE QUIERE MIX (ROLLITOS Y GLÚTEOS). EJECUTA EL 'CASO ESPECIAL A' (OFRECE EVALUACIÓN PARA PLAN MIXTO).";
-                } else if (pideLlamada) {
-                    basePrompt += "\n\n🚨 ALERTA: CLIENTE PIDE LLAMADA. USA 'CASO C'. PIDE SU NÚMERO.";
-                } else if (preguntaZonas) {
-                    basePrompt += "\n\n🚨 ALERTA: PREGUNTA POR ZONAS. USA 'CASO B' (ARGUMENTO DE AHORRO).";
-                } else if (pidePrecio) {
-                    basePrompt += "\n\n🚨 ALERTA: PIDE PRECIO. SALTA AL PASO 3.";
-                } else if (afirmacion) {
-                    basePrompt += "\n\n🚨 ALERTA: DIJO SÍ. MIRA EL HISTORIAL Y DALE EL SIGUIENTE PASO DEL PING-PONG.";
-                } else {
-                    basePrompt += "\n\n🚨 ALERTA: CLIENTE PIDE INFO. EMPIEZA POR EL PASO 1.";
-                }
 
-                systemPrompt = basePrompt
-                    .replace(/{NOMBRE_CLIENTE}/g, nombrePila)
-                    .replace(/{PLAN}/g, datos.plan)
-                    .replace(/{PRECIO}/g, datos.precio)
-                    .replace(/{DURACION}/g, datos.duracion)
-                    .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
-                    .replace(/{BENEFICIO}/g, datos.beneficio)
-                    .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
-            }
+        // LÓGICA DE RESPUESTA
+        if (esMix) {
+            // LÓGICA ESPECÍFICA PARA EL MIX (PRIORIDAD ALTA)
+            const datos = CLINICA["lipo_express"]; // Cargamos datos base para tener el link
+            let basePrompt = PROMPT_VENTA;
+
+            if (pideLlamada) basePrompt += "\n\n🚨 ALERTA: CLIENTE PIDE LLAMADA. PIDE NÚMERO.";
+            else if (preguntaZonas) basePrompt += "\n\n🚨 ALERTA: PREGUNTA ZONAS. USA GUION 'D' (ZONAS/IA).";
+            else if (pidePrecio) basePrompt += "\n\n🚨 ALERTA: PIDE PRECIO MIXTO. USA GUION 'C' (SUMA VS AHORRO).";
+            else if (preguntaQueEs) basePrompt += "\n\n🚨 ALERTA: PREGUNTA EN QUÉ CONSISTE. USA GUION 'B' (TECNOLOGÍA).";
+            else basePrompt += "\n\n🚨 ALERTA: CLIENTE PIDE MIX. USA GUION 'A' (GANCHO RELOJ DE ARENA).";
+
+            systemPrompt = basePrompt.replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
+
+        } else if (key) {
+            // LÓGICA TRATAMIENTO ÚNICO
+            const datos = CLINICA[key];
+            let basePrompt = PROMPT_VENTA;
+            
+            if (pideLlamada) basePrompt += "\n\n🚨 ALERTA: PIDE LLAMADA. PIDE NÚMERO.";
+            else if (preguntaZonas) basePrompt += "\n\n🚨 ALERTA: PREGUNTA ZONAS. USA GUION 'D'.";
+            else if (pidePrecio) basePrompt += "\n\n🚨 ALERTA: PIDE PRECIO. USA GUION 'C' (ADAPTADO A UN SOLO PLAN).";
+            else if (preguntaQueEs) basePrompt += `\n\n🚨 ALERTA: EXPLICA EL ${datos.plan} EN 2 LÍNEAS MÁXIMO. LUEGO PREGUNTA SI QUIERE PRECIO.`;
+            else basePrompt += `\n\n🚨 ALERTA: USA EL GUION DE GANCHO PARA ${datos.plan}.`;
+
+            systemPrompt = basePrompt
+                .replace(/{PLAN}/g, datos.plan)
+                .replace(/{PRECIO}/g, datos.precio)
+                .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
         } else {
-            // Si no hay tema claro en el último mensaje, TRIAGE INMEDIATO.
-            systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
+            // TRIAGE
+            systemPrompt = PROMPT_TRIAGE;
         }
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
-            temperature: 0.1, 
-            max_tokens: 250
+            temperature: 0.2, 
+            max_tokens: 200
         });
 
         return completion.choices[0].message.content;
