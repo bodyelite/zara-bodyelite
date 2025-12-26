@@ -11,7 +11,6 @@ export async function pensar(historial, nombreCompleto) {
     try {
         const nombrePila = nombreCompleto ? nombreCompleto.split(" ")[0] : "Hola";
         
-        // FILTRAR SOLO MENSAJES DE USUARIO
         const mensajesUsuario = historial.filter(m => m.role === 'user');
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         const textoCompleto = mensajesUsuario.map(m => m.content.toLowerCase()).join(" ");
@@ -30,7 +29,7 @@ export async function pensar(historial, nombreCompleto) {
         
         if (key) {
             const datos = CLINICA[key];
-            if (!datos) { // FALLBACK DE SEGURIDAD
+            if (!datos) { 
                 key = "general";
                 systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
             } else {
@@ -40,21 +39,18 @@ export async function pensar(historial, nombreCompleto) {
                     .replace(/{PRECIO}/g, datos.precio)
                     .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
                     .replace(/{BENEFICIO}/g, datos.beneficio)
-                    .replace(/{DIRECCION}/g, CLINICA.faq.direccion);
+                    .replace(/{DIRECCION}/g, CLINICA.faq.direccion)
+                    .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link); // AHORA SÍ TIENE EL LINK
             }
         } else {
             systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
         }
 
-        // LOG PARA DEBUG EN RENDER
-        console.log("CEREBRO ACTIVADO:", key);
-        console.log("PROMPT USADO:", systemPrompt.substring(0, 50) + "...");
-
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
-            temperature: 0.1, 
-            max_tokens: 200
+            temperature: 0.3, // Un poco más de creatividad para la calidez
+            max_tokens: 300
         });
 
         return completion.choices[0].message.content;

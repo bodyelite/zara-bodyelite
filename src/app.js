@@ -11,12 +11,9 @@ import { transmitir } from "./utils/stream.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// RUTA SEGÚN TU CAPTURA DE RENDER
 const RENDER_DISK_PATH = "/opt/render/project/src/data/historial.json";
 const LOCAL_PATH = path.join(__dirname, "data", "historial.json");
 const DB_FILE = fs.existsSync("/opt/render/project/src/data") ? RENDER_DISK_PATH : LOCAL_PATH;
-
-// Asegurar carpeta
 const DB_DIR = path.dirname(DB_FILE);
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
 
@@ -39,7 +36,8 @@ export const usuariosPlataforma = {};
 
 function getPhone(txt) {
   if (!txt) return null;
-  const m = txt.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{7,8}\b/); 
+  // REGEX MEJORADA: Detecta 8 o 9 dígitos seguidos, con o sin +56
+  const m = txt.match(/\b(?:\+?56)?\s?(?:9\s?)?\d{8,9}\b/); 
   return m ? m[0].replace(/\D/g, '') : null;
 }
 
@@ -101,12 +99,17 @@ export async function procesarEvento(entry) {
   const low = text.toLowerCase().trim();
   if (low.includes("link") || low.includes("agenda")) estadosClientes[id] = 'agendado';
 
+  // DETECCIÓN DE TELÉFONO (Prioridad Alta)
   const ph = getPhone(text);
   if (ph) {
     estadosClientes[id] = 'agendado';
-    const alerta = `🚨 LLAMAR: ${name} - ${ph}`;
-    for (const n of NEGOCIO.staff_alertas) await sendMessage(n, alerta);
-    await sendMessage(id, "¡Anotado! 📞 Te llamaremos en breve.", platform);
+    const alerta = `🚨 NUEVO LEAD (WSP): ${name} - ${ph}`;
+    // ENVIAR ALERTA A CADA STAFF
+    for (const n of NEGOCIO.staff_alertas) {
+        try { await sendMessage(n, alerta, "whatsapp"); } catch(e) {}
+    }
+    // CONFIRMACIÓN AL CLIENTE (Hardcoded para asegurar respuesta inmediata)
+    await sendMessage(id, "¡Perfecto! 📞 Ya le pasé tu número a mis compañeras. Te llamarán en breve para coordinar.", platform);
     return;
   }
 
