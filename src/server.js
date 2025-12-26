@@ -9,7 +9,6 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
 app.use(bodyParser.json());
 
-// --- MONITOR VISUAL (RESTAURADO) ---
 const MONITOR_HTML = `
 <!DOCTYPE html>
 <html lang="es">
@@ -61,7 +60,6 @@ const MONITOR_HTML = `
         let users = {};
         let activeId = null;
 
-        // Cargar historial inicial
         fetch('/api/history').then(res => res.json()).then(data => {
             Object.keys(data).forEach(id => {
                 const hist = data[id];
@@ -70,13 +68,11 @@ const MONITOR_HTML = `
                     const match = hist[0].content.match(/\\[Cliente: (.*?)\\]/);
                     if(match) name = match[1];
                     
-                    // Procesar historial completo
                     const cleanHist = hist.map(m => ({ 
                         role: m.role === 'assistant' ? 'bot' : 'user', 
                         txt: m.content.replace(/\\[Cliente: .*?\\] /, '')
                     }));
 
-                    // Inicializar usuario
                     users[id] = { name: name, phone: id, history: cleanHist };
                     createCard(users[id], cleanHist[cleanHist.length-1].txt);
                 }
@@ -92,7 +88,6 @@ const MONITOR_HTML = `
 
         function update(d) {
             const id = d.telefono;
-            // Si es mensaje nuevo, crear usuario si no existe
             if (!users[id]) {
                 users[id] = { name: d.nombre || 'Cliente', phone: id, history: [] };
                 createCard(users[id], "...");
@@ -101,12 +96,10 @@ const MONITOR_HTML = `
             const txt = d.tipo === "RESPUESTA_ZARA" ? d.texto : d.mensaje;
             const role = d.tipo === "RESPUESTA_ZARA" ? 'bot' : 'user';
             
-            // Evitar duplicados si es restauración
             if(!d.restore) {
                 users[id].history.push({ role, txt });
                 if (activeId === id) renderBubble({ role, txt });
                 
-                // Actualizar card y mover al inicio
                 const card = document.getElementById('c-' + id);
                 if(card) {
                     card.querySelector('.preview').innerText = (role === 'bot' ? "🤖 " : "") + txt;
@@ -168,6 +161,6 @@ app.post("/reservo-webhook", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(\`🟢 ZARA 6.0 LIVE en puerto \${PORT}\`);
-    console.log(\`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor\`);
+    console.log(`🟢 ZARA 6.0 LIVE en puerto ${PORT}`);
+    console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
 });
