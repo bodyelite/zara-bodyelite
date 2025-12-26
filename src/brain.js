@@ -15,9 +15,10 @@ export async function pensar(historial, nombreCompleto) {
         const ultimoMensaje = mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content.toLowerCase() : "";
         const textoCompleto = mensajesUsuario.map(m => m.content.toLowerCase()).join(" ");
         
-        // DETECCIÓN DE URGENCIA / PRECIO
+        // DETECCIÓN: ¿PIDE PRECIO?
         const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("vale") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
 
+        // DETECCIÓN: ¿SABEMOS DE QUÉ HABLA?
         const detectar = (txt) => {
             if (txt.includes("face") || txt.includes("cara") || txt.includes("rostro") || txt.includes("piel") || txt.includes("arrugas") || txt.includes("manchas")) return "pink_glow";
             if (txt.includes("push") || txt.includes("gluteo") || txt.includes("trasero") || txt.includes("cola") || txt.includes("nalga") || txt.includes("levantar")) return "push_up";
@@ -31,16 +32,17 @@ export async function pensar(historial, nombreCompleto) {
         let systemPrompt = "";
         
         if (key) {
+            // CONTEXTO ESPECÍFICO (Sabe qué quiere)
             const datos = CLINICA[key];
             if (!datos) { 
-                key = "general";
+                // CASO RARO: Detectó algo pero no hay datos -> General
                 systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
             } else {
                 let basePrompt = PROMPT_VENTA;
                 
-                // INYECCIÓN DE ORDEN DIRECTA SI PIDE PRECIO
+                // SI PIDE PRECIO Y SABEMOS QUÉ ES -> ORDEN DIRECTA
                 if (pidePrecio) {
-                    basePrompt += "\n\n🚨 ALERTA: EL CLIENTE PIDIÓ PRECIO DIRECTAMENTE. IGNORA LA EXPLICACIÓN TÉCNICA Y DALE EL VALOR AHORA MISMO.";
+                    basePrompt += "\n\n🚨 CLIENTE PIDE VALOR. DALE EL PRECIO ({PRECIO}) DIRECTAMENTE. NO USES LA PALABRA 'PROMO'.";
                 }
 
                 systemPrompt = basePrompt
@@ -50,18 +52,26 @@ export async function pensar(historial, nombreCompleto) {
                     .replace(/{DURACION}/g, datos.duracion)
                     .replace(/{TECNOLOGIAS}/g, datos.tecnologias)
                     .replace(/{BENEFICIO}/g, datos.beneficio)
-                    .replace(/{DIRECCION}/g, CLINICA.faq.direccion)
                     .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
             }
         } else {
-            systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
+            // NO HAY CONTEXTO (No nombró tratamiento)
+            if (pidePrecio) {
+                // CASO CRÍTICO: Pide precio pero no sabemos de qué -> MENÚ ELEGANTE
+                systemPrompt = PROMPT_VENTA
+                    .replace(/{NOMBRE_CLIENTE}/g, nombrePila)
+                    + "\n\n🚨 EL CLIENTE DIJO 'PRECIO' PERO NO SABEMOS DE QUÉ. EJECUTA EL 'CASO 1' (MENÚ ELEGANTE) MOSTRANDO LOS DOS VALORES (PUSH UP Y LIPO).";
+            } else {
+                // Saludo normal
+                systemPrompt = PROMPT_TRIAGE.replace(/{NOMBRE_CLIENTE}/g, nombrePila);
+            }
         }
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
             temperature: 0.2, 
-            max_tokens: 300
+            max_tokens: 350
         });
 
         return completion.choices[0].message.content;
