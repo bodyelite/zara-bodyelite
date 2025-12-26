@@ -16,6 +16,7 @@ export async function pensar(historial, nombreCompleto) {
         
         const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
         const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
+        const preguntaZonas = ultimoMensaje.includes("zonas") || ultimoMensaje.includes("sesiones") || ultimoMensaje.includes("veces") || ultimoMensaje.includes("cuanto dura");
         const afirmacion = ultimoMensaje === "si" || ultimoMensaje.includes("si ") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno");
 
         const detectar = (txt) => {
@@ -43,12 +44,14 @@ export async function pensar(historial, nombreCompleto) {
                 
                 if (pideLlamada) {
                     basePrompt += "\n\n🚨 CLIENTE PIDE LLAMADA. PIDE SU NÚMERO. NO ENVÍES EL LINK.";
+                } else if (preguntaZonas) {
+                    basePrompt += "\n\n🚨 PREGUNTA CRÍTICA SOBRE ZONAS/SESIONES. USA EL 'CASO ESPECIAL A' (ARGUMENTO DE AHORRO CON IA).";
                 } else if (pidePrecio) {
-                    basePrompt += "\n\n🚨 CLIENTE PIDE PRECIO. SALTA AL PASO 3 (PRECIO + PREGUNTA IA).";
+                    basePrompt += "\n\n🚨 CLIENTE PIDE PRECIO. SALTA AL PASO 3 (PRECIO + ARGUMENTO DE AHORRO IA).";
                 } else if (afirmacion) {
-                    basePrompt += "\n\n🚨 EL CLIENTE DIJO 'SÍ'. REVISA QUÉ LE PREGUNTASTE ANTES Y DALE EL SIGUIENTE PASO DEL GUION (NO TE SALTES PASOS).";
+                    basePrompt += "\n\n🚨 EL CLIENTE DIJO 'SÍ'. REVISA EL HISTORIAL Y DALE EL SIGUIENTE PASO DEL PING-PONG.";
                 } else {
-                    basePrompt += "\n\n🚨 CLIENTE PIDE INFO. EMPIEZA POR EL PASO 1 (GANCHO + ¿QUIERES SABER CÓMO FUNCIONA?). NO DES PRECIO AÚN.";
+                    basePrompt += "\n\n🚨 CLIENTE PIDE INFO. EMPIEZA POR EL PASO 1 (GANCHO).";
                 }
 
                 systemPrompt = basePrompt
@@ -72,7 +75,7 @@ export async function pensar(historial, nombreCompleto) {
             model: "gpt-4o",
             messages: [{ role: "system", content: systemPrompt }, ...historial],
             temperature: 0.1, 
-            max_tokens: 150
+            max_tokens: 200
         });
 
         return completion.choices[0].message.content;
