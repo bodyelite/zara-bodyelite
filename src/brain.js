@@ -1,51 +1,43 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
-import { PROMPT_TRIAGE, PASO_1_GANCHO, PASO_2_TECNOLOGIA, PASO_3_PRECIO, PASO_4_CIERRE, RESPUESTA_LLAMADA } from './config/persona.js';
 import { CLINICA } from './config/clinic.js';
 import { NEGOCIO } from './config/business.js';
 
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-function limpiar(t) { return t ? t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() : ""; }
-
-function detectarTema(texto) {
-    const t = limpiar(texto);
-    if (t.includes("push") || t.includes("gluteo")) return "push_up";
-    if (t.includes("fitness") || t.includes("fortalecer")) return "body_fitness";
-    if (t.includes("arruga") || t.includes("rostro")) return "full_face";
-    if (t.includes("lipo") || t.includes("grasa")) return "lipo_express";
-    return null;
-}
+const CONOCIMIENTO_CLINICO = JSON.stringify(CLINICA, null, 2);
 
 export async function pensar(historial, nombreCompleto) {
     const nombre = nombreCompleto ? nombreCompleto.split(" ")[0] : "estimada/o";
-    const msjsUsr = historial.filter(m => m.role === 'user');
-    const msjsBot = historial.filter(m => m.role === 'assistant');
-    const uMsg = limpiar(msjsUsr[msjsUsr.length - 1]?.content);
-    const uBot = limpiar(msjsBot[msjsBot.length - 1]?.content);
+    const SYSTEM_PROMPT = `
+    Eres Zara, asistente de Body Elite. Tu tono es profesional, empático y directo.
+    
+    BASE DE DATOS DE TRATAMIENTOS (SOLO VENDEMOS ESTO):
+    ${CONOCIMIENTO_CLINICO}
 
-    let key = null;
-    for (let i = msjsUsr.length - 1; i >= 0; i--) {
-        const t = detectarTema(msjsUsr[i].content);
-        if (t) { key = t; break; }
-    }
+    LINK AGENDA: ${NEGOCIO.agenda_link}
 
-    let p = "";
-    if (uMsg.includes("hola") || uMsg === "ola" || !key) p = PROMPT_TRIAGE;
-    else if (uMsg.includes("llam") || uMsg.includes("numero")) p = RESPUESTA_LLAMADA;
-    else if (uBot.includes("como funciona")) p = PASO_2_TECNOLOGIA;
-    else if (uBot.includes("sobre el precio")) p = PASO_3_PRECIO;
-    else if (uBot.includes("evaluacion con ia")) p = PASO_4_CIERRE;
-    else p = PASO_1_GANCHO;
+    INSTRUCCIONES:
+    1. INTERPRETA lo que el usuario quiere. (Ej: "poto"/"cola" -> push_up; "guata"/"rollos" -> lipo_express/reductiva; "cara"/"arrugas" -> full_face).
+    2. SIGUE EL FLUJO DE 4 PASOS:
+       - FASE 1 (Descubrimiento): Si el usuario cuenta su problema, recomienda el PLAN exacto del JSON, su BENEFICIO y pregunta si quiere saber cómo funciona.
+       - FASE 2 (Tecnología): Si pide detalles, explica las TECNOLOGIAS del JSON y pregunta si quiere el precio.
+       - FASE 3 (Precio): Si pide precio, da el PRECIO del JSON. Menciona que la evaluación presencial con IA es GRATIS.
+       - FASE 4 (Cierre): Ofrece agendar (dar link) o llamar.
+    
+    REGLAS:
+    - Si dicen "Hola", saluda a ${nombre} y haz Triage: ¿Buscas corporal o facial?
+    - NO inventes precios.
+    - Respuestas cortas (máx 2 párrafos).
+    `;
 
-    const d = CLINICA[key] || CLINICA["lipo_express"];
-    const final = p.replace(/{NOMBRE}/g, nombre).replace(/{PLAN}/g, d.plan).replace(/{BENEFICIO}/g, d.beneficio).replace(/{TECNOLOGIAS}/g, d.tecnologias).replace(/{PRECIO}/g, d.precio).replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
-
-    const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "system", content: "Eres Zara. Responde exactamente con este texto:\n" + final }],
-        temperature: 0
-    });
-    return completion.choices[0].message.content;
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
+            temperature: 0.1
+        });
+        return completion.choices[0].message.content;
+    } catch (e) { return "¡Hola! 👋 ¿Te interesa reducir medidas, levantar glúteos o rejuvenecimiento facial?"; }
 }
