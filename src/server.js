@@ -15,7 +15,7 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZARA ANALYTICS 9.9</title>
+    <title>ZARA ANALYTICS 9.9.1</title>
     <style>
         :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --strategy: #bd00ff; --gold: #ffd700; --bubble-user: #222; --bubble-bot: #003322; --bubble-system: #004400; --bar-1: #444; --bar-2: #0077ff; --bar-3: #ffaa00; --bar-4: #00ff88; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -62,7 +62,7 @@ const MONITOR_HTML = `
         .btn-toggle { background: var(--accent); color: #000; }
         .btn-toggle.off { background: var(--danger); color: #fff; }
         .btn-strategy { background: var(--strategy); color: #fff; box-shadow: 0 0 10px rgba(189, 0, 255, 0.4); }
-        .btn-report { background: #333; color: #fff; border: 1px solid #555; } /* Botón Reporte */
+        .btn-report { background: #333; color: #fff; border: 1px solid #555; }
 
         .notification-area { position: absolute; top: 80px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .notif-card { background: var(--gold); color: #000; padding: 15px 20px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); font-weight: bold; animation: slideIn 0.5s ease-out; display: flex; align-items: center; gap: 10px; }
@@ -82,7 +82,6 @@ const MONITOR_HTML = `
         textarea:focus { border-color: var(--accent); }
         .send-btn { width: 50px; height: 50px; background: var(--accent); border: none; border-radius: 8px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* MODAL REPORTE */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal { background: #111; border: 1px solid #333; padding: 25px; border-radius: 10px; width: 90%; max-width: 400px; color: #fff; box-shadow: 0 0 30px rgba(0,255,136,0.1); }
         .modal h3 { margin-top: 0; color: var(--accent); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
@@ -108,7 +107,7 @@ const MONITOR_HTML = `
 <body>
     <div class="sidebar" id="sidebar">
         <div class="header">
-            ZARA 9.9
+            ZARA 9.9.1
             <div class="header-controls">
                 <button onclick="openModal()" class="dl-btn btn-report" title="Ver Reporte">📊</button>
                 <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar CSV">📥 CSV</a>
@@ -148,13 +147,58 @@ const MONITOR_HTML = `
                 <input type="date" id="dateEnd" onchange="calcFunnel()">
             </div>
             <div class="funnel-chart" id="funnelChart">
-                <div style="text-align:center; color:#666;">Selecciona fechas para calcular</div>
+                <div style="text-align:center; color:#666;">Cargando datos...</div>
             </div>
             <button class="modal-close" onclick="closeModal()">Cerrar</button>
         </div>
     </div>
 
     <script>
+        // === PARCHE: PARSER DE FECHA ROBUSTO ===
+        function getTimestamp(timeStr) {
+            if (!timeStr) return 0;
+            const s = timeStr.replace(/\u00A0/g, ' ').trim();
+
+            // Intento 1: Formato con coma (27/12, 19:00 p. m.)
+            if (s.includes(',')) {
+                try {
+                    const parts = s.split(',');
+                    const datePart = parts[0].trim().split('/');
+                    const day = parseInt(datePart[0]);
+                    const month = parseInt(datePart[1]) - 1;
+                    let year = new Date().getFullYear(); 
+                    if(datePart.length > 2) year = parseInt(datePart[2]); // Si trae año
+
+                    let timePart = parts[1].trim();
+                    let isPM = timePart.toLowerCase().includes('p') && !timePart.toLowerCase().includes('a');
+                    let isAM = timePart.toLowerCase().includes('a');
+                    timePart = timePart.replace(/[a-z\.\s]/gi, '');
+                    let [h, m] = timePart.split(':').map(n => parseInt(n));
+                    if (isPM && h < 12) h += 12;
+                    if (isAM && h === 12) h = 0;
+                    return new Date(year, month, day, h, m).getTime();
+                } catch(e) {}
+            }
+
+            // Intento 2: Formato Linux/Render (27/12 19:00 o 2025-12-27)
+            try {
+                // Probamos parsing directo de JS
+                let d = new Date(s);
+                if (!isNaN(d.getTime())) return d.getTime();
+                
+                // Probamos DD/MM/YYYY HH:MM
+                if (s.includes('/') && s.includes(':')) {
+                    const [dStr, tStr] = s.split(' ');
+                    const [day, month, year] = dStr.split('/').map(n => parseInt(n));
+                    const [h, m] = tStr.split(':').map(n => parseInt(n));
+                    const y = year || new Date().getFullYear();
+                    return new Date(y, month - 1, day, h, m).getTime();
+                }
+            } catch(e) {}
+            
+            return 0;
+        }
+
         const list = document.getElementById('list');
         const feed = document.getElementById('feed');
         const sidebar = document.getElementById('sidebar');
@@ -168,28 +212,7 @@ const MONITOR_HTML = `
         const strategyBtn = document.getElementById('strategyBtn');
         const notifArea = document.getElementById('notifArea');
         const reportModal = document.getElementById('reportModal');
-        
         let users = {}; let activeId = null; let botStatus = {};
-
-        function getTimestamp(timeStr) {
-            if (!timeStr) return 0;
-            try {
-                let cleanStr = timeStr.replace(/\u00A0/g, ' ').trim();
-                const parts = cleanStr.split(','); if (parts.length < 2) return 0;
-                const dateParts = parts[0].trim().split('/');
-                const day = parseInt(dateParts[0]); const month = parseInt(dateParts[1]) - 1; 
-                let timeRaw = parts[1].trim(); 
-                let isPM = timeRaw.toLowerCase().includes("p. m.") || timeRaw.toLowerCase().includes("pm");
-                let isAM = timeRaw.toLowerCase().includes("a. m.") || timeRaw.toLowerCase().includes("am");
-                let timeClean = timeRaw.replace(/[a-z\.\s]/gi, ''); 
-                let hourPart = timeClean.substring(0, timeClean.indexOf(':'));
-                let minPart = timeClean.substring(timeClean.indexOf(':') + 1);
-                let hour = parseInt(hourPart); const min = parseInt(minPart);
-                if (isPM && hour < 12) hour += 12; if (isAM && hour === 12) hour = 0;
-                const now = new Date(); const d = new Date(now.getFullYear(), month, day, hour, min);
-                return d.getTime();
-            } catch (e) { return 0; }
-        }
 
         function calculateStatus(history) {
             let userCount = 0; let isAgendado = false; let isCapturado = false;
@@ -198,10 +221,10 @@ const MONITOR_HTML = `
                 if (m.role === 'system' && m.txt.includes("RESERVA CONFIRMADA")) isAgendado = true;
                 if (m.role === 'bot' && m.txt.includes("llamará")) isCapturado = true;
             });
-            if (isAgendado) return { label: 'AGENDADO', class: 'agendado', val: 4 };
-            if (isCapturado) return { label: 'CAPTURADO', class: 'capturado', val: 3 };
-            if (userCount > 1) return { label: 'MEDIO', class: 'medio', val: 2 };
-            return { label: 'FRIO', class: 'frio', val: 1 };
+            if (isAgendado) return { label: 'AGENDADO', class: 'agendado' };
+            if (isCapturado) return { label: 'CAPTURADO', class: 'capturado' };
+            if (userCount > 1) return { label: 'MEDIO', class: 'medio' };
+            return { label: 'FRIO', class: 'frio' };
         }
 
         Promise.all([fetch('/api/history').then(r => r.json()), fetch('/api/status').then(r => r.json())]).then(([data, status]) => {
@@ -222,8 +245,6 @@ const MONITOR_HTML = `
             });
             sortedUsers.sort((a, b) => b.sortTime - a.sortTime);
             sortedUsers.forEach(u => { users[u.id] = u; createCard(u, u.lastMsg.txt, u.lastMsg.time, u.history); });
-            
-            // Set fechas default (Hoy)
             document.getElementById('dateStart').valueAsDate = new Date();
             document.getElementById('dateEnd').valueAsDate = new Date();
         });
@@ -320,19 +341,14 @@ const MONITOR_HTML = `
             let leads = 0, conversados = 0, interesados = 0, agendados = 0;
 
             Object.values(users).forEach(u => {
-                // Filtrar mensajes por fecha
                 const msgsInRange = u.history.filter(m => {
                     const ts = getTimestamp(m.time);
                     return ts >= start.getTime() && ts <= end.getTime();
                 });
 
                 if(msgsInRange.length > 0) {
-                    leads++; // Hubo actividad en ese rango
-                    
-                    // Calculamos el "mejor estado" logrado en ese rango
-                    let userMsgCount = 0;
-                    let isAgendado = false;
-                    let isCapturado = false;
+                    leads++;
+                    let userMsgCount = 0; let isAgendado = false; let isCapturado = false;
 
                     msgsInRange.forEach(m => {
                         if (m.role === 'user') userMsgCount++;
@@ -346,7 +362,6 @@ const MONITOR_HTML = `
                 }
             });
 
-            // Dibujar Gráfico
             const max = leads > 0 ? leads : 1;
             const pConversados = Math.round((conversados / max) * 100);
             const pInteresados = Math.round((interesados / max) * 100);
@@ -380,8 +395,6 @@ app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/history", (req, res) => res.json(getSesiones()));
 app.get("/api/status", (req, res) => res.json(getStatus()));
 app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
-
-// === CSV FINAL (ETIQUETAS + REPORTE READY) ===
 app.get("/api/export-csv", (req, res) => {
     const data = getSesiones();
     const status = getStatus();
@@ -389,20 +402,14 @@ app.get("/api/export-csv", (req, res) => {
     for (const [phone, history] of Object.entries(data)) {
         if (!history || history.length === 0) continue;
         let name = "Cliente"; let userMsgCount = 0; let isAgendado = false; let isCapturado = false;
-        
         history.forEach(m => {
             if (m.role === 'user') { userMsgCount++; const matchName = m.content.match(/\[Cliente: (.*?)\]/); if (matchName) name = matchName[1]; }
-            if (m.role === 'assistant') {
-                if (m.content.includes("te llamarán muy pronto")) isCapturado = true;
-                if (m.content.includes("RESERVA CONFIRMADA")) isAgendado = true;
-            }
+            if (m.role === 'assistant') { if (m.content.includes("te llamarán muy pronto")) isCapturado = true; if (m.content.includes("RESERVA CONFIRMADA")) isAgendado = true; }
         });
-        
         let clasificacion = "FRIO";
         if (isAgendado) clasificacion = "AGENDADO (Objetivo)";
         else if (isCapturado) clasificacion = "CAPTURADO (Llamar)";
         else if (userMsgCount > 1) clasificacion = "MEDIO (Interesado)";
-
         const last = history[history.length - 1];
         const safeMsg = last.content.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""');
         const botState = status[phone] === false ? "OFF" : "ON";
@@ -415,38 +422,21 @@ app.post("/api/toggle-bot", (req, res) => { const id = req.query.id; if(id) { co
 app.post("/api/manual-msg", async (req, res) => { const { phone, text } = req.body; if(phone && text) { const ok = await enviarMensajeManual(phone, text); res.sendStatus(ok ? 200 : 500); } else res.sendStatus(400); });
 app.post("/api/strategy-msg", async (req, res) => {
     const { phone } = req.body; const historial = getSesiones()[phone]; if (!phone || !historial) return res.sendStatus(404);
-    
     let isAgendado = false; let isCapturado = false; let userMsgCount = 0;
-    historial.forEach(m => { 
-        if (m.role === 'user') userMsgCount++; 
-        if (m.role === 'assistant') { 
-            if (m.content.includes("te llamarán muy pronto")) isCapturado = true; 
-            if (m.content.includes("RESERVA CONFIRMADA")) isAgendado = true; 
-        } 
-    });
-    
+    historial.forEach(m => { if (m.role === 'user') userMsgCount++; if (m.role === 'assistant') { if (m.content.includes("te llamarán muy pronto")) isCapturado = true; if (m.content.includes("RESERVA CONFIRMADA")) isAgendado = true; } });
     let mensajeEstrategico = "";
     if (isAgendado) mensajeEstrategico = "Hola! 🌟 ¿Cómo has estado? ¿Todo bien con tu reserva?";
     else if (isCapturado) mensajeEstrategico = "Hola! 📞 Quedamos en llamarte. ¿Tienes un minuto ahora o prefieres que te hable por aquí?";
     else if (userMsgCount > 1) mensajeEstrategico = "Hola! ✨ ¿Te quedó alguna duda sobre los tratamientos que vimos?";
     else mensajeEstrategico = "Hola! 👋 ¿Pudiste revisar la info que te envié?";
-    
     const enviado = await enviarMensajeManual(phone, mensajeEstrategico);
     if (enviado) res.json({ msg: mensajeEstrategico }); else res.sendStatus(500);
 });
-
 app.get("/webhook", (req, res) => { if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]); else res.sendStatus(403); });
 app.post("/webhook", async (req, res) => { try { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); } catch (e) { res.sendStatus(500); } });
-app.get("/api/reservo-webhook", async (req, res) => {
-  try {
-      const { name, phone, date } = req.query; 
-      console.log(`[RESERVO] Nueva reserva: ${name} - ${phone} - ${date}`);
-      await procesarReserva({ clientName: name || "Cliente Reservo", clientPhone: phone, date: date, status: "CONFIRMADO" });
-      res.send("Reserva Procesada");
-  } catch (e) { console.error(e); res.sendStatus(500); }
-});
+app.get("/api/reservo-webhook", async (req, res) => { try { const { name, phone, date } = req.query; console.log(`[RESERVO] Nueva reserva: ${name} - ${phone} - ${date}`); await procesarReserva({ clientName: name || "Cliente Reservo", clientPhone: phone, date: date, status: "CONFIRMADO" }); res.send("Reserva Procesada"); } catch (e) { console.error(e); res.sendStatus(500); } });
 
 app.listen(PORT, () => {
-    console.log(`🟢 ZARA 9.9 ANALYTICS en puerto ${PORT}`);
+    console.log(`🟢 ZARA 9.9.1 FIXED DATES en puerto ${PORT}`);
     console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
 });
