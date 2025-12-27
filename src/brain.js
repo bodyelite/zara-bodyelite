@@ -20,14 +20,12 @@ function detectarTema(texto) {
     const t = limpiarTexto(texto);
     if (t.includes("fitness") || t.includes("fortalecer") || t.includes("musculo")) return "body_fitness";
     if (t.includes("papada") || t.includes("menton")) return "lipo_papada";
+    if (t.includes("push") || t.includes("gluteo") || t.includes("cola") || t.includes("pompa")) return "push_up";
     if (t.includes("smart")) return "face_smart";
     if (t.includes("tensor")) return "body_tensor";
     if (t.includes("elite")) return "lipo_body_elite";
+    if (t.includes("facial") || t.includes("rostro") || t.includes("cara") || t.includes("arrugas")) return "full_face";
     const cuerpo = t.includes("lipo") || t.includes("reduc") || t.includes("grasa") || t.includes("rollito") || t.includes("abdomen");
-    const gluteo = t.includes("push") || t.includes("gluteo") || t.includes("cola");
-    if (cuerpo && gluteo) return "push_up";
-    if (t.includes("facial") || t.includes("rostro") || t.includes("arrugas")) return "full_face";
-    if (gluteo) return "push_up";
     if (cuerpo) return "lipo_express";
     return null;
 }
@@ -45,7 +43,7 @@ export async function pensar(historial, nombreCompleto) {
             if (tema) { key = tema; break; }
         }
 
-        const afirmacion = uMsg.includes("si") || uMsg.includes("vale") || uMsg.includes("ya") || uMsg.includes("y?") || uMsg.includes("dale") || uMsg.includes("cuentame");
+        const afirmacion = uMsg.includes("si") || uMsg.includes("vale") || uMsg.includes("ya") || uMsg.includes("y?") || uMsg.includes("dale") || uMsg.includes("cuentame") || uMsg.includes("claro");
         const pidePrecio = uMsg.includes("precio") || uMsg.includes("cuanto") || uMsg.includes("valor") || uMsg.includes("cuesta");
 
         let promptFinal = "";
@@ -59,21 +57,19 @@ export async function pensar(historial, nombreCompleto) {
             promptFinal = PASO_2_TECNOLOGIA;
         } else if (uBot.includes("evaluacion con ia")) {
             promptFinal = PASO_4_CIERRE;
-        } else if (uBot.includes("objetivo es reducir")) {
-            promptFinal = PASO_1_GANCHO;
         } else {
             promptFinal = PASO_1_GANCHO;
         }
 
         const d = CLINICA[key] || CLINICA["lipo_express"];
-        promptFinal = promptFinal
+        const output = promptFinal
             .replace(/{PLAN}/g, d.plan).replace(/{BENEFICIO}/g, d.beneficio)
             .replace(/{TECNOLOGIAS}/g, d.tecnologias).replace(/{PRECIO}/g, d.precio)
             .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
-            messages: [{ role: "system", content: "ERES ZARA. USA ESTE TEXTO EXACTO, NO AÑADAS NADA MÁS:\n\n" + promptFinal }],
+            messages: [{ role: "system", content: "Eres una asistente de estética profesional. Responde de forma amable y directa usando esta información:\n" + output }],
             temperature: 0,
             max_tokens: 150 
         });
