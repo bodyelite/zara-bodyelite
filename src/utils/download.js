@@ -16,11 +16,7 @@ export async function downloadFile(url, filename) {
             responseType: 'stream',
             headers: { 
                 'Authorization': `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-                'User-Agent': 'curl/7.64.1' 
-            },
-            maxRedirects: 5,
-            validateStatus: function (status) {
-                return status >= 200 && status < 303; 
+                'User-Agent': 'curl/7.64.1'
             }
         });
 
