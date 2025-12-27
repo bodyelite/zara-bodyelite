@@ -60,7 +60,6 @@ export async function pensar(historial, nombreCompleto) {
         });
         return completion.choices[0].message.content;
     } catch (e) { 
-        console.error(e);
         return "¡Hola! 👋 Para poder asesorarte mejor, cuéntame: ¿Qué te gustaría mejorar de tu rostro o cuerpo?"; 
     }
 }

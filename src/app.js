@@ -104,22 +104,20 @@ export async function procesarEvento(entry) {
   if (!sesionesLocal[id]) sesionesLocal[id] = [];
   const ts = getFechaHora();
 
-  // PROCESAMIENTO DE AUDIO
   if (audioId) {
       try {
           const url = await getWhatsAppMediaUrl(audioId);
           if (url) {
               const localPath = await downloadFile(url, `audio_${id}_${Date.now()}.ogg`);
               const transcripcion = await transcribirAudio(localPath);
-              text = transcripcion; 
-              fs.unlinkSync(localPath); 
+              if (transcripcion) text = transcripcion; 
+              try { fs.unlinkSync(localPath); } catch(e){} 
           }
-      } catch (e) { console.error("Error audio", e); }
+      } catch (e) {}
   }
 
   if (!text) return; 
 
-  // Mostrar en Monitor (Si es audio, mostrar icono de microfono)
   const msgDisplay = audioId ? `🎤 (Audio): "${text}"` : text;
 
   transmitir({ 
