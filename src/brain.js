@@ -19,16 +19,14 @@ function detectarTema(texto) {
     if (!texto) return null;
     const t = limpiarTexto(texto);
     if (t.includes("fitness") || t.includes("fortalecer") || t.includes("musculo")) return "body_fitness";
-    if (t.includes("papada") || t.includes("menton") || t.includes("cuello")) return "lipo_papada";
-    if (t.includes("exosoma")) return "exosomas";
+    if (t.includes("papada") || t.includes("menton")) return "lipo_papada";
     if (t.includes("smart")) return "face_smart";
-    if (t.includes("tensor") || t.includes("post parto") || t.includes("bariatrica")) return "body_tensor";
+    if (t.includes("tensor")) return "body_tensor";
     if (t.includes("elite")) return "lipo_body_elite";
-    if (t.includes("focalizada")) return "lipo_focalizada";
     const cuerpo = t.includes("lipo") || t.includes("reduc") || t.includes("grasa") || t.includes("rollito") || t.includes("abdomen");
     const gluteo = t.includes("push") || t.includes("gluteo") || t.includes("cola");
     if (cuerpo && gluteo) return "push_up";
-    if (t.includes("facial") || t.includes("rostro") || t.includes("cara") || t.includes("arrugas")) return "full_face";
+    if (t.includes("facial") || t.includes("rostro") || t.includes("arrugas")) return "full_face";
     if (gluteo) return "push_up";
     if (cuerpo) return "lipo_express";
     return null;
@@ -36,46 +34,49 @@ function detectarTema(texto) {
 
 export async function pensar(historial, nombreCompleto) {
     try {
-        const mensajesUsuario = historial.filter(m => m.role === 'user');
-        const mensajesBot = historial.filter(m => m.role === 'assistant');
-        const ultimoMensaje = limpiarTexto(mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content : "");
-        const ultimoBot = limpiarTexto(mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].content : "");
+        const msjsUsr = historial.filter(m => m.role === 'user');
+        const msjsBot = historial.filter(m => m.role === 'assistant');
+        const uMsg = limpiarTexto(msjsUsr.length > 0 ? msjsUsr[msjsUsr.length - 1].content : "");
+        const uBot = limpiarTexto(msjsBot.length > 0 ? msjsBot[msjsBot.length - 1].content : "");
 
         let key = null;
-        for (let i = mensajesUsuario.length - 1; i >= 0; i--) {
-            const temaEncontrado = detectarTema(mensajesUsuario[i].content);
-            if (temaEncontrado) { key = temaEncontrado; break; }
+        for (let i = msjsUsr.length - 1; i >= 0; i--) {
+            const tema = detectarTema(msjsUsr[i].content);
+            if (tema) { key = tema; break; }
         }
 
-        const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
-        const afirmacion = ultimoMensaje.includes("si") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("ok") || ultimoMensaje.includes("dale") || ultimoMensaje.includes("interesa");
-        
-        const botPreguntoFuncionamiento = ultimoBot.includes("como funciona");
-        const botPreguntoPrecio = ultimoBot.includes("sobre el precio");
-        const botPreguntoEvaluacion = ultimoBot.includes("evaluacion con ia");
+        const afirmacion = uMsg.includes("si") || uMsg.includes("vale") || uMsg.includes("ya") || uMsg.includes("y?") || uMsg.includes("dale") || uMsg.includes("cuentame");
+        const pidePrecio = uMsg.includes("precio") || uMsg.includes("cuanto") || uMsg.includes("valor") || uMsg.includes("cuesta");
 
         let promptFinal = "";
-        if (pideLlamada) promptFinal = RESPUESTA_LLAMADA;
-        else if (!key) promptFinal = PROMPT_TRIAGE;
-        else if (botPreguntoFuncionamiento && afirmacion) promptFinal = PASO_2_TECNOLOGIA;
-        else if (botPreguntoPrecio && afirmacion) promptFinal = PASO_3_PRECIO;
-        else if (botPreguntoEvaluacion) promptFinal = PASO_4_CIERRE;
-        else promptFinal = PASO_1_GANCHO;
+        if (uMsg.includes("llam") || uMsg.includes("numero")) {
+            promptFinal = RESPUESTA_LLAMADA;
+        } else if (!key) {
+            promptFinal = PROMPT_TRIAGE;
+        } else if (pidePrecio || uBot.includes("sobre el precio")) {
+            promptFinal = PASO_3_PRECIO;
+        } else if (uBot.includes("como funciona") && afirmacion) {
+            promptFinal = PASO_2_TECNOLOGIA;
+        } else if (uBot.includes("evaluacion con ia")) {
+            promptFinal = PASO_4_CIERRE;
+        } else if (uBot.includes("objetivo es reducir")) {
+            promptFinal = PASO_1_GANCHO;
+        } else {
+            promptFinal = PASO_1_GANCHO;
+        }
 
-        if (key && CLINICA[key]) {
-            const d = CLINICA[key];
-            promptFinal = promptFinal
-                .replace(/{PLAN}/g, d.plan).replace(/{BENEFICIO}/g, d.beneficio)
-                .replace(/{TECNOLOGIAS}/g, d.tecnologias).replace(/{PRECIO}/g, d.precio)
-                .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
-        } else { promptFinal = PROMPT_TRIAGE; }
+        const d = CLINICA[key] || CLINICA["lipo_express"];
+        promptFinal = promptFinal
+            .replace(/{PLAN}/g, d.plan).replace(/{BENEFICIO}/g, d.beneficio)
+            .replace(/{TECNOLOGIAS}/g, d.tecnologias).replace(/{PRECIO}/g, d.precio)
+            .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
-            messages: [{ role: "system", content: promptFinal + " Sé directa y usa el formato de los 4 pilares. No inventes info extra." }, ...historial],
-            temperature: 0.0,
+            messages: [{ role: "system", content: "ERES ZARA. USA ESTE TEXTO EXACTO, NO AÑADAS NADA MÁS:\n\n" + promptFinal }],
+            temperature: 0,
             max_tokens: 150 
         });
         return completion.choices[0].message.content;
-    } catch (error) { return "¡Hola! 👋 Cuéntame: ¿Tu objetivo es reducir rollitos 🌿, levantar glúteos 🍑 o rejuvenecer tu rostro ✨?"; }
+    } catch (error) { return "¡Hola! 👋 Cuéntame tu objetivo: ¿Reducir rollitos, levantar glúteos o rostro?"; }
 }
