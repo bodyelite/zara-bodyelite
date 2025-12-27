@@ -15,12 +15,11 @@ function limpiarTexto(texto) {
     return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-// FUNCIÓN DE RASTREO: Busca palabras clave en cualquier texto
 function detectarTema(texto) {
     if (!texto) return null;
     const t = limpiarTexto(texto);
     
-    const cuerpo = t.includes("lipo") || t.includes("reduc") || t.includes("grasa") || t.includes("rollito") || t.includes("rollos") || t.includes("peso") || t.includes("abdomen");
+    const cuerpo = t.includes("lipo") || t.includes("reduc") || t.includes("grasa") || t.includes("rollito") || t.includes("rollos") || t.includes("peso") || t.includes("abdomen") || t.includes("cintura");
     const gluteo = t.includes("push") || t.includes("gluteo") || t.includes("trasero") || t.includes("cola") || t.includes("nalga");
     
     if (cuerpo && gluteo) return "mix_corporal";
@@ -33,17 +32,12 @@ function detectarTema(texto) {
 
 export async function pensar(historial, nombreCompleto) {
     try {
-        const nombrePila = nombreCompleto ? nombreCompleto.split(" ")[0] : "Hola";
-        
         const mensajesUsuario = historial.filter(m => m.role === 'user');
         const mensajesBot = historial.filter(m => m.role === 'assistant');
         
         const ultimoMensaje = limpiarTexto(mensajesUsuario.length > 0 ? mensajesUsuario[mensajesUsuario.length - 1].content : "");
         const ultimoBot = limpiarTexto(mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].content : "");
 
-        // --- 1. SOLUCIÓN A LA AMNESIA (RASTREO PROFUNDO) ---
-        // Recorremos el historial hacia atrás buscando el ÚLTIMO tema válido.
-        // Así, aunque el usuario diga solo "Sí", Zara recordará que hablaban de "rollos".
         let key = null;
         for (let i = mensajesUsuario.length - 1; i >= 0; i--) {
             const temaEncontrado = detectarTema(mensajesUsuario[i].content);
@@ -52,16 +46,15 @@ export async function pensar(historial, nombreCompleto) {
                 break; 
             }
         }
-        // Respaldo por si el mix se mencionó muy atrás
         if (!key && historial.some(m => m.content.includes("Reloj de Arena"))) key = "mix_corporal";
 
-        // --- 2. DETECCIÓN DE INTENCIÓN ---
-        const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
-        const afirmacion = ultimoMensaje.includes("si") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok") || ultimoMensaje.includes("dale");
-        const negacion = ultimoMensaje.includes("no");
-        const preguntaPrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor");
+        const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero") || ultimoMensaje.includes("contactar");
+        
+        const afirmacion = ultimoMensaje.includes("si") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok") || ultimoMensaje.includes("dale") || ultimoMensaje.includes("ya") || ultimoMensaje.includes("a ver") || ultimoMensaje.includes("me interesa") || ultimoMensaje.includes("cuentame") || ultimoMensaje.includes("obvio");
+        
+        const negacion = ultimoMensaje.includes("no") || ultimoMensaje.includes("paso") || ultimoMensaje.includes("nada");
+        const preguntaPrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("cuesta") || ultimoMensaje.includes("sale");
 
-        // --- 3. DETECCIÓN DE CONTEXTO (PING-PONG) ---
         const botPreguntoFuncionamiento = ultimoBot.includes("como funciona");
         const botPreguntoPrecio = ultimoBot.includes("sobre el precio");
         const botPreguntoEvaluacion = ultimoBot.includes("evaluacion con ia") || ultimoBot.includes("hecho una evaluacion");
@@ -75,10 +68,8 @@ export async function pensar(historial, nombreCompleto) {
         } else if (esMixActual && !botPreguntoFuncionamiento && !botPreguntoPrecio && !botPreguntoEvaluacion) {
              promptFinal = PASO_MIX_ESTRATEGA;
         } else if (!key && !preguntaPrecio) {
-            // Si tras rastrear todo el historial NO hay tema, solo entonces preguntamos.
             promptFinal = PROMPT_TRIAGE; 
         } else {
-            // --- MÁQUINA DE 4 COMPUERTAS ---
             if (preguntaPrecio) {
                 promptFinal = PASO_3_PRECIO;
             } else if (botPreguntoFuncionamiento && afirmacion) {
@@ -92,7 +83,6 @@ export async function pensar(historial, nombreCompleto) {
             }
         }
 
-        // --- 4. RELLENADO DE DATOS (ANTI-ALUCINACIÓN) ---
         if (key && CLINICA[key]) {
             const d = CLINICA[key];
             promptFinal = promptFinal
@@ -102,15 +92,14 @@ export async function pensar(historial, nombreCompleto) {
                 .replace(/{PRECIO}/g, d.precio)
                 .replace(/{LINK_AGENDA}/g, NEGOCIO.agenda_link);
         } else {
-            // Si no hay ficha clínica (caso muy raro), volvemos a Triage para evitar inventar precios.
             if(promptFinal !== RESPUESTA_LLAMADA) promptFinal = PROMPT_TRIAGE;
         }
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: promptFinal }, ...historial],
-            temperature: 0.0, // Cero creatividad = Cero locuras
-            max_tokens: 100 
+            temperature: 0.0,
+            max_tokens: 150 
         });
 
         return completion.choices[0].message.content;
