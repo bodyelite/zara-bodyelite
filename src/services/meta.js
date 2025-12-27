@@ -10,9 +10,7 @@ export async function sendMessage(to, text, platform = "whatsapp") {
     }, {
       headers: { Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}` }
     });
-  } catch (e) {
-    console.error("Meta Error:", e.response ? e.response.data : e.message);
-  }
+  } catch (e) {}
 }
 
 export async function getWhatsAppMediaUrl(mediaId) {

@@ -87,40 +87,6 @@ function getPhone(txt) {
   return m ? m[0].replace(/\D/g, '') : null;
 }
 
-setInterval(async () => {
-    const now = Date.now();
-    for (const [id, last] of Object.entries(ultimasRespuestas)) {
-        if (botStatus[id] === false) continue;
-
-        if ((now - last > 7200000) && estadosClientes[id] === 'activo') { 
-            try {
-                let nom = "Hola";
-                if (sesionesLocal[id] && sesionesLocal[id].length > 0) {
-                    const m = sesionesLocal[id][0].content.match(/\[Cliente: (.*?)\]/);
-                    if (m) nom = m[1];
-                }
-                
-                const msj = `${nom}, me quedé pensando si había resuelto todas tus dudas... 🤔 ¿Prefieres que te llamemos?`;
-                const ts = getFechaHora();
-
-                await sendMessage(id, msj, usuariosPlataforma[id] || "whatsapp");
-                estadosClientes[id] = 'recontactado';
-                
-                sesionesLocal[id].push({ role: "assistant", content: msj, timestamp: ts });
-                guardar();
-                
-                transmitir({ 
-                    tipo: "REACTIVACION", 
-                    nombre: nom, 
-                    telefono: id, 
-                    timestamp: ts,
-                    texto: msj 
-                });
-            } catch (e) {}
-        }
-    }
-}, 60000);
-
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let id, text = "", name, audioId = null;
@@ -130,27 +96,45 @@ export async function procesarEvento(entry) {
       if (!msg) return;
       id = msg.from; 
       name = entry.changes[0].value.contacts?.[0]?.profile?.name || "Cliente";
+      
       if (msg.type === "text") text = msg.text.body;
       if (msg.type === "audio") audioId = msg.audio.id;
   } else return; 
 
   if (!sesionesLocal[id]) sesionesLocal[id] = [];
-  
   const ts = getFechaHora();
+
+  // PROCESAMIENTO DE AUDIO
+  if (audioId) {
+      try {
+          const url = await getWhatsAppMediaUrl(audioId);
+          if (url) {
+              const localPath = await downloadFile(url, `audio_${id}_${Date.now()}.ogg`);
+              const transcripcion = await transcribirAudio(localPath);
+              text = transcripcion; 
+              fs.unlinkSync(localPath); 
+          }
+      } catch (e) { console.error("Error audio", e); }
+  }
+
+  if (!text) return; 
+
+  // Mostrar en Monitor (Si es audio, mostrar icono de microfono)
+  const msgDisplay = audioId ? `🎤 (Audio): "${text}"` : text;
 
   transmitir({ 
       tipo: "MENSAJE", 
       nombre: name, 
       telefono: id, 
-      mensaje: text || "Audio", 
+      mensaje: msgDisplay, 
       timestamp: ts,
       linkFoto: `https://wa.me/${id}`
   });
 
+  sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ${text}`, timestamp: ts });
+  guardar();
+
   if (botStatus[id] === false) {
-      sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ` + (text || "Audio"), timestamp: ts });
-      guardar();
-      // Actualizar timestamp para ordenamiento
       ultimasRespuestas[id] = Date.now(); 
       return;
   }
@@ -161,17 +145,6 @@ export async function procesarEvento(entry) {
   usuariosPlataforma[id] = platform; 
   if (estadosClientes[id] !== 'agendado') estadosClientes[id] = 'activo';
 
-  if (audioId) {
-      const url = await getWhatsAppMediaUrl(audioId);
-      if (url) {
-          const path = await downloadFile(url, `audio_${id}.ogg`);
-          text = await transcribirAudio(path); 
-          fs.unlinkSync(path);
-          transmitir({ tipo: "TRANSCRIPCION", texto: text, telefono: id });
-      }
-  }
-
-  if (!text) return;
   const low = text.toLowerCase().trim();
   if (low.includes("link") || low.includes("agenda")) estadosClientes[id] = 'agendado';
 
@@ -197,9 +170,6 @@ export async function procesarEvento(entry) {
     });
     return;
   }
-
-  sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ` + text, timestamp: ts });
-  guardar(); 
 
   if (sesionesLocal[id].length > 16) sesionesLocal[id] = sesionesLocal[id].slice(-16);
 

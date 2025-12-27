@@ -1,15 +1,17 @@
 import OpenAI from "openai";
 import fs from "fs";
 
-// Nota: app.js importa transcribirAudio de aquí
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function transcribirAudio(filePath) {
+export async function transcribirAudio(path) {
     try {
-        const res = await openai.audio.transcriptions.create({
-            file: fs.createReadStream(filePath),
+        const response = await openai.audio.transcriptions.create({
+            file: fs.createReadStream(path),
             model: "whisper-1",
+            language: "es"
         });
-        return res.text;
-    } catch (e) { return ""; }
+        return response.text;
+    } catch (e) {
+        return "";
+    }
 }

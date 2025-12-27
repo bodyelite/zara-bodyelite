@@ -37,6 +37,7 @@ export async function pensar(historial, nombreCompleto) {
        - Grasa abdominal, rollitos, reducir medidas -> Lipo Express.
        - Flacidez de piel (post parto) -> Body Tensor.
        - Músculo, fitness, tonificar -> Body Fitness.
+       - Hidratación facial, piel seca -> Face Smart.
 
     3. FLUJO DE VENTA DE 4 PASOS (SOLO APLICAR TRAS ASIGNAR PLAN):
        - PASO 1 (Gancho): Menciona el Nombre del Plan + Beneficio Clave + "¿Te cuento cómo funciona?".
@@ -55,7 +56,7 @@ export async function pensar(historial, nombreCompleto) {
             model: "gpt-4o",
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             temperature: 0.0,
-            max_tokens: 300
+            max_tokens: 350
         });
         return completion.choices[0].message.content;
     } catch (e) { 
