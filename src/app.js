@@ -87,6 +87,11 @@ function getPhone(txt) {
   return m ? m[0].replace(/\D/g, '') : null;
 }
 
+// Función auxiliar para normalizar teléfonos (sacar el +)
+function normalizarTelefono(p) {
+    return p.replace(/\D/g, ''); 
+}
+
 export async function procesarEvento(entry) {
   const platform = entry.changes ? "whatsapp" : "instagram";
   let id, text = "", name, audioId = null;
@@ -101,16 +106,15 @@ export async function procesarEvento(entry) {
       if (msg.type === "audio") audioId = msg.audio.id;
   } else return; 
 
-  // === COMANDO SECRETO PARA BORRAR HISTORIAL ===
-  if (text && text.trim() === "/reset") {
+  if (text && text.trim().toLowerCase() === "/reset") {
       delete sesionesLocal[id];
       delete estadosClientes[id];
       guardar();
+      transmitir({ tipo: "MENSAJE", nombre: "SISTEMA", telefono: id, mensaje: "⚠️ MEMORIA BORRADA POR COMANDO /RESET", timestamp: getFechaHora() });
       await sendMessage(id, "✅ Memoria borrada. Eres un cliente nuevo. Escribe 'Hola' para probar la alerta.", platform);
       return;
   }
 
-  // === DETECCIÓN DE CLIENTE NUEVO (ALERTA STAFF) ===
   if (!sesionesLocal[id]) {
       const alertaNuevo = `🔔 *NUEVO INTERESADO DETECTADO*\n👤 ${name}\n📱 Link: https://wa.me/${id}\n\nZara comenzará a atenderlo. 👀`;
       console.log(`[ALERTA] Nuevo cliente detectado: ${name}`);
@@ -138,22 +142,12 @@ export async function procesarEvento(entry) {
 
   const msgDisplay = audioId ? `🎤 (Audio): "${text}"` : text;
 
-  transmitir({ 
-      tipo: "MENSAJE", 
-      nombre: name, 
-      telefono: id, 
-      mensaje: msgDisplay, 
-      timestamp: ts,
-      linkFoto: `https://wa.me/${id}`
-  });
+  transmitir({ tipo: "MENSAJE", nombre: name, telefono: id, mensaje: msgDisplay, timestamp: ts, linkFoto: `https://wa.me/${id}` });
 
   sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ${text}`, timestamp: ts });
   guardar();
 
-  if (botStatus[id] === false) {
-      ultimasRespuestas[id] = Date.now(); 
-      return;
-  }
+  if (botStatus[id] === false) { ultimasRespuestas[id] = Date.now(); return; }
 
   const now = Date.now();
   if ((now - (ultimasRespuestas[id] || 0)) < 2000) return; 
@@ -172,18 +166,10 @@ export async function procesarEvento(entry) {
     
     const msjFinal = "¡Anotado! 📝 Ya le pasé tu contacto a mis compañeras. Te llamarán muy pronto. ¡Gracias por confiar en Body Elite! ✨";
     await sendMessage(id, msjFinal, platform);
-    
     const tsFinal = getFechaHora();
     sesionesLocal[id].push({ role: "assistant", content: msjFinal, timestamp: tsFinal });
     guardar();
-    
-    transmitir({ 
-        tipo: "RESPUESTA_ZARA", 
-        nombre: "Zara", 
-        telefono: id, 
-        texto: msjFinal,
-        timestamp: tsFinal
-    });
+    transmitir({ tipo: "RESPUESTA_ZARA", nombre: "Zara", telefono: id, texto: msjFinal, timestamp: tsFinal });
     return;
   }
 
@@ -194,13 +180,7 @@ export async function procesarEvento(entry) {
   
   await sendMessage(id, respuesta, platform);
   
-  transmitir({ 
-      tipo: "RESPUESTA_ZARA", 
-      nombre: "Zara", 
-      telefono: id, 
-      texto: respuesta,
-      timestamp: tsResp
-  });
+  transmitir({ tipo: "RESPUESTA_ZARA", nombre: "Zara", telefono: id, texto: respuesta, timestamp: tsResp });
   
   sesionesLocal[id].push({ role: "assistant", content: respuesta, timestamp: tsResp });
   guardar();
@@ -208,5 +188,48 @@ export async function procesarEvento(entry) {
 
 export async function procesarReserva(d) {
     if (d.status !== "CONFIRMADO") return;
+
+    const ts = getFechaHora();
+    const phone = d.clientPhone ? normalizarTelefono(d.clientPhone) : null;
+
+    // 1. Avisar al Monitor (Flash)
     transmitir({ tipo: "RESERVA", nombre: d.clientName });
+
+    // 2. Avisar al Staff (WhatsApp)
+    const alertaReserva = `💰 *NUEVA RESERVA CONFIRMADA*\n👤 ${d.clientName}\n📞 ${phone || "Sin número"}\n📅 ${d.date || "Fecha por confirmar"}\n\n¡A facturar! 🚀`;
+    console.log("[ALERTA] Enviando aviso de reserva al staff...");
+    for (const staffPhone of NEGOCIO.staff_alertas) {
+        try { await sendMessage(staffPhone, alertaReserva); } catch(e) { console.error("Error enviando alerta staff:", e); }
+    }
+
+    // 3. INYECTAR EN EL CHAT (Persistencia)
+    // Buscamos si tenemos chat con este teléfono (puede venir con 569 o sin él)
+    // Intentamos match exacto o parcial
+    let chatId = null;
+    if (phone) {
+        // Buscamos en las llaves de sesionesLocal
+        const keys = Object.keys(sesionesLocal);
+        chatId = keys.find(k => k.includes(phone) || phone.includes(k));
+    }
+
+    if (chatId) {
+        const msgSistema = `✅ [SISTEMA] RESERVA CONFIRMADA en Reservo.cl (Fecha: ${d.date || "Hoy"})`;
+        sesionesLocal[chatId].push({ 
+            role: "assistant", // Lo ponemos como bot para que se vea a la derecha
+            content: msgSistema, 
+            timestamp: ts,
+            system: true 
+        });
+        estadosClientes[chatId] = 'agendado'; // Marcamos como cliente cerrado
+        guardar();
+
+        // Actualizamos el Monitor visualmente agregando el mensaje al chat
+        transmitir({ 
+            tipo: "RESPUESTA_ZARA", 
+            nombre: "SISTEMA", 
+            telefono: chatId, 
+            texto: msgSistema, 
+            timestamp: ts 
+        });
+    }
 }
