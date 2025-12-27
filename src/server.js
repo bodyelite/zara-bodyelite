@@ -15,9 +15,9 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZARA MONITOR 9.3</title>
+    <title>ZARA MONITOR 9.4</title>
     <style>
-        :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --bubble-user: #222; --bubble-bot: #003322; }
+        :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --strategy: #bd00ff; --bubble-user: #222; --bubble-bot: #003322; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
@@ -25,8 +25,7 @@ const MONITOR_HTML = `
         .header { padding: 20px; border-bottom: 2px solid var(--accent); font-weight: 900; font-size: 1.3rem; letter-spacing: 1px; background: #000; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
         
         .header-controls { display: flex; gap: 10px; align-items: center; }
-        .dl-btn { background: #111; border: 1px solid #333; color: var(--accent); border-radius: 5px; cursor: pointer; padding: 5px 10px; font-size: 1rem; transition: 0.2s; text-decoration: none; }
-        .dl-btn:hover { background: #222; border-color: var(--accent); }
+        .dl-btn { background: #111; border: 1px solid #333; color: var(--accent); border-radius: 5px; cursor: pointer; padding: 5px 10px; font-size: 0.8rem; text-decoration: none; }
         
         .live-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
@@ -49,10 +48,15 @@ const MONITOR_HTML = `
         
         .back-btn { display: none; background: none; border: none; color: var(--accent); font-size: 2rem; padding: 0 15px 0 0; cursor: pointer; }
         .chat-info h2 { margin: 0; font-size: 1.1rem; }
-        .chat-info a { color: #888; text-decoration: none; font-size: 0.9rem; }
         
-        .controls button { padding: 8px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; font-size: 0.9rem; }
-        .controls button.off { background: var(--danger); color: #fff; }
+        .controls { display: flex; gap: 10px; }
+        .controls button { padding: 8px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .btn-toggle { background: var(--accent); color: #000; }
+        .btn-toggle.off { background: var(--danger); color: #fff; }
+        
+        /* BOTÓN ESTRATEGIA */
+        .btn-strategy { background: var(--strategy); color: #fff; box-shadow: 0 0 10px rgba(189, 0, 255, 0.4); }
+        .btn-strategy:active { transform: scale(0.95); }
 
         .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #000; }
         
@@ -78,9 +82,9 @@ const MONITOR_HTML = `
 <body>
     <div class="sidebar" id="sidebar">
         <div class="header">
-            ZARA 9.3 
+            ZARA 9.4
             <div class="header-controls">
-                <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar Base de Datos">📥 CLASIFICAR</a>
+                <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar CSV">📥 CSV</a>
                 <div class="live-dot"></div>
             </div>
         </div>
@@ -97,7 +101,8 @@ const MONITOR_HTML = `
                 </div>
             </div>
             <div class="controls" id="controls" style="display:none;">
-                <button id="toggleBtn" onclick="toggleCurrent()">ZARA ON</button>
+                <button id="strategyBtn" class="btn-strategy" onclick="runStrategy()">🎯 ESTRATEGIA</button>
+                <button id="toggleBtn" class="btn-toggle" onclick="toggleCurrent()">ZARA ON</button>
             </div>
         </div>
         
@@ -120,6 +125,7 @@ const MONITOR_HTML = `
         const inputArea = document.getElementById('inputArea');
         const msgInput = document.getElementById('msgInput');
         const toggleBtn = document.getElementById('toggleBtn');
+        const strategyBtn = document.getElementById('strategyBtn');
         
         let users = {};
         let activeId = null;
@@ -131,25 +137,19 @@ const MONITOR_HTML = `
                 let cleanStr = timeStr.replace(/\u00A0/g, ' ').trim();
                 const parts = cleanStr.split(','); 
                 if (parts.length < 2) return 0;
-
                 const dateParts = parts[0].trim().split('/');
                 const day = parseInt(dateParts[0]);
                 const month = parseInt(dateParts[1]) - 1; 
-                
                 let timeRaw = parts[1].trim(); 
                 let isPM = timeRaw.toLowerCase().includes("p. m.") || timeRaw.toLowerCase().includes("pm");
                 let isAM = timeRaw.toLowerCase().includes("a. m.") || timeRaw.toLowerCase().includes("am");
-                
                 let timeClean = timeRaw.replace(/[a-z\.\s]/gi, ''); 
                 let hourPart = timeClean.substring(0, timeClean.indexOf(':'));
                 let minPart = timeClean.substring(timeClean.indexOf(':') + 1);
-
                 let hour = parseInt(hourPart);
                 const min = parseInt(minPart);
-
                 if (isPM && hour < 12) hour += 12;
                 if (isAM && hour === 12) hour = 0;
-
                 const now = new Date();
                 const d = new Date(now.getFullYear(), month, day, hour, min);
                 return d.getTime();
@@ -161,7 +161,6 @@ const MONITOR_HTML = `
             fetch('/api/status').then(r => r.json())
         ]).then(([data, status]) => {
             botStatus = status;
-            
             let sortedUsers = [];
             Object.keys(data).forEach(id => {
                 const hist = data[id];
@@ -169,32 +168,17 @@ const MONITOR_HTML = `
                     let name = "Cliente";
                     const m = hist[0].content.match(/\\[Cliente: (.*?)\\]/);
                     if(m) name = m[1];
-                    
                     const clean = hist.map(x => ({ 
                         role: x.role === 'assistant' ? 'bot' : 'user', 
                         txt: x.content.replace(/\\[Cliente: .*?\\] /, ''),
                         time: x.timestamp || '' 
                     }));
-                    
                     const lastMsg = clean[clean.length-1];
-
-                    sortedUsers.push({
-                        id: id,
-                        name: name,
-                        phone: id,
-                        history: clean,
-                        lastMsg: lastMsg,
-                        sortTime: getTimestamp(lastMsg.time)
-                    });
+                    sortedUsers.push({ id, name, phone: id, history: clean, lastMsg, sortTime: getTimestamp(lastMsg.time) });
                 }
             });
-
             sortedUsers.sort((a, b) => b.sortTime - a.sortTime);
-
-            sortedUsers.forEach(u => {
-                users[u.id] = u;
-                createCard(u, u.lastMsg.txt, u.lastMsg.time);
-            });
+            sortedUsers.forEach(u => { users[u.id] = u; createCard(u, u.lastMsg.txt, u.lastMsg.time); });
         });
 
         const evt = new EventSource("/monitor-stream");
@@ -206,12 +190,10 @@ const MONITOR_HTML = `
         function update(d) {
             const id = d.telefono;
             if(!id || id === 'undefined') return;
-
             if (!users[id]) {
                 users[id] = { name: d.nombre || 'Cliente', phone: id, history: [] };
                 createCard(users[id], "...", "");
             }
-            
             const txt = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? d.texto : d.mensaje;
             const role = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? 'bot' : 'user';
             const time = d.timestamp || new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', hour12: true});
@@ -219,16 +201,13 @@ const MONITOR_HTML = `
             if(!d.restore) {
                 users[id].history.push({ role, txt, time });
                 if (activeId === id) renderBubble({ role, txt, time });
-                
                 const card = document.getElementById('c-' + id);
                 if(card) {
                     let prev = (role==='bot'?'🤖 ':'') + txt;
                     card.querySelector('.preview').innerText = prev;
-                    
                     let timeShow = time.includes(',') ? time.split(',')[1] : time;
                     card.querySelector('.time-ago').innerText = timeShow;
                     list.prepend(card);
-                    
                     card.classList.add('flash');
                     setTimeout(() => card.classList.remove('flash'), 500);
                 }
@@ -241,16 +220,11 @@ const MONITOR_HTML = `
             div.className = 'card';
             div.id = 'c-' + u.phone;
             div.onclick = () => select(u.phone);
-            
             const timeDisplay = time ? (time.includes(',') ? time.split(',')[1] : time) : '';
-
             div.innerHTML = \`
                 <div class="avatar">\${u.name[0]}</div>
                 <div class="info">
-                    <div class="top-row">
-                        <div class="name">\${u.name}</div>
-                        <div class="time-ago">\${timeDisplay}</div>
-                    </div>
+                    <div class="top-row"><div class="name">\${u.name}</div><div class="time-ago">\${timeDisplay}</div></div>
                     <div class="preview">\${prev}</div>
                 </div>\`;
             list.appendChild(div); 
@@ -258,10 +232,7 @@ const MONITOR_HTML = `
 
         function select(id) {
             activeId = id;
-            if(window.innerWidth <= 768) {
-                sidebar.classList.add('hidden');
-                mainView.classList.add('active');
-            }
+            if(window.innerWidth <= 768) { sidebar.classList.add('hidden'); mainView.classList.add('active'); }
             document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
             document.getElementById('c-' + id).classList.add('active');
             chatTitle.innerText = users[id].name;
@@ -275,11 +246,7 @@ const MONITOR_HTML = `
             feed.scrollTop = feed.scrollHeight;
         }
 
-        function showList() {
-            sidebar.classList.remove('hidden');
-            mainView.classList.remove('active');
-            activeId = null;
-        }
+        function showList() { sidebar.classList.remove('hidden'); mainView.classList.remove('active'); activeId = null; }
 
         function renderBubble(m) {
             const d = document.createElement('div');
@@ -292,7 +259,7 @@ const MONITOR_HTML = `
         function updateToggleBtn(id) {
             const status = botStatus[id] !== false; 
             toggleBtn.innerText = status ? "ZARA: ON 🟢" : "ZARA: OFF 🔴";
-            toggleBtn.className = status ? "" : "off";
+            toggleBtn.className = status ? "btn-toggle" : "btn-toggle off";
         }
 
         window.toggleCurrent = async function() {
@@ -303,14 +270,36 @@ const MONITOR_HTML = `
             updateToggleBtn(activeId);
         }
 
+        // === ESTRATEGIA: EJECUTAR LA IA DE RECUPERACIÓN ===
+        window.runStrategy = async function() {
+            if(!activeId) return;
+            if(!confirm("¿Lanzar Estrategia de Recuperación para este cliente?")) return;
+            
+            strategyBtn.innerText = "⏳...";
+            try {
+                const res = await fetch('/api/strategy-msg', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone: activeId })
+                });
+                if(res.ok) {
+                    const data = await res.json();
+                    // Simulamos el mensaje en el chat local
+                    const nowTime = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', hour12: true});
+                    renderBubble({ role: 'bot', txt: data.msg, time: nowTime });
+                } else {
+                    alert("Error enviando estrategia");
+                }
+            } catch(e) { console.error(e); }
+            strategyBtn.innerText = "🎯 ESTRATEGIA";
+        }
+
         window.sendManual = async function() {
             const txt = msgInput.value.trim();
             if(!activeId || !txt) return;
             msgInput.value = "";
-            
             const nowTime = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', hour12: true});
             renderBubble({ role: 'bot', txt: txt, time: nowTime });
-            
             await fetch('/api/manual-msg', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -326,88 +315,76 @@ app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/history", (req, res) => res.json(getSesiones()));
 app.get("/api/status", (req, res) => res.json(getStatus()));
 app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
-
-// === ZARA CLASIFICADOR INTELIGENTE (CSV) ===
 app.get("/api/export-csv", (req, res) => {
+    // ... (Tu código CSV anterior sigue funcionando igual)
     const data = getSesiones();
     const status = getStatus();
-    // Agregamos BOM para que Excel abra bien los tildes y Ñ
     let csv = "\uFEFFNombre,Telefono,Clasificacion_IA,Link_WSP,Estado_Bot,Ultimo_Mensaje,Fecha\n";
-
     for (const [phone, history] of Object.entries(data)) {
         if (!history || history.length === 0) continue;
-
-        let name = "Cliente";
-        let hasLink = false;
-        let userMsgCount = 0;
-
-        // 1. Análisis del Historial
+        let name = "Cliente"; let hasLink = false; let userMsgCount = 0;
         history.forEach(m => {
-            if (m.role === 'user') {
-                userMsgCount++;
-                const matchName = m.content.match(/\[Cliente: (.*?)\]/);
-                if (matchName) name = matchName[1];
-            }
-            if (m.role === 'assistant') {
-                // Chequeamos si Zara mandó el link
-                if (m.content.includes("reservo.cl") || m.content.includes("agendamiento")) {
-                    hasLink = true;
-                }
-            }
+            if (m.role === 'user') { userMsgCount++; const matchName = m.content.match(/\[Cliente: (.*?)\]/); if (matchName) name = matchName[1]; }
+            if (m.role === 'assistant' && (m.content.includes("reservo.cl") || m.content.includes("agendamiento"))) hasLink = true;
         });
-
-        // 2. Lógica de Clasificación
-        let clasificacion = "🔴 FRIO (Visto)";
-        
-        if (hasLink) {
-            clasificacion = "🟢 CALIENTE (Link Enviado)";
-        } else if (userMsgCount > 1) {
-            clasificacion = "🟡 TIBIO (Preguntó)";
-        }
-
-        // 3. Preparar CSV
+        let clasificacion = "FRIO";
+        if (hasLink) clasificacion = "CALIENTE"; else if (userMsgCount > 1) clasificacion = "TIBIO";
         const last = history[history.length - 1];
-        // Limpiamos ENTERs y comillas para que el Excel no se rompa
         const safeMsg = last.content.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""');
         const botState = status[phone] === false ? "OFF" : "ON";
-        const link = `https://wa.me/${phone}`;
-
-        csv += `"${name}","${phone}","${clasificacion}","${link}","${botState}","${safeMsg}","${last.timestamp}"\n`;
+        csv += `"${name}","${phone}","${clasificacion}","https://wa.me/${phone}","${botState}","${safeMsg}","${last.timestamp}"\n`;
     }
-
-    res.header("Content-Type", "text/csv");
-    res.attachment("zara_clientes_clasificados.csv");
-    res.send(csv);
+    res.header("Content-Type", "text/csv"); res.attachment("zara_clientes.csv"); res.send(csv);
 });
 
 app.post("/api/toggle-bot", (req, res) => {
-    const id = req.query.id;
-    if(id) {
-        const s = toggleBot(id);
-        res.json({ status: s });
-    } else res.sendStatus(400);
+    const id = req.query.id; if(id) { const s = toggleBot(id); res.json({ status: s }); } else res.sendStatus(400);
+});
+app.post("/api/manual-msg", async (req, res) => {
+    const { phone, text } = req.body; if(phone && text) { const ok = await enviarMensajeManual(phone, text); res.sendStatus(ok ? 200 : 500); } else res.sendStatus(400);
 });
 
-app.post("/api/manual-msg", async (req, res) => {
-    const { phone, text } = req.body;
-    if(phone && text) {
-        const ok = await enviarMensajeManual(phone, text);
-        res.sendStatus(ok ? 200 : 500);
-    } else res.sendStatus(400);
+// === NUEVO ENDPOINT: ESTRATEGIA DE RECUPERACIÓN ===
+app.post("/api/strategy-msg", async (req, res) => {
+    const { phone } = req.body;
+    const historial = getSesiones()[phone];
+    if (!phone || !historial) return res.sendStatus(404);
+
+    // 1. Clasificar al cliente
+    let hasLink = false;
+    let userMsgCount = 0;
+    historial.forEach(m => {
+        if (m.role === 'user') userMsgCount++;
+        if (m.role === 'assistant' && (m.content.includes("reservo.cl") || m.content.includes("agendamiento"))) hasLink = true;
+    });
+
+    let mensajeEstrategico = "";
+
+    if (hasLink) {
+        // 🟢 CALIENTE: Ya le dimos link, ¿agendó?
+        mensajeEstrategico = "Hola! 💎 Cuéntame, ¿pudiste ser contactada por mi equipo o lograste agendar tu hora?";
+    } else if (userMsgCount > 1) {
+        // 🟡 TIBIO: Conversó pero no pidió link
+        mensajeEstrategico = "Hola de nuevo! ✨ ¿Puedo ayudarte en algo para entender mejor cómo nuestros tratamientos te pueden ayudar?";
+    } else {
+        // 🔴 FRIO: Saludó y desapareció
+        mensajeEstrategico = "Hola! 👋 ¿Te sirvió la explicación que te envié o necesitas preguntar algo más?";
+    }
+
+    // 2. Enviar el mensaje
+    const enviado = await enviarMensajeManual(phone, mensajeEstrategico);
+    
+    if (enviado) res.json({ msg: mensajeEstrategico });
+    else res.sendStatus(500);
 });
 
 app.get("/webhook", (req, res) => {
-  if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]);
-  else res.sendStatus(403);
+  if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]); else res.sendStatus(403);
 });
-app.post("/webhook", async (req, res) => {
-  try { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
-});
-app.post("/reservo-webhook", async (req, res) => {
-  try { await procesarReserva(req.body); res.sendStatus(200); } catch (e) { res.sendStatus(500); }
-});
+app.post("/webhook", async (req, res) => { try { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); } catch (e) { res.sendStatus(500); } });
+app.post("/reservo-webhook", async (req, res) => { try { await procesarReserva(req.body); res.sendStatus(200); } catch (e) { res.sendStatus(500); } });
 
 app.listen(PORT, () => {
-    console.log(`🟢 ZARA 9.3 CLASIFICADOR en puerto ${PORT}`);
+    console.log(`🟢 ZARA 9.4 ESTRATEGIA MANUAL en puerto ${PORT}`);
     console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
 });
