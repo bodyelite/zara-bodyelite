@@ -15,9 +15,9 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZARA MONITOR 9.4</title>
+    <title>ZARA MONITOR 9.5</title>
     <style>
-        :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --strategy: #bd00ff; --bubble-user: #222; --bubble-bot: #003322; }
+        :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --strategy: #bd00ff; --gold: #ffd700; --bubble-user: #222; --bubble-bot: #003322; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
@@ -54,9 +54,12 @@ const MONITOR_HTML = `
         .btn-toggle { background: var(--accent); color: #000; }
         .btn-toggle.off { background: var(--danger); color: #fff; }
         
-        /* BOTÓN ESTRATEGIA */
         .btn-strategy { background: var(--strategy); color: #fff; box-shadow: 0 0 10px rgba(189, 0, 255, 0.4); }
-        .btn-strategy:active { transform: scale(0.95); }
+
+        /* AVISO DE RESERVA */
+        .notification-area { position: absolute; top: 80px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .notif-card { background: var(--gold); color: #000; padding: 15px 20px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); font-weight: bold; animation: slideIn 0.5s ease-out; display: flex; align-items: center; gap: 10px; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         .feed { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #000; }
         
@@ -82,7 +85,7 @@ const MONITOR_HTML = `
 <body>
     <div class="sidebar" id="sidebar">
         <div class="header">
-            ZARA 9.4
+            ZARA 9.5
             <div class="header-controls">
                 <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar CSV">📥 CSV</a>
                 <div class="live-dot"></div>
@@ -106,6 +109,8 @@ const MONITOR_HTML = `
             </div>
         </div>
         
+        <div class="notification-area" id="notifArea"></div>
+
         <div class="feed" id="feed"></div>
         
         <div class="input-area" id="inputArea" style="display:none;">
@@ -126,6 +131,7 @@ const MONITOR_HTML = `
         const msgInput = document.getElementById('msgInput');
         const toggleBtn = document.getElementById('toggleBtn');
         const strategyBtn = document.getElementById('strategyBtn');
+        const notifArea = document.getElementById('notifArea');
         
         let users = {};
         let activeId = null;
@@ -184,8 +190,21 @@ const MONITOR_HTML = `
         const evt = new EventSource("/monitor-stream");
         evt.onmessage = (e) => {
             const d = JSON.parse(e.data);
-            if (d.tipo === "MENSAJE" || d.tipo === "RESPUESTA_ZARA" || d.tipo === "REACTIVACION") update(d);
+            if (d.tipo === "RESERVA") showNotification(d.nombre);
+            else if (d.tipo === "MENSAJE" || d.tipo === "RESPUESTA_ZARA" || d.tipo === "REACTIVACION") update(d);
         };
+
+        function showNotification(nombre) {
+            const div = document.createElement('div');
+            div.className = 'notif-card';
+            div.innerHTML = '💰 NUEVA RESERVA CONFIRMADA:<br>' + nombre;
+            notifArea.appendChild(div);
+            setTimeout(() => div.remove(), 5000);
+            
+            // Sonido de caja registradora (opcional)
+            const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/clank_car_crash.ogg'); // Placeholder sound
+            audio.play().catch(e=>console.log("Audio play blocked"));
+        }
 
         function update(d) {
             const id = d.telefono;
@@ -270,7 +289,6 @@ const MONITOR_HTML = `
             updateToggleBtn(activeId);
         }
 
-        // === ESTRATEGIA: EJECUTAR LA IA DE RECUPERACIÓN ===
         window.runStrategy = async function() {
             if(!activeId) return;
             if(!confirm("¿Lanzar Estrategia de Recuperación para este cliente?")) return;
@@ -284,7 +302,6 @@ const MONITOR_HTML = `
                 });
                 if(res.ok) {
                     const data = await res.json();
-                    // Simulamos el mensaje en el chat local
                     const nowTime = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', hour12: true});
                     renderBubble({ role: 'bot', txt: data.msg, time: nowTime });
                 } else {
@@ -316,7 +333,6 @@ app.get("/api/history", (req, res) => res.json(getSesiones()));
 app.get("/api/status", (req, res) => res.json(getStatus()));
 app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
 app.get("/api/export-csv", (req, res) => {
-    // ... (Tu código CSV anterior sigue funcionando igual)
     const data = getSesiones();
     const status = getStatus();
     let csv = "\uFEFFNombre,Telefono,Clasificacion_IA,Link_WSP,Estado_Bot,Ultimo_Mensaje,Fecha\n";
@@ -343,37 +359,21 @@ app.post("/api/toggle-bot", (req, res) => {
 app.post("/api/manual-msg", async (req, res) => {
     const { phone, text } = req.body; if(phone && text) { const ok = await enviarMensajeManual(phone, text); res.sendStatus(ok ? 200 : 500); } else res.sendStatus(400);
 });
-
-// === NUEVO ENDPOINT: ESTRATEGIA DE RECUPERACIÓN ===
 app.post("/api/strategy-msg", async (req, res) => {
     const { phone } = req.body;
     const historial = getSesiones()[phone];
     if (!phone || !historial) return res.sendStatus(404);
-
-    // 1. Clasificar al cliente
     let hasLink = false;
     let userMsgCount = 0;
     historial.forEach(m => {
         if (m.role === 'user') userMsgCount++;
         if (m.role === 'assistant' && (m.content.includes("reservo.cl") || m.content.includes("agendamiento"))) hasLink = true;
     });
-
     let mensajeEstrategico = "";
-
-    if (hasLink) {
-        // 🟢 CALIENTE: Ya le dimos link, ¿agendó?
-        mensajeEstrategico = "Hola! 💎 Cuéntame, ¿pudiste ser contactada por mi equipo o lograste agendar tu hora?";
-    } else if (userMsgCount > 1) {
-        // 🟡 TIBIO: Conversó pero no pidió link
-        mensajeEstrategico = "Hola de nuevo! ✨ ¿Puedo ayudarte en algo para entender mejor cómo nuestros tratamientos te pueden ayudar?";
-    } else {
-        // 🔴 FRIO: Saludó y desapareció
-        mensajeEstrategico = "Hola! 👋 ¿Te sirvió la explicación que te envié o necesitas preguntar algo más?";
-    }
-
-    // 2. Enviar el mensaje
+    if (hasLink) mensajeEstrategico = "Hola! 💎 Cuéntame, ¿pudiste ser contactada por mi equipo o lograste agendar tu hora?";
+    else if (userMsgCount > 1) mensajeEstrategico = "Hola de nuevo! ✨ ¿Puedo ayudarte en algo para entender mejor cómo nuestros tratamientos te pueden ayudar?";
+    else mensajeEstrategico = "Hola! 👋 ¿Te sirvió la explicación que te envié o necesitas preguntar algo más?";
     const enviado = await enviarMensajeManual(phone, mensajeEstrategico);
-    
     if (enviado) res.json({ msg: mensajeEstrategico });
     else res.sendStatus(500);
 });
@@ -382,9 +382,32 @@ app.get("/webhook", (req, res) => {
   if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]); else res.sendStatus(403);
 });
 app.post("/webhook", async (req, res) => { try { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); } catch (e) { res.sendStatus(500); } });
-app.post("/reservo-webhook", async (req, res) => { try { await procesarReserva(req.body); res.sendStatus(200); } catch (e) { res.sendStatus(500); } });
+
+// === WEBHOOK RESERVO (FIX) ===
+// 1. Escuchar la ruta correcta (/api/reservo-webhook)
+// 2. Escuchar el método correcto (GET)
+// 3. Forzar el estado a CONFIRMADO para que suene la alarma
+app.get("/api/reservo-webhook", async (req, res) => {
+  try {
+      const { name, phone, date } = req.query; // Leemos de la URL (GET)
+      
+      console.log(`[RESERVO] Nueva reserva recibida: ${name} - ${phone}`);
+      
+      // Enviamos la señal al monitor
+      await procesarReserva({
+          clientName: name || "Cliente Reservo",
+          clientPhone: phone,
+          status: "CONFIRMADO" // Forzamos esto porque Reservo ya confirmó
+      });
+      
+      res.send("Reserva Procesada por Zara");
+  } catch (e) {
+      console.error(e);
+      res.sendStatus(500);
+  }
+});
 
 app.listen(PORT, () => {
-    console.log(`🟢 ZARA 9.4 ESTRATEGIA MANUAL en puerto ${PORT}`);
+    console.log(`🟢 ZARA 9.5 (FIX RESERVO) en puerto ${PORT}`);
     console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
 });
