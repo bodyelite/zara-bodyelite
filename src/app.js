@@ -113,7 +113,7 @@ export async function procesarEvento(entry) {
               if (transcripcion) text = transcripcion; 
               try { fs.unlinkSync(localPath); } catch(e){} 
           }
-      } catch (e) {}
+      } catch (e) { console.error("Error Audio:", e.message); }
   }
 
   if (!text) return; 
@@ -162,7 +162,7 @@ export async function procesarEvento(entry) {
     transmitir({ 
         tipo: "RESPUESTA_ZARA", 
         nombre: "Zara", 
-        telefono: id,
+        telefono: id, 
         texto: msjFinal,
         timestamp: tsFinal
     });
