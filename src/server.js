@@ -15,7 +15,7 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZARA ANALYTICS 9.9.2</title>
+    <title>ZARA ANALYTICS 9.9.3</title>
     <style>
         :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --strategy: #bd00ff; --gold: #ffd700; --bubble-user: #222; --bubble-bot: #003322; --bubble-system: #004400; --bar-1: #444; --bar-2: #0077ff; --bar-3: #ffaa00; --bar-4: #00ff88; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -109,7 +109,7 @@ const MONITOR_HTML = `
 <body>
     <div class="sidebar" id="sidebar">
         <div class="header">
-            ZARA 9.9.2
+            ZARA 9.9.3
             <div class="header-controls">
                 <button onclick="openModal()" class="dl-btn btn-report" title="Ver Reporte">📊</button>
                 <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar CSV">📥 CSV</a>
@@ -157,7 +157,6 @@ const MONITOR_HTML = `
     </div>
 
     <script>
-        // === PARSER DE FECHA ROBUSTO ===
         function getTimestamp(timeStr) {
             if (!timeStr) return 0;
             const s = timeStr.replace(/\u00A0/g, ' ').trim();
@@ -241,7 +240,6 @@ const MONITOR_HTML = `
             sortedUsers.forEach(u => { users[u.id] = u; createCard(u, u.lastMsg.txt, u.lastMsg.time, u.history); });
             document.getElementById('dateStart').valueAsDate = new Date();
             document.getElementById('dateEnd').valueAsDate = new Date();
-            // Ejecutar al cargar si se desea, o esperar click
             calcFunnel();
         });
 
@@ -322,7 +320,6 @@ const MONITOR_HTML = `
             await fetch('/api/manual-msg', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone: activeId, text: txt }) });
         }
 
-        // === FUNCIONES DE REPORTE ===
         window.openModal = function() { reportModal.style.display = 'flex'; calcFunnel(); }
         window.closeModal = function() { reportModal.style.display = 'none'; }
         
@@ -331,7 +328,6 @@ const MONITOR_HTML = `
             const endInput = document.getElementById('dateEnd').value;
             if(!startInput || !endInput) return;
 
-            // FIX: Parseo manual de fecha para respetar zona horaria local exacta
             const [sY, sM, sD] = startInput.split('-').map(Number);
             const start = new Date(sY, sM-1, sD, 0, 0, 0, 0);
 
@@ -420,23 +416,33 @@ app.get("/api/export-csv", (req, res) => {
 
 app.post("/api/toggle-bot", (req, res) => { const id = req.query.id; if(id) { const s = toggleBot(id); res.json({ status: s }); } else res.sendStatus(400); });
 app.post("/api/manual-msg", async (req, res) => { const { phone, text } = req.body; if(phone && text) { const ok = await enviarMensajeManual(phone, text); res.sendStatus(ok ? 200 : 500); } else res.sendStatus(400); });
+
+// === ESTRATEGIA INTELIGENTE RECONQUISTA ===
 app.post("/api/strategy-msg", async (req, res) => {
     const { phone } = req.body; const historial = getSesiones()[phone]; if (!phone || !historial) return res.sendStatus(404);
     let isAgendado = false; let isCapturado = false; let userMsgCount = 0;
     historial.forEach(m => { if (m.role === 'user') userMsgCount++; if (m.role === 'assistant') { if (m.content.includes("te llamarán muy pronto")) isCapturado = true; if (m.content.includes("RESERVA CONFIRMADA")) isAgendado = true; } });
+    
     let mensajeEstrategico = "";
-    if (isAgendado) mensajeEstrategico = "Hola! 🌟 ¿Cómo has estado? ¿Todo bien con tu reserva?";
-    else if (isCapturado) mensajeEstrategico = "Hola! 📞 Quedamos en llamarte. ¿Tienes un minuto ahora o prefieres que te hable por aquí?";
-    else if (userMsgCount > 1) mensajeEstrategico = "Hola! ✨ ¿Te quedó alguna duda sobre los tratamientos que vimos?";
-    else mensajeEstrategico = "Hola! 👋 ¿Pudiste revisar la info que te envié?";
+    if (isAgendado) {
+        mensajeEstrategico = "Hola! 🌟 Veo tu reserva confirmada. Todo listo por aquí. ¿Necesitas que te envíe la ubicación exacta?";
+    } else if (isCapturado) {
+        mensajeEstrategico = "Hola! 📞 Te escribo para chequear: ¿Te alcanzaron a llamar mis compañeras para agendar o prefieres ver horarios por aquí?";
+    } else if (userMsgCount > 1) {
+        mensajeEstrategico = "Hola! 👋 Me quedé pensando en tu caso. Se nos liberó un cupo de evaluación para mañana. ¿Te gustaría tomarlo?";
+    } else {
+        mensajeEstrategico = "Hola! ✨ Estamos cerrando agenda de la semana. ¿Te interesaba agendar una cita o prefieres que te avise para el próximo mes?";
+    }
+
     const enviado = await enviarMensajeManual(phone, mensajeEstrategico);
     if (enviado) res.json({ msg: mensajeEstrategico }); else res.sendStatus(500);
 });
+
 app.get("/webhook", (req, res) => { if (req.query["hub.mode"] === "subscribe" && req.query["hub.verify_token"] === VERIFY_TOKEN) res.send(req.query["hub.challenge"]); else res.sendStatus(403); });
 app.post("/webhook", async (req, res) => { try { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); } catch (e) { res.sendStatus(500); } });
 app.get("/api/reservo-webhook", async (req, res) => { try { const { name, phone, date } = req.query; console.log(`[RESERVO] Nueva reserva: ${name} - ${phone} - ${date}`); await procesarReserva({ clientName: name || "Cliente Reservo", clientPhone: phone, date: date, status: "CONFIRMADO" }); res.send("Reserva Procesada"); } catch (e) { console.error(e); res.sendStatus(500); } });
 
 app.listen(PORT, () => {
-    console.log(`🟢 ZARA 9.9.2 FIXED DATES en puerto ${PORT}`);
+    console.log(`🟢 ZARA 9.9.3 STRATEGY en puerto ${PORT}`);
     console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
 });
