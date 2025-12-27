@@ -15,7 +15,7 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZARA MONITOR 9.2</title>
+    <title>ZARA MONITOR 9.3</title>
     <style>
         :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --bubble-user: #222; --bubble-bot: #003322; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -78,9 +78,9 @@ const MONITOR_HTML = `
 <body>
     <div class="sidebar" id="sidebar">
         <div class="header">
-            ZARA 9.2 
+            ZARA 9.3 
             <div class="header-controls">
-                <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar Base de Datos">📥 CSV</a>
+                <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar Base de Datos">📥 CLASIFICAR</a>
                 <div class="live-dot"></div>
             </div>
         </div>
@@ -327,37 +327,56 @@ app.get("/api/history", (req, res) => res.json(getSesiones()));
 app.get("/api/status", (req, res) => res.json(getStatus()));
 app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
 
-// === EXPORTAR BASE DE DATOS (CSV) ===
+// === ZARA CLASIFICADOR INTELIGENTE (CSV) ===
 app.get("/api/export-csv", (req, res) => {
     const data = getSesiones();
     const status = getStatus();
-    // Header UTF-8 BOM + Columnas
-    let csv = "\uFEFFNombre,Telefono,Link,Estado_Bot,Ultimo_Mensaje,Fecha\n";
+    // Agregamos BOM para que Excel abra bien los tildes y Ñ
+    let csv = "\uFEFFNombre,Telefono,Clasificacion_IA,Link_WSP,Estado_Bot,Ultimo_Mensaje,Fecha\n";
 
     for (const [phone, history] of Object.entries(data)) {
         if (!history || history.length === 0) continue;
 
-        // Extraer nombre del primer mensaje si es posible
         let name = "Cliente";
-        const firstUserMsg = history.find(m => m.role === 'user');
-        if (firstUserMsg) {
-            const m = firstUserMsg.content.match(/\[Cliente: (.*?)\]/);
-            if (m) name = m[1];
+        let hasLink = false;
+        let userMsgCount = 0;
+
+        // 1. Análisis del Historial
+        history.forEach(m => {
+            if (m.role === 'user') {
+                userMsgCount++;
+                const matchName = m.content.match(/\[Cliente: (.*?)\]/);
+                if (matchName) name = matchName[1];
+            }
+            if (m.role === 'assistant') {
+                // Chequeamos si Zara mandó el link
+                if (m.content.includes("reservo.cl") || m.content.includes("agendamiento")) {
+                    hasLink = true;
+                }
+            }
+        });
+
+        // 2. Lógica de Clasificación
+        let clasificacion = "🔴 FRIO (Visto)";
+        
+        if (hasLink) {
+            clasificacion = "🟢 CALIENTE (Link Enviado)";
+        } else if (userMsgCount > 1) {
+            clasificacion = "🟡 TIBIO (Preguntó)";
         }
 
-        // Ultimo mensaje y fecha
+        // 3. Preparar CSV
         const last = history[history.length - 1];
-        // Limpiamos saltos de línea y comillas para no romper el CSV
+        // Limpiamos ENTERs y comillas para que el Excel no se rompa
         const safeMsg = last.content.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""');
-        
         const botState = status[phone] === false ? "OFF" : "ON";
         const link = `https://wa.me/${phone}`;
 
-        csv += `"${name}","${phone}","${link}","${botState}","${safeMsg}","${last.timestamp}"\n`;
+        csv += `"${name}","${phone}","${clasificacion}","${link}","${botState}","${safeMsg}","${last.timestamp}"\n`;
     }
 
     res.header("Content-Type", "text/csv");
-    res.attachment("zara_clientes.csv");
+    res.attachment("zara_clientes_clasificados.csv");
     res.send(csv);
 });
 
@@ -389,6 +408,6 @@ app.post("/reservo-webhook", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🟢 ZARA 9.2 CONTROL TOTAL en puerto ${PORT}`);
+    console.log(`🟢 ZARA 9.3 CLASIFICADOR en puerto ${PORT}`);
     console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
 });
