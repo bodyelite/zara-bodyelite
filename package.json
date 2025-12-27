@@ -1,6 +1,6 @@
 {
   "name": "zara-9-6-final",
-  "version": "9.6.0",
+  "version": "9.6.1",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
