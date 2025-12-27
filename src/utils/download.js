@@ -9,20 +9,34 @@ export async function downloadFile(url, filename) {
     const filePath = path.join(tempDir, filename);
     const writer = fs.createWriteStream(filePath);
 
-    const response = await axios({
-        url,
-        method: 'GET',
-        responseType: 'stream',
-        headers: { 
-            'Authorization': `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-    });
+    try {
+        const response = await axios({
+            url: url,
+            method: 'GET',
+            responseType: 'stream',
+            headers: { 
+                'Authorization': `Bearer ${process.env.PAGE_ACCESS_TOKEN}`,
+                'User-Agent': 'curl/7.64.1' 
+            },
+            maxRedirects: 5,
+            validateStatus: function (status) {
+                return status >= 200 && status < 303; 
+            }
+        });
 
-    response.data.pipe(writer);
+        response.data.pipe(writer);
 
-    return new Promise((resolve, reject) => {
-        writer.on('finish', () => resolve(filePath));
-        writer.on('error', reject);
-    });
+        return new Promise((resolve, reject) => {
+            writer.on('finish', () => resolve(filePath));
+            writer.on('error', (err) => {
+                writer.close();
+                fs.unlink(filePath, () => {}); 
+                reject(err);
+            });
+        });
+    } catch (error) {
+        if (writer) writer.close();
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        throw error;
+    }
 }
