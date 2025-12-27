@@ -23,6 +23,11 @@ const MONITOR_HTML = `
         
         .sidebar { width: 360px; background: var(--sidebar); border-right: 1px solid #222; display: flex; flex-direction: column; z-index: 20; }
         .header { padding: 20px; border-bottom: 2px solid var(--accent); font-weight: 900; font-size: 1.3rem; letter-spacing: 1px; background: #000; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+        .dl-btn { background: #111; border: 1px solid #333; color: var(--accent); border-radius: 5px; cursor: pointer; padding: 5px 10px; font-size: 1rem; transition: 0.2s; text-decoration: none; }
+        .dl-btn:hover { background: #222; border-color: var(--accent); }
+        
         .live-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
@@ -72,7 +77,13 @@ const MONITOR_HTML = `
 </head>
 <body>
     <div class="sidebar" id="sidebar">
-        <div class="header">ZARA 9.2 <div class="live-dot"></div></div>
+        <div class="header">
+            ZARA 9.2 
+            <div class="header-controls">
+                <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar Base de Datos">📥 CSV</a>
+                <div class="live-dot"></div>
+            </div>
+        </div>
         <div class="user-list" id="list"></div>
     </div>
     
@@ -315,6 +326,40 @@ app.get("/monitor", (req, res) => res.send(MONITOR_HTML));
 app.get("/api/history", (req, res) => res.json(getSesiones()));
 app.get("/api/status", (req, res) => res.json(getStatus()));
 app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
+
+// === EXPORTAR BASE DE DATOS (CSV) ===
+app.get("/api/export-csv", (req, res) => {
+    const data = getSesiones();
+    const status = getStatus();
+    // Header UTF-8 BOM + Columnas
+    let csv = "\uFEFFNombre,Telefono,Link,Estado_Bot,Ultimo_Mensaje,Fecha\n";
+
+    for (const [phone, history] of Object.entries(data)) {
+        if (!history || history.length === 0) continue;
+
+        // Extraer nombre del primer mensaje si es posible
+        let name = "Cliente";
+        const firstUserMsg = history.find(m => m.role === 'user');
+        if (firstUserMsg) {
+            const m = firstUserMsg.content.match(/\[Cliente: (.*?)\]/);
+            if (m) name = m[1];
+        }
+
+        // Ultimo mensaje y fecha
+        const last = history[history.length - 1];
+        // Limpiamos saltos de línea y comillas para no romper el CSV
+        const safeMsg = last.content.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""');
+        
+        const botState = status[phone] === false ? "OFF" : "ON";
+        const link = `https://wa.me/${phone}`;
+
+        csv += `"${name}","${phone}","${link}","${botState}","${safeMsg}","${last.timestamp}"\n`;
+    }
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("zara_clientes.csv");
+    res.send(csv);
+});
 
 app.post("/api/toggle-bot", (req, res) => {
     const id = req.query.id;
