@@ -15,7 +15,7 @@ export const CLINICA = {
         plan: "Push Up Glúteos",
         precio: "$376.000",
         tecnologias: "EMS Sculptor (HIFEM) y Radiofrecuencia",
-        beneficio: "levantar y tonificar tus glúteos"
+        beneficio: "levantar y dar forma a los glúteos"
     },
     "lipo_express": {
         plan: "Lipo Express",

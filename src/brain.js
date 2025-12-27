@@ -1,8 +1,8 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { 
-    PROMPT_EMPATIA, PROMPT_EDUCACION, PROMPT_PRECIO, 
-    PROMPT_CIERRE, PROMPT_MIX, RESPUESTA_LLAMADA 
+    PROMPT_TRIAGE, PASO_1_GANCHO, PASO_2_TECNOLOGIA, 
+    PASO_3_PRECIO, PASO_4_CIERRE, PASO_MIX_ESTRATEGA, RESPUESTA_LLAMADA 
 } from './config/persona.js';
 import { CLINICA } from './config/clinic.js';
 import { NEGOCIO } from './config/business.js';
@@ -44,37 +44,34 @@ export async function pensar(historial, nombreCompleto) {
              else if (historial.some(m => m.content.includes("Reloj de Arena"))) key = "mix_corporal";
         }
 
-        const pidePrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor") || ultimoMensaje.includes("costo") || ultimoMensaje.includes("sale");
         const pideLlamada = ultimoMensaje.includes("llamen") || ultimoMensaje.includes("llamada") || ultimoMensaje.includes("fono") || ultimoMensaje.includes("numero");
-        const preguntaComo = ultimoMensaje.includes("como") || ultimoMensaje.includes("funciona") || ultimoMensaje.includes("consiste") || ultimoMensaje.includes("que es") || ultimoMensaje.includes("info");
         const afirmacion = ultimoMensaje.includes("si") || ultimoMensaje.includes("claro") || ultimoMensaje.includes("bueno") || ultimoMensaje.includes("ok") || ultimoMensaje.includes("dale");
         const negacion = ultimoMensaje.includes("no");
+        const preguntaPrecio = ultimoMensaje.includes("precio") || ultimoMensaje.includes("valor");
 
-        const botPreguntoFuncionamiento = ultimoBot.includes("como logramos") || ultimoBot.includes("resultados reales") || ultimoBot.includes("que te cuente");
-        const botPreguntoPrecio = ultimoBot.includes("conocer el valor") || ultimoBot.includes("sobre el valor");
-        const botPreguntoEvaluacion = ultimoBot.includes("evaluacion") || ultimoBot.includes("ahorrar asi") || ultimoBot.includes("te hace sentido");
+        const botPreguntoFuncionamiento = ultimoBot.includes("como funciona");
+        const botPreguntoPrecio = ultimoBot.includes("sobre el precio");
+        const botPreguntoEvaluacion = ultimoBot.includes("evaluacion con ia") || ultimoBot.includes("hecho una evaluacion");
 
         let promptFinal = "";
 
         if (pideLlamada) {
             promptFinal = RESPUESTA_LLAMADA;
-        } else if (esMix && !preguntaComo && !pidePrecio) {
-            promptFinal = PROMPT_MIX; 
-        } else if (!key) {
-            promptFinal = PROMPT_EMPATIA; 
+        } else if (esMix && !botPreguntoFuncionamiento && !botPreguntoPrecio && !botPreguntoEvaluacion) {
+             promptFinal = PASO_MIX_ESTRATEGA;
+        } else if (!key && !preguntaPrecio) {
+            promptFinal = PROMPT_TRIAGE; 
         } else {
-            if (pidePrecio) {
-                promptFinal = PROMPT_PRECIO; 
-            } else if (preguntaComo) {
-                promptFinal = PROMPT_EDUCACION; 
+            if (preguntaPrecio) {
+                promptFinal = PASO_3_PRECIO;
             } else if (botPreguntoFuncionamiento && afirmacion) {
-                promptFinal = PROMPT_EDUCACION; 
+                promptFinal = PASO_2_TECNOLOGIA; 
             } else if (botPreguntoPrecio && afirmacion) {
-                promptFinal = PROMPT_PRECIO; 
+                promptFinal = PASO_3_PRECIO; 
             } else if (botPreguntoEvaluacion && (afirmacion || negacion)) {
-                promptFinal = PROMPT_CIERRE; 
+                promptFinal = PASO_4_CIERRE; 
             } else {
-                promptFinal = PROMPT_EDUCACION; 
+                promptFinal = PASO_1_GANCHO; 
             }
         }
 
@@ -92,7 +89,7 @@ export async function pensar(historial, nombreCompleto) {
             model: "gpt-4o",
             messages: [{ role: "system", content: promptFinal }, ...historial],
             temperature: 0.0, 
-            max_tokens: 85
+            max_tokens: 100 
         });
 
         return completion.choices[0].message.content;
