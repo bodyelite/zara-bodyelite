@@ -101,27 +101,31 @@ export async function procesarEvento(entry) {
       if (msg.type === "audio") audioId = msg.audio.id;
   } else return; 
 
+  // === COMANDO SECRETO PARA BORRAR HISTORIAL ===
+  if (text && text.trim() === "/reset") {
+      delete sesionesLocal[id];
+      delete estadosClientes[id];
+      guardar();
+      await sendMessage(id, "✅ Memoria borrada. Eres un cliente nuevo. Escribe 'Hola' para probar la alerta.", platform);
+      return;
+  }
+
   // === DETECCIÓN DE CLIENTE NUEVO (ALERTA STAFF) ===
-  // Si el ID no existe en sesionesLocal, es la primera vez que escribe
   if (!sesionesLocal[id]) {
       const alertaNuevo = `🔔 *NUEVO INTERESADO DETECTADO*\n👤 ${name}\n📱 Link: https://wa.me/${id}\n\nZara comenzará a atenderlo. 👀`;
       console.log(`[ALERTA] Nuevo cliente detectado: ${name}`);
-      // Enviamos alerta a todo el staff configurado
       for (const staffPhone of NEGOCIO.staff_alertas) {
           try { await sendMessage(staffPhone, alertaNuevo); } catch(e) {}
       }
-      // Inicializamos su historial
       sesionesLocal[id] = [];
   }
 
   const ts = getFechaHora();
 
-  // === PROCESAMIENTO DE AUDIO (FIX 401 INCLUIDO) ===
   if (audioId) {
       try {
           const url = await getWhatsAppMediaUrl(audioId);
           if (url) {
-              // Usamos el nombre con timestamp para evitar colisiones
               const localPath = await downloadFile(url, `audio_${id}_${Date.now()}.ogg`);
               const transcripcion = await transcribirAudio(localPath);
               if (transcripcion) text = transcripcion; 
@@ -134,7 +138,6 @@ export async function procesarEvento(entry) {
 
   const msgDisplay = audioId ? `🎤 (Audio): "${text}"` : text;
 
-  // Transmitir al Monitor
   transmitir({ 
       tipo: "MENSAJE", 
       nombre: name, 
@@ -144,29 +147,23 @@ export async function procesarEvento(entry) {
       linkFoto: `https://wa.me/${id}`
   });
 
-  // Guardar mensaje del usuario
   sesionesLocal[id].push({ role: "user", content: `[Cliente: ${name}] ${text}`, timestamp: ts });
   guardar();
 
-  // Si el bot está apagado para este usuario, no respondemos
   if (botStatus[id] === false) {
       ultimasRespuestas[id] = Date.now(); 
       return;
   }
 
-  // Evitar doble respuesta (debounce 2s)
   const now = Date.now();
   if ((now - (ultimasRespuestas[id] || 0)) < 2000) return; 
   ultimasRespuestas[id] = now;
-  
   usuariosPlataforma[id] = platform; 
   if (estadosClientes[id] !== 'agendado') estadosClientes[id] = 'activo';
 
-  // Detección básica de intención de agenda
   const low = text.toLowerCase().trim();
   if (low.includes("link") || low.includes("agenda")) estadosClientes[id] = 'agendado';
 
-  // === DETECCIÓN DE NÚMERO (LEAD CALIENTE) ===
   const ph = getPhone(text);
   if (ph) {
     estadosClientes[id] = 'agendado';
@@ -190,10 +187,8 @@ export async function procesarEvento(entry) {
     return;
   }
 
-  // Limitar memoria de contexto
   if (sesionesLocal[id].length > 16) sesionesLocal[id] = sesionesLocal[id].slice(-16);
 
-  // === CEREBRO ZARA 3.1 ===
   const respuesta = await pensar(sesionesLocal[id], name);
   const tsResp = getFechaHora();
   
