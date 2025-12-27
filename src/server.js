@@ -15,9 +15,9 @@ const MONITOR_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZARA MONITOR 9.8</title>
+    <title>ZARA ANALYTICS 9.9</title>
     <style>
-        :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --strategy: #bd00ff; --gold: #ffd700; --bubble-user: #222; --bubble-bot: #003322; --bubble-system: #004400; }
+        :root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --danger: #ff0044; --strategy: #bd00ff; --gold: #ffd700; --bubble-user: #222; --bubble-bot: #003322; --bubble-system: #004400; --bar-1: #444; --bar-2: #0077ff; --bar-3: #ffaa00; --bar-4: #00ff88; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
@@ -36,7 +36,6 @@ const MONITOR_HTML = `
         .card.active { background: #161616; border-left: 4px solid var(--accent); }
         .card.flash { background: #002211; transition: background 0.5s; }
         
-        /* ETIQUETAS DE ESTADO */
         .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; vertical-align: middle; }
         .tag.frio { background: #333; color: #aaa; border: 1px solid #444; }
         .tag.medio { background: #ffaa00; color: #000; border: 1px solid #ffcc00; }
@@ -63,6 +62,7 @@ const MONITOR_HTML = `
         .btn-toggle { background: var(--accent); color: #000; }
         .btn-toggle.off { background: var(--danger); color: #fff; }
         .btn-strategy { background: var(--strategy); color: #fff; box-shadow: 0 0 10px rgba(189, 0, 255, 0.4); }
+        .btn-report { background: #333; color: #fff; border: 1px solid #555; } /* Botón Reporte */
 
         .notification-area { position: absolute; top: 80px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .notif-card { background: var(--gold); color: #000; padding: 15px 20px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); font-weight: bold; animation: slideIn 0.5s ease-out; display: flex; align-items: center; gap: 10px; }
@@ -82,6 +82,20 @@ const MONITOR_HTML = `
         textarea:focus { border-color: var(--accent); }
         .send-btn { width: 50px; height: 50px; background: var(--accent); border: none; border-radius: 8px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
+        /* MODAL REPORTE */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal { background: #111; border: 1px solid #333; padding: 25px; border-radius: 10px; width: 90%; max-width: 400px; color: #fff; box-shadow: 0 0 30px rgba(0,255,136,0.1); }
+        .modal h3 { margin-top: 0; color: var(--accent); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .date-inputs { display: flex; gap: 10px; margin: 20px 0; }
+        .date-inputs input { background: #222; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 5px; flex: 1; color-scheme: dark; }
+        .funnel-chart { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .bar-group { display: flex; flex-direction: column; gap: 5px; }
+        .bar-label { font-size: 0.9rem; color: #ccc; display: flex; justify-content: space-between; }
+        .bar-track { width: 100%; background: #222; height: 10px; border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 5px; width: 0%; transition: width 1s ease; }
+        .modal-close { margin-top: 20px; width: 100%; padding: 10px; background: #333; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .modal-close:hover { background: #444; }
+
         @media (max-width: 768px) {
             .sidebar { width: 100%; position: absolute; height: 100%; transition: transform 0.3s ease; }
             .sidebar.hidden { transform: translateX(-100%); }
@@ -94,8 +108,9 @@ const MONITOR_HTML = `
 <body>
     <div class="sidebar" id="sidebar">
         <div class="header">
-            ZARA 9.8
+            ZARA 9.9
             <div class="header-controls">
+                <button onclick="openModal()" class="dl-btn btn-report" title="Ver Reporte">📊</button>
                 <a href="/api/export-csv" target="_blank" class="dl-btn" title="Descargar CSV">📥 CSV</a>
                 <div class="live-dot"></div>
             </div>
@@ -125,6 +140,20 @@ const MONITOR_HTML = `
         </div>
     </div>
 
+    <div class="modal-overlay" id="reportModal">
+        <div class="modal">
+            <h3>Embudo de Ventas</h3>
+            <div class="date-inputs">
+                <input type="date" id="dateStart" onchange="calcFunnel()">
+                <input type="date" id="dateEnd" onchange="calcFunnel()">
+            </div>
+            <div class="funnel-chart" id="funnelChart">
+                <div style="text-align:center; color:#666;">Selecciona fechas para calcular</div>
+            </div>
+            <button class="modal-close" onclick="closeModal()">Cerrar</button>
+        </div>
+    </div>
+
     <script>
         const list = document.getElementById('list');
         const feed = document.getElementById('feed');
@@ -138,6 +167,8 @@ const MONITOR_HTML = `
         const toggleBtn = document.getElementById('toggleBtn');
         const strategyBtn = document.getElementById('strategyBtn');
         const notifArea = document.getElementById('notifArea');
+        const reportModal = document.getElementById('reportModal');
+        
         let users = {}; let activeId = null; let botStatus = {};
 
         function getTimestamp(timeStr) {
@@ -161,20 +192,16 @@ const MONITOR_HTML = `
         }
 
         function calculateStatus(history) {
-            let userCount = 0;
-            let isAgendado = false;
-            let isCapturado = false;
-
+            let userCount = 0; let isAgendado = false; let isCapturado = false;
             history.forEach(m => {
                 if (m.role === 'user') userCount++;
                 if (m.role === 'system' && m.txt.includes("RESERVA CONFIRMADA")) isAgendado = true;
-                if (m.role === 'bot' && m.txt.includes("llamará")) isCapturado = true; // Bot dijo: te llamarán
+                if (m.role === 'bot' && m.txt.includes("llamará")) isCapturado = true;
             });
-
-            if (isAgendado) return { label: 'AGENDADO', class: 'agendado' };
-            if (isCapturado) return { label: 'CAPTURADO', class: 'capturado' };
-            if (userCount > 1) return { label: 'MEDIO', class: 'medio' };
-            return { label: 'FRIO', class: 'frio' };
+            if (isAgendado) return { label: 'AGENDADO', class: 'agendado', val: 4 };
+            if (isCapturado) return { label: 'CAPTURADO', class: 'capturado', val: 3 };
+            if (userCount > 1) return { label: 'MEDIO', class: 'medio', val: 2 };
+            return { label: 'FRIO', class: 'frio', val: 1 };
         }
 
         Promise.all([fetch('/api/history').then(r => r.json()), fetch('/api/status').then(r => r.json())]).then(([data, status]) => {
@@ -195,6 +222,10 @@ const MONITOR_HTML = `
             });
             sortedUsers.sort((a, b) => b.sortTime - a.sortTime);
             sortedUsers.forEach(u => { users[u.id] = u; createCard(u, u.lastMsg.txt, u.lastMsg.time, u.history); });
+            
+            // Set fechas default (Hoy)
+            document.getElementById('dateStart').valueAsDate = new Date();
+            document.getElementById('dateEnd').valueAsDate = new Date();
         });
 
         const evt = new EventSource("/monitor-stream");
@@ -214,7 +245,6 @@ const MONITOR_HTML = `
         function update(d) {
             const id = d.telefono; if(!id) return;
             if (!users[id]) { users[id] = { name: d.nombre || 'Cliente', phone: id, history: [] }; createCard(users[id], "...", "", []); }
-            
             const isSystem = d.nombre === "SISTEMA" || d.texto?.includes("[SISTEMA]");
             const txt = d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? d.texto : d.mensaje;
             const role = isSystem ? 'system' : (d.tipo.includes("ZARA") || d.tipo === "REACTIVACION" ? 'bot' : 'user');
@@ -223,18 +253,11 @@ const MONITOR_HTML = `
             if(!d.restore) {
                 users[id].history.push({ role, txt, time });
                 if (activeId === id) renderBubble({ role, txt, time });
-                
-                // Actualizar tarjeta y etiqueta
                 const card = document.getElementById('c-' + id);
                 if(card) {
-                    // Recalcular estado
                     const st = calculateStatus(users[id].history);
                     const tagEl = card.querySelector('.tag');
-                    if(tagEl) {
-                        tagEl.className = 'tag ' + st.class;
-                        tagEl.innerText = st.label;
-                    }
-
+                    if(tagEl) { tagEl.className = 'tag ' + st.class; tagEl.innerText = st.label; }
                     let prev = (role==='bot'?'🤖 ':'') + (role==='system'?'✅ ':'') + txt;
                     card.querySelector('.preview').innerText = prev;
                     let timeShow = time.includes(',') ? time.split(',')[1] : time;
@@ -247,7 +270,6 @@ const MONITOR_HTML = `
         function createCard(u, prev, time, history) {
             if(document.getElementById('c-' + u.phone)) return;
             const st = calculateStatus(history || []);
-            
             const div = document.createElement('div'); div.className = 'card'; div.id = 'c-' + u.phone; div.onclick = () => select(u.phone);
             const timeDisplay = time ? (time.includes(',') ? time.split(',')[1] : time) : '';
             div.innerHTML = \`<div class="avatar">\${u.name[0]}</div><div class="info"><div class="top-row"><div class="name-container"><div class="name">\${u.name}</div><div class="tag \${st.class}">\${st.label}</div></div><div class="time-ago">\${timeDisplay}</div></div><div class="preview">\${prev}</div></div>\`;
@@ -282,6 +304,73 @@ const MONITOR_HTML = `
             const nowTime = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', hour12: true}); renderBubble({ role: 'bot', txt: txt, time: nowTime });
             await fetch('/api/manual-msg', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone: activeId, text: txt }) });
         }
+
+        // === FUNCIONES DE REPORTE ===
+        window.openModal = function() { reportModal.style.display = 'flex'; calcFunnel(); }
+        window.closeModal = function() { reportModal.style.display = 'none'; }
+        
+        window.calcFunnel = function() {
+            const startInput = document.getElementById('dateStart').value;
+            const endInput = document.getElementById('dateEnd').value;
+            if(!startInput || !endInput) return;
+
+            const start = new Date(startInput); start.setHours(0,0,0,0);
+            const end = new Date(endInput); end.setHours(23,59,59,999);
+
+            let leads = 0, conversados = 0, interesados = 0, agendados = 0;
+
+            Object.values(users).forEach(u => {
+                // Filtrar mensajes por fecha
+                const msgsInRange = u.history.filter(m => {
+                    const ts = getTimestamp(m.time);
+                    return ts >= start.getTime() && ts <= end.getTime();
+                });
+
+                if(msgsInRange.length > 0) {
+                    leads++; // Hubo actividad en ese rango
+                    
+                    // Calculamos el "mejor estado" logrado en ese rango
+                    let userMsgCount = 0;
+                    let isAgendado = false;
+                    let isCapturado = false;
+
+                    msgsInRange.forEach(m => {
+                        if (m.role === 'user') userMsgCount++;
+                        if (m.role === 'system' && m.txt.includes("RESERVA CONFIRMADA")) isAgendado = true;
+                        if (m.role === 'bot' && m.txt.includes("llamará")) isCapturado = true;
+                    });
+
+                    if(userMsgCount > 0) conversados++;
+                    if(userMsgCount > 1 || isCapturado || isAgendado) interesados++;
+                    if(isAgendado) agendados++;
+                }
+            });
+
+            // Dibujar Gráfico
+            const max = leads > 0 ? leads : 1;
+            const pConversados = Math.round((conversados / max) * 100);
+            const pInteresados = Math.round((interesados / max) * 100);
+            const pAgendados = Math.round((agendados / max) * 100);
+
+            document.getElementById('funnelChart').innerHTML = \`
+                <div class="bar-group">
+                    <div class="bar-label"><span>📉 Total Leads</span><span>\${leads} (100%)</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: 100%; background: var(--bar-1)"></div></div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar-label"><span>💬 Conversados</span><span>\${conversados} (\${pConversados}%)</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: \${pConversados}%; background: var(--bar-2)"></div></div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar-label"><span>🔥 Interesados</span><span>\${interesados} (\${pInteresados}%)</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: \${pInteresados}%; background: var(--bar-3)"></div></div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar-label"><span>💰 Agendados (Ventas)</span><span>\${agendados} (\${pAgendados}%)</span></div>
+                    <div class="bar-track"><div class="bar-fill" style="width: \${pAgendados}%; background: var(--bar-4); box-shadow: 0 0 10px var(--bar-4)"></div></div>
+                </div>
+            \`;
+        }
     </script>
 </body>
 </html>
@@ -292,7 +381,7 @@ app.get("/api/history", (req, res) => res.json(getSesiones()));
 app.get("/api/status", (req, res) => res.json(getStatus()));
 app.get("/monitor-stream", (req, res) => conectarCliente(req, res));
 
-// === EXPORTAR CSV (CON TUS ETIQUETAS NUEVAS) ===
+// === CSV FINAL (ETIQUETAS + REPORTE READY) ===
 app.get("/api/export-csv", (req, res) => {
     const data = getSesiones();
     const status = getStatus();
@@ -309,7 +398,6 @@ app.get("/api/export-csv", (req, res) => {
             }
         });
         
-        // ETIQUETAS NUEVAS
         let clasificacion = "FRIO";
         if (isAgendado) clasificacion = "AGENDADO (Objetivo)";
         else if (isCapturado) clasificacion = "CAPTURADO (Llamar)";
@@ -359,6 +447,6 @@ app.get("/api/reservo-webhook", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🟢 ZARA 9.8 ETIQUETAS en puerto ${PORT}`);
+    console.log(`🟢 ZARA 9.9 ANALYTICS en puerto ${PORT}`);
     console.log(`📊 MONITOR: https://zara-bodyelite-1.onrender.com/monitor`);
 });
