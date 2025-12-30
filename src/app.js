@@ -12,64 +12,74 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 let sesiones = {}; 
 let botStatus = {}; 
 
+// CARGA DE DATOS (FLEXIBLE)
 try {
     const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
     if (files.length > 0) {
+        // Leemos el primer archivo json que encontremos para asegurar carga
         const target = files.includes('sesiones.json') ? 'sesiones.json' : files[0];
+        console.log(`📂 Leyendo backup: ${target}`);
         const raw = fs.readFileSync(path.join(DATA_DIR, target), 'utf8');
-        const data = JSON.parse(raw);
         
-        if (Array.isArray(data)) {
-             data.forEach(d => {
-                 const id = d.phone || d.id;
-                 if(id) sesiones[id] = { name: d.name || "Cliente", history: d.history || [], tag: "ANTIGUO" };
-             });
-        } else {
-            sesiones = data.sesiones || data || {};
-            botStatus = data.botStatus || {};
+        try {
+            const data = JSON.parse(raw);
+            if (Array.isArray(data)) {
+                // Convertir array antiguo a objeto nuevo
+                data.forEach(item => {
+                    const key = item.phone || item.id || (item.history?.[0]?.from);
+                    if (key) {
+                        sesiones[key] = {
+                            name: item.name || "Recuperado",
+                            history: Array.isArray(item.history) ? item.history : [],
+                            tag: "ANTIGUO"
+                        };
+                    }
+                });
+            } else {
+                sesiones = data.sesiones || data || {};
+                botStatus = data.botStatus || {};
+            }
+        } catch (errParse) {
+            console.error("Error parseando JSON, iniciando limpio pero sin borrar archivo.");
         }
-        Object.keys(sesiones).forEach(k => {
-            if (!sesiones[k].lastInteraction) sesiones[k].lastInteraction = Date.now();
-            if (sesiones[k].followUpSent === undefined) sesiones[k].followUpSent = false;
-        });
-        console.log(`✅ DISCO CARGADO: ${Object.keys(sesiones).length} Chats recuperados.`);
+        console.log(`✅ MEMORIA ACTIVA: ${Object.keys(sesiones).length} clientes.`);
     }
-} catch (e) { console.error("Error Carga:", e); }
+} catch (e) { console.error("Error Disco:", e); }
 
 function guardar() {
     try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); } 
-    catch (e) { console.error("Error Guardado"); }
+    catch (e) { console.error("Error Save"); }
 }
 
 async function notificarStaff(cliente, nombre, motivo) {
-    const texto = `🚨 *ALERTA ZARA* 🚨\nCliente: ${nombre}\nTel: ${cliente}\nEstado: ${motivo}\nLink: https://wa.me/${cliente}`;
+    const texto = `🚨 *ALERTA ZARA* 🚨\nCliente: ${nombre}\nTel: ${cliente}\nMotivo: ${motivo}\nLink: https://wa.me/${cliente}`;
     for (const staff of NEGOCIO.staff_alertas) {
         await enviarMensaje(staff, texto);
     }
 }
 
 function calcularEtiqueta(historial, intencion) {
-    if (!historial || historial.length === 0) return "NUEVO";
+    if (!historial || !Array.isArray(historial) || historial.length === 0) return "NUEVO";
     if (intencion === "HOT") return "CALIENTE";
     if (historial.length > 0 && historial[historial.length-1].role === 'assistant') return "FRIO";
     if (historial.length > 2) return "TIBIO";
     return "TIBIO";
 }
 
+// MOTOR DE SEGUIMIENTO
 setInterval(() => {
     const now = Date.now();
     const currentHour = new Date().getHours(); 
     Object.keys(sesiones).forEach(async (phone) => {
         const u = sesiones[phone];
-        if (!u.lastInteraction) return;
+        if (!u.lastInteraction || u.followUpSent) return;
         
         const diffHours = (now - u.lastInteraction) / (1000 * 60 * 60);
-        
-        if (diffHours >= 2 && diffHours < 2.1 && !u.followUpSent) {
+        if (diffHours >= 2 && diffHours < 2.2) {
              if (currentHour < 24) { 
                  await enviarMensaje(phone, `Hola ${u.name.split(" ")[0]}... 🤔 Me quedé pensando si resolví todas tus dudas o te gustaría que te llame una especialista.`);
                  u.followUpSent = true;
-                 u.history.push({ role: "assistant", content: "[AUTO] Seguimiento enviado", timestamp: now });
+                 u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
                  guardar();
              }
         }
@@ -97,23 +107,20 @@ export async function procesarEvento(evento) {
     if (texto.trim().toLowerCase() === '/reset') {
         delete sesiones[telefono];
         guardar();
-        await enviarMensaje(telefono, "✅ Memoria reiniciada. Salúdame de nuevo.");
+        await enviarMensaje(telefono, "✅ Reset completado.");
         return;
     }
 
     if (!sesiones[telefono]) {
         sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
-        await notificarStaff(telefono, nombre, "NUEVO INTERESADO 🔥");
+        await notificarStaff(telefono, nombre, "NUEVO LEAD 🔥");
     }
     
     if (nombre !== "Cliente") sesiones[telefono].name = nombre;
     if (!sesiones[telefono].history) sesiones[telefono].history = [];
 
-    sesiones[telefono].followUpSent = false;
     sesiones[telefono].lastInteraction = Date.now();
-
     sesiones[telefono].history.push({ role: "user", content: texto, timestamp: Date.now() });
-    
     sesiones[telefono].tag = calcularEtiqueta(sesiones[telefono].history, sesiones[telefono].tag === "CALIENTE" ? "HOT" : null);
     guardar();
 
@@ -125,7 +132,7 @@ export async function procesarEvento(evento) {
         if (respuesta.includes("||HOT||")) {
             respuesta = respuesta.replace("||HOT||", "").trim();
             intencion = "HOT";
-            await notificarStaff(telefono, sesiones[telefono].name, "PIDIÓ CIERRE/AGENDA 🚀");
+            await notificarStaff(telefono, sesiones[telefono].name, "PIDIÓ CIERRE 🚀");
         }
         
         sesiones[telefono].history.push({ role: "assistant", content: respuesta, timestamp: Date.now() });

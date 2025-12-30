@@ -14,7 +14,7 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 app.get('/monitor', (req, res) => {
     let html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">';
     html += '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
-    html += '<title>ZARA 7.1 DIAGNOSTIC</title>';
+    html += '<title>ZARA 8.0 CRM</title>';
     html += '<style>';
     html += ':root { --bg: #000000; --sidebar: #0a0a0a; --text: #ffffff; --accent: #00ff88; --hot: #ff0044; --medium: #ffcc00; --cold: #00ccff; --bot: #005c4b; }';
     html += '* { box-sizing: border-box; } body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }';
@@ -43,7 +43,7 @@ app.get('/monitor', (req, res) => {
     html += '</style></head><body>';
     
     html += '<div class="sidebar">';
-    html += '<div class="header"><span class="brand">ZARA 7.1</span><button class="btn-csv" onclick="alert(\'Descarga CSV Próximamente\')">📥 CSV</button></div>';
+    html += '<div class="header"><span class="brand">ZARA 8.0</span><button class="btn-csv" onclick="alert(\'CSV\')">📥 CSV</button></div>';
     html += '<div style="flex:1; overflow-y:auto" id="list"></div></div>';
     
     html += '<div class="main"><div class="chat-head" id="chatHead" style="display:none">';
@@ -53,17 +53,16 @@ app.get('/monitor', (req, res) => {
 
     html += '<script>';
     html += 'let users = {}; let activePhone = null;';
-    html += 'function update() { fetch("/api/data").then(r => r.json()).then(data => { users = data.users; renderList(); if(activePhone) renderChat(activePhone); }).catch(e => console.error(e)); }';
+    html += 'function update() { fetch("/api/data").then(r => r.json()).then(data => { users = data.users; renderList(); if(activePhone) renderChat(activePhone); }); }';
     
-    // RENDERIZADOR A PRUEBA DE FALLOS
     html += 'function renderList() { const list = document.getElementById("list"); list.innerHTML = ""; ';
-    html += 'if(!users || Object.keys(users).length === 0) { list.innerHTML = "<div style=\'padding:20px; color:#666\'>Sin datos...</div>"; return; }';
+    html += 'if(!users) return; ';
     html += 'Object.keys(users).forEach(phone => { const u = users[phone]; if(!u) return; ';
     html += 'const history = Array.isArray(u.history) ? u.history : []; ';
-    html += 'const lastMsg = history.length > 0 ? history[history.length-1].content : "Sin mensajes"; ';
+    html += 'const last = history.length > 0 ? history[history.length-1].content : "Sin mensajes"; ';
     html += 'const tagClass = u.tag || "NUEVO"; ';
     html += 'const div = document.createElement("div"); div.className = `card ${activePhone === phone ? "active" : ""}`; div.onclick = () => select(phone); ';
-    html += 'div.innerHTML = `<div class="avatar">${(u.name && u.name[0]) ? u.name[0] : "?"}</div><div class="info"><div class="name"><span>${u.name || "Cliente"}</span><span class="tag ${tagClass}">${u.tag || "?"}</span></div><div class="last-msg">${lastMsg.substring(0,30)}...</div></div>`; list.prepend(div); }); }';
+    html += 'div.innerHTML = `<div class="avatar">${(u.name && u.name[0]) ? u.name[0] : "?"}</div><div class="info"><div class="name"><span>${u.name}</span><span class="tag ${tagClass}">${u.tag || "?"}</span></div><div class="last-msg">${last.substring(0,35)}...</div></div>`; list.prepend(div); }); }';
     
     html += 'function select(phone) { activePhone = phone; document.getElementById("chatHead").style.display = "flex"; document.getElementById("inputArea").style.display = "flex"; document.getElementById("chatTitle").innerText = users[phone].name; const btn = document.getElementById("toggleBtn"); const isOn = users[phone].botOn !== false; btn.className = isOn ? "btn-toggle" : "btn-toggle off"; btn.innerText = isOn ? "ZARA: ON" : "ZARA: OFF"; renderChat(phone); renderList(); }';
     html += 'function renderChat(phone) { const feed = document.getElementById("feed"); feed.innerHTML = ""; if(users[phone] && Array.isArray(users[phone].history)) { users[phone].history.forEach(msg => { const div = document.createElement("div"); div.className = "msg " + msg.role; div.innerHTML = msg.content; feed.appendChild(div); }); } feed.scrollTop = feed.scrollHeight; }';
@@ -87,4 +86,4 @@ app.post('/webhook', async (req, res) => {
     catch (e) { console.error(e); res.sendStatus(500); }
 });
 
-app.listen(PORT, () => console.log(`🟢 ZARA 7.1 DIAGNOSTIC en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🟢 ZARA 8.0 LISTA en puerto ${PORT}`));
