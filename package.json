@@ -1,6 +1,6 @@
 {
   "name": "zara-7.0-blindada",
-  "version": "34.0.0",
+  "version": "35.0.0",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
