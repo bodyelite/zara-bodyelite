@@ -5,56 +5,101 @@ import { procesarEvento, getSesiones, toggleBot, enviarMensajeManual, ejecutarEs
 const app = express(); app.use(express.json()); app.use(cors());
 
 app.get('/monitor', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ZARA MONITOR 6.1</title>
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ZARA DASHBOARD</title>
     <style>
-        :root { --bg: #0b141a; --sidebar: #111b21; --panel: #202c33; --accent: #00a884; --hot: #e91e63; --int: #ff9800; --frio: #667781; --auto: #a855f7; --estrat: #3b82f6; } 
+        :root { --bg: #0b141a; --sidebar: #111b21; --accent: #00a884; --hot: #e91e63; --int: #ff9800; --frio: #667781; --auto: #a855f7; --estrat: #3b82f6; --off: #333; } 
         body { margin:0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e9edef; display: flex; height: 100vh; overflow:hidden; } 
-        .sidebar { width: 380px; background: var(--sidebar); border-right: 1px solid #222d34; display:flex; flex-direction:column; } 
-        .header { padding: 15px; background: #202c33; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #2a3942; }
-        .btn-strat { border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 0.75em; }
-        #list { flex: 1; overflow-y: auto; background: var(--sidebar); }
-        .card { padding: 15px; border-bottom: 1px solid #222d34; cursor: pointer; transition: 0.2s; position: relative; display: flex; flex-direction: column; gap: 4px; }
-        .card.active { background: #2a3942; border-right: 4px solid var(--accent); }
-        .card.HOT { background: rgba(233, 30, 99, 0.15); animation: pulse-hot 2s infinite; }
-        @keyframes pulse-hot { 0% { background: rgba(233, 30, 99, 0.1); } 50% { background: rgba(233, 30, 99, 0.25); } 100% { background: rgba(233, 30, 99, 0.1); } }
-        .name { font-weight: 600; font-size: 1.05em; color: #f1f1f1; }
-        .tag { font-size: 0.65em; padding: 3px 8px; border-radius: 50px; font-weight: 800; text-transform: uppercase; float: right; }
-        .tag.HOT { background: var(--hot); } .tag.INTERESADO { background: var(--int); } .tag.FRIO { background: var(--frio); } .tag.NUEVO { background: var(--accent); }
         
-        /* CHAT BUBBLES */
-        #feed { flex:1; padding: 30px 60px; overflow-y:auto; display:flex; flex-direction:column; gap: 10px; z-index: 1; }
-        .msg { max-width: 75%; padding: 10px 14px; border-radius: 8px; font-size: 0.95em; position: relative; line-height: 1.4; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); margin-bottom: 5px; }
-        .msg.bot { align-self: flex-end; background: #005c4b; color: #e9edef; }
-        .msg.user { align-self: flex-start; background: #202c33; color: #e9edef; }
+        /* Sidebar Izquierda: Clientes */
+        .sidebar-left { width: 350px; background: var(--sidebar); border-right: 1px solid #222d34; display:flex; flex-direction:column; }
+        .nav-tabs { display: flex; background: #202c33; padding: 5px; gap: 5px; }
+        .tab { flex:1; padding: 8px; font-size: 0.7em; border:none; background:transparent; color:#8696a0; cursor:pointer; font-weight:bold; border-radius:4px; }
+        .tab.active { background: #374248; color: white; }
         
-        /* COLORES ESPECIALES PARA ZARA */
-        .msg.auto { background: var(--auto) !important; border: 1px solid #c084fc; }
-        .msg.estrat { background: var(--estrat) !important; border: 1px solid #60a5fa; }
+        /* Dashboard Header */
+        .dash-header { padding: 15px; background: #202c33; border-bottom: 1px solid #2a3942; display:flex; justify-content:space-between; align-items:center; }
+        .dash-title { font-size: 1.2em; font-weight: bold; color: var(--accent); letter-spacing: 1px; }
+
+        /* Lista de Clientes */
+        #list { flex: 1; overflow-y: auto; }
+        .card { padding: 12px 15px; border-bottom: 1px solid #222d34; cursor: pointer; transition: 0.2s; }
+        .card:hover { background: #2a3942; }
+        .card.active { background: #2a3942; border-left: 4px solid var(--accent); }
+        .card.HOT { border-left: 4px solid var(--hot); background: rgba(233, 30, 99, 0.05); }
+        .card.APAGADO { opacity: 0.3; filter: grayscale(1); }
         
-        .msg-label { font-size: 0.6em; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: block; opacity: 0.8; }
-        .msg-time { font-size: 0.65em; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px; }
-        
-        .input-area { padding: 15px 30px; background: #202c33; display: flex; align-items: center; gap: 15px; z-index: 1; }
-        #m { flex: 1; background: #2a3942; border: none; padding: 12px 15px; border-radius: 8px; color: white; outline: none; }
+        .c-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .c-name { font-weight: 600; font-size: 0.95em; }
+        .c-time { font-size: 0.7em; color: #8696a0; }
+        .c-tag { font-size: 0.6em; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+        .tag-HOT { background: var(--hot); } .tag-INT { background: var(--int); } .tag-FRIO { background: var(--frio); } .tag-OFF { background: var(--off); }
+
+        /* Chat Principal */
+        .main-chat { flex:1; display:flex; flex-direction:column; position: relative; }
+        #feed { flex:1; padding: 20px 40px; overflow-y:auto; display:flex; flex-direction:column; gap: 8px; }
+        .msg { max-width: 70%; padding: 8px 12px; border-radius: 8px; font-size: 0.9em; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+        .msg.bot { align-self: flex-end; background: #005c4b; }
+        .msg.user { align-self: flex-start; background: #202c33; }
+        .msg.auto { background: var(--auto) !important; border-right: 4px solid white; }
+        .m-meta { font-size: 0.6em; opacity: 0.5; text-align: right; margin-top: 4px; }
+
+        /* Sidebar Derecha: Acciones */
+        .sidebar-right { width: 220px; background: #111b21; border-left: 1px solid #222d34; padding: 20px; display:flex; flex-direction:column; gap:15px; }
+        .action-title { font-size: 0.8em; font-weight: bold; color: #8696a0; text-transform: uppercase; margin-bottom: 5px; }
+        .btn-act { padding: 12px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; font-size:0.75em; transition:0.2s; }
+        .btn-act:hover { transform: scale(1.02); }
+
+        .input-box { padding: 15px; background: #202c33; display: flex; gap: 10px; }
+        #m { flex: 1; background: #2a3942; border: none; padding: 10px; border-radius: 8px; color: white; outline: none; }
     </style></head>
     <body>
-        <div class="sidebar"><div class="header"><button class="btn-strat" style="background:var(--hot);width:100%" onclick="run('HOT')">Estrategia Cierre HOT 🔥</button>
-        <div style="display:flex;gap:10px"><button class="btn-strat" style="background:var(--frio);flex:1" onclick="run('FRIO')">FRIO ❄️</button>
-        <button class="btn-strat" style="background:var(--int);flex:1" onclick="run('INTERESADO')">INT 🔸</button></div></div><div id="list"></div></div>
-        <div style="flex:1;display:flex;flex-direction:column;background:#0b141a"><div id="feed"></div>
-        <div class="input-area" id="input" style="display:none"><input id="m" placeholder="Mensaje manual..." onkeypress="if(event.key==='Enter')send()"></div></div>
+        <div class="sidebar-left">
+            <div class="dash-header"><div class="dash-title">ZARA PANEL</div></div>
+            <div class="nav-tabs">
+                <button class="tab active" onclick="setFilter('ALL')">TODOS</button>
+                <button class="tab" onclick="setFilter('HOT')">HOT 🔥</button>
+                <button class="tab" onclick="setFilter('INTERESADO')">INT 🔸</button>
+            </div>
+            <div id="list"></div>
+        </div>
+        
+        <div class="main-chat">
+            <div id="feed"></div>
+            <div class="input-box" id="input" style="display:none">
+                <input id="m" placeholder="Escribir respuesta..." onkeypress="if(event.key==='Enter')send()">
+            </div>
+        </div>
+
+        <div class="sidebar-right">
+            <div class="action-title">Estrategias Masivas</div>
+            <button class="btn-act" style="background:var(--hot)" onclick="run('HOT')">CIERRE HOT 🔥</button>
+            <button class="btn-act" style="background:var(--int)" onclick="run('INTERESADO')">IMPULSAR INT 🔸</button>
+            <button class="btn-act" style="background:var(--frio)" onclick="run('FRIO')">REVIVIR FRÍOS ❄️</button>
+            <hr style="border:0; border-top:1px solid #222d34; width:100%">
+            <div class="action-title">Configuración</div>
+            <button class="btn-act" style="background:#555" onclick="location.reload()">REFRESCAR</button>
+        </div>
+
         <script>
-            let ap = null;
-            const fmt = (ts) => new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            async function run(t) { if(!confirm("¿Lanzar estrategia para "+t+"?")) return; await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})}); update(); }
+            let ap = null; let filter = 'ALL';
+            const fmt = (ts) => {
+                const d = new Date(ts);
+                return d.toLocaleDateString([], {day:'2-digit', month:'2-digit'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            };
+            function setFilter(f){ filter=f; update(); }
+            async function run(t) { if(!confirm("Lanzar estrategia para "+t+"?")) return; await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})}); update(); }
             function update(){ fetch("/api/data").then(r=>r.json()).then(d=>{
                 const l=document.getElementById("list"); l.innerHTML="";
                 const sorted = Object.keys(d.users).sort((a,b) => (d.users[b].lastInteraction || 0) - (d.users[a].lastInteraction || 0));
                 sorted.forEach(p => {
-                    const u=d.users[p]; const last=u.history[u.history.length-1];
+                    const u=d.users[p]; if(filter!=='ALL' && u.tag!==filter) return;
+                    const last=u.history[u.history.length-1];
                     l.innerHTML += \`<div class="card \${u.tag} \${ap===p?'active':''}" onclick="select('\${p}')">
-                        <div style="display:flex;justify-content:space-between"><span class="name">\${u.name}</span><span class="tag \${u.tag}">\${u.tag}</span></div>
-                        <div style="font-size:0.8em;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${last?.content || ''}</div>
+                        <div class="c-header"><span class="c-name">\${u.name}</span><span class="c-time">\${new Date(u.lastInteraction).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <span style="font-size:0.75em;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">\${last?.content || ''}</span>
+                            <span class="c-tag tag-\${u.tag.substring(0,3)}">\${u.tag}</span>
+                        </div>
                     </div>\`;
                 });
                 if(ap) renderChat(d.users[ap]);
@@ -64,17 +109,15 @@ app.get('/monitor', (req, res) => {
                 const f=document.getElementById("feed"); f.innerHTML="";
                 u.history.forEach(m => {
                     const isAuto = m.content.includes("[AUTO]");
-                    const isEstrat = m.content.includes("[ESTRATEGIA]");
                     const div = document.createElement("div");
-                    div.className = \`msg \${m.role==='assistant'?'bot':'user'} \${isAuto?'auto':''} \${isEstrat?'estrat':''}\`;
-                    const label = isAuto ? '<span class="msg-label">⚡ Autoseguimiento</span>' : (isEstrat ? '<span class="msg-label">🧪 Estrategia</span>' : '');
-                    div.innerHTML = \`\${label}<div>\${m.content.replace("[AUTO] ","").replace("[ESTRATEGIA] ","")}</div><div class="msg-time">\${fmt(m.timestamp)}</div>\`;
+                    div.className = \`msg \${m.role==='assistant'?'bot':'user'} \${isAuto?'auto':''}\`;
+                    div.innerHTML = \`<div>\${m.content.replace("[AUTO] ","")}</div><div class="m-meta">\${fmt(m.timestamp)}</div>\`;
                     f.appendChild(div);
                 });
                 f.scrollTop = f.scrollHeight;
             }
             async function send(){ const i=document.getElementById("m"); if(!i.value) return; await fetch("/api/manual",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,text:i.value})}); i.value=""; update(); }
-            setInterval(update, 4000); update();
+            setInterval(update, 5000); update();
         </script>
     </body></html>`);
 });
