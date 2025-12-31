@@ -23,30 +23,32 @@ function guardar() {
     try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); } catch (e) {}
 }
 
-async function notificarStaff(cliente, nombre, motivo) {
-    const texto = `🚨 *ALERTA ZARA* 🚨\nCliente: ${nombre}\nTel: ${cliente}\nMotivo: ${motivo}\nLink: https://wa.me/${cliente}`;
-    for (const staff of NEGOCIO.staff_alertas) { await enviarMensaje(staff, texto); }
-}
-
-function calcularEtiqueta(historial) {
+export function calcularEtiqueta(historial) {
     if (!historial || historial.length === 0) return "NUEVO";
-    
     const textoCompleto = historial.map(m => m.content.toLowerCase()).join(" ");
     const interaccionesUsuario = historial.filter(m => m.role === 'user').length;
     const ultimoMensaje = historial[historial.length - 1];
-
-    // 1. HOT: Pidió link o llamado (Prioridad máxima)
     const palabrasCalientes = ["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular", "autoagendamiento"];
     if (palabrasCalientes.some(p => textoCompleto.includes(p))) return "HOT";
-    
-    // 2. FRIO: Si el último mensaje es el seguimiento automático y no ha respondido
     if (ultimoMensaje.content.includes("[AUTO] Seguimiento")) return "FRIO";
-    
-    // 3. INTERESADO: Si el usuario ha interactuado más de 2 veces
     if (interaccionesUsuario > 2) return "INTERESADO";
-    
-    // 4. NUEVO: Llegó, Zara habló y no ha pasado a interesado ni ha recibido seguimiento
     return "NUEVO";
+}
+
+export async function ejecutarEstrategia(etiqueta) {
+    const clientes = Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta);
+    let total = 0;
+    for (const phone of clientes) {
+        const u = sesiones[phone];
+        const promptEstrategia = `Eres Zara. Analiza el último mensaje del cliente: "${u.history.filter(m=>m.role==='user').pop()?.content || ''}" y tu última respuesta: "${u.history.filter(m=>m.role==='assistant').pop()?.content || ''}". Genera un mensaje corto y natural para retomar la conversación según su estado ${etiqueta}.`;
+        const respuesta = await pensar([{ role: "user", content: promptEstrategia }], u.name);
+        u.history.push({ role: "assistant", content: `[ESTRATEGIA] ${respuesta}`, timestamp: Date.now() });
+        u.tag = calcularEtiqueta(u.history);
+        guardar();
+        await enviarMensaje(phone, respuesta);
+        total++;
+    }
+    return total;
 }
 
 setInterval(() => {
@@ -54,9 +56,8 @@ setInterval(() => {
     Object.keys(sesiones).forEach(async (phone) => {
         const u = sesiones[phone];
         if (!u.lastInteraction || u.followUpSent) return;
-        const diffHours = (now - u.lastInteraction) / (1000 * 60 * 60);
-        if (diffHours >= 2 && diffHours < 2.1) {
-             await enviarMensaje(phone, `Hola ${u.name.split(" ")[0]}... 🤔 Me quedé pensando si te gustaría que te llame una especialista para resolver dudas.`);
+        if ((now - u.lastInteraction) / (1000 * 60 * 60) >= 2) {
+             await enviarMensaje(phone, `Hola ${u.name.split(" ")[0]}... 🤔 Me quedé pensando en lo que hablamos.`);
              u.followUpSent = true;
              u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
              u.tag = calcularEtiqueta(u.history);
@@ -89,20 +90,10 @@ export async function procesarEvento(evento) {
     const telefono = mensaje.from;
     const nombre = value.contacts?.[0]?.profile?.name || "Cliente";
     const texto = mensaje.text.body;
-
-    if (!sesiones[telefono]) {
-        sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
-        await notificarStaff(telefono, nombre, "NUEVO LEAD 🔥");
-    }
-    
+    if (!sesiones[telefono]) sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
     sesiones[telefono].name = nombre;
     sesiones[telefono].lastInteraction = Date.now();
     sesiones[telefono].history.push({ role: "user", content: texto, timestamp: Date.now() });
-    
-    if (texto.toLowerCase().match(/llame|llamada|celular|telefono|contacten/)) {
-        await notificarStaff(telefono, nombre, "PIDIÓ LLAMADA 📞");
-    }
-
     if (botStatus[telefono] !== false) {
         const respuesta = await pensar(sesiones[telefono].history, sesiones[telefono].name);
         sesiones[telefono].history.push({ role: "assistant", content: respuesta, timestamp: Date.now() });
