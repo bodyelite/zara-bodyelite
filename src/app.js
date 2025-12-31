@@ -24,30 +24,33 @@ export function calcularEtiqueta(u) {
     const interaccionesUser = historial.filter(m => m.role === 'user').length;
     const ultimoMsg = historial[historial.length - 1];
 
-    // Lógica HOT: Juan Carlos (Llamadas, link, etc.)
-    if (["llamen", "llamada", "llame", "link", "agendar", "cita", "telefono", "celular", "contacto"].some(p => textoCompleto.includes(p))) return "HOT";
-    // ELIMINADO: 24h sin respuesta
+    // REGLA DE ORO: Juan Carlos (HOT) si pide contacto
+    if (["llamen", "llamada", "llame", "link", "agendar", "cita", "telefono", "celular"].some(p => textoCompleto.includes(p))) return "HOT";
+    
+    // ELIMINADO: 24h sin respuesta tras estrategia
     if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant' && (ultimoMsg.content.includes("[ESTRATEGIA]") || ultimoMsg.content.includes("[AUTO]"))) return "ELIMINADO";
-    // INTERESADO: Carlos (2 o más mensajes)
+    
+    // INTERESADO: Carlos (2 mensajes o más)
     if (interaccionesUser >= 2) return "INTERESADO";
-    // FRIO: Patricia (1 mensaje + seguimiento)
+    
+    // FRIO: Patricia (1 mensaje + seguimiento enviado)
     if (interaccionesUser === 1 && ultimoMsg.content.includes("[AUTO] Seguimiento")) return "FRIO";
     
     return "NUEVO";
 }
 
 export async function ejecutarEstrategia(etiqueta) {
-    for (const phone of Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta)) {
+    const clientes = Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta);
+    for (const phone of clientes) {
         const u = sesiones[phone];
-        let prompt = `Eres Zara de Body Elite. Cliente ${u.name} es ${etiqueta}. `;
-        if (etiqueta === "HOT") {
-            prompt += "Ya pidió link o llamada. Genera un mensaje de seguimiento con PREOCUPACIÓN. Pregunta si ya pudo agendar su cupo o si mis compañeras ya lo contactaron para coordinar, ya que no queremos que pierda su valor promocional.";
-        } else {
-            prompt += "Genera un re-enganche corto, natural y con emojis.";
-        }
+        let prompt = `Eres Zara de Body Elite. El cliente ${u.name} está en estado ${etiqueta}. `;
+        if (etiqueta === "HOT") prompt += "Ya pidió link o llamada. Genera un mensaje de preocupación preguntando si logró agendar o si ya lo contactaron mis compañeras.";
+        else prompt += "Genera un re-enganche corto y natural con emojis.";
+        
         const resp = await pensar([{ role: "user", content: prompt }], u.name);
         u.history.push({ role: "assistant", content: `🧪 [ESTRATEGIA]: ${resp}`, timestamp: Date.now() });
         u.tag = calcularEtiqueta(u);
+        u.lastInteraction = Date.now();
         guardar();
     }
 }
@@ -58,7 +61,7 @@ setInterval(() => {
         const u = sesiones[p];
         if (!u.lastInteraction || u.followUpSent || ["ELIMINADO", "INTERESADO", "HOT"].includes(u.tag)) return;
         if ((now - u.lastInteraction) / (1000 * 60 * 60) >= 2) {
-            const txt = `Hola ${u.name.split(" ")[0]}... 🌸 ¿Pudiste revisar lo que hablamos? Me quedé pensando en tu caso.`;
+            const txt = `Hola ${u.name.split(" ")[0]}... 🌸 ¿Pudiste revisar la información que te envié?`;
             await enviarMensaje(p, txt);
             u.followUpSent = true;
             u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
