@@ -3,7 +3,7 @@
   "version": "39.0.0",
   "main": "src/server.js",
   "type": "module",
-  "scripts": {
+  "scripts": { "test": "node src/verify.js",
     "start": "node src/server.js"
   },
   "dependencies": {

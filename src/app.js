@@ -32,10 +32,20 @@ function guardar() {
 
 async function notificarStaff(cliente, nombre, motivo) {
     const texto = `🚨 *ALERTA ZARA* 🚨\nCliente: ${nombre}\nTel: ${cliente}\nMotivo: ${motivo}\nLink: https://wa.me/${cliente}`;
-    console.log(`Notificando staff: ${motivo}`);
     for (const staff of NEGOCIO.staff_alertas) {
         await enviarMensaje(staff, texto);
     }
+}
+
+function calcularEtiqueta(historial) {
+    if (!historial || historial.length === 0) return "NUEVO";
+    const textoCompleto = historial.map(m => m.content.toLowerCase()).join(" ");
+    const ultimoMensaje = historial[historial.length - 1];
+    const palabrasCalientes = ["llamen", "llamada", "link", "agendar", "agendamiento", "cita", "telefono", "celular", "autoagendamiento"];
+    if (palabrasCalientes.some(p => textoCompleto.includes(p))) return "CALIENTE";
+    if (textoCompleto.includes("$") || textoCompleto.includes("valor promocional") || textoCompleto.includes("precio")) return "INTERESADO";
+    if (historial.length > 2 && ultimoMensaje.role === 'assistant') return "FRIO";
+    return "NUEVO";
 }
 
 setInterval(() => {
@@ -44,23 +54,20 @@ setInterval(() => {
     Object.keys(sesiones).forEach(async (phone) => {
         const u = sesiones[phone];
         if (!u.lastInteraction || u.followUpSent) return;
-        
         const diffHours = (now - u.lastInteraction) / (1000 * 60 * 60);
-        if (diffHours >= 2 && diffHours < 2.1) {
-             if (currentHour >= 9 && currentHour < 21) { 
-                 await enviarMensaje(phone, `Hola ${u.name.split(" ")[0]}... 🤔 Me quedé pensando si te gustaría que te llame una especialista para resolver dudas.`);
-                 u.followUpSent = true;
-                 u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
-                 guardar();
-             }
+        if (diffHours >= 2 && diffHours < 2.1 && currentHour >= 9 && currentHour < 21) { 
+             await enviarMensaje(phone, `Hola ${u.name.split(" ")[0]}... 🤔 Me quedé pensando si te gustaría que te llame una especialista para resolver dudas.`);
+             u.followUpSent = true;
+             u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
+             u.tag = calcularEtiqueta(u.history);
+             guardar();
         }
     });
 }, 60000);
 
 export function getSesiones() { return sesiones; }
 export function toggleBot(phone) {
-    if (botStatus[phone] === undefined) botStatus[phone] = true;
-    botStatus[phone] = !botStatus[phone];
+    botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
     guardar();
     return botStatus[phone];
 }
@@ -68,6 +75,7 @@ export function toggleBot(phone) {
 export async function enviarMensajeManual(phone, text) {
     if (!sesiones[phone]) sesiones[phone] = { name: "Cliente", history: [], tag: "MANUAL" };
     sesiones[phone].history.push({ role: "assistant", content: text, timestamp: Date.now() });
+    sesiones[phone].tag = calcularEtiqueta(sesiones[phone].history);
     guardar();
     await enviarMensaje(phone, text);
     return true;
@@ -78,43 +86,27 @@ export async function procesarEvento(evento) {
     const value = evento.changes?.[0]?.value;
     const mensaje = value?.messages?.[0];
     if (!mensaje || mensaje.type !== 'text') return;
-
     const telefono = mensaje.from;
     const nombre = value.contacts?.[0]?.profile?.name || "Cliente";
     const texto = mensaje.text.body;
-    const textoLower = texto.toLowerCase();
-
-    if (textoLower === '/reset') {
-        delete sesiones[telefono];
-        guardar();
-        await enviarMensaje(telefono, "✅ Reset completado.");
-        return;
-    }
-
+    if (texto.toLowerCase() === '/reset') { delete sesiones[telefono]; guardar(); await enviarMensaje(telefono, "✅ Reset."); return; }
     if (!sesiones[telefono]) {
         sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
         await notificarStaff(telefono, nombre, "NUEVO LEAD 🔥");
     }
-    
-    if (nombre !== "Cliente") sesiones[telefono].name = nombre;
     sesiones[telefono].lastInteraction = Date.now();
     sesiones[telefono].history.push({ role: "user", content: texto, timestamp: Date.now() });
-    
-    // DETECTOR DE LLAMADAS (Actualizado para detectar "llamen")
-    if (textoLower.includes("llame") || textoLower.includes("llamada") || textoLower.includes("celular") || textoLower.includes("telefono") || textoLower.includes("contacten")) {
+    if (texto.toLowerCase().match(/llame|llamada|celular|telefono|contacten/)) {
         await notificarStaff(telefono, nombre, "PIDIÓ LLAMADA 📞");
-        sesiones[telefono].tag = "CALIENTE";
     }
-
-    guardar();
-
     if (botStatus[telefono] !== false) {
-        const historial = sesiones[telefono].history.map(m => ({ role: m.role, content: m.content }));
-        const respuesta = await pensar(historial, sesiones[telefono].name);
-        
+        const respuesta = await pensar(sesiones[telefono].history, sesiones[telefono].name);
         sesiones[telefono].history.push({ role: "assistant", content: respuesta, timestamp: Date.now() });
-        sesiones[telefono].lastInteraction = Date.now();
+        sesiones[telefono].tag = calcularEtiqueta(sesiones[telefono].history);
         guardar();
         await enviarMensaje(telefono, respuesta);
+    } else {
+        sesiones[telefono].tag = calcularEtiqueta(sesiones[telefono].history);
+        guardar();
     }
 }
