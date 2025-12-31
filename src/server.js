@@ -33,7 +33,7 @@ body{margin:0;font-family:sans-serif;background:var(--bg);color:#e9edef;display:
 <div id="fd"></div>
 <div class="ib" id="i" style="display:none"><input id="m" placeholder="Mensaje..." onkeypress="if(event.key==='Enter')sd()"></div>
 </div>
-<div class="sr"><button class="btn" style="background:var(--ht)" onclick="rn('HOT')">ESTRATEGIA HOT 🔥</button><button class="btn" style="background:#444" onclick="location.reload()">REFRESCAR</button></div>
+<div class="sr"><button class="btn" style="background:var(--ht)" onclick="rn('HOT')">ESTRATEGIA HOT 🔥</button><button class="btn" style="background:#444;margin-top:20px" onclick="location.reload()">REFRESCAR</button></div>
 <script>
 let ap=null;const f=(ts)=>new Date(ts).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 async function st(){await fetch("/api/tag",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,tag:document.getElementById("s").value})});up();}
@@ -41,7 +41,7 @@ async function rn(t){if(!confirm("¿Lanzar?"))return;await fetch("/api/estrat",{
 function up(){fetch("/api/data").then(r=>r.json()).then(d=>{
 const l=document.getElementById("list");l.innerHTML="";const us=d.users||{};
 Object.keys(us).sort((a,b)=>(us[b].lastInteraction||0)-(us[a].lastInteraction||0)).forEach(p=>{
-const u=us[p];l.innerHTML+='<div class="cd '+(ap===p?'active':'')+'" onclick="sl(\\\\''+p+'\\\\')"><div style="display:flex;justify-content:space-between"><b>'+u.name+'</b><small>'+new Date(u.lastInteraction).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</small></div><div style="font-size:0.7em;opacity:0.6">'+f(u.lastInteraction)+' | '+u.tag+'</div></div>';
+const u=us[p];l.innerHTML+='<div class="cd '+(ap===p?'active':'')+'" onclick="sl(\\''+p+'\\')"><div style="display:flex;justify-content:space-between"><b>'+u.name+'</b><small>'+new Date(u.lastInteraction).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</small></div><div style="font-size:0.7em;opacity:0.6">'+f(u.lastInteraction)+' | '+u.tag+'</div></div>';
 });
 if(ap&&us[ap]){document.getElementById("n").innerText=us[ap].name;document.getElementById("s").value=us[ap].tag;rd(us[ap]);}
 });}
