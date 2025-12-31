@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { enviarMensaje } from './whatsapp.js';
 import { pensar } from './brain.js';
-import { NEGOCIO } from './config/business.js';
 
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
 let sesiones = {}; 
@@ -19,15 +18,14 @@ function guardar() { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus
 export function calcularEtiqueta(u) {
     const historial = u.history || [];
     if (historial.length === 0) return "NUEVO";
-    
     const ahora = Date.now();
     const tiempoPasado = (ahora - (u.lastInteraction || ahora)) / (1000 * 60 * 60);
     const textoCompleto = historial.map(m => m.content.toLowerCase()).join(" ");
     const interaccionesUser = historial.filter(m => m.role === 'user').length;
     const ultimoMsg = historial[historial.length - 1];
 
-    if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant' && (ultimoMsg.content.includes("[ESTRATEGIA]") || ultimoMsg.content.includes("[AUTO]"))) return "ELIMINADO";
     if (["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular"].some(p => textoCompleto.includes(p))) return "HOT";
+    if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant' && (ultimoMsg.content.includes("[ESTRATEGIA]") || ultimoMsg.content.includes("[AUTO]"))) return "ELIMINADO";
     if (interaccionesUser >= 2) return "INTERESADO";
     if (interaccionesUser === 1 && ultimoMsg.content.includes("[AUTO] Seguimiento")) return "FRIO";
     return "NUEVO";
@@ -36,7 +34,9 @@ export function calcularEtiqueta(u) {
 export async function ejecutarEstrategia(etiqueta) {
     for (const phone of Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta)) {
         const u = sesiones[phone];
-        const prompt = `Eres Zara. Cliente dijo: "${u.history.filter(m=>m.role==='user').pop()?.content}". Genera un re-enganche corto 🌸`;
+        let prompt = `Eres Zara de Body Elite. Cliente ${u.name} es ${etiqueta}. `;
+        if (etiqueta === "HOT") prompt += "Ya pidió link o llamada. Pregunta con preocupación si pudo agendar o si lo llamaron.";
+        else prompt += "Genera un re-enganche corto y natural.";
         const resp = await pensar([{ role: "user", content: prompt }], u.name);
         u.history.push({ role: "assistant", content: `🧪 [PRUEBA ESTRATEGIA]: ${resp}`, timestamp: Date.now() });
         u.tag = calcularEtiqueta(u);

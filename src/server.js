@@ -10,37 +10,32 @@ app.get('/monitor', (req, res) => {
         :root { --bg: #111b21; --accent: #00a884; --hot: #ff0044; --int: #ff9900; } 
         body { margin:0; font-family: sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; } 
         .sidebar { width: 350px; background: #202c33; border-right: 1px solid #333; overflow-y: auto; display:flex; flex-direction:column; } 
-        
-        /* RESALTADO CALIENTE AGRESIVO */
-        .card.HOT { 
-            background: #440011 !important; 
-            border-left: 8px solid var(--hot) !important; 
-            animation: pulse-red 1.5s infinite;
-        }
-        @keyframes pulse-red {
-            0% { background: #440011; }
-            50% { background: #880022; }
-            100% { background: #440011; }
-        }
-
         .card { padding: 12px; border-bottom: 1px solid #2a3942; cursor: pointer; position: relative; } 
         .card.active { background: #2a3942; }
-        .card.ELIMINADO { opacity: 0.3; } 
+        
+        /* ESTILOS DE ETIQUETAS */
+        .card.HOT { background: #440011 !important; border-left: 8px solid var(--hot) !important; animation: pulse 1.5s infinite; }
+        .card.INTERESADO { border-left: 5px solid var(--int); }
+        .card.ELIMINADO { opacity: 0.3; background: #000 !important; }
+        
+        @keyframes pulse { 0% { background: #440011; } 50% { background: #770022; } 100% { background: #440011; } }
+        
         .tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; font-weight: bold; float: right; } 
-        .HOT { background: var(--hot); color: white; } 
-        .INTERESADO { background: var(--int); color: white; } 
-        .FRIO { background: #667781; color: white; } 
-        .NUEVO { background: var(--accent); color: white; } 
-        .ELIMINADO { background: #000; color: #555; } 
+        .HOT { background: var(--hot); } .INTERESADO { background: var(--int); } 
+        .FRIO { background: #667781; } .NUEVO { background: var(--accent); } 
+        .ELIMINADO { background: #000; color: #555; }
         
         .msg { max-width: 75%; padding: 8px; border-radius: 8px; margin-bottom: 5px; position: relative; } 
         .time { font-size: 0.65em; opacity: 0.5; text-align: right; margin-top: 3px; }
     </style></head>
     <body>
         <div class="sidebar">
-            <div style="padding:10px; display:flex; gap:5px">
-                <button onclick="run('FRIO')" style="background:#667781; color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">FRIO ❄️</button>
-                <button onclick="run('INTERESADO')" style="background:var(--int); color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">INT 🔥</button>
+            <div style="padding:10px; display:flex; flex-direction:column; gap:5px">
+                <button onclick="run('HOT')" style="background:var(--hot); color:white; border:none; padding:8px; cursor:pointer; border-radius:4px; font-weight:bold">ESTRATEGIA HOT 🔥</button>
+                <div style="display:flex; gap:5px">
+                    <button onclick="run('FRIO')" style="background:#667781; color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">FRIO ❄️</button>
+                    <button onclick="run('INTERESADO')" style="background:var(--int); color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">INT 🔥</button>
+                </div>
             </div>
             <div id="list"></div>
         </div>
@@ -51,18 +46,13 @@ app.get('/monitor', (req, res) => {
         <script>
             let ap = null;
             const fmt = (ts) => new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            async function run(t) { await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})}); update(); }
-            
+            async function run(t) { if(!confirm("Simular estrategia para "+t+"?")) return; await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})}); update(); }
             function update(){ fetch("/api/data").then(r=>r.json()).then(d=>{
                 const l=document.getElementById("list"); l.innerHTML="";
                 const sorted = Object.keys(d.users).sort((a,b) => {
-                    // Prioridad 1: HOT (Siempre arriba)
                     if (d.users[a].tag === "HOT" && d.users[b].tag !== "HOT") return -1;
                     if (d.users[a].tag !== "HOT" && d.users[b].tag === "HOT") return 1;
-                    // Prioridad 2: ELIMINADO (Siempre abajo)
                     if (d.users[a].tag === "ELIMINADO" && d.users[b].tag !== "ELIMINADO") return 1;
-                    if (d.users[a].tag !== "ELIMINADO" && d.users[b].tag === "ELIMINADO") return -1;
-                    // Por fecha
                     return (d.users[b].lastInteraction || 0) - (d.users[a].lastInteraction || 0);
                 });
                 sorted.forEach(p => {
@@ -79,8 +69,7 @@ app.get('/monitor', (req, res) => {
                 const f=document.getElementById("feed"); f.innerHTML="";
                 u.history.forEach(m => {
                     const isB = m.role==='assistant';
-                    const div = document.createElement("div");
-                    div.className = "msg";
+                    const div = document.createElement("div"); div.className = "msg";
                     div.style = \`align-self:\${isB?'flex-end':'flex-start'}; background:\${isB?'#005c4b':'#202c33'}\`;
                     div.innerHTML = \`<div>\${m.content}</div><div class="time">\${fmt(m.timestamp)}</div>\`;
                     f.appendChild(div);
