@@ -21,14 +21,19 @@ export function calcularEtiqueta(u) {
     const msgsU = hist.filter(m => m.role === 'user');
     const textoU = msgsU.map(m => m.content.toLowerCase()).join(" ");
     const ultimo = hist[hist.length - 1];
-
-    if (["llamen", "llamada", "link", "agendar"].some(p => textoU.includes(p))) {
-        if (u.tag !== "HOT") notificarStaff(u, "SOLICITÓ CONTACTO DIRECTO 🔥");
-        return "HOT";
-    }
+    if (["llamen", "llamada", "link", "agendar"].some(p => textoU.includes(p))) return "HOT";
     if (tiempo >= 24 && ultimo.content.includes("[AUTO]")) return "APAGADO";
     if (msgsU.length >= 2) return "INTERESADO";
     return "NUEVO";
+}
+
+export function updateTagManual(phone, newTag) {
+    if (sesiones[phone]) {
+        sesiones[phone].tag = newTag;
+        guardar();
+        return true;
+    }
+    return false;
 }
 
 export async function ejecutarEstrategia(tag) {
@@ -47,29 +52,17 @@ export async function procesarEvento(evento) {
     const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg || msg.type !== 'text') return;
     const p = msg.from; const txt = msg.text.body;
     const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
-
-    if (txt.toLowerCase() === '/reset') {
-        delete sesiones[p]; guardar();
-        await enviarMensaje(p, "🔄 Historial de Zara reiniciado."); return;
-    }
-
-    if (!sesiones[p]) {
-        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
-        notificarStaff(sesiones[p], "NUEVO CLIENTE INGRESÓ 🌸");
-    }
-    
+    if (txt.toLowerCase() === '/reset') { delete sesiones[p]; guardar(); await enviarMensaje(p, "🔄 Historial de Zara reiniciado."); return; }
+    if (!sesiones[p]) { sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" }; notificarStaff(sesiones[p], "NUEVO CLIENTE INGRESÓ 🌸"); }
     sesiones[p].lastInteraction = Date.now();
     sesiones[p].history.push({ role: "user", content: txt, timestamp: Date.now() });
-
     if (botStatus[p] !== false) {
         const promptSystem = { role: "system", content: `Habla siempre usando el nombre: ${sesiones[p].name}.` };
         const resp = await pensar([promptSystem, ...sesiones[p].history], sesiones[p].name);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now() });
         sesiones[p].tag = calcularEtiqueta(sesiones[p]);
         guardar(); await enviarMensaje(p, resp);
-    } else {
-        sesiones[p].tag = calcularEtiqueta(sesiones[p]); guardar();
-    }
+    } else { sesiones[p].tag = calcularEtiqueta(sesiones[p]); guardar(); }
 }
 
 export async function enviarMensajeManual(p, t) {
