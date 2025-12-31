@@ -5,7 +5,7 @@ import { procesarEvento, getSesiones, getBotStatus, enviarMensajeManual, ejecuta
 const app = express(); app.use(express.json()); app.use(cors());
 
 app.get('/monitor', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZARA 9.0</title>
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZARA 9.1 ANALYTICS</title>
     <style>
         :root{--bg:#0b141a;--sb:#111b21;--ac:#00a884;--ht:#e91e63;--it:#ff9800;--fr:#667781;--mn:#3b82f6;--txt:#e9edef;}
         body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);display:flex;height:100vh;overflow:hidden;}
@@ -42,15 +42,19 @@ app.get('/monitor', (req, res) => {
         .sr{width:220px;background:var(--sb);border-left:1px solid #222d34;padding:20px;display:flex;flex-direction:column;gap:15px;flex-shrink:0;}
         
         /* Modal Reportes */
-        .mod{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:600px;background:#202c33;display:none;padding:30px;border-radius:12px;z-index:100;box-shadow:0 0 50px rgba(0,0,0,0.8);border:1px solid #374045;}
+        .mod{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;background:#111b21;display:none;padding:30px;border-radius:12px;z-index:100;box-shadow:0 0 50px rgba(0,0,0,0.9);border:1px solid #374045;max-height:90vh;overflow-y:auto;}
         .d-picker{background:#2a3942;border:1px solid #444;color:white;padding:8px;border-radius:5px;}
-        .stat-box{flex:1;padding:15px;border-radius:8px;text-align:center;}
+        .stat-grid{display:grid;grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));gap:10px;margin-top:20px;}
+        .stat-box{padding:15px;border-radius:8px;text-align:center;color:white;position:relative;}
+        .stat-num{font-size:1.8em;font-weight:bold;margin:5px 0;}
+        .stat-pct{font-size:0.8em;opacity:0.8;}
+        .total-box{background:#202c33;padding:15px;border-radius:8px;text-align:center;margin-top:15px;border:1px solid #374045;}
 
         @media(max-width:900px){body{flex-direction:column;}.sl{width:100%;height:35vh;}.sr{display:none;}.mc{height:65vh;}}
     </style></head>
     <body>
         <div class="sl">
-            <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.0</div>
+            <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.1</div>
             <div class="filters">
                 <button class="f-btn active" onclick="setFilter('ALL',this)">TODOS</button>
                 <button class="f-btn" onclick="setFilter('HOT',this)">HOT 🔥</button>
@@ -83,26 +87,31 @@ app.get('/monitor', (req, res) => {
             <button class="btn" style="background:var(--ht)" onclick="rn('HOT')">CIERRE HOT 🔥</button>
             <button class="btn" style="background:var(--it)" onclick="rn('INTERESADO')">IMPULSAR INT 🔸</button>
             <hr style="border:0;border-top:1px solid #374045;width:100%">
-            <button class="btn" style="background:var(--mn)" onclick="op()">📊 VER FUNNEL</button>
+            <button class="btn" style="background:var(--mn)" onclick="op()">📊 VER ANALYTICS</button>
             <button class="btn" style="background:#444" onclick="location.reload()">REFRESCAR</button>
         </div>
 
         <div id="rp" class="mod">
-            <h2 style="margin-top:0">Funnel de Ventas</h2>
+            <h2 style="margin-top:0;color:var(--ac)">Funnel Analytics</h2>
             
-            <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+            <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;justify-content:center">
                 <button class="f-btn" onclick="setRange('hoy')">HOY</button>
                 <button class="f-btn" onclick="setRange('ayer')">AYER</button>
                 <button class="f-btn" onclick="setRange('semana')">SEMANA</button>
+                <button class="f-btn" onclick="setRange('mes')">MES</button>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px">
                 <input type="date" id="d-start" class="d-picker" onchange="calcStats()">
                 <input type="date" id="d-end" class="d-picker" onchange="calcStats()">
             </div>
 
-            <div id="fn" style="display:flex;gap:10px;justify-content:space-between"></div>
-            
-            <div style="margin-top:20px;font-size:0.8em;color:#8696a0;text-align:center">
-                * Calculado según la última interacción del cliente en el rango seleccionado.
+            <div id="total-display" class="total-box">
+                <div style="font-size:0.9em;color:#8696a0">TOTAL LEADS (Fecha Seleccionada)</div>
+                <div id="total-num" style="font-size:2.5em;font-weight:bold;color:white">0</div>
             </div>
+
+            <div id="fn" class="stat-grid"></div>
+            
             <button class="btn" style="background:#444;margin-top:20px" onclick="document.getElementById('rp').style.display='none'">CERRAR</button>
         </div>
 
@@ -121,7 +130,6 @@ app.get('/monitor', (req, res) => {
                 renderList();
             }
 
-            // Lógica de Fechas para Funnel
             function setRange(type) {
                 const today = new Date();
                 let start = new Date();
@@ -134,6 +142,8 @@ app.get('/monitor', (req, res) => {
                     end.setDate(today.getDate() - 1); end.setHours(23,59,59,999);
                 } else if (type === 'semana') {
                     start.setDate(today.getDate() - 7); start.setHours(0,0,0,0);
+                } else if (type === 'mes') {
+                    start.setDate(1); start.setHours(0,0,0,0);
                 }
                 
                 document.getElementById('d-start').valueAsDate = start;
@@ -146,28 +156,50 @@ app.get('/monitor', (req, res) => {
                 const e = document.getElementById('d-end').valueAsDate;
                 if(!s || !e) return;
                 
-                // Asegurar final del día para la fecha fin
+                // Ajustar zona horaria (esto evita problemas de desfase de día)
+                s.setMinutes(s.getMinutes() + s.getTimezoneOffset());
+                e.setMinutes(e.getMinutes() + e.getTimezoneOffset());
                 e.setHours(23,59,59,999);
 
-                const c = {NUEVO:0, INTERESADO:0, HOT:0, FRIO:0};
+                const c = { NUEVO:0, INTERESADO:0, HOT:0, FRIO:0, APAGADO:0 };
+                let total = 0;
                 
                 Object.values(allUsers).forEach(u => {
                     const last = new Date(u.lastInteraction || 0);
                     if (last >= s && last <= e) {
-                        if(c[u.tag] !== undefined) c[u.tag]++;
+                        const tag = u.tag || "NUEVO";
+                        if(c[tag] !== undefined) c[tag]++;
+                        total++;
                     }
                 });
 
+                document.getElementById("total-num").innerText = total;
+
+                // Helper para porcentaje
+                const pct = (val) => total > 0 ? ((val/total)*100).toFixed(1) + '%' : '0%';
+
                 document.getElementById("fn").innerHTML = \`
-                    <div class="stat-box" style="background:var(--ac)">NUEVOS<br><h1 style="margin:5px 0">\${c.NUEVO}</h1></div>
-                    <div class="stat-box" style="background:var(--it)">INT<br><h1 style="margin:5px 0">\${c.INTERESADO}</h1></div>
-                    <div class="stat-box" style="background:var(--ht)">HOT<br><h1 style="margin:5px 0">\${c.HOT}</h1></div>
+                    <div class="stat-box" style="background:var(--ac)">
+                        <div>NUEVOS</div><div class="stat-num">\${c.NUEVO}</div><div class="stat-pct">\${pct(c.NUEVO)}</div>
+                    </div>
+                    <div class="stat-box" style="background:var(--it)">
+                        <div>INT</div><div class="stat-num">\${c.INTERESADO}</div><div class="stat-pct">\${pct(c.INTERESADO)}</div>
+                    </div>
+                    <div class="stat-box" style="background:var(--ht)">
+                        <div>HOT</div><div class="stat-num">\${c.HOT}</div><div class="stat-pct">\${pct(c.HOT)}</div>
+                    </div>
+                    <div class="stat-box" style="background:var(--fr)">
+                        <div>FRIOS</div><div class="stat-num">\${c.FRIO}</div><div class="stat-pct">\${pct(c.FRIO)}</div>
+                    </div>
+                    <div class="stat-box" style="background:#333;border:1px solid #555">
+                        <div>OFF</div><div class="stat-num">\${c.APAGADO}</div><div class="stat-pct">\${pct(c.APAGADO)}</div>
+                    </div>
                 \`;
             }
 
             function op(){
                 document.getElementById("rp").style.display='block';
-                setRange('hoy'); // Default a hoy
+                setRange('hoy');
             }
 
             function up(){
