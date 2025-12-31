@@ -55,6 +55,7 @@ app.get('/monitor', (req, res) => {
             /* Tags */
             .tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 5px; }
             .tag.CALIENTE { background: #ff0044; color: white; }
+            .tag.INTERESADO { background: #ff9900; color: white; } /* NARANJA */
             .tag.NUEVO { background: var(--accent); color: white; }
             .tag.FRIO { background: #333; color: #aaa; }
             .tag.MANUAL { background: #bd00ff; color: white; }
@@ -119,7 +120,6 @@ app.get('/monitor', (req, res) => {
                 const day = d.getDate().toString().padStart(2, '0');
                 const month = (d.getMonth() + 1).toString().padStart(2, '0');
                 
-                // Si es de hoy, solo hora. Si no, fecha y hora.
                 const isToday = new Date().toDateString() === d.toDateString();
                 return isToday ? \`\${hours}:\${minutes}\` : \`\${day}/\${month} \${hours}:\${minutes}\`;
             }
@@ -139,7 +139,6 @@ app.get('/monitor', (req, res) => {
                 
                 if(!users) return; 
                 
-                // Ordenar: Más reciente arriba (usando lastInteraction)
                 const sorted = Object.keys(users).sort((a,b) => {
                     const timeA = users[a].lastInteraction || 0;
                     const timeB = users[b].lastInteraction || 0;
@@ -193,7 +192,6 @@ app.get('/monitor', (req, res) => {
                 const feed = document.getElementById("feed"); 
                 const u = users[phone];
                 
-                // Guardar posición de scroll para no saltar si el usuario lee arriba
                 const isAtBottom = feed.scrollHeight - feed.scrollTop <= feed.clientHeight + 50;
 
                 feed.innerHTML = ""; 
