@@ -13,49 +13,49 @@ let sesiones = {};
 let botStatus = {}; 
 
 try {
-    const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
-    if (files.length > 0) {
-        const target = files.includes('sesiones.json') ? 'sesiones.json' : files[0];
-        const raw = fs.readFileSync(path.join(DATA_DIR, target), 'utf8');
-        try {
-            const data = JSON.parse(raw);
-            sesiones = data.sesiones || {};
-            botStatus = data.botStatus || {};
-        } catch (e) { console.error("Error parseando JSON"); }
-    }
-} catch (e) { console.error("Error Disco:", e); }
+    const raw = fs.readFileSync(FILE, 'utf8');
+    const data = JSON.parse(raw);
+    sesiones = data.sesiones || {};
+    botStatus = data.botStatus || {};
+} catch (e) {}
 
 function guardar() {
-    try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); } 
-    catch (e) { console.error("Error Save"); }
+    try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); } catch (e) {}
 }
 
 async function notificarStaff(cliente, nombre, motivo) {
     const texto = `🚨 *ALERTA ZARA* 🚨\nCliente: ${nombre}\nTel: ${cliente}\nMotivo: ${motivo}\nLink: https://wa.me/${cliente}`;
-    for (const staff of NEGOCIO.staff_alertas) {
-        await enviarMensaje(staff, texto);
-    }
+    for (const staff of NEGOCIO.staff_alertas) { await enviarMensaje(staff, texto); }
 }
 
 function calcularEtiqueta(historial) {
     if (!historial || historial.length === 0) return "NUEVO";
+    
     const textoCompleto = historial.map(m => m.content.toLowerCase()).join(" ");
+    const interaccionesUsuario = historial.filter(m => m.role === 'user').length;
     const ultimoMensaje = historial[historial.length - 1];
-    const palabrasCalientes = ["llamen", "llamada", "link", "agendar", "agendamiento", "cita", "telefono", "celular", "autoagendamiento"];
+
+    // 1. CALIENTE: Pidió llamar o link (Prioridad máxima)
+    const palabrasCalientes = ["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular", "autoagendamiento"];
     if (palabrasCalientes.some(p => textoCompleto.includes(p))) return "CALIENTE";
-    if (textoCompleto.includes("$") || textoCompleto.includes("valor promocional") || textoCompleto.includes("precio")) return "INTERESADO";
-    if (historial.length > 2 && ultimoMensaje.role === 'assistant') return "FRIO";
+    
+    // 2. FRIO: Si el último mensaje es el seguimiento automático de 2 horas
+    if (ultimoMensaje.content.includes("[AUTO] Seguimiento")) return "FRIO";
+    
+    // 3. INTERESADO: Si el usuario ha interactuado más de 2 veces
+    if (interaccionesUsuario > 2) return "INTERESADO";
+    
+    // 4. NUEVO: Por defecto al inicio o si Zara habló y el usuario aún no responde más de 2 veces
     return "NUEVO";
 }
 
 setInterval(() => {
     const now = Date.now();
-    const currentHour = new Date().getHours(); 
     Object.keys(sesiones).forEach(async (phone) => {
         const u = sesiones[phone];
         if (!u.lastInteraction || u.followUpSent) return;
         const diffHours = (now - u.lastInteraction) / (1000 * 60 * 60);
-        if (diffHours >= 2 && diffHours < 2.1 && currentHour >= 9 && currentHour < 21) { 
+        if (diffHours >= 2 && diffHours < 2.1) {
              await enviarMensaje(phone, `Hola ${u.name.split(" ")[0]}... 🤔 Me quedé pensando si te gustaría que te llame una especialista para resolver dudas.`);
              u.followUpSent = true;
              u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
@@ -89,16 +89,20 @@ export async function procesarEvento(evento) {
     const telefono = mensaje.from;
     const nombre = value.contacts?.[0]?.profile?.name || "Cliente";
     const texto = mensaje.text.body;
-    if (texto.toLowerCase() === '/reset') { delete sesiones[telefono]; guardar(); await enviarMensaje(telefono, "✅ Reset."); return; }
+
     if (!sesiones[telefono]) {
         sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
         await notificarStaff(telefono, nombre, "NUEVO LEAD 🔥");
     }
+    
+    sesiones[telefono].name = nombre;
     sesiones[telefono].lastInteraction = Date.now();
     sesiones[telefono].history.push({ role: "user", content: texto, timestamp: Date.now() });
+    
     if (texto.toLowerCase().match(/llame|llamada|celular|telefono|contacten/)) {
         await notificarStaff(telefono, nombre, "PIDIÓ LLAMADA 📞");
     }
+
     if (botStatus[telefono] !== false) {
         const respuesta = await pensar(sesiones[telefono].history, sesiones[telefono].name);
         sesiones[telefono].history.push({ role: "assistant", content: respuesta, timestamp: Date.now() });
