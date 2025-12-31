@@ -35,17 +35,17 @@ function calcularEtiqueta(historial) {
     const interaccionesUsuario = historial.filter(m => m.role === 'user').length;
     const ultimoMensaje = historial[historial.length - 1];
 
-    // 1. CALIENTE: Pidió llamar o link (Prioridad máxima)
+    // 1. HOT: Pidió link o llamado (Prioridad máxima)
     const palabrasCalientes = ["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular", "autoagendamiento"];
-    if (palabrasCalientes.some(p => textoCompleto.includes(p))) return "CALIENTE";
+    if (palabrasCalientes.some(p => textoCompleto.includes(p))) return "HOT";
     
-    // 2. FRIO: Si el último mensaje es el seguimiento automático de 2 horas
+    // 2. FRIO: Si el último mensaje es el seguimiento automático y no ha respondido
     if (ultimoMensaje.content.includes("[AUTO] Seguimiento")) return "FRIO";
     
     // 3. INTERESADO: Si el usuario ha interactuado más de 2 veces
     if (interaccionesUsuario > 2) return "INTERESADO";
     
-    // 4. NUEVO: Por defecto al inicio o si Zara habló y el usuario aún no responde más de 2 veces
+    // 4. NUEVO: Llegó, Zara habló y no ha pasado a interesado ni ha recibido seguimiento
     return "NUEVO";
 }
 
