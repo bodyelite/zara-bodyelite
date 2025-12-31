@@ -5,25 +5,22 @@ import { procesarEvento, getSesiones, getBotStatus, enviarMensajeManual, ejecuta
 const app = express(); app.use(express.json()); app.use(cors());
 
 app.get('/monitor', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZARA 9.1 ANALYTICS</title>
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZARA 9.2 ANALYTICS</title>
     <style>
         :root{--bg:#0b141a;--sb:#111b21;--ac:#00a884;--ht:#e91e63;--it:#ff9800;--fr:#667781;--mn:#3b82f6;--txt:#e9edef;}
         body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);display:flex;height:100vh;overflow:hidden;}
         
-        /* Sidebar */
         .sl{width:320px;background:var(--sb);border-right:1px solid #222d34;display:flex;flex-direction:column;flex-shrink:0;}
         .filters{padding:10px;background:#202c33;display:flex;gap:5px;border-bottom:1px solid #2a3942;}
         .f-btn{flex:1;background:transparent;border:1px solid #374045;color:#8696a0;padding:5px;border-radius:4px;cursor:pointer;font-size:0.7em;font-weight:bold;}
         .f-btn.active{background:#374045;color:white;border-color:var(--ac);}
         
-        /* Lista Clientes */
         .cd{padding:15px;border-bottom:1px solid #222d34;cursor:pointer;transition:0.2s;}
         .cd:hover{background:#202c33;}
         .cd.active{background:#2a3942;border-left:4px solid var(--ac);}
         .tag{font-size:0.65em;padding:2px 6px;border-radius:4px;color:white;font-weight:bold;display:inline-block;margin-left:5px;}
         .tag-NUEVO{background:var(--ac);} .tag-HOT{background:var(--ht);} .tag-INTERESADO{background:var(--it);} .tag-FRIO{background:var(--fr);} .tag-APAGADO{background:#333;}
 
-        /* Chat Central */
         .mc{flex:1;display:flex;flex-direction:column;background:var(--bg);min-width:0;}
         .ch{padding:10px 20px;background:#202c33;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a3942;}
         #fd{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
@@ -32,16 +29,13 @@ app.get('/monitor', (req, res) => {
         .msg.user{align-self:flex-start;background:#202c33;color:white;}
         .msg.manual{align-self:flex-end;background:var(--mn);border:1px solid #fff3;}
         
-        /* Inputs y Botones */
         .ib{padding:15px;background:#202c33;display:flex;gap:10px;}
         #m{flex:1;background:#2a3942;border:none;padding:12px;border-radius:8px;color:white;outline:none;}
         .btn{padding:12px;border:none;border-radius:6px;color:white;font-weight:bold;cursor:pointer;font-size:0.8em;width:100%;transition:0.2s;}
         .btn:hover{filter:brightness(1.1);}
 
-        /* Sidebar Derecha */
         .sr{width:220px;background:var(--sb);border-left:1px solid #222d34;padding:20px;display:flex;flex-direction:column;gap:15px;flex-shrink:0;}
         
-        /* Modal Reportes */
         .mod{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;background:#111b21;display:none;padding:30px;border-radius:12px;z-index:100;box-shadow:0 0 50px rgba(0,0,0,0.9);border:1px solid #374045;max-height:90vh;overflow-y:auto;}
         .d-picker{background:#2a3942;border:1px solid #444;color:white;padding:8px;border-radius:5px;}
         .stat-grid{display:grid;grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));gap:10px;margin-top:20px;}
@@ -54,7 +48,7 @@ app.get('/monitor', (req, res) => {
     </style></head>
     <body>
         <div class="sl">
-            <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.1</div>
+            <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.2</div>
             <div class="filters">
                 <button class="f-btn active" onclick="setFilter('ALL',this)">TODOS</button>
                 <button class="f-btn" onclick="setFilter('HOT',this)">HOT 🔥</button>
@@ -95,13 +89,15 @@ app.get('/monitor', (req, res) => {
             <h2 style="margin-top:0;color:var(--ac)">Funnel Analytics</h2>
             
             <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;justify-content:center">
-                <button class="f-btn" onclick="setRange('hoy')">HOY</button>
-                <button class="f-btn" onclick="setRange('ayer')">AYER</button>
-                <button class="f-btn" onclick="setRange('semana')">SEMANA</button>
-                <button class="f-btn" onclick="setRange('mes')">MES</button>
+                <button class="f-btn" onclick="setRange('hoy', this)">HOY</button>
+                <button class="f-btn" onclick="setRange('ayer', this)">AYER</button>
+                <button class="f-btn" onclick="setRange('semana', this)">SEMANA</button>
+                <button class="f-btn" onclick="setRange('mes', this)">MES</button>
             </div>
-            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px">
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;align-items:center">
+                <span>Desde:</span>
                 <input type="date" id="d-start" class="d-picker" onchange="calcStats()">
+                <span>Hasta:</span>
                 <input type="date" id="d-end" class="d-picker" onchange="calcStats()">
             </div>
 
@@ -130,36 +126,54 @@ app.get('/monitor', (req, res) => {
                 renderList();
             }
 
-            function setRange(type) {
+            // Helper para formatear fechas a YYYY-MM-DD sin problemas de zona horaria
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return \`\${year}-\${month}-\${day}\`;
+            }
+
+            function setRange(type, btn) {
                 const today = new Date();
                 let start = new Date();
                 let end = new Date();
 
+                // Quitar clase active a otros botones de rango
+                if(btn) {
+                    const parent = btn.parentElement;
+                    Array.from(parent.children).forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                }
+
                 if(type === 'hoy') {
-                    start.setHours(0,0,0,0); end.setHours(23,59,59,999);
+                    // Start y End son hoy
                 } else if (type === 'ayer') {
-                    start.setDate(today.getDate() - 1); start.setHours(0,0,0,0);
-                    end.setDate(today.getDate() - 1); end.setHours(23,59,59,999);
+                    start.setDate(today.getDate() - 1);
+                    end.setDate(today.getDate() - 1);
                 } else if (type === 'semana') {
-                    start.setDate(today.getDate() - 7); start.setHours(0,0,0,0);
+                    // Lunes de la semana actual
+                    const day = today.getDay() || 7; // Hacer que Domingo sea 7
+                    if(day !== 1) start.setHours(-24 * (day - 1));
+                    // End es hoy
                 } else if (type === 'mes') {
-                    start.setDate(1); start.setHours(0,0,0,0);
+                    start.setDate(1);
+                    // End es hoy
                 }
                 
-                document.getElementById('d-start').valueAsDate = start;
-                document.getElementById('d-end').valueAsDate = end;
+                document.getElementById('d-start').value = formatDate(start);
+                document.getElementById('d-end').value = formatDate(end);
                 calcStats();
             }
 
             function calcStats() {
-                const s = document.getElementById('d-start').valueAsDate;
-                const e = document.getElementById('d-end').valueAsDate;
-                if(!s || !e) return;
-                
-                // Ajustar zona horaria (esto evita problemas de desfase de día)
-                s.setMinutes(s.getMinutes() + s.getTimezoneOffset());
-                e.setMinutes(e.getMinutes() + e.getTimezoneOffset());
-                e.setHours(23,59,59,999);
+                const sVal = document.getElementById('d-start').value;
+                const eVal = document.getElementById('d-end').value;
+                if(!sVal || !eVal) return;
+
+                // Crear fechas usando string para evitar confusiones de zona
+                const s = new Date(sVal + "T00:00:00");
+                const e = new Date(eVal + "T23:59:59");
 
                 const c = { NUEVO:0, INTERESADO:0, HOT:0, FRIO:0, APAGADO:0 };
                 let total = 0;
@@ -199,7 +213,9 @@ app.get('/monitor', (req, res) => {
 
             function op(){
                 document.getElementById("rp").style.display='block';
-                setRange('hoy');
+                // Por defecto selecciona HOY al abrir si no hay fechas
+                if(!document.getElementById('d-start').value) setRange('hoy', null);
+                else calcStats();
             }
 
             function up(){
@@ -209,60 +225,3 @@ app.get('/monitor', (req, res) => {
                     if(ap && allUsers[ap]) updateChatUI(allUsers[ap], d.botStatus || {});
                 });
             }
-
-            function renderList(botStatus = {}) {
-                const l = document.getElementById("list"); l.innerHTML="";
-                Object.keys(allUsers).sort((a,b)=>allUsers[b].lastInteraction-allUsers[a].lastInteraction).forEach(p=>{
-                    const u = allUsers[p];
-                    if(fl !== 'ALL' && u.tag !== fl) return;
-                    
-                    l.innerHTML += \`<div class="cd \${ap===p?'active':''}" onclick="sl('\${p}')">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-                            <span style="font-weight:600">\${u.name}</span>
-                            <span style="font-size:0.7em;color:#8696a0">\${new Date(u.lastInteraction).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;align-items:center">
-                            <span style="font-size:0.75em;color:#8696a0">\${f(u.lastInteraction)}</span>
-                            <span class="tag tag-\${u.tag}">\${u.tag}</span>
-                        </div>
-                    </div>\`;
-                });
-            }
-
-            function sl(p){ ap=p; document.getElementById("h").style.display="flex"; document.getElementById("i").style.display="flex"; up(); }
-            
-            function updateChatUI(u, st) {
-                document.getElementById("n").innerText = u.name;
-                document.getElementById("p").innerText = u.phone;
-                document.getElementById("ts").value = u.tag;
-                const b = document.getElementById("bt");
-                b.innerText = st[u.phone]===false ? 'BOT OFF 🔴' : 'BOT ON 🟢';
-                b.style.background = st[u.phone]===false ? '#333' : 'var(--ac)';
-                rd(u);
-            }
-
-            function rd(u){
-                const d = document.getElementById("fd");
-                const html = u.history.map(m => {
-                    const type = m.role === 'user' ? 'user' : (m.source === 'manual' ? 'manual' : 'bot');
-                    return \`<div class="msg \${type}">
-                        <div>\${m.content}</div>
-                        <div style="font-size:0.65em;opacity:0.6;text-align:right;margin-top:4px">\${f(m.timestamp)}</div>
-                    </div>\`;
-                }).join("");
-                if(d.innerHTML !== html) { d.innerHTML = html; d.scrollTop = d.scrollHeight; }
-            }
-
-            async function sd(){const v=document.getElementById("m");if(!v.value)return;await fetch("/api/manual",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,text:v.value})});v.value="";up();}
-            setInterval(up, 4000); up();
-        </script>
-    </body></html>`);
-});
-
-app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
-app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.phone, req.body.tag) }));
-app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));
-app.post('/api/estrat', async (req, res) => { await ejecutarEstrategia(req.body.tag); res.json({ success: true }); });
-app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ success: true }); });
-app.post('/webhook', async (req, res) => { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); });
-app.listen(process.env.PORT || 3000);
