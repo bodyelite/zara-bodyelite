@@ -24,10 +24,15 @@ export function calcularEtiqueta(u) {
     const interaccionesUser = historial.filter(m => m.role === 'user').length;
     const ultimoMsg = historial[historial.length - 1];
 
-    if (["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular"].some(p => textoCompleto.includes(p))) return "HOT";
+    // Lógica HOT: Juan Carlos (Llamadas, link, etc.)
+    if (["llamen", "llamada", "llame", "link", "agendar", "cita", "telefono", "celular", "contacto"].some(p => textoCompleto.includes(p))) return "HOT";
+    // ELIMINADO: 24h sin respuesta
     if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant' && (ultimoMsg.content.includes("[ESTRATEGIA]") || ultimoMsg.content.includes("[AUTO]"))) return "ELIMINADO";
+    // INTERESADO: Carlos (2 o más mensajes)
     if (interaccionesUser >= 2) return "INTERESADO";
+    // FRIO: Patricia (1 mensaje + seguimiento)
     if (interaccionesUser === 1 && ultimoMsg.content.includes("[AUTO] Seguimiento")) return "FRIO";
+    
     return "NUEVO";
 }
 
@@ -35,10 +40,13 @@ export async function ejecutarEstrategia(etiqueta) {
     for (const phone of Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta)) {
         const u = sesiones[phone];
         let prompt = `Eres Zara de Body Elite. Cliente ${u.name} es ${etiqueta}. `;
-        if (etiqueta === "HOT") prompt += "Ya pidió link o llamada. Pregunta con preocupación si pudo agendar o si lo llamaron.";
-        else prompt += "Genera un re-enganche corto y natural.";
+        if (etiqueta === "HOT") {
+            prompt += "Ya pidió link o llamada. Genera un mensaje de seguimiento con PREOCUPACIÓN. Pregunta si ya pudo agendar su cupo o si mis compañeras ya lo contactaron para coordinar, ya que no queremos que pierda su valor promocional.";
+        } else {
+            prompt += "Genera un re-enganche corto, natural y con emojis.";
+        }
         const resp = await pensar([{ role: "user", content: prompt }], u.name);
-        u.history.push({ role: "assistant", content: `🧪 [PRUEBA ESTRATEGIA]: ${resp}`, timestamp: Date.now() });
+        u.history.push({ role: "assistant", content: `🧪 [ESTRATEGIA]: ${resp}`, timestamp: Date.now() });
         u.tag = calcularEtiqueta(u);
         guardar();
     }
@@ -50,7 +58,7 @@ setInterval(() => {
         const u = sesiones[p];
         if (!u.lastInteraction || u.followUpSent || ["ELIMINADO", "INTERESADO", "HOT"].includes(u.tag)) return;
         if ((now - u.lastInteraction) / (1000 * 60 * 60) >= 2) {
-            const txt = `Hola ${u.name.split(" ")[0]}... 🌸 ¿Pudiste revisar lo que hablamos?`;
+            const txt = `Hola ${u.name.split(" ")[0]}... 🌸 ¿Pudiste revisar lo que hablamos? Me quedé pensando en tu caso.`;
             await enviarMensaje(p, txt);
             u.followUpSent = true;
             u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
