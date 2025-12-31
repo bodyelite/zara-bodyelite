@@ -24,7 +24,7 @@ export function toggleBot(phone) {
 
 export async function enviarMensajeManual(p, t) {
     if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [], phone: p };
-    botStatus[p] = false;
+    botStatus[p] = false; // El humano apaga al bot
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: 'manual' });
     sesiones[p].lastInteraction = Date.now();
     guardar(); await enviarMensaje(p, t);
