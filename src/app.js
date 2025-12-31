@@ -4,7 +4,6 @@ import { enviarMensaje } from './whatsapp.js';
 import { pensar } from './brain.js';
 
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
-const STAFF = ["56983300262", "56955145504", "56937648536"];
 let sesiones = {}; let botStatus = {}; 
 
 try { const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); sesiones = data.sesiones || {}; botStatus = data.botStatus || {}; } catch (e) {}
@@ -25,7 +24,6 @@ export function toggleBot(phone) {
 
 export async function enviarMensajeManual(p, t) {
     if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [], phone: p };
-    // Al intervenir un humano, apagamos el bot para este cliente
     botStatus[p] = false;
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: 'manual' });
     sesiones[p].lastInteraction = Date.now();
@@ -45,7 +43,7 @@ export async function procesarEvento(evento) {
     sesiones[p].lastInteraction = Date.now();
 
     if (botStatus[p] !== false) {
-        const promptSystem = { role: "system", content: `Eres Zara. Cliente: ${sesiones[p].name}. Habla natural y breve.` };
+        const promptSystem = { role: "system", content: `Eres Zara. Cliente: ${sesiones[p].name}.` };
         const resp = await pensar([promptSystem, ...sesiones[p].history], sesiones[p].name);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
         await enviarMensaje(p, resp);
