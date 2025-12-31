@@ -22,24 +22,25 @@ export function calcularEtiqueta(u) {
     const ahora = Date.now();
     const tiempoPasado = (ahora - (u.lastInteraction || ahora)) / (1000 * 60 * 60);
     
-    // FILTRAR: Solo nos importa lo que el CLIENTE escribió para las etiquetas
-    const mensajesUser = historial.filter(m => m.role === 'user');
-    const textoUser = mensajesUser.map(m => m.content.toLowerCase()).join(" ");
-    const interaccionesUser = mensajesUser.length;
-    const ultimoMsg = historial[historial.length - 1];
+    // BLOQUEO DE AUTO-LECTURA: Solo extraemos mensajes del humano
+    const mensajesDelCliente = historial.filter(m => m.role === 'user');
+    const textoDelCliente = mensajesDelCliente.map(m => m.content.toLowerCase()).join(" ");
+    const numMensajesCliente = mensajesDelCliente.length;
+    
+    const ultimoMensajeGlobal = historial[historial.length - 1];
 
-    // 1. HOT: Solo si el CLIENTE pidió activamente contacto (Jennifer ya no entrará aquí)
-    const palabrasCierre = ["llamen", "llamada", "llame", "link", "agendar", "cita", "telefono", "celular", "contacto"];
-    if (palabrasCierre.some(p => textoUser.includes(p))) return "HOT";
+    // 1. HOT: Solo si el CLIENTE escribió la palabra clave (Jennifer bajará a FRIO)
+    const disparadoresHot = ["llamen", "llamada", "llame", "link", "agendar", "cita", "telefono", "celular", "contacto"];
+    if (disparadoresHot.some(palabra => textoDelCliente.includes(palabra))) return "HOT";
     
-    // 2. ELIMINADO: 24h de silencio absoluto tras bot
-    if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant') return "ELIMINADO";
+    // 2. ELIMINADO: 24h de silencio tras respuesta de Zara
+    if (tiempoPasado >= 24 && ultimoMensajeGlobal.role === 'assistant') return "ELIMINADO";
     
-    // 3. INTERESADO: 2 o más respuestas reales del cliente (Caso Carlos)
-    if (interaccionesUser >= 2) return "INTERESADO";
+    // 3. INTERESADO: 2 o más respuestas del cliente (Caso Carlos)
+    if (numMensajesCliente >= 2) return "INTERESADO";
     
-    // 4. FRIO: 1 respuesta y ya se le mandó el seguimiento automático
-    if (interaccionesUser === 1 && ultimoMsg.content.includes("[AUTO]")) return "FRIO";
+    // 4. FRIO: 1 respuesta y ya recibió seguimiento automático
+    if (numMensajesCliente === 1 && ultimoMensajeGlobal.content.includes("[AUTO]")) return "FRIO";
     
     return "NUEVO";
 }
@@ -47,8 +48,8 @@ export function calcularEtiqueta(u) {
 export async function ejecutarEstrategia(etiqueta) {
     for (const phone of Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta)) {
         const u = sesiones[phone];
-        let prompt = `Eres Zara. Cliente ${u.name} es ${etiqueta}. `;
-        if (etiqueta === "HOT") prompt += "Ya pidió link o llamada. Pregunta con preocupación si pudo agendar o si ya lo llamaron.";
+        let prompt = `Eres Zara. El cliente ${u.name} está en estado ${etiqueta}. `;
+        if (etiqueta === "HOT") prompt += "Ya pidió link o llamada. Pregunta si pudo agendar o si ya lo contactaron.";
         else prompt += "Genera un re-enganche corto y natural con emojis.";
         const resp = await pensar([{ role: "user", content: prompt }], u.name);
         u.history.push({ role: "assistant", content: `🧪 [PRUEBA]: ${resp}`, timestamp: Date.now() });
