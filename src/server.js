@@ -126,12 +126,11 @@ app.get('/monitor', (req, res) => {
                 renderList();
             }
 
-            // Helper para formatear fechas a YYYY-MM-DD sin problemas de zona horaria
             function formatDate(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
-                return \`\${year}-\${month}-\${day}\`;
+                return `${year}-${month}-${day}`;
             }
 
             function setRange(type, btn) {
@@ -139,7 +138,6 @@ app.get('/monitor', (req, res) => {
                 let start = new Date();
                 let end = new Date();
 
-                // Quitar clase active a otros botones de rango
                 if(btn) {
                     const parent = btn.parentElement;
                     Array.from(parent.children).forEach(c => c.classList.remove('active'));
@@ -152,13 +150,10 @@ app.get('/monitor', (req, res) => {
                     start.setDate(today.getDate() - 1);
                     end.setDate(today.getDate() - 1);
                 } else if (type === 'semana') {
-                    // Lunes de la semana actual
-                    const day = today.getDay() || 7; // Hacer que Domingo sea 7
+                    const day = today.getDay() || 7; 
                     if(day !== 1) start.setHours(-24 * (day - 1));
-                    // End es hoy
                 } else if (type === 'mes') {
                     start.setDate(1);
-                    // End es hoy
                 }
                 
                 document.getElementById('d-start').value = formatDate(start);
@@ -171,7 +166,6 @@ app.get('/monitor', (req, res) => {
                 const eVal = document.getElementById('d-end').value;
                 if(!sVal || !eVal) return;
 
-                // Crear fechas usando string para evitar confusiones de zona
                 const s = new Date(sVal + "T00:00:00");
                 const e = new Date(eVal + "T23:59:59");
 
@@ -189,31 +183,29 @@ app.get('/monitor', (req, res) => {
 
                 document.getElementById("total-num").innerText = total;
 
-                // Helper para porcentaje
                 const pct = (val) => total > 0 ? ((val/total)*100).toFixed(1) + '%' : '0%';
 
-                document.getElementById("fn").innerHTML = \`
+                document.getElementById("fn").innerHTML = `
                     <div class="stat-box" style="background:var(--ac)">
-                        <div>NUEVOS</div><div class="stat-num">\${c.NUEVO}</div><div class="stat-pct">\${pct(c.NUEVO)}</div>
+                        <div>NUEVOS</div><div class="stat-num">${c.NUEVO}</div><div class="stat-pct">${pct(c.NUEVO)}</div>
                     </div>
                     <div class="stat-box" style="background:var(--it)">
-                        <div>INT</div><div class="stat-num">\${c.INTERESADO}</div><div class="stat-pct">\${pct(c.INTERESADO)}</div>
+                        <div>INT</div><div class="stat-num">${c.INTERESADO}</div><div class="stat-pct">${pct(c.INTERESADO)}</div>
                     </div>
                     <div class="stat-box" style="background:var(--ht)">
-                        <div>HOT</div><div class="stat-num">\${c.HOT}</div><div class="stat-pct">\${pct(c.HOT)}</div>
+                        <div>HOT</div><div class="stat-num">${c.HOT}</div><div class="stat-pct">${pct(c.HOT)}</div>
                     </div>
                     <div class="stat-box" style="background:var(--fr)">
-                        <div>FRIOS</div><div class="stat-num">\${c.FRIO}</div><div class="stat-pct">\${pct(c.FRIO)}</div>
+                        <div>FRIOS</div><div class="stat-num">${c.FRIO}</div><div class="stat-pct">${pct(c.FRIO)}</div>
                     </div>
                     <div class="stat-box" style="background:#333;border:1px solid #555">
-                        <div>OFF</div><div class="stat-num">\${c.APAGADO}</div><div class="stat-pct">\${pct(c.APAGADO)}</div>
+                        <div>OFF</div><div class="stat-num">${c.APAGADO}</div><div class="stat-pct">${pct(c.APAGADO)}</div>
                     </div>
-                \`;
+                `;
             }
 
             function op(){
                 document.getElementById("rp").style.display='block';
-                // Por defecto selecciona HOY al abrir si no hay fechas
                 if(!document.getElementById('d-start').value) setRange('hoy', null);
                 else calcStats();
             }
@@ -225,3 +217,60 @@ app.get('/monitor', (req, res) => {
                     if(ap && allUsers[ap]) updateChatUI(allUsers[ap], d.botStatus || {});
                 });
             }
+
+            function renderList(botStatus = {}) {
+                const l = document.getElementById("list"); l.innerHTML="";
+                Object.keys(allUsers).sort((a,b)=>allUsers[b].lastInteraction-allUsers[a].lastInteraction).forEach(p=>{
+                    const u = allUsers[p];
+                    if(fl !== 'ALL' && u.tag !== fl) return;
+                    
+                    l.innerHTML += `<div class="cd ${ap===p?'active':''}" onclick="sl('${p}')">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                            <span style="font-weight:600">${u.name}</span>
+                            <span style="font-size:0.7em;color:#8696a0">${new Date(u.lastInteraction).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <span style="font-size:0.75em;color:#8696a0">${f(u.lastInteraction)}</span>
+                            <span class="tag tag-${u.tag}">${u.tag}</span>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            function sl(p){ ap=p; document.getElementById("h").style.display="flex"; document.getElementById("i").style.display="flex"; up(); }
+            
+            function updateChatUI(u, st) {
+                document.getElementById("n").innerText = u.name;
+                document.getElementById("p").innerText = u.phone;
+                document.getElementById("ts").value = u.tag;
+                const b = document.getElementById("bt");
+                b.innerText = st[u.phone]===false ? 'BOT OFF 🔴' : 'BOT ON 🟢';
+                b.style.background = st[u.phone]===false ? '#333' : 'var(--ac)';
+                rd(u);
+            }
+
+            function rd(u){
+                const d = document.getElementById("fd");
+                const html = u.history.map(m => {
+                    const type = m.role === 'user' ? 'user' : (m.source === 'manual' ? 'manual' : 'bot');
+                    return `<div class="msg ${type}">
+                        <div>${m.content}</div>
+                        <div style="font-size:0.65em;opacity:0.6;text-align:right;margin-top:4px">${f(m.timestamp)}</div>
+                    </div>`;
+                }).join("");
+                if(d.innerHTML !== html) { d.innerHTML = html; d.scrollTop = d.scrollHeight; }
+            }
+
+            async function sd(){const v=document.getElementById("m");if(!v.value)return;await fetch("/api/manual",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,text:v.value})});v.value="";up();}
+            setInterval(up, 4000); up();
+        </script>
+    </body></html>`);
+});
+
+app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
+app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.phone, req.body.tag) }));
+app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));
+app.post('/api/estrat', async (req, res) => { await ejecutarEstrategia(req.body.tag); res.json({ success: true }); });
+app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ success: true }); });
+app.post('/webhook', async (req, res) => { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); });
+app.listen(process.env.PORT || 3000);
