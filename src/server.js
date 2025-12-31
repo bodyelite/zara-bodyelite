@@ -5,18 +5,18 @@ import { procesarEvento, getSesiones, toggleBot, enviarMensajeManual, ejecutarEs
 const app = express(); app.use(express.json()); app.use(cors());
 
 app.get('/monitor', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ZARA BONITA</title><style>:root { --bg: #111b21; --accent: #00a884; --hot: #ff0044; --int: #ff9900; } body { margin:0; font-family: sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; } .sidebar { width: 350px; background: #202c33; border-right: 1px solid #333; overflow-y: auto; display:flex; flex-direction:column; } .card { padding: 12px; border-bottom: 1px solid #2a3942; cursor: pointer; } .card.ELIMINADO { opacity: 0.3; } .tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; font-weight: bold; float: right; } .HOT { background: var(--hot); } .INTERESADO { background: var(--int); } .FRIO { background: #667781; } .NUEVO { background: var(--accent); } .ELIMINADO { background: #000; } .msg { max-width: 75%; padding: 8px; border-radius: 8px; margin-bottom: 5px; position: relative; } .time { font-size: 0.65em; opacity: 0.5; text-align: right; margin-top: 3px; }</style></head>
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ZARA BONITA</title><style>:root { --bg: #111b21; --accent: #00a884; --hot: #ff0044; --int: #ff9900; } body { margin:0; font-family: sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; } .sidebar { width: 350px; background: #202c33; border-right: 1px solid #333; overflow-y: auto; display:flex; flex-direction:column; } .card { padding: 12px; border-bottom: 1px solid #2a3942; cursor: pointer; position: relative; } .card.HOT { background: rgba(255, 0, 68, 0.2); border-left: 5px solid var(--hot); animation: pulse 2s infinite; } @keyframes pulse { 0% { box-shadow: inset 0 0 0px var(--hot); } 50% { box-shadow: inset 0 0 10px var(--hot); } 100% { box-shadow: inset 0 0 0px var(--hot); } } .card.ELIMINADO { opacity: 0.3; } .tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; font-weight: bold; float: right; } .HOT { background: var(--hot); color: white; } .INTERESADO { background: var(--int); color: white; } .FRIO { background: #667781; color: white; } .NUEVO { background: var(--accent); color: white; } .ELIMINADO { background: #000; color: #555; } .msg { max-width: 75%; padding: 8px; border-radius: 8px; margin-bottom: 5px; position: relative; } .time { font-size: 0.65em; opacity: 0.5; text-align: right; margin-top: 3px; }</style></head>
     <body>
         <div class="sidebar">
             <div style="padding:10px; display:flex; gap:5px">
-                <button onclick="run('FRIO')" style="background:#667781; color:white; border:none; padding:8px; flex:1; cursor:pointer">FRIO ❄️</button>
-                <button onclick="run('INTERESADO')" style="background:var(--int); color:white; border:none; padding:8px; flex:1; cursor:pointer">INT 🔥</button>
+                <button onclick="run('FRIO')" style="background:#667781; color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">FRIO ❄️</button>
+                <button onclick="run('INTERESADO')" style="background:var(--int); color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">INT 🔥</button>
             </div>
             <div id="list"></div>
         </div>
         <div style="flex:1; display:flex; flex-direction:column; background:#0b141a">
             <div id="feed" style="flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column"></div>
-            <div id="input" style="padding:15px; background:#202c33; display:none"><input id="m" style="width:90%; padding:10px; background:#2a3942; border:none; color:white" onkeypress="if(event.key==='Enter')send()"></div>
+            <div id="input" style="padding:15px; background:#202c33; display:none"><input id="m" style="width:90%; padding:10px; background:#2a3942; border:none; color:white; border-radius:5px" onkeypress="if(event.key==='Enter')send()"></div>
         </div>
         <script>
             let ap = null;
@@ -25,6 +25,8 @@ app.get('/monitor', (req, res) => {
             function update(){ fetch("/api/data").then(r=>r.json()).then(d=>{
                 const l=document.getElementById("list"); l.innerHTML="";
                 const sorted = Object.keys(d.users).sort((a,b) => {
+                    if (d.users[a].tag === "HOT" && d.users[b].tag !== "HOT") return -1;
+                    if (d.users[a].tag !== "HOT" && d.users[b].tag === "HOT") return 1;
                     if (d.users[a].tag === "ELIMINADO" && d.users[b].tag !== "ELIMINADO") return 1;
                     if (d.users[a].tag !== "ELIMINADO" && d.users[b].tag === "ELIMINADO") return -1;
                     return (d.users[b].lastInteraction || 0) - (d.users[a].lastInteraction || 0);
