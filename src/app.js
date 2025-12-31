@@ -22,23 +22,24 @@ export function calcularEtiqueta(u) {
     const ahora = Date.now();
     const tiempoPasado = (ahora - (u.lastInteraction || ahora)) / (1000 * 60 * 60);
     
-    // FILTRAR SOLO MENSAJES DEL USUARIO PARA ETIQUETAS
+    // FILTRAR: Solo nos importa lo que el CLIENTE escribió para las etiquetas
     const mensajesUser = historial.filter(m => m.role === 'user');
     const textoUser = mensajesUser.map(m => m.content.toLowerCase()).join(" ");
     const interaccionesUser = mensajesUser.length;
     const ultimoMsg = historial[historial.length - 1];
 
-    // 1. HOT: Solo si el USUARIO pidió contacto o link
-    if (["llamen", "llamada", "llame", "link", "agendar", "cita", "telefono", "celular", "contacto"].some(p => textoUser.includes(p))) return "HOT";
+    // 1. HOT: Solo si el CLIENTE pidió activamente contacto (Jennifer ya no entrará aquí)
+    const palabrasCierre = ["llamen", "llamada", "llame", "link", "agendar", "cita", "telefono", "celular", "contacto"];
+    if (palabrasCierre.some(p => textoUser.includes(p))) return "HOT";
     
-    // 2. ELIMINADO: 24h sin señales de vida tras bot
-    if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant' && (ultimoMsg.content.includes("[ESTRATEGIA]") || ultimoMsg.content.includes("[AUTO]"))) return "ELIMINADO";
+    // 2. ELIMINADO: 24h de silencio absoluto tras bot
+    if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant') return "ELIMINADO";
     
-    // 3. INTERESADO: 2 o más respuestas del cliente (Caso Carlos)
+    // 3. INTERESADO: 2 o más respuestas reales del cliente (Caso Carlos)
     if (interaccionesUser >= 2) return "INTERESADO";
     
-    // 4. FRIO: 1 respuesta y ya le mandamos seguimiento
-    if (interaccionesUser === 1 && ultimoMsg.content.includes("[AUTO] Seguimiento")) return "FRIO";
+    // 4. FRIO: 1 respuesta y ya se le mandó el seguimiento automático
+    if (interaccionesUser === 1 && ultimoMsg.content.includes("[AUTO]")) return "FRIO";
     
     return "NUEVO";
 }
@@ -46,11 +47,11 @@ export function calcularEtiqueta(u) {
 export async function ejecutarEstrategia(etiqueta) {
     for (const phone of Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta)) {
         const u = sesiones[phone];
-        let prompt = `Eres Zara de Body Elite. El cliente ${u.name} es ${etiqueta}. `;
-        if (etiqueta === "HOT") prompt += "Ya pidió link o llamada. Pregunta con preocupación si pudo agendar o si lo llamaron.";
-        else prompt += "Genera un re-enganche corto, natural y con emojis.";
+        let prompt = `Eres Zara. Cliente ${u.name} es ${etiqueta}. `;
+        if (etiqueta === "HOT") prompt += "Ya pidió link o llamada. Pregunta con preocupación si pudo agendar o si ya lo llamaron.";
+        else prompt += "Genera un re-enganche corto y natural con emojis.";
         const resp = await pensar([{ role: "user", content: prompt }], u.name);
-        u.history.push({ role: "assistant", content: `🧪 [PRUEBA ESTRATEGIA]: ${resp}`, timestamp: Date.now() });
+        u.history.push({ role: "assistant", content: `🧪 [PRUEBA]: ${resp}`, timestamp: Date.now() });
         u.tag = calcularEtiqueta(u);
         guardar();
     }

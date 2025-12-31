@@ -5,60 +5,48 @@ import { procesarEvento, getSesiones, toggleBot, enviarMensajeManual, ejecutarEs
 const app = express(); app.use(express.json()); app.use(cors());
 
 app.get('/monitor', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ZARA BONITA</title>
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ZARA MONITOR</title>
     <style>
-        :root { --bg: #0b141a; --sidebar: #111b21; --accent: #00a884; --hot: #ff0044; --int: #ff9900; } 
-        body { margin:0; font-family: sans-serif; background: var(--bg); color: #e9edef; display: flex; height: 100vh; overflow:hidden; } 
-        .sidebar { width: 350px; background: var(--sidebar); border-right: 1px solid #222d34; display:flex; flex-direction:column; } 
+        :root { --bg: #0b141a; --hot: #ff0044; --int: #ff9900; } 
+        body { margin:0; font-family: sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow:hidden; } 
+        .sidebar { width: 350px; background: #111b21; border-right: 1px solid #222d34; display:flex; flex-direction:column; } 
+        .card { padding: 15px; border-bottom: 1px solid #222d34; cursor: pointer; transition: 0.3s; }
         
-        /* FUERZA EL ROJO EN HOT */
-        .card.HOT { 
-            background-color: #440011 !important; 
-            border-left: 8px solid var(--hot) !important; 
-            animation: pulse-red 2s infinite !important;
-        }
-        @keyframes pulse-red { 0% { background-color: #440011; } 50% { background-color: #880022; } 100% { background-color: #440011; } }
+        /* ROJO HOT PARPADEANTE */
+        .card.HOT { background: #440011 !important; border-left: 8px solid var(--hot) !important; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { background: #440011; } 50% { background: #880022; } 100% { background: #440011; } }
         
         .card.INTERESADO { border-left: 5px solid var(--int); }
-        .card.ELIMINADO { opacity: 0.2; background: #000 !important; }
-        .card { padding: 12px; border-bottom: 1px solid #222d34; cursor: pointer; transition: 0.3s; }
-        .card.active { background: #2a3942; }
-
-        .tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; font-weight: bold; float: right; } 
+        .card.ELIMINADO { opacity: 0.2; filter: grayscale(1); }
+        
+        .tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; font-weight: bold; float: right; } 
         .HOT { background: var(--hot); } .INTERESADO { background: var(--int); } 
-        .FRIO { background: #667781; } .NUEVO { background: var(--accent); } 
-        .ELIMINADO { background: #333; }
-
-        #feed { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; background-color: #0b141a; }
-        .msg { max-width: 75%; padding: 10px; border-radius: 10px; margin-bottom: 8px; position: relative; } 
-        .time { font-size: 0.7em; opacity: 0.5; text-align: right; margin-top: 4px; }
+        .FRIO { background: #667781; } .NUEVO { background: #00a884; } 
+        .ELIMINADO { background: #000; }
+        
+        #feed { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; background:#0b141a; }
+        .msg { max-width: 75%; padding: 10px; border-radius: 8px; margin-bottom: 5px; } 
+        .time { font-size: 0.65em; opacity: 0.5; text-align: right; }
     </style></head>
     <body>
         <div class="sidebar">
-            <div style="padding:10px; display:flex; flex-direction:column; gap:5px">
-                <button onclick="run('HOT')" style="background:var(--hot); color:white; border:none; padding:12px; cursor:pointer; border-radius:5px; font-weight:bold">ESTRATEGIA CIERRE HOT 🔥</button>
-                <div style="display:flex; gap:5px">
-                    <button onclick="run('FRIO')" style="background:#667781; color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">FRIO ❄️</button>
-                    <button onclick="run('INTERESADO')" style="background:var(--int); color:white; border:none; padding:8px; flex:1; cursor:pointer; border-radius:4px">INT 🔥</button>
-                </div>
+            <div style="padding:15px; border-bottom:1px solid #333">
+                <button onclick="run('HOT')" style="background:var(--hot); color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer; font-weight:bold">ESTRATEGIA HOT 🔥</button>
             </div>
             <div id="list"></div>
         </div>
-        <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="flex:1; display:flex; flex-direction:column">
             <div id="feed"></div>
-            <div id="input" style="padding:15px; background:#111b21; border-top:1px solid #222d34; display:none">
-                <input id="m" style="width:100%; padding:10px; background:#2a3942; border:none; color:white; border-radius:5px" onkeypress="if(event.key==='Enter')send()">
-            </div>
+            <div id="input" style="padding:15px; background:#111b21; display:none"><input id="m" style="width:100%; padding:10px; background:#2a3942; border:none; color:white; border-radius:5px" onkeypress="if(event.key==='Enter')send()"></div>
         </div>
         <script>
             let ap = null;
             const fmt = (ts) => new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            async function run(t) { if(!confirm("Simular estrategia para "+t+"?")) return; await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})}); update(); }
+            async function run(t) { await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})}); update(); }
             function update(){ fetch("/api/data").then(r=>r.json()).then(d=>{
                 const l=document.getElementById("list"); l.innerHTML="";
                 const sorted = Object.keys(d.users).sort((a,b) => {
                     if (d.users[a].tag === "HOT" && d.users[b].tag !== "HOT") return -1;
-                    if (d.users[a].tag !== "HOT" && d.users[b].tag === "HOT") return 1;
                     if (d.users[a].tag === "ELIMINADO" && d.users[b].tag !== "ELIMINADO") return 1;
                     return (d.users[b].lastInteraction || 0) - (d.users[a].lastInteraction || 0);
                 });
