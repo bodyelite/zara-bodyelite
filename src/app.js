@@ -62,7 +62,7 @@ export async function procesarEvento(evento) {
     sesiones[p].history.push({ role: "user", content: txt, timestamp: Date.now() });
 
     if (botStatus[p] !== false) {
-        const promptSystem = { role: "system", content: `Saluda y habla siempre usando el nombre del cliente: ${sesiones[p].name}.` };
+        const promptSystem = { role: "system", content: `Habla siempre usando el nombre: ${sesiones[p].name}.` };
         const resp = await pensar([promptSystem, ...sesiones[p].history], sesiones[p].name);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now() });
         sesiones[p].tag = calcularEtiqueta(sesiones[p]);
