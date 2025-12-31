@@ -31,18 +31,26 @@ export function calcularEtiqueta(u) {
     return "NUEVO";
 }
 
-export function getSesiones() { return sesiones; }
+export async function ejecutarEstrategia(tag) {
+    for (const p of Object.keys(sesiones).filter(k => sesiones[k].tag === tag)) {
+        const u = sesiones[p];
+        const resp = await pensar([{ role: "user", content: `Zara, el cliente ${u.name} es ${tag}. Re-engánchalo.` }], u.name);
+        u.history.push({ role: "assistant", content: `🧪 [ESTRATEGIA]: ${resp}`, timestamp: Date.now() });
+        u.tag = calcularEtiqueta(u); u.lastInteraction = Date.now(); guardar();
+    }
+}
+
 export function toggleBot(p) { botStatus[p] = !botStatus[p]; guardar(); return botStatus[p]; }
+export function getSesiones() { return sesiones; }
 
 export async function procesarEvento(evento) {
     const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg || msg.type !== 'text') return;
     const p = msg.from; const txt = msg.text.body;
     const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
 
-    // COMANDO RESET
     if (txt.toLowerCase() === '/reset') {
         delete sesiones[p]; guardar();
-        await enviarMensaje(p, "🔄 Historial reiniciado con éxito."); return;
+        await enviarMensaje(p, "🔄 Historial de Zara reiniciado."); return;
     }
 
     if (!sesiones[p]) {
@@ -54,15 +62,11 @@ export async function procesarEvento(evento) {
     sesiones[p].history.push({ role: "user", content: txt, timestamp: Date.now() });
 
     if (botStatus[p] !== false) {
-        // RECONOCIMIENTO DE NOMBRE FORZADO
-        const promptSystem = { role: "system", content: `Habla siempre con el cliente llamándolo por su nombre: ${sesiones[p].name}.` };
-        const historialConNombre = [promptSystem, ...sesiones[p].history];
-        
-        const resp = await pensar(historialConNombre, sesiones[p].name);
+        const promptSystem = { role: "system", content: `Saluda y habla siempre usando el nombre del cliente: ${sesiones[p].name}.` };
+        const resp = await pensar([promptSystem, ...sesiones[p].history], sesiones[p].name);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now() });
         sesiones[p].tag = calcularEtiqueta(sesiones[p]);
-        guardar();
-        await enviarMensaje(p, resp);
+        guardar(); await enviarMensaje(p, resp);
     } else {
         sesiones[p].tag = calcularEtiqueta(sesiones[p]); guardar();
     }
