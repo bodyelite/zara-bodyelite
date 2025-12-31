@@ -4,129 +4,85 @@ import { enviarMensaje } from './whatsapp.js';
 import { pensar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const FILE = path.join(DATA_DIR, 'sesiones.json');
-
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
-
+const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
 let sesiones = {}; 
 let botStatus = {}; 
 
 try {
-    const raw = fs.readFileSync(FILE, 'utf8');
-    const data = JSON.parse(raw);
+    const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
     sesiones = data.sesiones || {};
     botStatus = data.botStatus || {};
 } catch (e) {}
 
-function guardar() {
-    try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); } catch (e) {}
-}
+function guardar() { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); }
 
-export function calcularEtiqueta(historial, lastInteraction) {
-    if (!historial || historial.length === 0) return "NUEVO";
+export function calcularEtiqueta(u) {
+    const historial = u.history || [];
+    if (historial.length === 0) return "NUEVO";
     
     const ahora = Date.now();
-    const tiempoPasado = (ahora - lastInteraction) / (1000 * 60 * 60);
+    const tiempoPasado = (ahora - (u.lastInteraction || ahora)) / (1000 * 60 * 60);
     const textoCompleto = historial.map(m => m.content.toLowerCase()).join(" ");
-    const interaccionesUsuario = historial.filter(m => m.role === 'user').length;
-    const ultimoMensaje = historial[historial.length - 1];
+    const interaccionesUser = historial.filter(m => m.role === 'user').length;
+    const ultimoMsg = historial[historial.length - 1];
 
-    // 1. ELIMINADO: 24h sin respuesta tras estrategia o seguimiento automático
-    if (tiempoPasado >= 24 && ultimoMensaje.role === 'assistant' && 
-       (ultimoMensaje.content.includes("[ESTRATEGIA]") || ultimoMensaje.content.includes("[AUTO]"))) {
-        return "ELIMINADO";
-    }
-
-    // 2. HOT: Intención explícita de cierre o contacto
-    const palabrasCalientes = ["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular", "autoagendamiento"];
-    if (palabrasCalientes.some(p => textoCompleto.includes(p))) return "HOT";
-    
-    // 3. INTERESADO: 2 o más interacciones del usuario (Caso Carlos corregido)
-    if (interaccionesUsuario >= 2) return "INTERESADO";
-
-    // 4. FRIO: Solo 1 interacción y ya se le envió seguimiento automático por falta de respuesta
-    if (interaccionesUsuario === 1 && ultimoMensaje.content.includes("[AUTO] Seguimiento")) return "FRIO";
-    
-    // 5. NUEVO: Solo 1 interacción y aún estamos en el tiempo de espera inicial
+    if (tiempoPasado >= 24 && ultimoMsg.role === 'assistant' && (ultimoMsg.content.includes("[ESTRATEGIA]") || ultimoMsg.content.includes("[AUTO]"))) return "ELIMINADO";
+    if (["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular"].some(p => textoCompleto.includes(p))) return "HOT";
+    if (interaccionesUser >= 2) return "INTERESADO";
+    if (interaccionesUser === 1 && ultimoMsg.content.includes("[AUTO] Seguimiento")) return "FRIO";
     return "NUEVO";
 }
 
 export async function ejecutarEstrategia(etiqueta) {
-    const clientes = Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta);
-    for (const phone of clientes) {
+    for (const phone of Object.keys(sesiones).filter(p => sesiones[p].tag === etiqueta)) {
         const u = sesiones[phone];
-        const lastUserMsg = u.history.filter(m => m.role === 'user').pop()?.content || '';
-        const lastZaraMsg = u.history.filter(m => m.role === 'assistant').pop()?.content || '';
-        
-        const promptEstrategia = `Eres Zara de Body Elite. Analiza la charla con ${u.name}. Él dijo: "${lastUserMsg}". Tú respondiste: "${lastZaraMsg}". Genera un mensaje corto para re-enganchar (Estado: ${etiqueta}).`;
-        const respuesta = await pensar([{ role: "user", content: promptEstrategia }], u.name);
-        
-        u.history.push({ role: "assistant", content: `🧪 [PRUEBA ESTRATEGIA]: ${respuesta}`, timestamp: Date.now() });
-        u.tag = calcularEtiqueta(u.history, u.lastInteraction);
+        const prompt = `Eres Zara. Cliente dijo: "${u.history.filter(m=>m.role==='user').pop()?.content}". Genera un re-enganche corto 🌸`;
+        const resp = await pensar([{ role: "user", content: prompt }], u.name);
+        u.history.push({ role: "assistant", content: `🧪 [PRUEBA ESTRATEGIA]: ${resp}`, timestamp: Date.now() });
+        u.tag = calcularEtiqueta(u);
         guardar();
     }
 }
 
 setInterval(() => {
     const now = Date.now();
-    Object.keys(sesiones).forEach(async (phone) => {
-        const u = sesiones[phone];
-        if (!u.lastInteraction || u.followUpSent || u.tag === "ELIMINADO" || u.tag === "INTERESADO") return;
-        const diffHours = (now - u.lastInteraction) / (1000 * 60 * 60);
-        if (diffHours >= 2 && diffHours < 2.1) {
-             const nombre = u.name.split(" ")[0];
-             await enviarMensaje(phone, `Hola ${nombre}... 🌸 ¿Pudiste revisar lo que hablamos?`);
-             u.followUpSent = true;
-             u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
-             u.tag = calcularEtiqueta(u.history, now);
-             guardar();
+    Object.keys(sesiones).forEach(async (p) => {
+        const u = sesiones[p];
+        if (!u.lastInteraction || u.followUpSent || ["ELIMINADO", "INTERESADO", "HOT"].includes(u.tag)) return;
+        if ((now - u.lastInteraction) / (1000 * 60 * 60) >= 2) {
+            const txt = `Hola ${u.name.split(" ")[0]}... 🌸 ¿Pudiste revisar lo que hablamos?`;
+            await enviarMensaje(p, txt);
+            u.followUpSent = true;
+            u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
+            u.tag = calcularEtiqueta(u);
+            guardar();
         }
     });
 }, 60000);
 
 export function getSesiones() { return sesiones; }
-export function toggleBot(phone) {
-    botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
-    guardar();
-    return botStatus[phone];
-}
-
-export async function enviarMensajeManual(phone, text) {
-    if (!sesiones[phone]) sesiones[phone] = { name: "Cliente", history: [], tag: "MANUAL" };
-    sesiones[phone].history.push({ role: "assistant", content: text, timestamp: Date.now() });
-    sesiones[phone].lastInteraction = Date.now();
-    sesiones[phone].tag = calcularEtiqueta(sesiones[phone].history, sesiones[phone].lastInteraction);
-    guardar();
-    await enviarMensaje(phone, text);
-    return true;
+export function toggleBot(p) { botStatus[p] = !botStatus[p]; guardar(); return botStatus[p]; }
+export async function enviarMensajeManual(p, t) {
+    if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [] };
+    sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now() });
+    sesiones[p].lastInteraction = Date.now();
+    sesiones[p].tag = calcularEtiqueta(sesiones[p]);
+    guardar(); await enviarMensaje(p, t);
 }
 
 export async function procesarEvento(evento) {
-    if (!evento) return;
-    const value = evento.changes?.[0]?.value;
-    const mensaje = value?.messages?.[0];
-    if (!mensaje || mensaje.type !== 'text') return;
-    const telefono = mensaje.from;
-    const nombre = value.contacts?.[0]?.profile?.name || "Cliente";
-    const texto = mensaje.text.body;
-
-    if (!sesiones[telefono]) {
-        sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
+    const val = evento.changes?.[0]?.value;
+    const msg = val?.messages?.[0];
+    if (!msg || msg.type !== 'text') return;
+    const p = msg.from;
+    if (!sesiones[p]) sesiones[p] = { name: val.contacts?.[0]?.profile?.name || "Cliente", history: [], followUpSent: false };
+    sesiones[p].lastInteraction = Date.now();
+    sesiones[p].history.push({ role: "user", content: msg.text.body, timestamp: Date.now() });
+    if (botStatus[p] !== false) {
+        const resp = await pensar(sesiones[p].history, sesiones[p].name);
+        sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now() });
     }
-    
-    sesiones[telefono].lastInteraction = Date.now();
-    sesiones[telefono].history.push({ role: "user", content: texto, timestamp: Date.now() });
-    
-    if (botStatus[telefono] !== false) {
-        const respuesta = await pensar(sesiones[telefono].history, sesiones[telefono].name);
-        sesiones[telefono].history.push({ role: "assistant", content: respuesta, timestamp: Date.now() });
-    }
-    
-    sesiones[telefono].tag = calcularEtiqueta(sesiones[telefono].history, sesiones[telefono].lastInteraction);
+    sesiones[p].tag = calcularEtiqueta(sesiones[p]);
     guardar();
-    
-    if (botStatus[telefono] !== false) {
-        await enviarMensaje(telefono, sesiones[telefono].history[sesiones[telefono].history.length - 1].content);
-    }
+    if (botStatus[p] !== false) await enviarMensaje(p, sesiones[p].history.slice(-1)[0].content);
 }
