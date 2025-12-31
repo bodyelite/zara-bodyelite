@@ -32,23 +32,23 @@ export function calcularEtiqueta(historial, lastInteraction) {
     const interaccionesUsuario = historial.filter(m => m.role === 'user').length;
     const ultimoMensaje = historial[historial.length - 1];
 
-    // 1. ELIMINADO: Si la última acción fue ESTRATEGIA o SEGUIMIENTO y pasaron 24 horas sin respuesta
+    // 1. ELIMINADO: 24h sin respuesta tras estrategia o seguimiento automático
     if (tiempoPasado >= 24 && ultimoMensaje.role === 'assistant' && 
        (ultimoMensaje.content.includes("[ESTRATEGIA]") || ultimoMensaje.content.includes("[AUTO]"))) {
         return "ELIMINADO";
     }
 
-    // 2. HOT: Intención de cierre
+    // 2. HOT: Intención explícita de cierre o contacto
     const palabrasCalientes = ["llamen", "llamada", "link", "agendar", "cita", "telefono", "celular", "autoagendamiento"];
     if (palabrasCalientes.some(p => textoCompleto.includes(p))) return "HOT";
     
-    // 3. FRIO: Si recibió seguimiento automático y no ha respondido aún
-    if (ultimoMensaje.content.includes("[AUTO] Seguimiento")) return "FRIO";
+    // 3. INTERESADO: 2 o más interacciones del usuario (Caso Carlos corregido)
+    if (interaccionesUsuario >= 2) return "INTERESADO";
+
+    // 4. FRIO: Solo 1 interacción y ya se le envió seguimiento automático por falta de respuesta
+    if (interaccionesUsuario === 1 && ultimoMensaje.content.includes("[AUTO] Seguimiento")) return "FRIO";
     
-    // 4. INTERESADO: Interacción real (> 2 mensajes del usuario)
-    if (interaccionesUsuario > 2) return "INTERESADO";
-    
-    // 5. NUEVO: Inicio de flujo
+    // 5. NUEVO: Solo 1 interacción y aún estamos en el tiempo de espera inicial
     return "NUEVO";
 }
 
@@ -59,10 +59,10 @@ export async function ejecutarEstrategia(etiqueta) {
         const lastUserMsg = u.history.filter(m => m.role === 'user').pop()?.content || '';
         const lastZaraMsg = u.history.filter(m => m.role === 'assistant').pop()?.content || '';
         
-        const promptEstrategia = `Eres Zara de Body Elite. Genera un mensaje corto y natural para retomar contacto con ${u.name}. Él dijo: "${lastUserMsg}". Tú dijiste: "${lastZaraMsg}". Estado: ${etiqueta}.`;
+        const promptEstrategia = `Eres Zara de Body Elite. Analiza la charla con ${u.name}. Él dijo: "${lastUserMsg}". Tú respondiste: "${lastZaraMsg}". Genera un mensaje corto para re-enganchar (Estado: ${etiqueta}).`;
         const respuesta = await pensar([{ role: "user", content: promptEstrategia }], u.name);
         
-        u.history.push({ role: "assistant", content: `🧪 [ESTRATEGIA]: ${respuesta}`, timestamp: Date.now() });
+        u.history.push({ role: "assistant", content: `🧪 [PRUEBA ESTRATEGIA]: ${respuesta}`, timestamp: Date.now() });
         u.tag = calcularEtiqueta(u.history, u.lastInteraction);
         guardar();
     }
@@ -72,10 +72,11 @@ setInterval(() => {
     const now = Date.now();
     Object.keys(sesiones).forEach(async (phone) => {
         const u = sesiones[phone];
-        if (!u.lastInteraction || u.followUpSent || u.tag === "ELIMINADO") return;
+        if (!u.lastInteraction || u.followUpSent || u.tag === "ELIMINADO" || u.tag === "INTERESADO") return;
         const diffHours = (now - u.lastInteraction) / (1000 * 60 * 60);
         if (diffHours >= 2 && diffHours < 2.1) {
-             await enviarMensaje(phone, `Hola ${u.name.split(" ")[0]}... 🌸 ¿Pudiste revisar lo que hablamos?`);
+             const nombre = u.name.split(" ")[0];
+             await enviarMensaje(phone, `Hola ${nombre}... 🌸 ¿Pudiste revisar lo que hablamos?`);
              u.followUpSent = true;
              u.history.push({ role: "assistant", content: "[AUTO] Seguimiento", timestamp: now });
              u.tag = calcularEtiqueta(u.history, now);
@@ -110,7 +111,10 @@ export async function procesarEvento(evento) {
     const nombre = value.contacts?.[0]?.profile?.name || "Cliente";
     const texto = mensaje.text.body;
 
-    if (!sesiones[telefono]) sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
+    if (!sesiones[telefono]) {
+        sesiones[telefono] = { name: nombre, history: [], tag: "NUEVO", followUpSent: false };
+    }
+    
     sesiones[telefono].lastInteraction = Date.now();
     sesiones[telefono].history.push({ role: "user", content: texto, timestamp: Date.now() });
     
@@ -118,7 +122,11 @@ export async function procesarEvento(evento) {
         const respuesta = await pensar(sesiones[telefono].history, sesiones[telefono].name);
         sesiones[telefono].history.push({ role: "assistant", content: respuesta, timestamp: Date.now() });
     }
+    
     sesiones[telefono].tag = calcularEtiqueta(sesiones[telefono].history, sesiones[telefono].lastInteraction);
     guardar();
-    if (botStatus[telefono] !== false) await enviarMensaje(telefono, sesiones[telefono].history.slice(-1)[0].content);
+    
+    if (botStatus[telefono] !== false) {
+        await enviarMensaje(telefono, sesiones[telefono].history[sesiones[telefono].history.length - 1].content);
+    }
 }
