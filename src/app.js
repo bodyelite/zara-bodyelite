@@ -26,21 +26,18 @@ export function toggleBot(phone) {
 export async function procesarReserva(phone, name) {
     console.log("⚙️ PROCESANDO RESERVA:", phone, name);
     
-    // Limpieza
     phone = phone.replace(/\D/g, ''); 
     if (phone.length === 8) phone = "569" + phone;
     if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone;
 
     console.log("📞 TELEFONO FINAL:", phone);
 
-    // Crear o Actualizar Sesión
     if (!sesiones[phone]) {
         sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     } else {
         if(name) sesiones[phone].name = name; 
     }
     
-    // Cambiar estado
     sesiones[phone].tag = "AGENDADO";
     sesiones[phone].lastInteraction = Date.now();
     sesiones[phone].history.push({ 
@@ -50,11 +47,9 @@ export async function procesarReserva(phone, name) {
         source: 'manual' 
     });
     
-    // Apagar bot
     botStatus[phone] = false; 
     guardar();
 
-    // ENVIAR ALERTA AL STAFF
     const aviso = `🚨 *NUEVA CITA AGENDADA* 🚨\n\n👤 Cliente: ${sesiones[phone].name}\n📱 Tel: +${phone}\n✅ Origen: Web Reservo`;
     console.log("📨 Enviando alerta a staff...");
     
@@ -74,10 +69,10 @@ export async function enviarMensajeManual(p, t) {
 }
 
 export async function procesarEvento(evento) {
-    const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg) return;
+    if (!evento || !evento.changes || !evento.changes[0]) return;
+    const val = evento.changes[0].value; const msg = val?.messages?.[0]; if (!msg) return;
     const p = msg.from; const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
-    // === ALERTA NUEVO CLIENTE ===
     if (!sesiones[p]) {
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
         const avisoNuevo = `📢 *NUEVO LEAD* ✨\n👤 ${nombre}\n📱 +${p}`;
