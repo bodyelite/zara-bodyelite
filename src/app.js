@@ -19,56 +19,43 @@ export function updateTagManual(phone, newTag) {
 }
 
 export function toggleBot(phone) {
-    // If undefined, initialize as ON (true), so toggling makes it OFF (false)
-    // If false, toggle to true
-    // If true, toggle to false
     botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
-    guardar(); 
-    return botStatus[phone];
+    guardar(); return botStatus[phone];
 }
 
 export async function procesarReserva(phone, name) {
-    // === RESERVO MATCH LOGIC ===
-    // 1. Strip non-digits
+    // 1. Limpieza agresiva
     phone = phone.replace(/\D/g, ''); 
     
-    // 2. Normalize to 569... format
-    if (phone.length === 9 && (phone.startsWith('9') || phone.startsWith('8'))) {
-        // Case: 912345678 -> 56912345678
-        phone = "56" + phone;
-    } else if (phone.length === 8) {
-        // Case: 12345678 -> 56912345678
-        phone = "569" + phone;
-    } else if (phone.length === 11 && phone.startsWith('569')) {
-        // Case: 56912345678 -> Keep as is
-    }
-    
-    console.log("📞 TELEFONO RESERVA FINAL:", phone);
+    // 2. Normalización a 569...
+    if (!phone.startsWith("56") && phone.length === 9) phone = "56" + phone; // 912345678 -> 56912345678
+    if (phone.length === 8) phone = "569" + phone; // 12345678 -> 56912345678
 
-    // 3. Find or Create Session
-    if (!sesiones[phone]) {
-        sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
+    console.log("📞 MATCH RESERVA INTENTO:", phone);
+
+    // 3. Buscar sesión existente
+    if (sesiones[phone]) {
+        console.log("✅ MATCH ENCONTRADO:", sesiones[phone].name);
+        // Si ya existe, actualizamos su estado
+        sesiones[phone].tag = "AGENDADO";
+        sesiones[phone].lastInteraction = Date.now();
+        sesiones[phone].history.push({ 
+            role: "assistant", 
+            content: "📅 [SISTEMA] Cita confirmada vía Web. Bot pausado.", 
+            timestamp: Date.now(), 
+            source: 'manual' 
+        });
+        botStatus[phone] = false; // Apagar bot para intervención humana
     } else {
-        // Update name if it was just a placeholder
-        if(sesiones[phone].name === "Cliente" && name) sesiones[phone].name = name;
+        console.log("⚠️ NUEVO CLIENTE DESDE WEB (No estaba en WhatsApp)");
+        sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone, tag: "AGENDADO" };
+        sesiones[phone].lastInteraction = Date.now();
     }
     
-    // 4. Update Status
-    sesiones[phone].tag = "AGENDADO";
-    sesiones[phone].lastInteraction = Date.now();
-    sesiones[phone].history.push({ 
-        role: "assistant", 
-        content: "📅 [SISTEMA] Cita confirmada vía Web.", 
-        timestamp: Date.now(), 
-        source: 'manual' 
-    });
-    
-    // 5. Turn OFF bot for this user so humans can take over
-    botStatus[phone] = false; 
     guardar();
 
-    // 6. Alert Staff
-    const aviso = `🚨 *CITA AGENDADA* 🚨\nCliente: ${sesiones[phone].name}\nTel: +${phone}`;
+    // 4. AVISAR AL STAFF
+    const aviso = `🚨 *CITA AGENDADA* 📅\nCliente: ${sesiones[phone].name}\nTel: +${phone}\nOrigen: Web Reservo`;
     for (const s of STAFF) await enviarMensaje(s, aviso);
     
     return true;
@@ -86,11 +73,18 @@ export async function procesarEvento(evento) {
     const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg) return;
     const p = msg.from; const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
-    if (!sesiones[p]) sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
+    // === LÓGICA DE NUEVO CLIENTE ===
+    if (!sesiones[p]) {
+        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
+        
+        // 🔔 AVISAR AL STAFF (Esto faltaba)
+        const avisoNuevo = `📢 *NUEVO LEAD DETECTADO*\nNombre: ${nombre}\nTel: +${p}`;
+        for (const s of STAFF) await enviarMensaje(s, avisoNuevo);
+    }
+    
     let contenido = msg.text?.body || "";
     if (msg.type === 'image') contenido = `[FOTO] ${msg.image.caption || ''}`;
 
-    // === COMANDO RESET ===
     if (contenido.trim().toLowerCase() === '/reset') {
         sesiones[p].history = [];
         sesiones[p].tag = "NUEVO";
