@@ -1,19 +1,18 @@
 import express from 'express';
 import cors from 'cors';
-import { procesarEvento, getSesiones, getBotStatus, enviarMensajeManual, ejecutarEstrategia, updateTagManual, toggleBot } from './app.js';
+import { procesarEvento, getSesiones, getBotStatus, enviarMensajeManual, ejecutarEstrategia, updateTagManual, toggleBot, procesarReserva } from './app.js';
 
 const app = express(); app.use(express.json()); app.use(cors());
 
-// Guardamos el HTML en una variable separada para evitar errores de sintaxis al pegar
 const DASHBOARD_HTML = `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ZARA 9.3 ANALYTICS</title>
+    <title>ZARA 9.4 RESERVO</title>
     <style>
-        :root{--bg:#0b141a;--sb:#111b21;--ac:#00a884;--ht:#e91e63;--it:#ff9800;--fr:#667781;--mn:#3b82f6;--txt:#e9edef;}
+        :root{--bg:#0b141a;--sb:#111b21;--ac:#00a884;--ht:#e91e63;--it:#ff9800;--fr:#667781;--mn:#3b82f6;--ag:#8e44ad;--txt:#e9edef;}
         body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);display:flex;height:100vh;overflow:hidden;}
         .sl{width:320px;background:var(--sb);border-right:1px solid #222d34;display:flex;flex-direction:column;flex-shrink:0;}
         .filters{padding:10px;background:#202c33;display:flex;gap:5px;border-bottom:1px solid #2a3942;}
@@ -23,7 +22,8 @@ const DASHBOARD_HTML = `
         .cd:hover{background:#202c33;}
         .cd.active{background:#2a3942;border-left:4px solid var(--ac);}
         .tag{font-size:0.65em;padding:2px 6px;border-radius:4px;color:white;font-weight:bold;display:inline-block;margin-left:5px;}
-        .tag-NUEVO{background:var(--ac);} .tag-HOT{background:var(--ht);} .tag-INTERESADO{background:var(--it);} .tag-FRIO{background:var(--fr);} .tag-APAGADO{background:#333;}
+        .tag-NUEVO{background:var(--ac);} .tag-HOT{background:var(--ht);} .tag-INTERESADO{background:var(--it);} 
+        .tag-FRIO{background:var(--fr);} .tag-APAGADO{background:#333;} .tag-AGENDADO{background:var(--ag);box-shadow:0 0 5px var(--ag);}
         .mc{flex:1;display:flex;flex-direction:column;background:var(--bg);min-width:0;}
         .ch{padding:10px 20px;background:#202c33;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a3942;}
         #fd{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
@@ -47,15 +47,15 @@ const DASHBOARD_HTML = `
 </head>
 <body>
     <div class="sl">
-        <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.3</div>
+        <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.4</div>
         <div class="filters">
             <button class="f-btn active" onclick="setFilter('ALL',this)">TODOS</button>
             <button class="f-btn" onclick="setFilter('HOT',this)">HOT 🔥</button>
             <button class="f-btn" onclick="setFilter('INTERESADO',this)">INT 🔸</button>
+            <button class="f-btn" onclick="setFilter('AGENDADO',this)">CITA 📅</button>
         </div>
         <div id="list" style="flex:1;overflow-y:auto"></div>
     </div>
-    
     <div class="mc">
         <div class="ch" id="h" style="display:none">
             <div style="display:flex;flex-direction:column">
@@ -65,7 +65,7 @@ const DASHBOARD_HTML = `
             <div style="display:flex;gap:10px;align-items:center">
                 <button id="bt" class="btn" style="width:auto;padding:5px 15px;font-size:0.7em" onclick="tg()"></button>
                 <select id="ts" onchange="st()" style="background:#2a3942;color:white;border:1px solid #444;padding:6px;border-radius:6px;font-weight:bold">
-                    <option value="NUEVO">NUEVO</option><option value="HOT">HOT 🔥</option><option value="INTERESADO">INTERESADO 🔸</option><option value="FRIO">FRIO ❄️</option><option value="APAGADO">APAGADO 🗑️</option>
+                    <option value="NUEVO">NUEVO</option><option value="HOT">HOT 🔥</option><option value="INTERESADO">INTERESADO 🔸</option><option value="FRIO">FRIO ❄️</option><option value="APAGADO">APAGADO 🗑️</option><option value="AGENDADO">AGENDADO 📅</option>
                 </select>
             </div>
         </div>
@@ -74,7 +74,6 @@ const DASHBOARD_HTML = `
             <input id="m" placeholder="Escribe tu respuesta manual..." onkeypress="if(event.key==='Enter')sd()">
         </div>
     </div>
-
     <div class="sr">
         <div style="font-size:0.75em;color:#8696a0;font-weight:bold">ESTRATEGIAS</div>
         <button class="btn" style="background:var(--ht)" onclick="rn('HOT')">CIERRE HOT 🔥</button>
@@ -83,7 +82,6 @@ const DASHBOARD_HTML = `
         <button class="btn" style="background:var(--mn)" onclick="op()">📊 VER ANALYTICS</button>
         <button class="btn" style="background:#444" onclick="location.reload()">REFRESCAR</button>
     </div>
-
     <div id="rp" class="mod">
         <h2 style="margin-top:0;color:var(--ac)">Funnel Analytics</h2>
         <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;justify-content:center">
@@ -103,39 +101,31 @@ const DASHBOARD_HTML = `
         <div id="fn" class="stat-grid"></div>
         <button class="btn" style="background:#444;margin-top:20px" onclick="document.getElementById('rp').style.display='none'">CERRAR</button>
     </div>
-
     <script>
         let ap=null; let fl='ALL'; let allUsers={};
         const f=(t)=>new Date(t).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-        
         async function tg(){await fetch("/api/toggle",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap})});up();}
         async function st(){await fetch("/api/tag",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,tag:document.getElementById("ts").value})});up();}
         async function rn(t){if(!confirm("¿Lanzar?"))return;await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})});up();}
-        
         function setFilter(n, b) { fl=n; document.querySelectorAll('.filters .f-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderList(); }
         function formatDate(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-        
         function setRange(t, b) {
             const now = new Date(); let s = new Date(); let e = new Date();
             if(b){ b.parentElement.querySelectorAll('.f-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
-            
             if(t==='ayer') { s.setDate(now.getDate()-1); e.setDate(now.getDate()-1); }
             else if(t==='semana') { const d = now.getDay()||7; if(d!==1) s.setHours(-24*(d-1)); }
             else if(t==='mes') { s.setDate(1); }
-            
             document.getElementById('d-start').value = formatDate(s);
             document.getElementById('d-end').value = formatDate(e);
             calcStats();
         }
-
         function calcStats() {
             const sv = document.getElementById('d-start').value;
             const ev = document.getElementById('d-end').value;
             if(!sv||!ev) return;
             const s = new Date(sv+"T00:00:00"); const e = new Date(ev+"T23:59:59");
-            const c = {NUEVO:0,INTERESADO:0,HOT:0,FRIO:0,APAGADO:0};
+            const c = {NUEVO:0,INTERESADO:0,HOT:0,FRIO:0,APAGADO:0,AGENDADO:0};
             let tot = 0;
-            
             Object.values(allUsers).forEach(u => {
                 const l = new Date(u.lastInteraction||0);
                 if(l>=s && l<=e) {
@@ -144,20 +134,17 @@ const DASHBOARD_HTML = `
                     tot++;
                 }
             });
-            
             document.getElementById("total-num").innerText = tot;
             const pct = (v) => tot>0 ? ((v/tot)*100).toFixed(1)+'%' : '0%';
-            
             document.getElementById("fn").innerHTML = 
-                '<div class="stat-box" style="background:var(--ac)"><div>NUEVOS</div><div class="stat-num">'+c.NUEVO+'</div><div class="stat-pct">'+pct(c.NUEVO)+'</div></div>' +
-                '<div class="stat-box" style="background:var(--it)"><div>INT</div><div class="stat-num">'+c.INTERESADO+'</div><div class="stat-pct">'+pct(c.INTERESADO)+'</div></div>' +
+                '<div class="stat-box" style="background:var(--ag)"><div>CITAS</div><div class="stat-num">'+c.AGENDADO+'</div><div class="stat-pct">'+pct(c.AGENDADO)+'</div></div>' +
                 '<div class="stat-box" style="background:var(--ht)"><div>HOT</div><div class="stat-num">'+c.HOT+'</div><div class="stat-pct">'+pct(c.HOT)+'</div></div>' +
+                '<div class="stat-box" style="background:var(--it)"><div>INT</div><div class="stat-num">'+c.INTERESADO+'</div><div class="stat-pct">'+pct(c.INTERESADO)+'</div></div>' +
+                '<div class="stat-box" style="background:var(--ac)"><div>NUEVOS</div><div class="stat-num">'+c.NUEVO+'</div><div class="stat-pct">'+pct(c.NUEVO)+'</div></div>' +
                 '<div class="stat-box" style="background:var(--fr)"><div>FRIOS</div><div class="stat-num">'+c.FRIO+'</div><div class="stat-pct">'+pct(c.FRIO)+'</div></div>' +
                 '<div class="stat-box" style="background:#333;border:1px solid #555"><div>OFF</div><div class="stat-num">'+c.APAGADO+'</div><div class="stat-pct">'+pct(c.APAGADO)+'</div></div>';
         }
-
         function op(){ document.getElementById("rp").style.display='block'; if(!document.getElementById('d-start').value) setRange('hoy',null); else calcStats(); }
-
         function up(){
             fetch("/api/data").then(r=>r.json()).then(d=>{
                 allUsers = d.users||{};
@@ -165,7 +152,6 @@ const DASHBOARD_HTML = `
                 if(ap && allUsers[ap]) updateChatUI(allUsers[ap], d.botStatus||{});
             });
         }
-
         function renderList(st) {
             const l = document.getElementById("list"); l.innerHTML="";
             Object.keys(allUsers).sort((a,b)=>allUsers[b].lastInteraction-allUsers[a].lastInteraction).forEach(p=>{
@@ -176,9 +162,7 @@ const DASHBOARD_HTML = `
                     '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:0.75em;color:#8696a0">'+f(u.lastInteraction)+'</span><span class="tag tag-'+u.tag+'">'+u.tag+'</span></div></div>';
             });
         }
-
         function sl(p){ ap=p; document.getElementById("h").style.display="flex"; document.getElementById("i").style.display="flex"; up(); }
-        
         function updateChatUI(u, st) {
             document.getElementById("n").innerText = u.name;
             document.getElementById("p").innerText = u.phone;
@@ -188,7 +172,6 @@ const DASHBOARD_HTML = `
             b.style.background = st[u.phone]===false ? '#333' : 'var(--ac)';
             rd(u);
         }
-
         function rd(u){
             const d = document.getElementById("fd");
             const html = u.history.map(m => {
@@ -197,7 +180,6 @@ const DASHBOARD_HTML = `
             }).join("");
             if(d.innerHTML !== html) { d.innerHTML = html; d.scrollTop = d.scrollHeight; }
         }
-
         async function sd(){const v=document.getElementById("m");if(!v.value)return;await fetch("/api/manual",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,text:v.value})});v.value="";up();}
         setInterval(up, 4000); up();
     </script>
@@ -211,5 +193,10 @@ app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.
 app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));
 app.post('/api/estrat', async (req, res) => { await ejecutarEstrategia(req.body.tag); res.json({ success: true }); });
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ success: true }); });
+app.post('/api/reservo', async (req, res) => {
+    const { phone, name } = req.body;
+    if (phone) { await procesarReserva(phone, name); }
+    res.json({ success: true });
+});
 app.post('/webhook', async (req, res) => { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); });
 app.listen(process.env.PORT || 3000);

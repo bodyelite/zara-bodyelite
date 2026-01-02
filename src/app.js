@@ -22,9 +22,26 @@ export function toggleBot(phone) {
     guardar(); return botStatus[phone];
 }
 
+export async function procesarReserva(phone, name) {
+    if (!phone.startsWith("56")) phone = "56" + phone;
+    if (!sesiones[phone]) sesiones[phone] = { name: name, history: [], phone: phone };
+    
+    sesiones[phone].tag = "AGENDADO";
+    sesiones[phone].lastInteraction = Date.now();
+    sesiones[phone].history.push({ 
+        role: "assistant", 
+        content: "📅 [SISTEMA] Cita agendada vía Web/Reservo.", 
+        timestamp: Date.now(), 
+        source: 'manual' 
+    });
+    botStatus[phone] = false; 
+    guardar();
+    return true;
+}
+
 export async function enviarMensajeManual(p, t) {
     if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [], phone: p };
-    botStatus[p] = false; // El humano apaga al bot
+    botStatus[p] = false;
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: 'manual' });
     sesiones[p].lastInteraction = Date.now();
     guardar(); await enviarMensaje(p, t);
