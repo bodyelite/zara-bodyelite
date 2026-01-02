@@ -24,8 +24,14 @@ export function toggleBot(phone) {
 }
 
 export async function procesarReserva(phone, name) {
-    phone = phone.replace(/\D/g, '');
-    if (!phone.startsWith("56")) phone = "56" + phone;
+    console.log("⚙️ Procesando reserva raw:", phone);
+    // Limpieza agresiva del teléfono para asegurar match
+    phone = phone.replace(/\D/g, ''); 
+    // Si el cliente pone 912345678, le agregamos 56
+    if (!phone.startsWith("56") && phone.length === 9) phone = "56" + phone;
+    // Si el cliente pone 569..., lo dejamos igual.
+    
+    console.log("📞 Teléfono normalizado:", phone);
 
     if (!sesiones[phone]) sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     
@@ -56,11 +62,10 @@ export async function procesarEvento(evento) {
     let contenido = msg.text?.body || "";
     if (msg.type === 'image') contenido = `[FOTO] ${msg.image.caption || ''}`;
 
-    // === COMANDO RESET ===
     if (contenido.trim().toLowerCase() === '/reset') {
         sesiones[p].history = [];
         sesiones[p].tag = "NUEVO";
-        botStatus[p] = true; // Encender bot
+        botStatus[p] = true; 
         guardar();
         await enviarMensaje(p, "🤖 *Zara Reiniciada.*\nSoy Zara, tu asistente virtual. ¿En qué puedo ayudarte hoy?");
         return;
