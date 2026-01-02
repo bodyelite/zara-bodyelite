@@ -19,30 +19,30 @@ export function updateTagManual(phone, newTag) {
 }
 
 export function toggleBot(phone) {
-    // Si no existe (undefined), asumimos que estaba ON, así que lo apagamos (false)
-    // Si es false, lo prendemos (true)
-    // Si es true, lo apagamos (false)
+    // Si es undefined (por defecto ON), pasa a false (OFF)
+    // Si es false (OFF), pasa a true (ON)
+    // Si es true (ON), pasa a false (OFF)
     botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
     guardar(); 
     return botStatus[phone];
 }
 
 export async function procesarReserva(phone, name) {
-    // === FIX 7.2: LIMPIEZA EXTREMA DEL TELÉFONO ===
+    // === LIMPIEZA Y MATCH ===
     phone = phone.replace(/\D/g, ''); 
-    // Si llega "912345678", le ponemos "56"
+    // Caso 1: Viene sin prefijo (ej: 912345678) -> Agregamos 56
     if (!phone.startsWith("56") && phone.length === 9) phone = "56" + phone;
-    // Si llega "12345678" (8 digitos), le ponemos "569"
+    // Caso 2: Viene como antiguo (ej: 12345678) -> Agregamos 569
     if (phone.length === 8) phone = "569" + phone;
 
-    console.log("📞 TELEFONO RESERVA FINAL:", phone);
+    console.log("📞 RESERVA FINAL:", phone);
 
     if (!sesiones[phone]) sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     
     sesiones[phone].tag = "AGENDADO";
     sesiones[phone].lastInteraction = Date.now();
     sesiones[phone].history.push({ role: "assistant", content: "📅 [SISTEMA] Cita confirmada vía Web.", timestamp: Date.now(), source: 'manual' });
-    botStatus[phone] = false; // Apagar bot al reservar
+    botStatus[phone] = false; // Apagar bot
     guardar();
 
     const aviso = `🚨 *CITA AGENDADA* 🚨\nCliente: ${name}\nTel: +${phone}`;
