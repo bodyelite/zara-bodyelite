@@ -23,26 +23,24 @@ export function toggleBot(phone) {
     guardar(); return botStatus[phone];
 }
 
-export async function procesarReserva(phone, name) {
-    console.log("⚙️ PROCESANDO RESERVA:", phone, name);
+export async function procesarReserva(phone, name, date) {
+    console.log("⚙️ PROCESANDO RESERVA:", phone, name, date);
     
     phone = phone.replace(/\D/g, ''); 
     if (phone.length === 8) phone = "569" + phone;
     if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone;
 
-    console.log("📞 TELEFONO FINAL:", phone);
-
     if (!sesiones[phone]) {
         sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
-    } else {
-        if(name) sesiones[phone].name = name; 
     }
     
+    if (date) sesiones[phone].cita = date;
+
     sesiones[phone].tag = "AGENDADO";
     sesiones[phone].lastInteraction = Date.now();
     sesiones[phone].history.push({ 
         role: "assistant", 
-        content: "📅 [SISTEMA] Cita Agendada vía Web.", 
+        content: `📅 [SISTEMA] Cita Agendada vía Web.${date ? ' Fecha: '+date : ''}`, 
         timestamp: Date.now(), 
         source: 'manual' 
     });
@@ -50,7 +48,8 @@ export async function procesarReserva(phone, name) {
     botStatus[phone] = false; 
     guardar();
 
-    const aviso = `🚨 *NUEVA CITA AGENDADA* 🚨\n\n👤 Cliente: ${sesiones[phone].name}\n📱 Tel: +${phone}\n✅ Origen: Web Reservo`;
+    const nombreFinal = sesiones[phone].name;
+    const aviso = `🚨 *NUEVA CITA AGENDADA* 🚨\n\n👤 Cliente: ${nombreFinal}\n📅 Fecha: ${date || 'No detectada'}\n📱 Tel: +${phone}\n✅ Origen: Web Reservo`;
     console.log("📨 Enviando alerta a staff...");
     
     for (const s of STAFF) {
