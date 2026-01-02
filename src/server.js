@@ -11,7 +11,7 @@ app.get('/monitor', (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ZARA 9.7 FINAL</title>
+    <title>ZARA 9.8 FINAL</title>
     <style>
         :root{--bg:#0b141a;--sb:#111b21;--ac:#00a884;--ht:#e91e63;--it:#ff9800;--fr:#667781;--mn:#3b82f6;--ag:#8e44ad;--txt:#e9edef;}
         body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);display:flex;height:100vh;overflow:hidden;}
@@ -48,7 +48,7 @@ app.get('/monitor', (req, res) => {
 </head>
 <body>
     <div class="sl">
-        <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.7</div>
+        <div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA 9.8</div>
         <div class="filters">
             <button class="f-btn active" onclick="setFilter('ALL',this)">TODOS</button>
             <button class="f-btn" onclick="setFilter('HOT',this)">HOT 🔥</button>
@@ -110,13 +110,17 @@ app.get('/monitor', (req, res) => {
         let ap=null; let fl='ALL'; let allUsers={};
         const f=(t)=>new Date(t).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
         
-        // FUNCIONES DE CONTROL
         async function tg(){
             if(!ap) return;
             try {
-                await fetch("/api/toggle",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap})});
+                // FIXED: Wait for fetch to complete before updating UI
+                await fetch("/api/toggle", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({phone: ap})
+                });
                 up();
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error("Toggle Error:", e); }
         }
         
         async function st(){
@@ -203,8 +207,10 @@ app.get('/monitor', (req, res) => {
             document.getElementById("ts").value = u.tag;
             const b = document.getElementById("bt");
             
-            // LOGICA BOTON CORREGIDA
+            // FIXED: Correctly interpret status from server
+            // If st[phone] is FALSE, bot is OFF. Any other value (true/undefined), bot is ON.
             const isOff = st[u.phone] === false;
+            
             b.innerText = isOff ? 'BOT OFF 🔴' : 'BOT ON 🟢';
             b.style.background = isOff ? '#333' : 'var(--ac)';
             
@@ -230,7 +236,12 @@ app.get('/monitor', (req, res) => {
 
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
 app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.phone, req.body.tag) }));
-app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));
+app.post('/api/toggle', (req, res) => {
+    // Call the toggle logic from app.js
+    const newStatus = toggleBot(req.body.phone);
+    console.log(`🔌 TOGGLE: ${req.body.phone} ahora está ${newStatus ? 'ON' : 'OFF'}`);
+    res.json({ status: newStatus });
+});
 app.post('/api/estrat', async (req, res) => { await ejecutarEstrategia(req.body.tag); res.json({ success: true }); });
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ success: true }); });
 app.post('/api/reservo', async (req, res) => {

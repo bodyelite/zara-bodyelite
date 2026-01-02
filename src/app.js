@@ -19,34 +19,58 @@ export function updateTagManual(phone, newTag) {
 }
 
 export function toggleBot(phone) {
-    // Si es undefined (por defecto ON), pasa a false (OFF)
-    // Si es false (OFF), pasa a true (ON)
-    // Si es true (ON), pasa a false (OFF)
+    // If undefined, initialize as ON (true), so toggling makes it OFF (false)
+    // If false, toggle to true
+    // If true, toggle to false
     botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
     guardar(); 
     return botStatus[phone];
 }
 
 export async function procesarReserva(phone, name) {
-    // === LIMPIEZA Y MATCH ===
+    // === RESERVO MATCH LOGIC ===
+    // 1. Strip non-digits
     phone = phone.replace(/\D/g, ''); 
-    // Caso 1: Viene sin prefijo (ej: 912345678) -> Agregamos 56
-    if (!phone.startsWith("56") && phone.length === 9) phone = "56" + phone;
-    // Caso 2: Viene como antiguo (ej: 12345678) -> Agregamos 569
-    if (phone.length === 8) phone = "569" + phone;
-
-    console.log("📞 RESERVA FINAL:", phone);
-
-    if (!sesiones[phone]) sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     
+    // 2. Normalize to 569... format
+    if (phone.length === 9 && (phone.startsWith('9') || phone.startsWith('8'))) {
+        // Case: 912345678 -> 56912345678
+        phone = "56" + phone;
+    } else if (phone.length === 8) {
+        // Case: 12345678 -> 56912345678
+        phone = "569" + phone;
+    } else if (phone.length === 11 && phone.startsWith('569')) {
+        // Case: 56912345678 -> Keep as is
+    }
+    
+    console.log("📞 TELEFONO RESERVA FINAL:", phone);
+
+    // 3. Find or Create Session
+    if (!sesiones[phone]) {
+        sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
+    } else {
+        // Update name if it was just a placeholder
+        if(sesiones[phone].name === "Cliente" && name) sesiones[phone].name = name;
+    }
+    
+    // 4. Update Status
     sesiones[phone].tag = "AGENDADO";
     sesiones[phone].lastInteraction = Date.now();
-    sesiones[phone].history.push({ role: "assistant", content: "📅 [SISTEMA] Cita confirmada vía Web.", timestamp: Date.now(), source: 'manual' });
-    botStatus[phone] = false; // Apagar bot
+    sesiones[phone].history.push({ 
+        role: "assistant", 
+        content: "📅 [SISTEMA] Cita confirmada vía Web.", 
+        timestamp: Date.now(), 
+        source: 'manual' 
+    });
+    
+    // 5. Turn OFF bot for this user so humans can take over
+    botStatus[phone] = false; 
     guardar();
 
-    const aviso = `🚨 *CITA AGENDADA* 🚨\nCliente: ${name}\nTel: +${phone}`;
+    // 6. Alert Staff
+    const aviso = `🚨 *CITA AGENDADA* 🚨\nCliente: ${sesiones[phone].name}\nTel: +${phone}`;
     for (const s of STAFF) await enviarMensaje(s, aviso);
+    
     return true;
 }
 
