@@ -30,10 +30,14 @@ export async function procesarReserva(phone, name, date) {
     if (phone.length === 8) phone = "569" + phone;
     if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone;
 
+    // PROTECCION DE IDENTIDAD:
+    // Si la sesión ya existe, NO sobrescribimos el nombre (mantenemos el de WhatsApp).
+    // Solo usamos el nombre de Reservo si el cliente es totalmente nuevo para Zara.
     if (!sesiones[phone]) {
         sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     }
     
+    // Guardamos la fecha si viene
     if (date) sesiones[phone].cita = date;
 
     sesiones[phone].tag = "AGENDADO";
@@ -48,14 +52,13 @@ export async function procesarReserva(phone, name, date) {
     botStatus[phone] = false; 
     guardar();
 
+    // En el aviso al staff, usamos el nombre que Zara tenga guardado (Juan Carlos si ya existía)
     const nombreFinal = sesiones[phone].name;
     const aviso = `🚨 *NUEVA CITA AGENDADA* 🚨\n\n👤 Cliente: ${nombreFinal}\n📅 Fecha: ${date || 'No detectada'}\n📱 Tel: +${phone}\n✅ Origen: Web Reservo`;
-    console.log("📨 Enviando alerta a staff...");
     
     for (const s of STAFF) {
         await enviarMensaje(s, aviso).catch(e => console.error("Error enviando alerta:", e));
     }
-    
     return true;
 }
 
@@ -70,25 +73,26 @@ export async function enviarMensajeManual(p, t) {
 export async function procesarEvento(evento) {
     if (!evento || !evento.changes || !evento.changes[0]) return;
     const val = evento.changes[0].value; const msg = val?.messages?.[0]; if (!msg) return;
-    const p = msg.from; const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
+    const p = msg.from; const nombreWsp = val.contacts?.[0]?.profile?.name || "Cliente";
     
+    // RESET TOTAL: Borra la ficha completa para olvidar nombres antiguos
+    let contenido = msg.text?.body || "";
+    if (contenido.trim().toLowerCase() === '/reset') {
+        if (sesiones[p]) delete sesiones[p]; // <--- AQUÍ ESTÁ LA MAGIA: BORRADO REAL
+        botStatus[p] = true; 
+        guardar();
+        await enviarMensaje(p, "🤖 *Zara Reiniciada (Memoria Borrada).*");
+        return;
+    }
+
+    // Si no existe sesión (o se acaba de borrar), se crea con el nombre de WhatsApp
     if (!sesiones[p]) {
-        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
-        const avisoNuevo = `📢 *NUEVO LEAD* ✨\n👤 ${nombre}\n📱 +${p}`;
+        sesiones[p] = { name: nombreWsp, history: [], phone: p, tag: "NUEVO" };
+        const avisoNuevo = `📢 *NUEVO LEAD* ✨\n👤 ${nombreWsp}\n📱 +${p}`;
         for (const s of STAFF) await enviarMensaje(s, avisoNuevo);
     }
     
-    let contenido = msg.text?.body || "";
     if (msg.type === 'image') contenido = `[FOTO] ${msg.image.caption || ''}`;
-
-    if (contenido.trim().toLowerCase() === '/reset') {
-        sesiones[p].history = [];
-        sesiones[p].tag = "NUEVO";
-        botStatus[p] = true; 
-        guardar();
-        await enviarMensaje(p, "🤖 *Zara Reiniciada.*");
-        return;
-    }
 
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     sesiones[p].lastInteraction = Date.now();
