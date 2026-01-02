@@ -19,27 +19,29 @@ export function updateTagManual(phone, newTag) {
 }
 
 export function toggleBot(phone) {
-    botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
-    guardar(); return botStatus[phone];
+    // Lógica simple de interruptor
+    if (botStatus[phone] === undefined) botStatus[phone] = false; // Si no existe, lo apagamos
+    else botStatus[phone] = !botStatus[phone]; // Si existe, invertimos
+    
+    guardar(); 
+    return botStatus[phone];
 }
 
 export async function procesarReserva(phone, name) {
     phone = phone.replace(/\D/g, ''); 
     
-    // CORRECCIÓN INTELIGENTE DE NÚMERO
-    if (phone.length === 8) phone = "569" + phone; // Si viene 98765432 -> 56998765432
-    if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone; // Si viene 912345678 -> 56912345678
+    // Normalización Chilena
+    if (phone.length === 8) phone = "569" + phone;
+    if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone;
     
-    console.log("📞 MATCH RESERVO:", phone);
+    console.log("📞 RESERVA PROCESADA:", phone);
 
     if (sesiones[phone]) {
-        // CLIENTE EXISTENTE (MATCH)
         sesiones[phone].tag = "AGENDADO";
         sesiones[phone].lastInteraction = Date.now();
-        sesiones[phone].history.push({ role: "assistant", content: "📅 [SISTEMA] Cita confirmada en Reservo.", timestamp: Date.now(), source: 'manual' });
+        sesiones[phone].history.push({ role: "assistant", content: "📅 [SISTEMA] Cita confirmada. Bot pausado.", timestamp: Date.now(), source: 'manual' });
         botStatus[phone] = false; 
     } else {
-        // CLIENTE NUEVO (SOLO WEB)
         sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone, tag: "AGENDADO" };
         sesiones[phone].lastInteraction = Date.now();
     }
@@ -63,11 +65,15 @@ export async function procesarEvento(evento) {
     const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg) return;
     const p = msg.from; const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
-    // === ALERTA NUEVO CLIENTE (RECUPERADA) ===
+    // === FIX 1: ALERTA DE NUEVO CLIENTE ===
     if (!sesiones[p]) {
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
+        
+        // Enviamos aviso al staff INMEDIATAMENTE
         const avisoNuevo = `📢 *NUEVO LEAD* ⚡\n${nombre}\n+${p}`;
         for (const s of STAFF) await enviarMensaje(s, avisoNuevo);
+        
+        guardar();
     }
     
     let contenido = msg.text?.body || "";
