@@ -24,38 +24,28 @@ export function toggleBot(phone) {
 }
 
 export async function procesarReserva(phone, name) {
-    // 1. Limpieza agresiva
     phone = phone.replace(/\D/g, ''); 
     
-    // 2. Normalización a 569...
-    if (!phone.startsWith("56") && phone.length === 9) phone = "56" + phone; // 912345678 -> 56912345678
-    if (phone.length === 8) phone = "569" + phone; // 12345678 -> 56912345678
+    // CORRECCIÓN INTELIGENTE DE NÚMERO
+    if (phone.length === 8) phone = "569" + phone; // Si viene 98765432 -> 56998765432
+    if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone; // Si viene 912345678 -> 56912345678
+    
+    console.log("📞 MATCH RESERVO:", phone);
 
-    console.log("📞 MATCH RESERVA INTENTO:", phone);
-
-    // 3. Buscar sesión existente
     if (sesiones[phone]) {
-        console.log("✅ MATCH ENCONTRADO:", sesiones[phone].name);
-        // Si ya existe, actualizamos su estado
+        // CLIENTE EXISTENTE (MATCH)
         sesiones[phone].tag = "AGENDADO";
         sesiones[phone].lastInteraction = Date.now();
-        sesiones[phone].history.push({ 
-            role: "assistant", 
-            content: "📅 [SISTEMA] Cita confirmada vía Web. Bot pausado.", 
-            timestamp: Date.now(), 
-            source: 'manual' 
-        });
-        botStatus[phone] = false; // Apagar bot para intervención humana
+        sesiones[phone].history.push({ role: "assistant", content: "📅 [SISTEMA] Cita confirmada en Reservo.", timestamp: Date.now(), source: 'manual' });
+        botStatus[phone] = false; 
     } else {
-        console.log("⚠️ NUEVO CLIENTE DESDE WEB (No estaba en WhatsApp)");
+        // CLIENTE NUEVO (SOLO WEB)
         sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone, tag: "AGENDADO" };
         sesiones[phone].lastInteraction = Date.now();
     }
-    
     guardar();
 
-    // 4. AVISAR AL STAFF
-    const aviso = `🚨 *CITA AGENDADA* 📅\nCliente: ${sesiones[phone].name}\nTel: +${phone}\nOrigen: Web Reservo`;
+    const aviso = `🚨 *CITA AGENDADA* 📅\nCliente: ${sesiones[phone].name}\nTel: +${phone}`;
     for (const s of STAFF) await enviarMensaje(s, aviso);
     
     return true;
@@ -73,12 +63,10 @@ export async function procesarEvento(evento) {
     const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg) return;
     const p = msg.from; const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
-    // === LÓGICA DE NUEVO CLIENTE ===
+    // === ALERTA NUEVO CLIENTE (RECUPERADA) ===
     if (!sesiones[p]) {
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
-        
-        // 🔔 AVISAR AL STAFF (Esto faltaba)
-        const avisoNuevo = `📢 *NUEVO LEAD DETECTADO*\nNombre: ${nombre}\nTel: +${p}`;
+        const avisoNuevo = `📢 *NUEVO LEAD* ⚡\n${nombre}\n+${p}`;
         for (const s of STAFF) await enviarMensaje(s, avisoNuevo);
     }
     
@@ -90,7 +78,7 @@ export async function procesarEvento(evento) {
         sesiones[p].tag = "NUEVO";
         botStatus[p] = true; 
         guardar();
-        await enviarMensaje(p, "🤖 *Zara Reiniciada.*\nSoy Zara, tu asistente virtual. ¿En qué puedo ayudarte hoy?");
+        await enviarMensaje(p, "🤖 *Zara Reiniciada.*");
         return;
     }
 
