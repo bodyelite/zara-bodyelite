@@ -4,15 +4,18 @@ import { enviarMensaje } from './whatsapp.js';
 import { pensar } from './brain.js';
 
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
-const STAFF = ["56983300262", "56955145504", "56937648536"];
+const STAFF = ["56983300262", "56955145504", "56937648536"]; 
 let sesiones = {}; let botStatus = {}; 
 
+// Cargar memoria al inicio
 try { const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); sesiones = data.sesiones || {}; botStatus = data.botStatus || {}; } catch (e) {}
 function guardar() { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); }
 
+// Getters para el Monitor
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
 
+// Cambios manuales desde Monitor
 export function updateTagManual(phone, newTag) {
     if (sesiones[phone]) { sesiones[phone].tag = newTag; guardar(); return true; }
     return false;
@@ -23,44 +26,45 @@ export function toggleBot(phone) {
     guardar(); return botStatus[phone];
 }
 
-export async function procesarReserva(phone, name) {
-    console.log("⚙️ PROCESANDO RESERVA:", phone, name);
+// === LÓGICA CRÍTICA DE RESERVA ===
+export async function procesarReserva(phoneRaw, name) {
+    console.log("📨 RESERVA RECIBIDA:", phoneRaw, name);
     
-    // Limpieza
-    phone = phone.replace(/\D/g, ''); 
-    if (phone.length === 8) phone = "569" + phone;
-    if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone;
+    // 1. Limpieza Total
+    let phone = phoneRaw.replace(/\D/g, ''); 
 
-    console.log("📞 TELEFONO FINAL:", phone);
+    // 2. Matemáticas de Match (Transformar a formato WhatsApp 569...)
+    if (phone.length === 8) phone = "569" + phone;        // Ej: 37648536 -> 56937648536
+    else if (phone.length === 9) phone = "56" + phone;    // Ej: 937648536 -> 56937648536
+    
+    console.log("📞 TELEFONO NORMALIZADO:", phone);
 
-    // Crear o Actualizar Sesión
+    // 3. Buscar Match
+    let tipoCliente = "ANTIGUO";
     if (!sesiones[phone]) {
         sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
+        tipoCliente = "NUEVO WEB";
     } else {
-        if(name) sesiones[phone].name = name; // Actualizar nombre si viene
+        if(name) sesiones[phone].name = name; // Actualizar nombre real
     }
     
-    // Cambiar estado
+    // 4. Actualizar Estado
     sesiones[phone].tag = "AGENDADO";
     sesiones[phone].lastInteraction = Date.now();
     sesiones[phone].history.push({ 
         role: "assistant", 
-        content: "📅 [SISTEMA] Cita Agendada vía Web.", 
+        content: `📅 [SISTEMA] Cita confirmada (${name}). Bot pausado.`, 
         timestamp: Date.now(), 
         source: 'manual' 
     });
     
-    // Apagar bot
+    // 5. Apagar Bot (Para que no moleste)
     botStatus[phone] = false; 
     guardar();
 
-    // ENVIAR ALERTA AL STAFF
-    const aviso = `🚨 *NUEVA CITA AGENDADA* 🚨\n\n👤 Cliente: ${sesiones[phone].name}\n📱 Tel: +${phone}\n✅ Origen: Web Reservo`;
-    console.log("📨 Enviando alerta a staff...");
-    
-    for (const s of STAFF) {
-        await enviarMensaje(s, aviso).catch(e => console.error("Error enviando alerta:", e));
-    }
+    // 6. ¡GRITAR AL STAFF! (Esto faltaba)
+    const aviso = `🚨 *CITA AGENDADA* (${tipoCliente})\n👤 ${sesiones[phone].name}\n📱 +${phone}\n📅 Origen: Web Reservo`;
+    for (const s of STAFF) await enviarMensaje(s, aviso);
     
     return true;
 }
@@ -73,20 +77,26 @@ export async function enviarMensajeManual(p, t) {
     guardar(); await enviarMensaje(p, t);
 }
 
+// === LÓGICA DE WHATSAPP ===
 export async function procesarEvento(evento) {
     const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg) return;
     const p = msg.from; const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
-    // === ALERTA NUEVO CLIENTE ===
+    // 1. Detección de Cliente Nuevo
     if (!sesiones[p]) {
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
-        const avisoNuevo = `📢 *NUEVO LEAD* ✨\n👤 ${nombre}\n📱 +${p}`;
+        
+        // ¡GRITAR AL STAFF! (Esto faltaba)
+        const avisoNuevo = `📢 *NUEVO LEAD WHATSAPP*\n👤 ${nombre}\n📱 +${p}`;
         for (const s of STAFF) await enviarMensaje(s, avisoNuevo);
+        
+        guardar();
     }
     
     let contenido = msg.text?.body || "";
     if (msg.type === 'image') contenido = `[FOTO] ${msg.image.caption || ''}`;
 
+    // Comando Reset
     if (contenido.trim().toLowerCase() === '/reset') {
         sesiones[p].history = [];
         sesiones[p].tag = "NUEVO";
@@ -99,6 +109,7 @@ export async function procesarEvento(evento) {
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     sesiones[p].lastInteraction = Date.now();
 
+    // Cerebro
     if (botStatus[p] !== false) {
         const promptSystem = { role: "system", content: `Eres Zara. Cliente: ${sesiones[p].name}.` };
         const resp = await pensar([promptSystem, ...sesiones[p].history], sesiones[p].name);
