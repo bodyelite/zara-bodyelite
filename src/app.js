@@ -30,7 +30,7 @@ export async function procesarReserva(phone, name, date) {
     if (phone.length === 8) phone = "569" + phone;
     if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone;
 
-    // PROTECCION DE IDENTIDAD (Nombre)
+    // PROTECCION DE IDENTIDAD (Mantenemos nombre de WhatsApp si existe)
     if (!sesiones[phone]) {
         sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     }
@@ -73,7 +73,7 @@ export async function procesarEvento(evento) {
     const p = msg.from; const nombreWsp = val.contacts?.[0]?.profile?.name || "Cliente";
     
     let contenido = msg.text?.body || "";
-    // LOGICA DE RESET TOTAL Y REAL
+    // LOGICA DE RESET TOTAL Y REAL (Borra memoria pero mantiene personalidad)
     if (contenido.trim().toLowerCase() === '/reset') {
         if (sesiones[p]) delete sesiones[p]; 
         botStatus[p] = true; 
