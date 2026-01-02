@@ -19,26 +19,30 @@ export function updateTagManual(phone, newTag) {
 }
 
 export function toggleBot(phone) {
+    // Si no existe (undefined), asumimos que estaba ON, así que lo apagamos (false)
+    // Si es false, lo prendemos (true)
+    // Si es true, lo apagamos (false)
     botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
-    guardar(); return botStatus[phone];
+    guardar(); 
+    return botStatus[phone];
 }
 
 export async function procesarReserva(phone, name) {
-    console.log("⚙️ Procesando reserva raw:", phone);
-    // Limpieza agresiva del teléfono para asegurar match
+    // === FIX 7.2: LIMPIEZA EXTREMA DEL TELÉFONO ===
     phone = phone.replace(/\D/g, ''); 
-    // Si el cliente pone 912345678, le agregamos 56
+    // Si llega "912345678", le ponemos "56"
     if (!phone.startsWith("56") && phone.length === 9) phone = "56" + phone;
-    // Si el cliente pone 569..., lo dejamos igual.
-    
-    console.log("📞 Teléfono normalizado:", phone);
+    // Si llega "12345678" (8 digitos), le ponemos "569"
+    if (phone.length === 8) phone = "569" + phone;
+
+    console.log("📞 TELEFONO RESERVA FINAL:", phone);
 
     if (!sesiones[phone]) sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     
     sesiones[phone].tag = "AGENDADO";
     sesiones[phone].lastInteraction = Date.now();
     sesiones[phone].history.push({ role: "assistant", content: "📅 [SISTEMA] Cita confirmada vía Web.", timestamp: Date.now(), source: 'manual' });
-    botStatus[phone] = false; 
+    botStatus[phone] = false; // Apagar bot al reservar
     guardar();
 
     const aviso = `🚨 *CITA AGENDADA* 🚨\nCliente: ${name}\nTel: +${phone}`;
@@ -62,6 +66,7 @@ export async function procesarEvento(evento) {
     let contenido = msg.text?.body || "";
     if (msg.type === 'image') contenido = `[FOTO] ${msg.image.caption || ''}`;
 
+    // === COMANDO RESET ===
     if (contenido.trim().toLowerCase() === '/reset') {
         sesiones[p].history = [];
         sesiones[p].tag = "NUEVO";
