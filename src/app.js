@@ -4,6 +4,8 @@ import { enviarMensaje } from './whatsapp.js';
 import { pensar } from './brain.js';
 
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
+// TUS NÚMEROS DEL STAFF PARA AVISOS
+const STAFF = ["56983300262", "56955145504", "56937648536"]; 
 let sesiones = {}; let botStatus = {}; 
 
 try { const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); sesiones = data.sesiones || {}; botStatus = data.botStatus || {}; } catch (e) {}
@@ -22,20 +24,38 @@ export function toggleBot(phone) {
     guardar(); return botStatus[phone];
 }
 
+// === LÓGICA DE RESERVA MEJORADA ===
 export async function procesarReserva(phone, name) {
+    // Normalizar teléfono (quitar + y espacios)
+    phone = phone.replace(/\D/g, '');
     if (!phone.startsWith("56")) phone = "56" + phone;
-    if (!sesiones[phone]) sesiones[phone] = { name: name, history: [], phone: phone };
+
+    // Crear sesión si no existe
+    if (!sesiones[phone]) sesiones[phone] = { name: name || "Paciente Reservo", history: [], phone: phone };
     
+    // 1. CAMBIAR ESTADO
     sesiones[phone].tag = "AGENDADO";
     sesiones[phone].lastInteraction = Date.now();
+    
+    // 2. LOG INTERNO
     sesiones[phone].history.push({ 
         role: "assistant", 
-        content: "📅 [SISTEMA] Cita agendada vía Web/Reservo.", 
+        content: "📅 [SISTEMA] Cita confirmada en Reservo.", 
         timestamp: Date.now(), 
         source: 'manual' 
     });
+    
+    // 3. APAGAR BOT (Para que no interfiera si le hablan por la cita)
     botStatus[phone] = false; 
     guardar();
+
+    // 4. AVISAR AL STAFF (Esto faltaba)
+    const aviso = `🚨 *NUEVA CITA AGENDADA* 🚨\n\nCliente: ${name}\nTel: +${phone}\n\nRevisar agenda.`;
+    console.log("Enviando aviso a staff...", STAFF);
+    for (const s of STAFF) {
+        await enviarMensaje(s, aviso);
+    }
+
     return true;
 }
 
