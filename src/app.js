@@ -19,36 +19,48 @@ export function updateTagManual(phone, newTag) {
 }
 
 export function toggleBot(phone) {
-    // Lógica simple de interruptor
-    if (botStatus[phone] === undefined) botStatus[phone] = false; // Si no existe, lo apagamos
-    else botStatus[phone] = !botStatus[phone]; // Si existe, invertimos
-    
-    guardar(); 
-    return botStatus[phone];
+    botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
+    guardar(); return botStatus[phone];
 }
 
 export async function procesarReserva(phone, name) {
-    phone = phone.replace(/\D/g, ''); 
+    console.log("⚙️ PROCESANDO RESERVA:", phone, name);
     
-    // Normalización Chilena
+    // Limpieza
+    phone = phone.replace(/\D/g, ''); 
     if (phone.length === 8) phone = "569" + phone;
     if (phone.length === 9 && phone.startsWith('9')) phone = "56" + phone;
-    
-    console.log("📞 RESERVA PROCESADA:", phone);
 
-    if (sesiones[phone]) {
-        sesiones[phone].tag = "AGENDADO";
-        sesiones[phone].lastInteraction = Date.now();
-        sesiones[phone].history.push({ role: "assistant", content: "📅 [SISTEMA] Cita confirmada. Bot pausado.", timestamp: Date.now(), source: 'manual' });
-        botStatus[phone] = false; 
+    console.log("📞 TELEFONO FINAL:", phone);
+
+    // Crear o Actualizar Sesión
+    if (!sesiones[phone]) {
+        sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone };
     } else {
-        sesiones[phone] = { name: name || "Paciente Web", history: [], phone: phone, tag: "AGENDADO" };
-        sesiones[phone].lastInteraction = Date.now();
+        if(name) sesiones[phone].name = name; // Actualizar nombre si viene
     }
+    
+    // Cambiar estado
+    sesiones[phone].tag = "AGENDADO";
+    sesiones[phone].lastInteraction = Date.now();
+    sesiones[phone].history.push({ 
+        role: "assistant", 
+        content: "📅 [SISTEMA] Cita Agendada vía Web.", 
+        timestamp: Date.now(), 
+        source: 'manual' 
+    });
+    
+    // Apagar bot
+    botStatus[phone] = false; 
     guardar();
 
-    const aviso = `🚨 *CITA AGENDADA* 📅\nCliente: ${sesiones[phone].name}\nTel: +${phone}`;
-    for (const s of STAFF) await enviarMensaje(s, aviso);
+    // ENVIAR ALERTA AL STAFF
+    const aviso = `🚨 *NUEVA CITA AGENDADA* 🚨\n\n👤 Cliente: ${sesiones[phone].name}\n📱 Tel: +${phone}\n✅ Origen: Web Reservo`;
+    console.log("📨 Enviando alerta a staff...");
+    
+    for (const s of STAFF) {
+        await enviarMensaje(s, aviso).catch(e => console.error("Error enviando alerta:", e));
+    }
     
     return true;
 }
@@ -65,15 +77,11 @@ export async function procesarEvento(evento) {
     const val = evento.changes?.[0]?.value; const msg = val?.messages?.[0]; if (!msg) return;
     const p = msg.from; const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
-    // === FIX 1: ALERTA DE NUEVO CLIENTE ===
+    // === ALERTA NUEVO CLIENTE ===
     if (!sesiones[p]) {
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" };
-        
-        // Enviamos aviso al staff INMEDIATAMENTE
-        const avisoNuevo = `📢 *NUEVO LEAD* ⚡\n${nombre}\n+${p}`;
+        const avisoNuevo = `📢 *NUEVO LEAD* ✨\n👤 ${nombre}\n📱 +${p}`;
         for (const s of STAFF) await enviarMensaje(s, avisoNuevo);
-        
-        guardar();
     }
     
     let contenido = msg.text?.body || "";
