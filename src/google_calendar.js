@@ -7,15 +7,14 @@ dotenv.config();
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 
-// INTENTO DE LEER LA LLAVE DE VARIAS FORMAS PARA QUE NO FALLE
+// --- CORRECCIÓN CRÍTICA DE LA LLAVE ---
 let PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
 if (PRIVATE_KEY) {
-    // Si viene pegada sin saltos de línea (error común en Render), los arreglamos
-    if (!PRIVATE_KEY.includes('\n')) {
-        PRIVATE_KEY = PRIVATE_KEY.replace(/\\n/g, '\n');
-    }
+    // Reemplazamos SIEMPRE los caracteres literales \n por saltos de línea reales.
+    // Esto funciona tanto si la pegaste en una línea como si la pegaste expandida.
+    PRIVATE_KEY = PRIVATE_KEY.replace(/\\n/g, '\n');
 } else {
-    console.error("❌ ERROR CRÍTICO: No se encuentra GOOGLE_PRIVATE_KEY");
+    console.error("❌ ERROR CRÍTICO: No se encuentra GOOGLE_PRIVATE_KEY en las variables de entorno.");
 }
 
 const auth = new google.auth.JWT(
@@ -97,8 +96,8 @@ export async function checkAvailability() {
         return output;
 
     } catch (error) {
-        console.error("Error Calendario:", error);
-        return "Error de conexión con Google Calendar.";
+        console.error("Error Calendario Detallado:", error); // Log más detallado
+        return "Error de conexión con el calendario.";
     }
 }
 
