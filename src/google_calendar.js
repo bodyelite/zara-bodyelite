@@ -6,44 +6,54 @@ dotenv.config();
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 
-// 1. OBTENCIÓN Y LIMPIEZA BLINDADA DE LA LLAVE
-let PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
-const CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
-const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
+// Función auxiliar para obtener cliente autenticado fresco
+function getAuthClient() {
+    let key = process.env.GOOGLE_PRIVATE_KEY;
+    const email = process.env.GOOGLE_CLIENT_EMAIL;
 
-if (PRIVATE_KEY) {
-    // 🧹 LIMPIEZA MAESTRA:
-    // 1. Reemplazamos cualquier '\n' literal (escrito como texto) por un salto de línea real.
-    // 2. Esto no daña la llave si ya estaba bien, pero arregla las que están mixtas.
-    PRIVATE_KEY = PRIVATE_KEY.replace(/\\n/g, '\n');
-    
-    console.log("✅ Llave procesada y formateada.");
-} else {
-    console.error("❌ ERROR FATAL: GOOGLE_PRIVATE_KEY no existe en Render.");
+    if (!key || !email) {
+        console.error("❌ ERROR: Faltan credenciales en Render (Email o Key).");
+        return null;
+    }
+
+    // Limpieza agresiva de la llave
+    // 1. Quitar comillas extra si las hubiera
+    key = key.replace(/^"|"$/g, '');
+    // 2. Asegurar saltos de línea reales
+    if (!key.includes('-----BEGIN PRIVATE KEY-----')) {
+        console.error("❌ ERROR: La llave no parece una llave RSA válida (falta header).");
+        return null;
+    }
+    key = key.replace(/\\n/g, '\n');
+
+    // USAMOS GoogleAuth (Más moderno y seguro que JWT directo)
+    return new google.auth.GoogleAuth({
+        credentials: {
+            client_email: email,
+            private_key: key,
+        },
+        scopes: SCOPES,
+    });
 }
 
-// 2. AUTENTICACIÓN
-const auth = new google.auth.JWT(
-    CLIENT_EMAIL,
-    null,
-    PRIVATE_KEY,
-    SCOPES
-);
-
-const calendar = google.calendar({ version: 'v3', auth });
+const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
 
 export async function checkAvailability() {
     try {
-        if (!PRIVATE_KEY) return "Error: Falta configuración en Render.";
+        console.log("🔄 Iniciando verificación de calendario...");
+        const auth = getAuthClient();
+        if (!auth) return "Error técnico: Credenciales mal configuradas.";
 
-        // Verificación rápida de autorización
-        await auth.authorize();
+        // Instanciamos el calendario con el cliente auth moderno
+        const calendar = google.calendar({ version: 'v3', auth });
 
         const timeZone = 'America/Santiago';
         const now = DateTime.now().setZone(timeZone);
         const start = now.startOf('hour').plus({ hours: 1 });
         const end = now.plus({ days: 7 }).endOf('day');
 
+        console.log(`📅 Consultando agenda para: ${CALENDAR_ID}`);
+        
         const response = await calendar.events.list({
             calendarId: CALENDAR_ID,
             timeMin: start.toISO(),
@@ -53,41 +63,35 @@ export async function checkAvailability() {
             timeZone: timeZone
         });
 
-        // Procesar eventos ocupados
-        const busySlots = response.data.items.map(event => {
-            return {
-                start: DateTime.fromISO(event.start.dateTime || event.start.date, { zone: timeZone }),
-                end: DateTime.fromISO(event.end.dateTime || event.end.date, { zone: timeZone })
-            };
-        });
+        const busySlots = response.data.items.map(event => ({
+            start: DateTime.fromISO(event.start.dateTime || event.start.date, { zone: timeZone }),
+            end: DateTime.fromISO(event.end.dateTime || event.end.date, { zone: timeZone })
+        }));
 
-        // Buscar huecos libres (Lógica simplificada de 9 a 19 hrs)
         let freeSlots = [];
         let currentDay = now;
 
+        // Lógica simplificada de búsqueda de huecos
         for (let i = 0; i < 7; i++) {
             let dayStart = currentDay.plus({ days: i }).set({ hour: 9, minute: 0, second: 0, millisecond: 0 });
             let dayEnd = currentDay.plus({ days: i }).set({ hour: 19, minute: 0, second: 0, millisecond: 0 });
 
-            if (dayStart.weekday === 7) continue; // Domingo libre
+            if (dayStart.weekday === 7) continue; 
 
             let slot = dayStart;
             while (slot < dayEnd) {
-                let isBusy = busySlots.some(busy => {
-                    return (slot >= busy.start && slot < busy.end) || 
-                           (slot.plus({ minutes: 30 }) > busy.start && slot.plus({ minutes: 30 }) <= busy.end);
-                });
+                let isBusy = busySlots.some(busy => 
+                    (slot >= busy.start && slot < busy.end) || 
+                    (slot.plus({ minutes: 30 }) > busy.start && slot.plus({ minutes: 30 }) <= busy.end)
+                );
 
-                if (!isBusy && slot > now) {
-                    freeSlots.push(slot);
-                }
+                if (!isBusy && slot > now) freeSlots.push(slot);
                 slot = slot.plus({ minutes: 30 });
             }
         }
 
         if (freeSlots.length === 0) return "Agenda llena próximos 7 días.";
 
-        // Formatear respuesta amigable
         let output = "";
         let lastDate = "";
         const relevantSlots = freeSlots.filter((slot, index) => index % 2 === 0);
@@ -105,13 +109,20 @@ export async function checkAvailability() {
         return output;
 
     } catch (error) {
-        console.error("❌ Error Calendario:", error.message);
-        return "Lo siento, tengo un problema técnico momentáneo con la agenda.";
+        console.error("❌ ERROR CALENDARIO REAL:", error.message);
+        if (error.code === 401 || error.message.includes('invalid_grant')) {
+            console.error("⚠️ La llave privada es incorrecta o está revocada.");
+        }
+        return "Tengo un problema momentáneo para ver la agenda.";
     }
 }
 
 export async function crearEvento(fechaIso, nombre, telefono) {
     try {
+        const auth = getAuthClient();
+        if (!auth) return false;
+        const calendar = google.calendar({ version: 'v3', auth });
+
         const start = DateTime.fromFormat(fechaIso, 'yyyy-MM-dd HH:mm', { zone: 'America/Santiago' });
         await calendar.events.insert({
             calendarId: CALENDAR_ID,
