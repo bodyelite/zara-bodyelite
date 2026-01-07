@@ -11,7 +11,7 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 let PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
 if (PRIVATE_KEY) {
     // Reemplazamos SIEMPRE los caracteres literales \n por saltos de línea reales.
-    // Esto funciona tanto si la pegaste en una línea como si la pegaste expandida.
+    // Quitamos el 'if' que causaba el error si había un enter al final.
     PRIVATE_KEY = PRIVATE_KEY.replace(/\\n/g, '\n');
 } else {
     console.error("❌ ERROR CRÍTICO: No se encuentra GOOGLE_PRIVATE_KEY en las variables de entorno.");
@@ -96,7 +96,7 @@ export async function checkAvailability() {
         return output;
 
     } catch (error) {
-        console.error("Error Calendario Detallado:", error); // Log más detallado
+        console.error("Error Calendario Detallado:", error); 
         return "Error de conexión con el calendario.";
     }
 }
