@@ -129,7 +129,7 @@ app.get('/monitor', (req, res) => {
         function setTab(t){ curTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.innerText.includes(t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()))); renderList(); }
         setInterval(refresh, 5000); refresh();
     </script>
-    </body></html>\`);
+    </body></html>`);
 });
 
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));

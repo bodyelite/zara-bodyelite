@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
 import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
@@ -29,13 +28,6 @@ function guardar() {
 
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
-
-async function notificarStaff(texto) {
-    if (!NEGOCIO.staff_alertas) return;
-    for (const adminPhone of NEGOCIO.staff_alertas) { 
-        await enviarMensaje(adminPhone, texto).catch(e => console.error("Error alerta:", e)); 
-    }
-}
 
 export function updateTagManual(phone, newTag) {
     if (sesiones[phone]) {
@@ -91,7 +83,6 @@ export async function procesarEvento(evento) {
     
     if (!sesiones[p]) { 
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() }; 
-        await notificarStaff(`📢 *NUEVO LEAD* ✨\n👤 ${nombre}\n📱 +${p}`);
     }
     
     let contenido = "";
@@ -119,7 +110,6 @@ export async function procesarEvento(evento) {
         
         if (resp.includes('reservo.cl')) {
             sesiones[p].tag = "HOT";
-            await notificarStaff(`🔥 *LEAD CALIENTE* (Link Enviado)\n👤 ${nombre}\n📱 +${p}`);
         }
     }
     guardar();
