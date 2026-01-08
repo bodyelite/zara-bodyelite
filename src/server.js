@@ -11,7 +11,7 @@ app.get('/monitor', (req, res) => {
     <!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8"><title>ZARA CRM 9.0 PRO</title>
+        <meta charset="UTF-8"><title>ZARA CRM 9.0 POTENTE</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
         <style>
             :root { --primary: #2563eb; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
@@ -19,23 +19,20 @@ app.get('/monitor', (req, res) => {
             .sidebar { width: 320px; background: #111827; border-right: 1px solid #334155; display: flex; flex-direction: column; }
             .tabs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; }
             .tab-btn { padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; cursor: pointer; font-size: 11px; }
-            .tab-btn.active { background: var(--primary); border-color: var(--primary); }
+            .tab-btn.active { background: var(--primary); }
             .lead-list { flex: 1; overflow-y: auto; }
-            .lead-card { padding: 12px; border-bottom: 1px solid #1e293b; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
-            .lead-card:hover { background: #1e293b; }
-            .lead-card.active { background: #1e293b; border-left-color: var(--primary); }
+            .lead-card { padding: 12px; border-bottom: 1px solid #1e293b; cursor: pointer; transition: 0.2s; }
+            .lead-card.active { background: var(--primary); }
             .main { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
             .chat-header { padding: 15px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
             .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
             .msg { max-width: 80%; padding: 10px; border-radius: 10px; line-height: 1.4; }
-            .msg.bot { align-self: flex-end; background: var(--primary); color: white; }
-            .msg.user { align-self: flex-start; background: #334155; color: white; }
+            .msg.bot { align-self: flex-end; background: var(--primary); }
+            .msg.user { align-self: flex-start; background: #334155; }
             .tools { width: 280px; background: #111827; border-left: 1px solid #334155; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
             .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
             .btn-blue { background: var(--primary); color: white; }
             .btn-purple { background: #7c3aed; color: white; }
-            .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
-            .modal-content { background: #1e293b; padding: 25px; border-radius: 12px; width: 80%; max-width: 700px; }
         </style>
     </head>
     <body>
@@ -46,8 +43,6 @@ app.get('/monitor', (req, res) => {
             <button class="tab-btn" onclick="setTab('INTERESADO')">Interesados</button>
             <button class="tab-btn" onclick="setTab('HOT')">Hot 🔥</button>
             <button class="tab-btn" onclick="setTab('AGENDADO')">Agendados ✅</button>
-            <button class="tab-btn" onclick="setTab('CAMPAÑA')">Campaña 🚀</button>
-            <button class="tab-btn" onclick="setTab('DESCARTADO')">Papelera</button>
         </div>
         <div class="lead-list" id="leadList"></div>
     </div>
@@ -58,13 +53,13 @@ app.get('/monitor', (req, res) => {
         </div>
         <div class="chat-body" id="chatBody"></div>
         <div style="padding:15px; background:#1e293b; display:flex; gap:10px">
-            <input type="text" id="msgIn" style="flex:1; padding:12px; border-radius:8px; border:none; background:#0f172a; color:white;" placeholder="Mensaje manual...">
+            <input type="text" id="msgIn" style="flex:1; padding:12px; border-radius:8px; border:none; background:#0f172a; color:white;">
             <button class="btn btn-blue" style="width: 80px;" onclick="sendManual()">ENVIAR</button>
         </div>
     </div>
     <div class="tools">
-        <strong>🏷️ ESTADO</strong>
-        <select id="tagSelect" style="width:100%; padding:8px; border-radius:4px; background:#0f172a; color:white; border:none;">
+        <strong>🏷️ CAMBIAR ETAPA</strong>
+        <select id="tagSelect" style="width:100%; padding:8px; background:#0f172a; color:white; border:none; border-radius:4px;">
             <option value="NUEVO">NUEVO</option>
             <option value="INTERESADO">INTERESADO</option>
             <option value="HOT">HOT 🔥</option>
@@ -73,25 +68,15 @@ app.get('/monitor', (req, res) => {
             <option value="DESCARTADO">DESCARTADO</option>
         </select>
         <button class="btn btn-blue" onclick="updateTag()">Guardar Etapa</button>
-        <hr style="border:0; border-top:1px solid #334155; width:100%;">
-        <button class="btn btn-purple" onclick="openAnalytics()">📊 VER ANALYTICS</button>
-        <button class="btn btn-purple" onclick="runDiagnostic()">🔍 DIAGNOSTICAR</button>
-    </div>
-    <div id="analyticsModal" class="modal" onclick="this.style.display='none'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h2>📊 Reporte de Conversión</h2>
-            <div id="statGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"></div>
-        </div>
+        <button class="btn btn-purple" onclick="refresh()">Actualizar Leads</button>
     </div>
     <script>
         let curTab='NUEVO', curPhone=null, data={};
         async function refresh(){
-            try {
-                const r = await fetch('/api/data');
-                data = await r.json();
-                renderList();
-                if(curPhone) renderChat();
-            } catch(e) {}
+            const r = await fetch('/api/data');
+            data = await r.json();
+            renderList();
+            if(curPhone) renderChat();
         }
         function renderList(){
             const list=document.getElementById('leadList'); list.innerHTML='';
@@ -105,8 +90,7 @@ app.get('/monitor', (req, res) => {
         }
         function selectLead(p){ curPhone=p; document.getElementById('tagSelect').value = data.users[p].tag || 'NUEVO'; refresh(); }
         function renderChat(){
-            const u=data.users[curPhone];
-            document.getElementById('uName').innerText = u.name;
+            const u=data.users[curPhone]; document.getElementById('uName').innerText = u.name;
             const status = data.botStatus[curPhone] !== false;
             document.getElementById('botControl').innerHTML = \`<button onclick="toggleBot()" style="background:\${status?'#059669':'#991b1b'}; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer">BOT: \${status?'ON':'OFF'}</button>\`;
             document.getElementById('chatBody').innerHTML = u.history.map(m => \`<div class="msg \${m.role==='user'?'user':'bot'}">\${m.content}</div>\`).join('');
@@ -120,7 +104,6 @@ app.get('/monitor', (req, res) => {
         async function toggleBot(){ await fetch('/api/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:curPhone})}); refresh(); }
         async function updateTag(){ await fetch('/api/tag', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:curPhone, tag:document.getElementById('tagSelect').value})}); refresh(); }
         function setTab(t){ curTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.innerText.includes(t))); renderList(); }
-        function openAnalytics(){ document.getElementById('analyticsModal').style.display='flex'; }
         setInterval(refresh, 5000); refresh();
     </script>
     </body></html>\`);
@@ -131,7 +114,6 @@ app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body
 app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.phone, req.body.tag) }));
 app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));
 app.post('/api/note', (req, res) => res.json({ success: agregarNota(req.body.phone, req.body.text) }));
-app.post('/api/diagnostic', async (req, res) => { await diagnosticarTodo(); res.json({ success: true }); });
 app.post('/webhook', async (req, res) => { await procesarEvento(req.body); res.sendStatus(200); });
 
 app.listen(process.env.PORT || 3000, () => console.log("ZARA CRM 9.0 POTENTE ONLINE 🚀"));
