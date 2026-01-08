@@ -9,17 +9,21 @@ let sesiones = {};
 let botStatus = {}; 
 
 if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
-    fs.mkdirSync(path.join(process.cwd(), 'data'));
+    fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
 }
 
 try { 
-    const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); 
-    sesiones = data.sesiones || {}; 
-    botStatus = data.botStatus || {}; 
-} catch (e) {}
+    if (fs.existsSync(FILE)) {
+        const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); 
+        sesiones = data.sesiones || {}; 
+        botStatus = data.botStatus || {}; 
+    }
+} catch (e) { console.error("Error DB:", e); }
 
 function guardar() { 
-    fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); 
+    try {
+        fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); 
+    } catch (e) { console.error("Error Guardar:", e); }
 }
 
 export function getSesiones() { return sesiones; }
@@ -33,12 +37,10 @@ async function notificarStaff(texto) {
 }
 
 export async function diagnosticarTodo() {
-    console.log("🩺 [CRM] Actualizando diagnósticos...");
     const keys = Object.keys(sesiones);
     for (const p of keys) {
         if (sesiones[p].history && sesiones[p].history.length > 0) {
-            const diag = await diagnosticar(sesiones[p].history);
-            sesiones[p].diagnostico = diag;
+            sesiones[p].diagnostico = await diagnosticar(sesiones[p].history);
         }
     }
     guardar();
@@ -107,22 +109,19 @@ export async function procesarEvento(evento) {
     
     if (!sesiones[p]) { 
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO" }; 
-        await notificarStaff(`📢 *NUEVO LEAD* ✨\n👤 ${nombre}\n📱 +${p}`); 
     }
     
     let contenido = "";
     if (msg.type === "text") contenido = msg.text.body;
     else if (msg.type === "audio" || msg.type === "voice") {
         const url = await obtenerUrlMedia(msg.audio ? msg.audio.id : msg.voice.id);
-        contenido = url ? `[AUDIO TRANSCRITO]: "${await transcribirAudio(url) || '...'}"` : "[AUDIO - ERROR]";
+        contenido = url ? `[AUDIO]: ${await transcribirAudio(url)}` : "[AUDIO ERROR]";
     }
-    if (!contenido) contenido = "[CONTENIDO DESCONOCIDO]";
 
-    if (contenido.trim().toLowerCase().includes('/reset')) { 
-        if (sesiones[p]) delete sesiones[p]; 
-        botStatus[p] = true; 
+    if (contenido.toLowerCase().includes('/reset')) { 
+        sesiones[p].history = []; 
         guardar(); 
-        await enviarMensaje(p, "🔄 Conversación reiniciada. ¡Hola de nuevo! 🌸"); 
+        await enviarMensaje(p, "🔄 Reset."); 
         return; 
     }
 
@@ -131,25 +130,9 @@ export async function procesarEvento(evento) {
 
     if (botStatus[p] !== false) {
         const resp = await pensar(sesiones[p].history, sesiones[p].name);
-        sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
-        
-        const respLower = resp.toLowerCase();
-        
-        if (resp.includes('reservo.cl')) { 
-            sesiones[p].tag = "HOT"; 
-            await notificarStaff(`🔥 *LEAD CALIENTE* (Link Enviado)\n👤 ${nombre}\n📱 +${p}`); 
-        }
-        else if (
-            respLower.includes('llamaremos') || 
-            respLower.includes('llamando') || 
-            respLower.includes('coordinar') || 
-            respLower.includes('especialista')
-        ) { 
-            sesiones[p].tag = "INTERESADO"; 
-            await notificarStaff(`📞 *SOLICITUD DE LLAMADA*\n👤 ${nombre}\n📱 +${p}\n\n⚠️ *Llamar ahora*`); 
-        }
-        
         await enviarMensaje(p, resp);
+        sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now() });
+        if (resp.includes('reservo.cl')) sesiones[p].tag = "HOT";
     }
     guardar();
 }
