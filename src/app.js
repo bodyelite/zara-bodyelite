@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
 import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
