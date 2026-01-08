@@ -1,38 +1,110 @@
 import express from 'express';
 import cors from 'cors';
-import { procesarEvento, getSesiones, getBotStatus, enviarMensajeManual, ejecutarEstrategia, updateTagManual, toggleBot, procesarReserva, diagnosticarTodo } from './app.js';
+import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, agregarNota } from './app.js';
 
-const app = express(); app.use(express.json()); app.use(cors());
+const app = express();
+app.use(express.json({ limit: '10mb' }));
+app.use(cors());
 
+// --- DASHBOARD POTENTE 9.0 (MODO DISCO RENDER) ---
 app.get('/monitor', (req, res) => {
-res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZARA CRM 8.0</title>
-<style>:root{--bg:#0b141a;--sb:#111b21;--ac:#00a884;--ht:#e91e63;--it:#ff9800;--fr:#667781;--mn:#3b82f6;--ag:#8e44ad;--dg:#9b59b6;--ab:#444;--txt:#e9edef;}body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);display:flex;height:100vh;overflow:hidden;}.sl{width:320px;background:var(--sb);border-right:1px solid #222d34;display:flex;flex-direction:column;flex-shrink:0;}.filters{padding:10px;background:#202c33;display:flex;gap:5px;border-bottom:1px solid #2a3942;overflow-x:auto;}.f-btn{flex:1;background:transparent;border:1px solid #374045;color:#8696a0;padding:5px;border-radius:4px;cursor:pointer;font-size:0.7em;font-weight:bold;white-space:nowrap;}.f-btn.active{background:#374045;color:white;border-color:var(--ac);}.cd{padding:15px;border-bottom:1px solid #222d34;cursor:pointer;transition:0.2s;}.cd:hover{background:#202c33;}.cd.active{background:#2a3942;border-left:4px solid var(--ac);}.tag{font-size:0.65em;padding:2px 6px;border-radius:4px;color:white;font-weight:bold;display:inline-block;margin-left:5px;}.tag-NUEVO{background:var(--ac);}.tag-HOT{background:var(--ht);}.tag-INTERESADO{background:var(--it);}.tag-FRIO{background:var(--fr);}.tag-APAGADO{background:#333;}.tag-ABANDONADO{background:var(--ab);border:1px dashed #666;}.tag-AGENDADO{background:var(--ag);box-shadow:0 0 5px var(--ag);}.diag{display:block;font-size:0.7em;color:#ffd700;margin-top:2px;font-style:italic;}.mc{flex:1;display:flex;flex-direction:column;background:var(--bg);min-width:0;}.ch{padding:10px 20px;background:#202c33;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a3942;}#fd{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}.msg{max-width:75%;padding:10px 14px;border-radius:8px;font-size:0.9em;position:relative;line-height:1.4;}.msg.bot{align-self:flex-end;background:#005c4b;color:white;}.msg.user{align-self:flex-start;background:#202c33;color:white;}.msg.manual{align-self:flex-end;background:var(--mn);border:1px solid #fff3;}.ib{padding:15px;background:#202c33;display:flex;gap:10px;}#m{flex:1;background:#2a3942;border:none;padding:12px;border-radius:8px;color:white;outline:none;}.btn{padding:12px;border:none;border-radius:6px;color:white;font-weight:bold;cursor:pointer;font-size:0.8em;width:100%;transition:0.2s;}.btn:hover{filter:brightness(1.1);}.sr{width:220px;background:var(--sb);border-left:1px solid #222d34;padding:20px;display:flex;flex-direction:column;gap:15px;flex-shrink:0;}.mod{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;background:#111b21;display:none;padding:30px;border-radius:12px;z-index:100;box-shadow:0 0 50px rgba(0,0,0,0.9);border:1px solid #374045;max-height:90vh;overflow-y:auto;}.d-picker{background:#2a3942;border:1px solid #444;color:white;padding:8px;border-radius:5px;}.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-top:20px;}.stat-box{padding:15px;border-radius:8px;text-align:center;color:white;position:relative;}.stat-num{font-size:1.8em;font-weight:bold;margin:5px 0;}.stat-pct{font-size:0.8em;opacity:0.8;}@media(max-width:900px){body{flex-direction:column;}.sl{width:100%;height:35vh;}.sr{display:none;}.mc{height:65vh;}}</style></head>
-<body><div class="sl"><div style="padding:15px;font-weight:bold;color:var(--ac);text-align:center;letter-spacing:1px">ZARA CRM 8.0</div><div class="filters"><button class="f-btn active" onclick="setFilter('ALL',this)">TODOS</button><button class="f-btn" onclick="setFilter('HOT',this)">HOT 🔥</button><button class="f-btn" onclick="setFilter('INTERESADO',this)">INT 🔸</button><button class="f-btn" onclick="setFilter('ABANDONADO',this)">🗑️ ABAND</button></div><div id="list" style="flex:1;overflow-y:auto"></div></div>
-<div class="mc"><div class="ch" id="h" style="display:none"><div style="display:flex;flex-direction:column"><b id="n" style="font-size:1.1em;color:var(--ac)"></b><small id="p" style="color:#8696a0;font-size:0.7em"></small><small id="dg" class="diag"></small></div><div style="display:flex;gap:10px;align-items:center"><button id="bt" class="btn" style="width:auto;padding:5px 15px;font-size:0.7em" onclick="tg()"></button><select id="ts" onchange="st()" style="background:#2a3942;color:white;border:1px solid #444;padding:6px;border-radius:6px;font-weight:bold"><option value="NUEVO">NUEVO</option><option value="HOT">HOT 🔥</option><option value="INTERESADO">INTERESADO 🔸</option><option value="FRIO">FRIO ❄️</option><option value="APAGADO">APAGADO 🗑️</option><option value="ABANDONADO">ABANDONADO ☠️</option><option value="AGENDADO">AGENDADO 📅</option></select></div></div><div id="fd"></div><div class="ib" id="i" style="display:none"><input id="m" placeholder="Escribe tu respuesta manual..." onkeypress="if(event.key==='Enter')sd()"></div></div>
-<div class="sr"><div style="font-size:0.75em;color:#8696a0;font-weight:bold">ACCIONES CRM</div><button class="btn" style="background:var(--ht)" onclick="rn('HOT')">🚨 CIERRE HOT</button><button class="btn" style="background:var(--dg)" onclick="forceDiag()">🔍 DIAGNOSTICAR TODO</button><hr style="border:0;border-top:1px solid #374045;width:100%"><button class="btn" style="background:var(--mn)" onclick="op()">📊 VER ANALYTICS</button><button class="btn" style="background:#444" onclick="location.reload()">REFRESCAR</button></div>
-<div id="rp" class="mod"><h2 style="margin-top:0;color:var(--ac)">Analítica Zara</h2><div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;justify-content:center"><button class="f-btn" onclick="setRange('hoy',this)">HOY</button><button class="f-btn" onclick="setRange('semana',this)">SEMANA</button><button class="f-btn" onclick="setRange('mes',this)">MES</button></div><div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;align-items:center"><span>Desde:</span> <input type="date" id="d-start" class="d-picker" onchange="calcStats()"><span>Hasta:</span> <input type="date" id="d-end" class="d-picker" onchange="calcStats()"></div><div style="background:#202c33;padding:15px;border-radius:8px;text-align:center;margin-top:15px;border:1px solid #374045;"><div style="font-size:0.9em;color:#8696a0">TOTAL LEADS</div><div id="total-num" style="font-size:2.5em;font-weight:bold;color:white">0</div></div><div id="fn" class="stat-grid"></div><button class="btn" style="background:#444;margin-top:20px" onclick="document.getElementById('rp').style.display='none'">CERRAR</button></div>
-<script>
-let ap=null;let fl='ALL';let allUsers={};const f=(t)=>new Date(t).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-async function tg(){if(!ap)return;await fetch("/api/toggle",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap})});up();}
-async function st(){await fetch("/api/tag",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,tag:document.getElementById("ts").value})});up();}
-async function rn(t){if(!confirm("¿Lanzar estrategia?"))return;await fetch("/api/estrat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tag:t})});up();}
-async function forceDiag(){if(!confirm("¿Diagnosticar todos los chats?"))return;await fetch("/api/diag-all",{method:"POST"});alert("Diagnóstico en proceso...");up();}
-function setFilter(n,b){fl=n;document.querySelectorAll('.filters .f-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderList();}function formatDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}function setRange(t,b){const now=new Date();let s=new Date();let e=new Date();if(b){b.parentElement.querySelectorAll('.f-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}if(t==='ayer'){s.setDate(now.getDate()-1);e.setDate(now.getDate()-1);}else if(t==='semana'){const d=now.getDay()||7;if(d!==1)s.setHours(-24*(d-1));}else if(t==='mes'){s.setDate(1);}document.getElementById('d-start').value=formatDate(s);document.getElementById('d-end').value=formatDate(e);calcStats();}
-function calcStats(){const sv=document.getElementById('d-start').value;const ev=document.getElementById('d-end').value;if(!sv||!ev)return;const s=new Date(sv+"T00:00:00");const e=new Date(ev+"T23:59:59");const c={NUEVO:0,INTERESADO:0,HOT:0,FRIO:0,APAGADO:0,ABANDONADO:0,AGENDADO:0};let tot=0;Object.values(allUsers).forEach(u=>{const l=new Date(u.lastInteraction||0);if(l>=s&&l<=e){const tag=u.tag||"NUEVO";if(c[tag]!==undefined)c[tag]++;tot++;}});document.getElementById("total-num").innerText=tot;const pct=(v)=>tot>0?((v/tot)*100).toFixed(1)+'%':'0%';document.getElementById("fn").innerHTML='<div class="stat-box" style="background:var(--ag)"><div>CITAS</div><div class="stat-num">'+c.AGENDADO+'</div><div class="stat-pct">'+pct(c.AGENDADO)+'</div></div>'+'<div class="stat-box" style="background:var(--ht)"><div>HOT</div><div class="stat-num">'+c.HOT+'</div><div class="stat-pct">'+pct(c.HOT)+'</div></div>'+'<div class="stat-box" style="background:var(--it)"><div>INT</div><div class="stat-num">'+c.INTERESADO+'</div><div class="stat-pct">'+pct(c.INTERESADO)+'</div></div>'+'<div class="stat-box" style="background:var(--ac)"><div>NUEVOS</div><div class="stat-num">'+c.NUEVO+'</div><div class="stat-pct">'+pct(c.NUEVO)+'</div></div>'+'<div class="stat-box" style="background:var(--fr)"><div>FRIOS</div><div class="stat-num">'+c.FRIO+'</div><div class="stat-pct">'+pct(c.FRIO)+'</div></div>'+'<div class="stat-box" style="background:var(--ab)"><div>ABAND</div><div class="stat-num">'+c.ABANDONADO+'</div><div class="stat-pct">'+pct(c.ABANDONADO)+'</div></div>';}
-function op(){document.getElementById("rp").style.display='block';if(!document.getElementById('d-start').value)setRange('hoy',null);else calcStats();}function up(){fetch("/api/data").then(r=>r.json()).then(d=>{allUsers=d.users||{};renderList(d.botStatus||{});if(ap&&allUsers[ap])updateChatUI(allUsers[ap],d.botStatus||{});});}
-function renderList(st){const l=document.getElementById("list");l.innerHTML="";Object.keys(allUsers).sort((a,b)=>allUsers[b].lastInteraction-allUsers[a].lastInteraction).forEach(p=>{const u=allUsers[p];if(fl!=='ALL'&&u.tag!==fl)return;l.innerHTML+='<div class="cd '+(ap===p?'active':'')+'" onclick="sl(\\''+p+'\\')"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-weight:600">'+u.name+'</span><span style="font-size:0.7em;color:#8696a0">'+new Date(u.lastInteraction).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span></div><div style="display:flex;justify-content:space-between;align-items:center"><div><span class="tag tag-'+u.tag+'">'+u.tag+'</span><span class="diag">'+(u.diagnostico||'')+'</span></div><span style="font-size:0.75em;color:#8696a0">'+f(u.lastInteraction)+'</span></div></div>';});}
-function sl(p){ap=p;document.getElementById("h").style.display="flex";document.getElementById("i").style.display="flex";up();}function updateChatUI(u,st){document.getElementById("n").innerText=u.name;document.getElementById("p").innerText=u.phone;document.getElementById("ts").value=u.tag;document.getElementById("dg").innerText = u.diagnostico ? "🩺 " + u.diagnostico : ""; const b=document.getElementById("bt");const isOff=st[u.phone]===false;b.innerText=isOff?'BOT OFF 🔴':'BOT ON 🟢';b.style.background=isOff?'#333':'var(--ac)';rd(u);}
-function rd(u){const d=document.getElementById("fd");const html=u.history.map(m=>{const type=m.role==='user'?'user':(m.source==='manual'?'manual':'bot');return '<div class="msg '+type+'"><div>'+m.content+'</div><div style="font-size:0.65em;opacity:0.6;text-align:right;margin-top:4px">'+f(m.timestamp)+'</div></div>';}).join("");if(d.innerHTML!==html){d.innerHTML=html;d.scrollTop=d.scrollHeight;}}
-async function sd(){const v=document.getElementById("m");if(!v.value)return;await fetch("/api/manual",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:ap,text:v.value})});v.value="";up();}
-setInterval(up,4000);up();
-</script></body></html>`);
+    res.send(`
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><title>ZARA CRM POTENTE 9.0</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 350px; border-right: 1px solid #334155; display: flex; flex-direction: column; background: #111827; }
+        .main { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
+        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; background: #1e293b; border-bottom: 1px solid #334155; }
+        .stat-card { background: #334155; padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; }
+        .lead-list { flex: 1; overflow-y: auto; }
+        .lead-item { padding: 15px; border-bottom: 1px solid #1e293b; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+        .lead-item:hover { background: #1e293b; }
+        .lead-item.active { background: #1e293b; border-left-color: var(--primary); }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; background: #475569; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { max-width: 80%; padding: 10px 14px; border-radius: 15px; font-size: 13.5px; line-height: 1.5; position: relative; }
+        .msg.user { align-self: flex-start; background: #334155; color: white; border-bottom-left-radius: 2px; }
+        .msg.bot { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div style="padding:20px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center">
+            <h2 style="margin:0; font-size:16px; color:var(--primary)">💎 ZARA 9.0 POTENTE</h2>
+            <span style="font-size:10px; color:#64748b">DISCO ACTIVO</span>
+        </div>
+        <div class="stats-bar" id="stats"></div>
+        <div class="lead-list" id="list"></div>
+    </div>
+    <div class="main">
+        <div id="chatHeader" style="padding:15px 20px; background:#1e293b; border-bottom:1px solid #334155; display:flex; justify-content:space-between">
+            <h3 id="curUser" style="margin:0; font-size:16px">Selecciona un cliente</h3>
+            <div id="statusBadge"></div>
+        </div>
+        <div class="chat-area" id="chat"></div>
+        <div style="padding:15px; background:#1e293b; display:flex; gap:10px; border-top:1px solid #334155">
+            <input type="text" id="input" style="flex:1; padding:12px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:white" placeholder="Mensaje manual...">
+            <button onclick="send()" style="padding:0 20px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer">ENVIAR</button>
+        </div>
+    </div>
+    <script>
+        let data = {}; let selected = null;
+        async function refresh() {
+            try {
+                const r = await fetch('/api/data');
+                data = await r.json();
+                render();
+            } catch(e) { console.error("Error refresh"); }
+        }
+        function render() {
+            const list = document.getElementById('list');
+            const stats = document.getElementById('stats');
+            const users = Object.values(data.users || {}).sort((a,b) => b.lastInteraction - a.lastInteraction);
+            
+            stats.innerHTML = \`<div class="stat-card"><b style="color:var(--primary)">\${users.length}</b><br>LEADS</div>
+                               <div class="stat-card"><b style="color:#fbbf24">\${users.filter(u=>u.tag==='HOT').length}</b><br>HOT</div>
+                               <div class="stat-card"><b style="color:#4ade80">\${users.filter(u=>u.tag==='AGENDADO').length}</b><br>CITAS</div>\`;
+
+            list.innerHTML = users.map(u => \`
+                <div class="lead-item \${selected === u.phone ? 'active' : ''}" onclick="selectUser('\${u.phone}')">
+                    <div style="display:flex; justify-content:space-between"><b>\${u.name || u.phone}</b></div>
+                    <span class="badge" style="background:\${u.tag==='AGENDADO'?'#065f46':u.tag==='HOT'?'#991b1b':'#334155'}">\${u.tag || 'NUEVO'}</span>
+                </div>
+            \`).join('');
+
+            if(selected && data.users[selected]) {
+                const u = data.users[selected];
+                document.getElementById('curUser').innerText = u.name || selected;
+                document.getElementById('chat').innerHTML = u.history.map(m => \`
+                    <div class="msg \${m.role==='user'?'user':'bot'}">\${m.content}</div>
+                \`).join('');
+                const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight;
+            }
+        }
+        function selectUser(p) { selected = p; render(); }
+        async function send() {
+            const i = document.getElementById('input'); if(!i.value || !selected) return;
+            await fetch('/api/manual', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({phone: selected, text: i.value})
+            });
+            i.value = ''; refresh();
+        }
+        setInterval(refresh, 5000);
+        refresh();
+    </script>
+</body>
+</html>
+    `);
 });
-app.get('/api/data',(req,res)=>res.json({users:getSesiones(),botStatus:getBotStatus()}));
-app.post('/api/tag',(req,res)=>res.json({success:updateTagManual(req.body.phone,req.body.tag)}));
-app.post('/api/toggle',(req,res)=>{const s=toggleBot(req.body.phone);res.json({status:s});});
-app.post('/api/estrat',async(req,res)=>{await ejecutarEstrategia(req.body.tag);res.json({success:true});});
-app.post('/api/diag-all',async(req,res)=>{await diagnosticarTodo();res.json({success:true});});
-app.post('/api/manual',async(req,res)=>{await enviarMensajeManual(req.body.phone,req.body.text);res.json({success:true});});
-app.post('/api/reservo',async(req,res)=>{ const {phone,name,date}=req.body; if(phone) await procesarReserva(phone,name,date); res.json({success:true});});
-app.post('/webhook',async(req,res)=>{await procesarEvento(req.body.entry?.[0]);res.sendStatus(200);});
-app.listen(process.env.PORT||3000);
+
+app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
+app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ success: true }); });
+app.post('/webhook', async (req, res) => { const { procesarEvento } = await import('./app.js'); await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); });
+
+app.listen(process.env.PORT || 3000, () => console.log("ZARA DASHBOARD 9.0 ONLINE"));
