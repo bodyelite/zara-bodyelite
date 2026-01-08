@@ -51,7 +51,7 @@ export async function diagnosticarTodo() {
 }
 
 export function updateTagManual(phone, newTag) { 
-    if (sesiones[phone]) { sesiones[phone].tag = newTag; guardar(); return true; } 
+export function agregarNota(phone, texto) { if (sesiones[phone]) { if (!sesiones[phone].notes) sesiones[phone].notes = []; sesiones[phone].notes.unshift({ date: Date.now(), text: texto }); return true; } return false; }    if (sesiones[phone]) { sesiones[phone].tag = newTag; guardar(); return true; } 
     return false; 
 }
 
