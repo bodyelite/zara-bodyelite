@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, procesarEvento } from './app.js';
+import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, agregarNota, procesarEvento } from './app.js';
 
 const app = express();
 app.use(express.json());
@@ -32,7 +32,7 @@ app.get('/monitor', (req, res) => {
             <div class="lead-list" id="list"></div>
         </div>
         <div class="main">
-            <div style="padding:20px; background:#1e293b; border-bottom:1px solid #334155"><h3 id="uName">Selecciona Cliente</h3></div>
+            <div style="padding:20px; background:#1e293b; border-bottom:1px solid #334155"><h3 id="uName">Selecciona un cliente</h3></div>
             <div class="chat-area" id="chat"></div>
             <div style="padding:20px; background:#1e293b; display:flex; gap:10px">
                 <input type="text" id="input" style="flex:1; padding:12px; border-radius:8px; border:none; background:#0f172a; color:white" placeholder="Mensaje...">
@@ -42,21 +42,25 @@ app.get('/monitor', (req, res) => {
         <script>
             let data = {}; let selected = null;
             async function load() {
-                const r = await fetch('/api/data');
-                data = await r.json();
-                const list = document.getElementById('list');
-                const users = Object.values(data.users).sort((a,b)=>b.lastInteraction-a.lastInteraction);
-                list.innerHTML = users.map(u => \`
-                    <div class="lead-item \${selected === u.phone ? 'active' : ''}" onclick="show('\${u.phone}')">
-                        <b>\${u.name || u.phone}</b><br><small>\${u.tag || 'NUEVO'}</small>
-                    </div>\`).join('');
-                if(selected) show(selected);
+                try {
+                    const r = await fetch('/api/data');
+                    data = await r.json();
+                    const list = document.getElementById('list');
+                    const users = Object.values(data.users).sort((a,b)=>b.lastInteraction-a.lastInteraction);
+                    list.innerHTML = users.map(u => \`
+                        <div class="lead-item \${selected === u.phone ? 'active' : ''}" onclick="show('\${u.phone}')">
+                            <b>\${u.name || u.phone}</b><br><small>\${u.tag || 'NUEVO'}</small>
+                        </div>\`).join('');
+                    if(selected) show(selected);
+                } catch(e) {}
             }
             function show(p) {
                 selected = p; const u = data.users[p];
+                if(!u) return;
                 document.getElementById('uName').innerText = u.name;
                 document.getElementById('chat').innerHTML = u.history.map(m => \`
                     <div class="msg \${m.role==='user'?'user':'bot'}">\${m.content}</div>\`).join('');
+                const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight;
             }
             async function send() {
                 const i = document.getElementById('input');
@@ -72,6 +76,6 @@ app.get('/monitor', (req, res) => {
 
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ success: true }); });
-app.post('/webhook', async (req, res) => { await procesarEvento(req.body.entry?.[0]); res.sendStatus(200); });
+app.post('/webhook', async (req, res) => { await procesarEvento(req.body); res.sendStatus(200); });
 
-app.listen(process.env.PORT || 3000, () => console.log("ZARA ONLINE"));
+app.listen(process.env.PORT || 3000, () => console.log("ZARA ONLINE 🚀"));
