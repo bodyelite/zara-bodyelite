@@ -39,20 +39,37 @@ export function updateTagManual(phone, newTag) {
     return false;
 }
 
-export function agregarNota(phone, texto) {
-    if (sesiones[phone]) {
-        if (!sesiones[phone].notes) sesiones[phone].notes = [];
-        sesiones[phone].notes.unshift({ date: Date.now(), text: texto });
-        guardar();
-        return true;
-    }
-    return false;
-}
-
 export function toggleBot(phone) { 
     botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone]; 
     guardar(); 
     return botStatus[phone]; 
+}
+
+// --- NUEVA LÓGICA DE NOTAS ---
+export function agregarNota(phone, texto, isScheduled, dateStr) {
+    if (sesiones[phone]) {
+        if (!sesiones[phone].notes) sesiones[phone].notes = [];
+        
+        let noteObj = {
+            date: Date.now(),
+            text: texto,
+            status: 'normal'
+        };
+
+        if (isScheduled && dateStr) {
+            // Guardamos la fecha y hora exacta que viene del monitor (Formato: YYYY-MM-DDTHH:mm)
+            noteObj.status = 'pending';
+            noteObj.scheduleTime = dateStr; 
+            
+            // Mover lead a GESTIÓN FUTURA
+            sesiones[phone].tag = 'GESTIÓN FUTURA';
+        }
+
+        sesiones[phone].notes.unshift(noteObj);
+        guardar();
+        return true;
+    }
+    return false;
 }
 
 export async function enviarMensajeManual(p, t) {
@@ -88,33 +105,49 @@ export async function ejecutarEstrategia(phone, tipo) {
     return true;
 }
 
-// RECUPERADOR AUTOMÁTICO (EL "VISTO")
+// --- CRONOS: MOTOR DE TIEMPO EXACTO ---
 setInterval(async () => {
     const now = DateTime.now().setZone('America/Santiago');
-    const hora = now.hour;
+    // Formato exacto del input datetime-local (YYYY-MM-DDTHH:mm)
+    const nowStr = now.toFormat("yyyy-MM-dd'T'HH:mm");
     
-    // Solo opera de 9:00 a 19:00
-    if (hora < 9 || hora >= 19) return;
-
-    const keys = Object.keys(sesiones);
-    for (const p of keys) {
+    const phones = Object.keys(sesiones);
+    for (const p of phones) {
         const u = sesiones[p];
-        if (!u.history || u.history.length === 0) continue;
+        
+        // 1. TAREAS PROGRAMADAS EXACTAS
+        if (u.notes) {
+            for (let note of u.notes) {
+                // Compara strings: "2026-01-08T20:30" <= "2026-01-08T20:30"
+                if (note.status === 'pending' && note.scheduleTime && note.scheduleTime <= nowStr) {
+                    console.log(`⏰ EJECUTANDO TAREA EXACTA PARA ${p}: ${note.text}`);
+                    
+                    const prompt = `IMPORTANTE: Es hora de cumplir esta tarea programada: "${note.text}". Lee el historial y envía el mensaje correspondiente ahora de forma natural y empática.`;
+                    const historyConContexto = [...u.history, { role: "system", content: prompt }];
+                    
+                    const resp = await pensar(historyConContexto, u.name);
+                    await enviarMensajeManual(p, resp);
+                    
+                    note.status = 'executed';
+                    note.executedAt = Date.now();
+                    guardar();
+                }
+            }
+        }
 
-        const lastMsg = u.history[u.history.length - 1];
-        const timeDiff = Date.now() - u.lastInteraction;
-        const horasPasadas = timeDiff / (1000 * 60 * 60);
-
-        if (lastMsg.role === 'assistant' && horasPasadas > 2 && horasPasadas < 24) {
-            if (u.tag === 'INTERESADO' && !u.recoverySent) {
-                const msg = `Hola ${u.name.split(' ')[0]}! 👋 Quedé atenta por si te surgió alguna duda. ¿Te gustaría que te llame brevemente?`;
-                await enviarMensajeManual(p, msg);
-                u.recoverySent = true;
-                guardar();
+        // 2. LIMPIEZA AUTOMÁTICA (GESTIÓN FUTURA -> DESCARTADO)
+        if (u.tag === 'GESTIÓN FUTURA') {
+            const lastExecuted = u.notes?.find(n => n.status === 'executed');
+            if (lastExecuted && lastExecuted.executedAt) {
+                const hoursSince = (Date.now() - lastExecuted.executedAt) / (1000 * 60 * 60);
+                if (hoursSince > 24) {
+                    u.tag = 'DESCARTADO';
+                    guardar();
+                }
             }
         }
     }
-}, 600000); 
+}, 30000); // Revisar cada 30 segundos para mayor precisión
 
 export async function procesarEvento(evento) {
     const val = evento.entry?.[0]?.changes?.[0]?.value; 
@@ -129,9 +162,8 @@ export async function procesarEvento(evento) {
     }
     
     let contenido = "";
-    if (msg.type === "text") {
-        contenido = msg.text.body;
-    } else if (msg.type === "audio") {
+    if (msg.type === "text") contenido = msg.text.body;
+    else if (msg.type === "audio") {
         const url = await obtenerUrlMedia(msg.audio.id);
         contenido = `[AUDIO]: ${await transcribirAudio(url)}`;
     }
@@ -143,9 +175,12 @@ export async function procesarEvento(evento) {
         return; 
     }
 
+    if (sesiones[p].tag === 'GESTIÓN FUTURA') {
+        sesiones[p].tag = 'INTERESADO';
+    }
+
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     sesiones[p].lastInteraction = Date.now();
-    sesiones[p].recoverySent = false; 
 
     if (botStatus[p] !== false) {
         const resp = await pensar(sesiones[p].history, sesiones[p].name);
