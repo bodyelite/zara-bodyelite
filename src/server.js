@@ -11,7 +11,7 @@ app.get('/monitor', (req, res) => {
     <!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8"><title>ZARA CRM 9.0 PRO</title>
+        <meta charset="UTF-8"><title>ZARA CRM 9.0 POTENTE</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
         <style>
             :root { --primary: #2563eb; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
@@ -27,7 +27,7 @@ app.get('/monitor', (req, res) => {
             .main { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
             .chat-header { padding: 15px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
             .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-            .msg { max-width: 80%; padding: 10px; border-radius: 10px; line-height: 1.4; }
+            .msg { max-width: 80%; padding: 10px; border-radius: 10px; line-height: 1.4; font-size: 13px; }
             .msg.bot { align-self: flex-end; background: var(--primary); color: white; }
             .msg.user { align-self: flex-start; background: #334155; color: white; }
             .tools { width: 280px; background: #111827; border-left: 1px solid #334155; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
@@ -61,7 +61,7 @@ app.get('/monitor', (req, res) => {
         </div>
     </div>
     <div class="tools">
-        <strong>🏷️ ESTADO</strong>
+        <strong>🏷️ CAMBIAR ESTADO</strong>
         <select id="tagSelect" style="width:100%; padding:8px; border-radius:4px; background:#0f172a; color:white; border:none;">
             <option value="NUEVO">NUEVO</option>
             <option value="INTERESADO">INTERESADO</option>
@@ -72,7 +72,12 @@ app.get('/monitor', (req, res) => {
         </select>
         <button class="btn btn-blue" onclick="updateTag()">Guardar Etapa</button>
         <hr style="border:0; border-top:1px solid #334155; width:100%;">
-        <button class="btn btn-purple" onclick="refresh()">Actualizar Leads</button>
+        <strong>📝 NOTA INTERNA</strong>
+        <textarea id="noteIn" style="width:100%; height:80px; background:#0f172a; color:white; border:none; border-radius:4px; padding:5px; resize:none;"></textarea>
+        <button class="btn btn-blue" onclick="addNote()">Añadir Nota</button>
+        <hr style="border:0; border-top:1px solid #334155; width:100%;">
+        <button class="btn btn-purple" onclick="runDiagnostic()">🔍 DIAGNOSTICAR LEADS</button>
+        <button class="btn btn-purple" onclick="refresh()">RECARGAR DATOS</button>
     </div>
     <script>
         let curTab='NUEVO', curPhone=null, data={};
@@ -86,7 +91,8 @@ app.get('/monitor', (req, res) => {
         }
         function renderList(){
             const list=document.getElementById('leadList'); list.innerHTML='';
-            Object.values(data.users || {}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
+            const users = Object.values(data.users || {}).sort((a,b)=>b.lastInteraction-a.lastInteraction);
+            users.forEach(u=>{
                 if(u.tag===curTab || (curTab==='NUEVO' && !u.tag)){
                     list.innerHTML += \`<div class="lead-card \${curPhone===u.phone?'active':''}" onclick="selectLead('\${u.phone}')">
                         <b>\${u.name}</b><br><small>\${u.phone}</small>
@@ -97,20 +103,30 @@ app.get('/monitor', (req, res) => {
         function selectLead(p){ curPhone=p; document.getElementById('tagSelect').value = data.users[p].tag || 'NUEVO'; refresh(); }
         function renderChat(){
             const u=data.users[curPhone];
+            if(!u) return;
             document.getElementById('uName').innerText = u.name;
             const status = data.botStatus[curPhone] !== false;
             document.getElementById('botControl').innerHTML = \`<button onclick="toggleBot()" style="background:\${status?'#059669':'#991b1b'}; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer">BOT: \${status?'ON':'OFF'}</button>\`;
-            document.getElementById('chatBody').innerHTML = u.history.map(m => \`<div class="msg \${m.role==='user'?'user':'bot'}">\${m.content}</div>\`).join('');
+            let content = '';
+            if(u.notes) u.notes.forEach(n => content += \`<div style="background:#fef3c7; color:#92400e; padding:10px; border-radius:6px; margin-bottom:10px; font-size:11px;">📌 \${n.text}</div>\`);
+            content += u.history.map(m => \`<div class="msg \${m.role==='user'?'user':'bot'}">\${m.content}</div>\`).join('');
+            document.getElementById('chatBody').innerHTML = content;
             document.getElementById('chatBody').scrollTop = document.getElementById('chatBody').scrollHeight;
         }
         async function sendManual(){
-            const t = document.getElementById('msgIn').value;
+            const t = document.getElementById('msgIn').value; if(!t || !curPhone) return;
             await fetch('/api/manual', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:curPhone, text:t})});
             document.getElementById('msgIn').value=''; refresh();
         }
         async function toggleBot(){ await fetch('/api/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:curPhone})}); refresh(); }
         async function updateTag(){ await fetch('/api/tag', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:curPhone, tag:document.getElementById('tagSelect').value})}); refresh(); }
-        function setTab(t){ curTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.innerText.includes(t))); renderList(); }
+        async function addNote(){
+            const note = document.getElementById('noteIn').value; if(!note || !curPhone) return;
+            await fetch('/api/note', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:curPhone, text:note})});
+            document.getElementById('noteIn').value=''; refresh();
+        }
+        async function runDiagnostic(){ await fetch('/api/diagnostic', {method:'POST'}); alert('Diagnóstico completado'); refresh(); }
+        function setTab(t){ curTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.innerText.includes(t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()))); renderList(); }
         setInterval(refresh, 5000); refresh();
     </script>
     </body></html>\`);
@@ -121,6 +137,7 @@ app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body
 app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.phone, req.body.tag) }));
 app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));
 app.post('/api/note', (req, res) => res.json({ success: agregarNota(req.body.phone, req.body.text) }));
+app.post('/api/diagnostic', async (req, res) => { await diagnosticarTodo(); res.json({ success: true }); });
 app.post('/webhook', async (req, res) => { await procesarEvento(req.body); res.sendStatus(200); });
 
 app.listen(process.env.PORT || 3000, () => console.log("ZARA CRM 9.0 POTENTE ONLINE 🚀"));

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
 import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
@@ -36,17 +37,6 @@ async function notificarStaff(texto) {
     }
 }
 
-export async function diagnosticarTodo() {
-    const keys = Object.keys(sesiones);
-    for (const p of keys) {
-        if (sesiones[p].history && sesiones[p].history.length > 0) {
-            sesiones[p].diagnostico = await diagnosticar(sesiones[p].history);
-        }
-    }
-    guardar();
-    return true;
-}
-
 export function updateTagManual(phone, newTag) {
     if (sesiones[phone]) {
         sesiones[phone].tag = newTag;
@@ -72,6 +62,17 @@ export function toggleBot(phone) {
     return botStatus[phone]; 
 }
 
+export async function diagnosticarTodo() {
+    const keys = Object.keys(sesiones);
+    for (const p of keys) {
+        if (sesiones[p].history && sesiones[p].history.length > 0) {
+            sesiones[p].diagnostico = await diagnosticar(sesiones[p].history);
+        }
+    }
+    guardar();
+    return true;
+}
+
 export async function enviarMensajeManual(p, t) {
     if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() };
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: 'manual' });
@@ -90,6 +91,7 @@ export async function procesarEvento(evento) {
     
     if (!sesiones[p]) { 
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() }; 
+        await notificarStaff(`📢 *NUEVO LEAD* ✨\n👤 ${nombre}\n📱 +${p}`);
     }
     
     let contenido = "";
@@ -103,7 +105,7 @@ export async function procesarEvento(evento) {
     if (contenido.toLowerCase().includes('/reset')) { 
         sesiones[p].history = []; 
         guardar(); 
-        await enviarMensaje(p, "🔄 Reset."); 
+        await enviarMensaje(p, "🔄 Conversación reiniciada."); 
         return; 
     }
 
@@ -114,7 +116,11 @@ export async function procesarEvento(evento) {
         const resp = await pensar(sesiones[p].history, sesiones[p].name);
         await enviarMensaje(p, resp);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
-        if (resp.includes('reservo.cl')) sesiones[p].tag = "HOT";
+        
+        if (resp.includes('reservo.cl')) {
+            sesiones[p].tag = "HOT";
+            await notificarStaff(`🔥 *LEAD CALIENTE* (Link Enviado)\n👤 ${nombre}\n📱 +${p}`);
+        }
     }
     guardar();
 }
