@@ -1,35 +1,60 @@
 import fs from 'fs';
 import path from 'path';
-import { DateTime } from 'luxon'; 
+import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
-import { pensar, transcribirAudio, diagnosticar } from './brain.js';
-import { obtenerCitasHoy } from './google_calendar.js'; 
+import { pensar, transcribirAudio } from './brain.js';
 import { NEGOCIO } from './config/business.js';
 
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
-let sesiones = {}; let botStatus = {}; let recordatoriosEnviadosHoy = false;
+let sesiones = {};
+let botStatus = {};
+let recordatoriosEnviadosHoy = false;
 
 if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
     fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
 }
 
-try { 
+try {
     if (fs.existsSync(FILE)) {
-        const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); 
-        sesiones = data.sesiones || {}; 
-        botStatus = data.botStatus || {}; 
+        const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+        sesiones = data.sesiones || {};
+        botStatus = data.botStatus || {};
     }
-} catch (e) { console.log("Error DB:", e); }
+} catch (e) { console.error("Error DB:", e); }
 
-function guardar() { 
-    try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); } catch(e){} 
+function guardar() {
+    try {
+        fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus }));
+    } catch (e) { console.error("Error Guardar:", e); }
 }
 
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
-export function toggleBot(phone) { botStatus[phone] = !botStatus[phone]; guardar(); return botStatus[phone]; }
-export function updateTagManual(phone, newTag) { if (sesiones[phone]) { sesiones[phone].tag = newTag; guardar(); return true; } return false; }
-export function agregarNota(phone, texto) { if (sesiones[phone]) { if (!sesiones[phone].notes) sesiones[phone].notes = []; sesiones[phone].notes.unshift({ date: Date.now(), text: texto }); guardar(); return true; } return false; }
+
+export function updateTagManual(phone, newTag) {
+    if (sesiones[phone]) {
+        sesiones[phone].tag = newTag;
+        guardar();
+        return true;
+    }
+    return false;
+}
+
+export function agregarNota(phone, texto) {
+    if (sesiones[phone]) {
+        if (!sesiones[phone].notes) sesiones[phone].notes = [];
+        sesiones[phone].notes.unshift({ date: Date.now(), text: texto });
+        guardar();
+        return true;
+    }
+    return false;
+}
+
+export function toggleBot(phone) {
+    botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
+    guardar();
+    return botStatus[phone];
+}
 
 export async function enviarMensajeManual(p, t) {
     if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() };
@@ -40,7 +65,6 @@ export async function enviarMensajeManual(p, t) {
 }
 
 export async function procesarEvento(evento) {
-    // RUTA CORRECTA PARA META WEBHOOK
     const entry = evento.entry?.[0];
     const changes = entry?.changes?.[0];
     const value = changes?.value;
@@ -50,7 +74,9 @@ export async function procesarEvento(evento) {
     const p = message.from;
     const nombre = value.contacts?.[0]?.profile?.name || "Cliente";
 
-    if (!sesiones[p]) { sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() }; }
+    if (!sesiones[p]) {
+        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() };
+    }
 
     let contenido = "";
     if (message.type === "text") {
@@ -71,15 +97,3 @@ export async function procesarEvento(evento) {
     }
     guardar();
 }
-
-setInterval(async () => {
-    const now = DateTime.now().setZone('America/Santiago');
-    if (now.hour === 9 && now.minute === 0 && !recordatoriosEnviadosHoy) {
-        const citas = await obtenerCitasHoy();
-        for (const c of citas) {
-            await enviarMensaje(c.telefono, `Hola ${c.nombre.split(' ')[0]}! Recordatorio de cita hoy a las ${c.hora}. ✨`);
-        }
-        recordatoriosEnviadosHoy = true;
-    }
-    if (now.hour === 10) recordatoriosEnviadosHoy = false;
-}, 60000);
