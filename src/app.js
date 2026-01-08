@@ -1,35 +1,44 @@
 import fs from 'fs';
 import path from 'path';
-import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
-import { pensar, transcribirAudio } from './brain.js';
+import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
 
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
-let sesiones = {};
-let botStatus = {};
-let recordatoriosEnviadosHoy = false;
+let sesiones = {}; 
+let botStatus = {}; 
 
 if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
     fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
 }
 
-try {
+try { 
     if (fs.existsSync(FILE)) {
-        const data = JSON.parse(fs.readFileSync(FILE, 'utf8'));
-        sesiones = data.sesiones || {};
-        botStatus = data.botStatus || {};
+        const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); 
+        sesiones = data.sesiones || {}; 
+        botStatus = data.botStatus || {}; 
     }
 } catch (e) { console.error("Error DB:", e); }
 
-function guardar() {
+function guardar() { 
     try {
-        fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus }));
+        fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); 
     } catch (e) { console.error("Error Guardar:", e); }
 }
 
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
+
+export async function diagnosticarTodo() {
+    const keys = Object.keys(sesiones);
+    for (const p of keys) {
+        if (sesiones[p].history && sesiones[p].history.length > 0) {
+            sesiones[p].diagnostico = await diagnosticar(sesiones[p].history);
+        }
+    }
+    guardar();
+    return true;
+}
 
 export function updateTagManual(phone, newTag) {
     if (sesiones[phone]) {
@@ -50,40 +59,45 @@ export function agregarNota(phone, texto) {
     return false;
 }
 
-export function toggleBot(phone) {
-    botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone];
-    guardar();
-    return botStatus[phone];
+export function toggleBot(phone) { 
+    botStatus[phone] = botStatus[phone] === undefined ? false : !botStatus[phone]; 
+    guardar(); 
+    return botStatus[phone]; 
 }
 
 export async function enviarMensajeManual(p, t) {
     if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() };
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: 'manual' });
     sesiones[p].lastInteraction = Date.now();
-    guardar();
+    guardar(); 
     await enviarMensaje(p, t);
 }
 
 export async function procesarEvento(evento) {
-    const entry = evento.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const value = changes?.value;
-    if (!value?.messages) return;
+    const val = evento.changes?.[0]?.value; 
+    const msg = val?.messages?.[0]; 
+    if (!msg) return;
 
-    const message = value.messages[0];
-    const p = message.from;
-    const nombre = value.contacts?.[0]?.profile?.name || "Cliente";
-
-    if (!sesiones[p]) {
-        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() };
+    const p = msg.from; 
+    const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
+    
+    if (!sesiones[p]) { 
+        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() }; 
+    }
+    
+    let contenido = "";
+    if (msg.type === "text") {
+        contenido = msg.text.body;
+    } else if (msg.type === "audio") {
+        const url = await obtenerUrlMedia(msg.audio.id);
+        contenido = `[AUDIO]: ${await transcribirAudio(url)}`;
     }
 
-    let contenido = "";
-    if (message.type === "text") {
-        contenido = message.text.body;
-    } else if (message.type === "audio") {
-        const url = await obtenerUrlMedia(message.audio.id);
-        contenido = `[AUDIO]: ${await transcribirAudio(url)}`;
+    if (contenido.toLowerCase().includes('/reset')) { 
+        sesiones[p].history = []; 
+        guardar(); 
+        await enviarMensaje(p, "🔄 Reset."); 
+        return; 
     }
 
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
