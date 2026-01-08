@@ -4,7 +4,6 @@ import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
 import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
 
-// --- PERSISTENCIA EN DISCO RENDER ---
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
 let sesiones = {}; 
 let botStatus = {}; 
@@ -19,17 +18,34 @@ try {
         sesiones = data.sesiones || {}; 
         botStatus = data.botStatus || {}; 
     }
-} catch (e) { console.error("Error cargando DB:", e); }
+} catch (e) { console.error("Error DB:", e); }
 
 function guardar() { 
     try {
         fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); 
-    } catch (e) { console.error("Error guardando DB:", e); }
+    } catch (e) { console.error("Error Guardar:", e); }
 }
 
-// --- EXPORTACIONES ---
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
+
+async function notificarStaff(texto) {
+    if (!NEGOCIO.staff_alertas) return;
+    for (const adminPhone of NEGOCIO.staff_alertas) { 
+        await enviarMensaje(adminPhone, texto).catch(e => console.error("Error alerta:", e)); 
+    }
+}
+
+export async function diagnosticarTodo() {
+    const keys = Object.keys(sesiones);
+    for (const p of keys) {
+        if (sesiones[p].history && sesiones[p].history.length > 0) {
+            sesiones[p].diagnostico = await diagnosticar(sesiones[p].history);
+        }
+    }
+    guardar();
+    return true;
+}
 
 export function updateTagManual(phone, newTag) {
     if (sesiones[phone]) {
@@ -64,20 +80,8 @@ export async function enviarMensajeManual(p, t) {
     await enviarMensaje(p, t);
 }
 
-export async function diagnosticarTodo() {
-    const keys = Object.keys(sesiones);
-    for (const p of keys) {
-        if (sesiones[p].history && sesiones[p].history.length > 0) {
-            sesiones[p].diagnostico = await diagnosticar(sesiones[p].history);
-        }
-    }
-    guardar();
-    return true;
-}
-
-// --- PROCESAMIENTO DE MENSAJES ---
 export async function procesarEvento(evento) {
-    const val = evento.changes?.[0]?.value; 
+    const val = evento.entry?.[0]?.changes?.[0]?.value; 
     const msg = val?.messages?.[0]; 
     if (!msg) return;
 
@@ -89,8 +93,9 @@ export async function procesarEvento(evento) {
     }
     
     let contenido = "";
-    if (msg.type === "text") contenido = msg.text.body;
-    else if (msg.type === "audio") {
+    if (msg.type === "text") {
+        contenido = msg.text.body;
+    } else if (msg.type === "audio") {
         const url = await obtenerUrlMedia(msg.audio.id);
         contenido = `[AUDIO]: ${await transcribirAudio(url)}`;
     }
@@ -98,7 +103,7 @@ export async function procesarEvento(evento) {
     if (contenido.toLowerCase().includes('/reset')) { 
         sesiones[p].history = []; 
         guardar(); 
-        await enviarMensaje(p, "🔄 Historial limpio."); 
+        await enviarMensaje(p, "🔄 Reset."); 
         return; 
     }
 
@@ -108,7 +113,7 @@ export async function procesarEvento(evento) {
     if (botStatus[p] !== false) {
         const resp = await pensar(sesiones[p].history, sesiones[p].name);
         await enviarMensaje(p, resp);
-        sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now() });
+        sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
         if (resp.includes('reservo.cl')) sesiones[p].tag = "HOT";
     }
     guardar();
