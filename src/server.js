@@ -29,11 +29,11 @@ app.get('/monitor', (req, res) => {
     <body>
         <div class="sidebar">
             <div style="padding:20px; border-bottom:1px solid #334155"><h2>💎 ZARA 9.0</h2></div>
-            <div class="lead-list" id="list"></div>
+            <div id="list" class="lead-list"></div>
         </div>
         <div class="main">
-            <div style="padding:20px; background:#1e293b; border-bottom:1px solid #334155"><h3 id="uName">Selecciona un cliente</h3></div>
-            <div class="chat-area" id="chat"></div>
+            <div style="padding:20px; background:#1e293b; border-bottom:1px solid #334155"><h3 id="uName">Selecciona Cliente</h3></div>
+            <div id="chat" class="chat-area"></div>
             <div style="padding:20px; background:#1e293b; display:flex; gap:10px">
                 <input type="text" id="input" style="flex:1; padding:12px; border-radius:8px; border:none; background:#0f172a; color:white" placeholder="Mensaje...">
                 <button onclick="send()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:8px; cursor:pointer">ENVIAR</button>
