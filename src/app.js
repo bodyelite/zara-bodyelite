@@ -5,6 +5,9 @@ import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
 import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
 
+// --- CONFIGURACIÓN DE ALERTAS ---
+const ADMIN_NUMBER = '569XXXXXXXX'; // <--- PON TU NÚMERO AQUÍ PARA RECIBIR ALERTAS
+
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
 let sesiones = {}; 
 let botStatus = {}; 
@@ -101,7 +104,6 @@ setInterval(async () => {
     for (const p of phones) {
         const u = sesiones[p];
         
-        // 1. TAREAS EXACTAS
         if (u.notes) {
             for (let note of u.notes) {
                 if (note.status === 'pending' && note.scheduleTime && note.scheduleTime <= nowStr) {
@@ -118,7 +120,6 @@ setInterval(async () => {
             }
         }
 
-        // 2. LIMPIEZA AUTOMÁTICA
         if (u.tag === 'GESTIÓN FUTURA') {
             const lastExecuted = u.notes?.find(n => n.status === 'executed');
             if (lastExecuted && lastExecuted.executedAt) {
@@ -138,8 +139,10 @@ export async function procesarEvento(evento) {
     const p = msg.from; 
     const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
+    // 1. ALERTA NUEVO LEAD
     if (!sesiones[p]) { 
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() }; 
+        await enviarMensaje(ADMIN_NUMBER, `🚨 NUEVO LEAD: ${nombre} (${p})`);
     }
     
     let contenido = "";
@@ -153,24 +156,34 @@ export async function procesarEvento(evento) {
         sesiones[p].history = []; guardar(); await enviarMensaje(p, "🔄 Reset."); return; 
     }
 
+    // 2. ALERTA SOLICITUD DE LLAMADA (Detecta "llámame", "llámenme" o "sí" tras oferta)
+    const lowerContent = contenido.toLowerCase();
+    if (lowerContent.includes('llámame') || lowerContent.includes('llámenme') || lowerContent.includes('llamenme') || 
+       (lowerContent.includes('si') && sesiones[p].history.length > 0 && sesiones[p].history[sesiones[p].history.length-1].content.includes('llamar'))) {
+        await enviarMensaje(ADMIN_NUMBER, `📞 PIDEN LLAMADA: ${sesiones[p].name} (${p}) dijo: "${contenido}"`);
+    }
+
     if (sesiones[p].tag === 'GESTIÓN FUTURA') { sesiones[p].tag = 'INTERESADO'; }
 
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     sesiones[p].lastInteraction = Date.now();
 
     if (botStatus[p] !== false) {
-        // INYECCIÓN DE HORARIOS ESTRICTOS (FIX FINAL)
         const reglasHorarias = {
             role: "system",
-            content: "⚠️ REGLA DE ORO DE HORARIOS (NO INVENTAR): Lunes, Miércoles y Viernes de 10:00 a 18:30. Martes y Jueves de 10:00 a 17:00. Sábados SOLO de 10:00 a 13:00. Domingos CERRADO. Si piden sábado a las 17:00 DI QUE NO. No ofrezcas horas fuera de esto."
+            content: "⚠️ REGLA DE ORO DE HORARIOS: Lunes, Miércoles y Viernes de 10:00 a 18:30. Martes y Jueves de 10:00 a 17:00. Sábados SOLO de 10:00 a 13:00. Domingos CERRADO. Si piden sábado a las 17:00 DI QUE NO. No ofrezcas horas fuera de esto."
         };
         
-        // Enviamos historial + Reglas al final para que la IA no lo olvide
         const resp = await pensar([...sesiones[p].history, reglasHorarias], sesiones[p].name);
         
         await enviarMensaje(p, resp);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
-        if (resp.includes('reservo.cl')) sesiones[p].tag = "HOT";
+        
+        // 3. ALERTA AGENDA / CITA
+        if (resp.includes('reservo.cl')) {
+            sesiones[p].tag = "HOT";
+            await enviarMensaje(ADMIN_NUMBER, `📅 ZARA AGENDA ENVIADA A: ${sesiones[p].name} (${p})`);
+        }
     }
     guardar();
 }
