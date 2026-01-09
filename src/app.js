@@ -4,9 +4,9 @@ import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
 import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { NEGOCIO } from './config/business.js';
+import { FLUJO_MAESTRO } from './flow.js'; // <--- ESTO ES LO QUE FALTABA
 
 // --- CONFIGURACIÓN STAFF ---
-// Valentina, Recepción, Juan Carlos
 const STAFF_NUMBERS = ['56955145504', '56983300262', '56937648536'];
 
 const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
@@ -159,7 +159,7 @@ export async function procesarEvento(evento) {
         sesiones[p].history = []; guardar(); await enviarMensaje(p, "🔄 Reset."); return; 
     }
 
-    // 2. ALERTA SOLICITUD DE LLAMADA
+    // 2. ALERTA STAFF
     const lowerContent = contenido.toLowerCase();
     if (lowerContent.includes('llámame') || lowerContent.includes('llámenme') || lowerContent.includes('llamenme') || 
        (lowerContent.includes('si') && sesiones[p].history.length > 0 && sesiones[p].history[sesiones[p].history.length-1].content.includes('llamar'))) {
@@ -172,18 +172,27 @@ export async function procesarEvento(evento) {
     sesiones[p].lastInteraction = Date.now();
 
     if (botStatus[p] !== false) {
-        // INYECCIÓN HORARIOS ESTRICTOS
-        const reglasHorarias = {
+        // --- INYECCIÓN DEL CEREBRO ---
+        // Aquí fusionamos el GUION (Flow) + HORARIOS + RESTRICCIONES
+        const sistemaOperativo = {
             role: "system",
-            content: "⚠️ REGLA DE ORO DE HORARIOS: Lunes, Miércoles y Viernes de 10:00 a 18:30. Martes y Jueves de 10:00 a 17:00. Sábados SOLO de 10:00 a 13:00. Domingos CERRADO. Si piden sábado a las 17:00 DI QUE NO. No ofrezcas horas fuera de esto."
+            content: `
+            ${FLUJO_MAESTRO}
+            
+            ⚠️ REGLAS CRÍTICAS DE EJECUCIÓN:
+            1. SIGUE EL FLUJO AL PIE DE LA LETRA. Si el flujo dice "No dar precio", NO DES PRECIO.
+            2. TUS RESPUESTAS SON CORTAS. Máximo 2-3 líneas.
+            3. HORARIOS: Lunes, Miércoles, Viernes hasta 18:30. Martes/Jueves hasta 17:00. Sábado hasta 13:00 (ESTRICTO). Domingo CERRADO.
+            4. Si te preguntan por un tratamiento, NO uses tu conocimiento general. Usa el PASO 1 del flujo.
+            `
         };
         
-        const resp = await pensar([...sesiones[p].history, reglasHorarias], sesiones[p].name);
+        // Enviamos el historial, pero ponemos el SISTEMA AL FINAL para que sea la última orden que recibe
+        const resp = await pensar([...sesiones[p].history, sistemaOperativo], sesiones[p].name);
         
         await enviarMensaje(p, resp);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
         
-        // 3. ALERTA AGENDA
         if (resp.includes('reservo.cl')) {
             sesiones[p].tag = "HOT";
             await notificarStaff(`📅 ZARA AGENDA ENVIADA A: ${sesiones[p].name} (${p})`);
