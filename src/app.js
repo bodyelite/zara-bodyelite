@@ -61,7 +61,6 @@ export function agregarNota(phone, texto, isScheduled, dateStr) {
     return false;
 }
 
-// Ahora acepta "source" para diferenciar colores
 export async function enviarMensajeManual(p, t, source = 'manual') {
     if (!sesiones[p]) sesiones[p] = { name: "Cliente", history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() };
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: source });
@@ -89,7 +88,7 @@ export async function ejecutarEstrategia(phone, tipo) {
     if (tipo === 'OFERTA') prompt = "Ofrece un incentivo o descuento para cerrar hoy.";
     if (tipo === 'CIERRE') prompt = "Pregunta directamente si quiere agendar para asegurar su cupo.";
     const resp = await pensar([{ role: "user", content: `(Instrucción interna: ${prompt})` }], u.name);
-    await enviarMensajeManual(phone, resp, 'manual'); // Estrategia manual cuenta como manual
+    await enviarMensajeManual(phone, resp, 'manual'); 
     return true;
 }
 
@@ -110,7 +109,6 @@ setInterval(async () => {
                     const prompt = `IMPORTANTE: Cumple esta tarea programada: "${note.text}". Lee el historial y envía el mensaje ahora.`;
                     const resp = await pensar([...u.history, { role: "system", content: prompt }], u.name);
                     
-                    // AQUI ENVIAMOS COMO "SCHEDULED" PARA QUE SALGA MORADO
                     await enviarMensajeManual(p, resp, 'scheduled');
                     
                     note.status = 'executed';
@@ -161,7 +159,15 @@ export async function procesarEvento(evento) {
     sesiones[p].lastInteraction = Date.now();
 
     if (botStatus[p] !== false) {
-        const resp = await pensar(sesiones[p].history, sesiones[p].name);
+        // INYECCIÓN DE HORARIOS ESTRICTOS (FIX FINAL)
+        const reglasHorarias = {
+            role: "system",
+            content: "⚠️ REGLA DE ORO DE HORARIOS (NO INVENTAR): Lunes, Miércoles y Viernes de 10:00 a 18:30. Martes y Jueves de 10:00 a 17:00. Sábados SOLO de 10:00 a 13:00. Domingos CERRADO. Si piden sábado a las 17:00 DI QUE NO. No ofrezcas horas fuera de esto."
+        };
+        
+        // Enviamos historial + Reglas al final para que la IA no lo olvide
+        const resp = await pensar([...sesiones[p].history, reglasHorarias], sesiones[p].name);
+        
         await enviarMensaje(p, resp);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
         if (resp.includes('reservo.cl')) sesiones[p].tag = "HOT";
