@@ -111,7 +111,7 @@ app.get('/monitor', (req, res) => {
             const list=document.getElementById('leadList'); list.innerHTML='';
             Object.values(data.users||{}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
                 if(u.tag===curTab || (curTab==='NUEVO' && !u.tag)){
-                    list.innerHTML+=`<div class="lead-card ${curPhone===u.phone?'active':''}" onclick="selectLead('${u.phone}')"><div><b>${u.name}</b><br><span style="font-size:11px; color:#6b7280">${u.phone}</span></div></div>`;
+                    list.innerHTML+=\`<div class="lead-card \${curPhone===u.phone?'active':''}" onclick="selectLead('\${u.phone}')"><div><b>\${u.name}</b><br><span style="font-size:11px; color:#6b7280">\${u.phone}</span></div></div>\`;
                 }
             });
         }
@@ -120,10 +120,10 @@ app.get('/monitor', (req, res) => {
             const u=data.users[curPhone]; if(!u) return;
             document.getElementById('uName').innerText=u.name; document.getElementById('uPhone').innerText=u.phone;
             const status=data.botStatus[curPhone]!==false;
-            document.getElementById('botControl').innerHTML=`<button onclick="toggleBot()" style="border:none; background:${status?'#dcfce7':'#fee2e2'}; color:${status?'#166534':'#991b1b'}; padding:5px 10px; border-radius:20px; font-weight:bold; font-size:11px; cursor:pointer">BOT ${status?'ON':'OFF'}</button>`;
+            document.getElementById('botControl').innerHTML=\`<button onclick="toggleBot()" style="border:none; background:\${status?'#dcfce7':'#fee2e2'}; color:\${status?'#166534':'#991b1b'}; padding:5px 10px; border-radius:20px; font-weight:bold; font-size:11px; cursor:pointer">BOT \${status?'ON':'OFF'}</button>\`;
             let html='';
-            if(u.notes) u.notes.forEach(n=>{ html+=`<div style="background:#fffbeb; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; color:#92400e;"><b>📝 Nota:</b> ${n.text}</div>`; });
-            (u.history||[]).forEach(m=>{ html+=`<div style="display:flex; flex-direction:column; align-items:${m.role==='user'?'flex-start':'flex-end'}"><div class="msg ${m.role}">${m.content}</div><span style="font-size:9px; color:#999; margin-top:2px;">${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`; });
+            if(u.notes) u.notes.forEach(n=>{ html+=\`<div style="background:#fffbeb; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; color:#92400e;"><b>📝 Nota:</b> \${n.text}</div>\`; });
+            (u.history||[]).forEach(m=>{ html+=\`<div style="display:flex; flex-direction:column; align-items:\${m.role==='user'?'flex-start':'flex-end'}"><div class="msg \${m.role}">\${m.content}</div><span style="font-size:9px; color:#999; margin-top:2px;">\${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>\`; });
             const chatDiv=document.getElementById('chatBody'); chatDiv.innerHTML=html; chatDiv.scrollTop=chatDiv.scrollHeight;
         }
         async function sendManual(){ const t=document.getElementById('msgIn').value; if(!t)return; await fetch('/api/manual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:t})}); document.getElementById('msgIn').value=''; refresh(); }
@@ -132,7 +132,7 @@ app.get('/monitor', (req, res) => {
         async function addNote(){ const n=document.getElementById('noteIn').value; const s=document.getElementById('checkZara').checked; const d=document.getElementById('dateIn').value; if(!n)return alert("Escribe algo"); await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:n,isScheduled:s,dateStr:d})}); document.getElementById('noteIn').value=''; toggleDateInput(); refresh(); }
         
         async function runBulk(){
-            const lines = document.getElementById('bulkInput').value.split('\n');
+            const lines = document.getElementById('bulkInput').value.split('\\n');
             const status = document.getElementById('bulkStatus');
             let count = 0;
             status.innerText = "Procesando...";
@@ -155,7 +155,7 @@ app.get('/monitor', (req, res) => {
                             body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) 
                         });
                         count++;
-                        status.innerText = `Enviando... (${count})`;
+                        status.innerText = \`Enviando... (\${count})\`;
                     }
                 }
             }

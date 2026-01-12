@@ -55,7 +55,7 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
     return true;
 }
 
-// --- MODIFICACIÓN 1: ENVÍO MANUAL AGRESIVO (Corrige Nombres y Tabs) ---
+// --- ENVÍO MANUAL AGRESIVO (CORRIGE NOMBRES) ---
 export async function enviarMensajeManual(p, t, source='manual', nombreOverride=null, tagOverride=null) {
     if(!sesiones[p]) {
         sesiones[p] = { 
@@ -66,7 +66,7 @@ export async function enviarMensajeManual(p, t, source='manual', nombreOverride=
             lastInteraction: Date.now() 
         };
     } else {
-        // AQUÍ ESTÁ LA CLAVE: Si mandamos nombre/tag nuevo, SOBRESCRIBIMOS lo viejo
+        // SOBRESCRIBE SI VIENE DATO NUEVO
         if (tagOverride) sesiones[p].tag = tagOverride;
         if (nombreOverride && nombreOverride.trim() !== "" && nombreOverride !== "Cliente") {
             sesiones[p].name = nombreOverride;
@@ -121,12 +121,11 @@ export async function procesarEvento(evento) {
 
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     
-    // --- MODIFICACIÓN 2: CLASIFICACIÓN INTELIGENTE ---
-    // 1. Si estaba en futuro/reciclaje y habla -> INTERESADO
+    // --- CLASIFICACIÓN INTELIGENTE ---
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
         sesiones[p].tag = 'INTERESADO'; 
     }
-    // 2. Si es NUEVO pero ya ha hablado más de 2 veces -> INTERESADO
+    
     const mensajesUsuario = sesiones[p].history.filter(m => m.role === 'user').length;
     if (sesiones[p].tag === 'NUEVO' && mensajesUsuario >= 2) {
         sesiones[p].tag = 'INTERESADO';
