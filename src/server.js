@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// --- DASHBOARD PLATINUM CON PESTAÑA RECICLAJE ---
+// --- DASHBOARD PLATINUM CON PESTAÑA RECICLAJE (FIX) ---
 app.get('/monitor', (req, res) => {
     res.send(`
     <!DOCTYPE html>
@@ -22,6 +22,7 @@ app.get('/monitor', (req, res) => {
                 --text: #1f2937; 
                 --primary: #2563eb; 
                 --bot-color: #2563eb;       
+                --bot-scheduled: #7c3aed;
                 --border: #e5e7eb;
             }
             body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text); display: flex; height: 100vh; overflow: hidden; font-size: 13px; }
@@ -29,9 +30,9 @@ app.get('/monitor', (req, res) => {
             .main { flex: 1; display: flex; flex-direction: column; background: #e5e7eb; } 
             .tools { width: 300px; background: var(--bg-sidebar); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; }
             
-            /* GRID DE TABS AHORA CON 3 COLUMNAS MÁS ORDENADAS */
+            /* GRID DE TABS DE 3 COLUMNAS */
             .tabs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 10px; border-bottom: 1px solid var(--border); background: #f9fafb; }
-            .tab-btn { padding: 8px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; color: #6b7280; font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .tab-btn { padding: 8px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; color: #6b7280; font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
             .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
             
             .lead-list { flex: 1; overflow-y: auto; }
@@ -66,6 +67,7 @@ app.get('/monitor', (req, res) => {
     <body>
     <div class="sidebar">
         <div style="padding:15px; font-weight:700; font-size:16px; color:var(--primary); border-bottom:1px solid var(--border)">ZARA 11.0</div>
+        
         <div class="tabs-grid">
             <button class="tab-btn active" onclick="setTab('NUEVO')">Nuevos</button>
             <button class="tab-btn" onclick="setTab('INTERESADO')">Interés</button>
@@ -74,6 +76,7 @@ app.get('/monitor', (req, res) => {
             <button class="tab-btn" onclick="setTab('RECICLAJE')">♻️ Reciclaje</button>
             <button class="tab-btn" onclick="setTab('GESTIÓN FUTURA')">Futuro</button>
         </div>
+        
         <div class="lead-list" id="leadList"></div>
     </div>
 
@@ -97,7 +100,7 @@ app.get('/monitor', (req, res) => {
                 <option value="INTERESADO">INTERESADO</option>
                 <option value="HOT">HOT 🔥</option>
                 <option value="AGENDADO">AGENDADO ✅</option>
-                <option value="RECICLAJE">♻️ RECICLAJE EV</option>
+                <option value="RECICLAJE">♻️ RECICLAJE</option>
                 <option value="GESTIÓN FUTURA">GESTIÓN FUTURA 🕒</option>
                 <option value="DESCARTADO">DESCARTADO 🗑️</option>
             </select>
@@ -128,7 +131,7 @@ app.get('/monitor', (req, res) => {
     <div id="bulkModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0">🚀 Carga Masiva (Lista Externa)</h3>
-            <p style="font-size:11px; color:#666">Formato: <b>TELEFONO, MENSAJE</b>. <br>⚠️ Se etiquetarán como <b>RECICLAJE</b> automáticamente.</p>
+            <p style="font-size:11px; color:#666">Formato: <b>TELEFONO, MENSAJE</b>.<br>⚠️ Se etiquetarán como <b>RECICLAJE</b> automáticamente.</p>
             <textarea id="bulkInput" class="bulk-area" placeholder="56911112222, Hola Juan..."></textarea>
             <div id="bulkStatus" style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:10px"></div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
@@ -233,9 +236,8 @@ app.get('/monitor', (req, res) => {
                     const p = parts[0].trim();
                     const msg = parts.slice(1).join(',').trim();
                     if(p && msg){
-                        // ENVÍA MENSAJE
                         await fetch('/api/manual', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p, text:msg}) });
-                        // CAMBIA ETIQUETA A RECICLAJE
+                        // ESTA LÍNEA ES LA QUE ETIQUETA AUTOMÁTICAMENTE:
                         await fetch('/api/tag', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p, tag:'RECICLAJE'}) });
                         count++;
                         status.innerText = \`Enviando... (\${count})\`;
@@ -243,8 +245,8 @@ app.get('/monitor', (req, res) => {
                 }
             }
             status.innerText = \`✅ Terminado. \${count} mensajes en RECICLAJE.\`;
-            alert("Campaña Lista. Revisa la pestaña RECICLAJE.");
-            setTimeout(() => { closeModal(); refresh(); }, 1500);
+            alert("Campaña terminada. Revisa la pestaña Reciclaje.");
+            setTimeout(() => { closeModal(); refresh(); }, 2000);
         }
 
         function setTab(t){ curTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.innerText.includes(t.substring(0,3)))); renderList(); }
