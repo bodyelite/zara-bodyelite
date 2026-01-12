@@ -90,7 +90,7 @@ app.get('/monitor', (req, res) => {
     <div id="bulkModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0">🚀 Carga Masiva (3 Columnas)</h3>
-            <p style="font-size:11px; color:#666">Pega aquí tu Excel con la fórmula nueva.<br>Formato: <b>TELEFONO, NOMBRE, MENSAJE</b>.<br>Se etiquetarán como <b>♻️ RECICLAJE</b> automáticamente.</p>
+            <p style="font-size:11px; color:#666">Pega aquí tu Excel.<br>Formato: <b>TELEFONO, NOMBRE, MENSAJE</b>.<br>Se etiquetarán como <b>♻️ RECICLAJE</b> y se corregirá el nombre automáticamente.</p>
             <textarea id="bulkInput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:5px;" placeholder="56911112222, Juan, Hola Juan..."></textarea>
             <div id="bulkStatus" style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:10px"></div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
@@ -132,7 +132,7 @@ app.get('/monitor', (req, res) => {
         async function addNote(){ const n=document.getElementById('noteIn').value; const s=document.getElementById('checkZara').checked; const d=document.getElementById('dateIn').value; if(!n)return alert("Escribe algo"); await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:n,isScheduled:s,dateStr:d})}); document.getElementById('noteIn').value=''; toggleDateInput(); refresh(); }
         
         async function runBulk(){
-            const lines = document.getElementById('bulkInput').value.split('\\n');
+            const lines = document.getElementById('bulkInput').value.split('\n');
             const status = document.getElementById('bulkStatus');
             let count = 0;
             status.innerText = "Procesando...";
@@ -155,7 +155,7 @@ app.get('/monitor', (req, res) => {
                             body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) 
                         });
                         count++;
-                        status.innerText = \`Enviando... (\${count})\`;
+                        status.innerText = `Enviando... (${count})`;
                     }
                 }
             }

@@ -25,10 +25,9 @@ function guardar() { try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, bot
 
 async function notificarStaff(t) { for (const n of STAFF_NUMBERS) try { await enviarMensaje(n, t); } catch(e){} }
 
-// --- EXPORTACIONES CLAVE ---
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
-export async function diagnosticarTodo() { return true; } // Placeholder para evitar crash
+export async function diagnosticarTodo() { return true; }
 
 export function updateTagManual(phone, tag) { 
     if(sesiones[phone]) { sesiones[phone].tag = tag; guardar(); return true; } 
@@ -56,6 +55,7 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
     return true;
 }
 
+// --- MODIFICACIÓN 1: ENVÍO MANUAL AGRESIVO (Corrige Nombres y Tabs) ---
 export async function enviarMensajeManual(p, t, source='manual', nombreOverride=null, tagOverride=null) {
     if(!sesiones[p]) {
         sesiones[p] = { 
@@ -66,8 +66,11 @@ export async function enviarMensajeManual(p, t, source='manual', nombreOverride=
             lastInteraction: Date.now() 
         };
     } else {
+        // AQUÍ ESTÁ LA CLAVE: Si mandamos nombre/tag nuevo, SOBRESCRIBIMOS lo viejo
         if (tagOverride) sesiones[p].tag = tagOverride;
-        if (nombreOverride && sesiones[p].name !== nombreOverride && nombreOverride !== "Cliente") sesiones[p].name = nombreOverride;
+        if (nombreOverride && nombreOverride.trim() !== "" && nombreOverride !== "Cliente") {
+            sesiones[p].name = nombreOverride;
+        }
     }
 
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: source });
@@ -116,11 +119,19 @@ export async function procesarEvento(evento) {
 
     if (contenido.toLowerCase().includes('/reset')) { sesiones[p].history = []; guardar(); return; }
 
+    sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
+    
+    // --- MODIFICACIÓN 2: CLASIFICACIÓN INTELIGENTE ---
+    // 1. Si estaba en futuro/reciclaje y habla -> INTERESADO
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
         sesiones[p].tag = 'INTERESADO'; 
     }
+    // 2. Si es NUEVO pero ya ha hablado más de 2 veces -> INTERESADO
+    const mensajesUsuario = sesiones[p].history.filter(m => m.role === 'user').length;
+    if (sesiones[p].tag === 'NUEVO' && mensajesUsuario >= 2) {
+        sesiones[p].tag = 'INTERESADO';
+    }
 
-    sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     sesiones[p].lastInteraction = Date.now();
     guardar();
 
