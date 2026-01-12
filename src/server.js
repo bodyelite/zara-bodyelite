@@ -131,30 +131,24 @@ app.get('/monitor', (req, res) => {
         async function updateTag(){ await fetch('/api/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,tag:document.getElementById('tagSelect').value})}); refresh(); }
         async function addNote(){ const n=document.getElementById('noteIn').value; const s=document.getElementById('checkZara').checked; const d=document.getElementById('dateIn').value; if(!n)return alert("Escribe algo"); await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:n,isScheduled:s,dateStr:d})}); document.getElementById('noteIn').value=''; toggleDateInput(); refresh(); }
         
-        // --- LOGICA DE CARGA MASIVA MEJORADA ---
         async function runBulk(){
             const lines = document.getElementById('bulkInput').value.split('\n');
             const status = document.getElementById('bulkStatus');
             let count = 0;
             status.innerText = "Procesando...";
-            
             for(let line of lines){
-                // Acepta 3 columnas: Teléfono, Nombre, Mensaje
                 const parts = line.split(',');
                 if(parts.length >= 2){
                     let p = parts[0].trim();
                     let name = "Cliente";
                     let msg = "";
-                    
                     if(parts.length >= 3) {
-                        name = parts[1].trim(); // Si hay 3, el del medio es nombre
-                        msg = parts.slice(2).join(',').trim(); // El resto es mensaje
+                        name = parts[1].trim(); 
+                        msg = parts.slice(2).join(',').trim(); 
                     } else {
-                        msg = parts.slice(1).join(',').trim(); // Si hay 2, es Telefono, Mensaje
+                        msg = parts.slice(1).join(',').trim(); 
                     }
-
                     if(p && msg){
-                        // Envia tag: 'RECICLAJE' para forzar la carpeta
                         await fetch('/api/manual', {
                             method:'POST', 
                             headers:{'Content-Type':'application/json'}, 
@@ -176,7 +170,6 @@ app.get('/monitor', (req, res) => {
 });
 
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
-// API Manual ahora acepta name y tag
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text, 'manual', req.body.name, req.body.tag); res.json({ success: true }); });
 app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.phone, req.body.tag) }));
 app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));

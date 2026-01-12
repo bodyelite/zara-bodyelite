@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
-import { pensar, transcribirAudio, diagnosticar } from './brain.js';
+import { pensar, transcribirAudio } from './brain.js'; // CORREGIDO: Sin diagnosticar
 import { FLUJO_MAESTRO } from './flow.js';
 
 const STAFF_NUMBERS = ['56955145504', '56983300262', '56937648536'];
@@ -55,9 +55,8 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
     return true;
 }
 
-// --- FUNCIÓN MEJORADA: ACEPTA NOMBRE Y TAG ---
+// --- FUNCIÓN QUE RECIBE NOMBRE Y TAG ---
 export async function enviarMensajeManual(p, t, source='manual', nombreOverride=null, tagOverride=null) {
-    // Si no existe, lo creamos con los datos correctos
     if(!sesiones[p]) {
         sesiones[p] = { 
             name: nombreOverride || "Cliente", 
@@ -67,7 +66,6 @@ export async function enviarMensajeManual(p, t, source='manual', nombreOverride=
             lastInteraction: Date.now() 
         };
     } else {
-        // Si ya existe, forzamos el tag si viene uno nuevo (ej: Reciclaje)
         if (tagOverride) sesiones[p].tag = tagOverride;
         if (nombreOverride && sesiones[p].name === "Cliente") sesiones[p].name = nombreOverride;
     }
