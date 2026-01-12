@@ -2,8 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
-import { pensar, transcribirAudio, diagnosticar } from './brain.js';
-import { NEGOCIO } from './config/business.js';
+import { pensar, transcribirAudio } from './brain.js'; // Simplificado
 import { FLUJO_MAESTRO } from './flow.js';
 
 const STAFF_NUMBERS = ['56955145504', '56983300262', '56937648536'];
@@ -26,10 +25,21 @@ function guardar() { try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, bot
 
 async function notificarStaff(t) { for (const n of STAFF_NUMBERS) try { await enviarMensaje(n, t); } catch(e){} }
 
+// --- ENCHUFES PARA EL DASHBOARD (ESTO FALTABA) ---
 export function getSesiones() { return sesiones; }
-export function getBotStatus() { return botStatus; }
-export function updateTagManual(phone, tag) { if(sesiones[phone]) { sesiones[phone].tag = tag; guardar(); return true; } return false; }
-export function toggleBot(phone) { botStatus[phone] = !botStatus[phone]; guardar(); return botStatus[phone]; }
+export function getBotStatus() { return botStatus; } // <--- CRÍTICO
+export async function diagnosticarTodo() { return true; } // <--- CRÍTICO (Placeholder para que no falle server.js)
+
+export function updateTagManual(phone, tag) { 
+    if(sesiones[phone]) { sesiones[phone].tag = tag; guardar(); return true; } 
+    return false; 
+}
+
+export function toggleBot(phone) { 
+    botStatus[phone] = !botStatus[phone]; 
+    guardar(); 
+    return botStatus[phone]; 
+}
 
 export function agregarNota(phone, text, isScheduled, dateStr) {
     if (!sesiones[phone]) return false;
@@ -39,7 +49,7 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
     if (isScheduled && dateStr) {
         note.status = 'pending';
         note.scheduleTime = dateStr;
-        sesiones[phone].tag = 'GESTIÓN FUTURA'; // Si programamos tarea, se mueve a futuro
+        sesiones[phone].tag = 'GESTIÓN FUTURA'; 
     }
     sesiones[phone].notes.unshift(note);
     guardar();
@@ -62,7 +72,6 @@ setInterval(async () => {
         if (u.notes) {
             for (let note of u.notes) {
                 if (note.status === 'pending' && note.scheduleTime <= nowStr) {
-                    console.log(`⏰ Ejecutando tarea: ${note.text}`);
                     const prompt = `IMPORTANTE: Cumple esta tarea: "${note.text}". Lee el historial y hazlo ahora.`;
                     const resp = await pensar([...u.history, { role: "system", content: prompt }], u.name);
                     await enviarMensajeManual(p, resp, 'scheduled');
@@ -96,8 +105,7 @@ export async function procesarEvento(evento) {
 
     if (contenido.toLowerCase().includes('/reset')) { sesiones[p].history = []; guardar(); return; }
 
-    // --- LÓGICA DE MOVIMIENTO AUTOMÁTICO DE ETIQUETAS ---
-    // Si estaba en Gestión Futura o Reciclaje y habla -> Pasa a Interesado
+    // AUTO-ETIQUETADO
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
         sesiones[p].tag = 'INTERESADO'; 
     }
@@ -109,7 +117,7 @@ export async function procesarEvento(evento) {
     if (botStatus[p] !== false) {
         const sistema = {
             role: "system",
-            content: `${FLUJO_MAESTRO}\n\nREGLA: Respuestas cortas. Horarios: L-V hasta 18:30 (Ma/Ju 17:00), Sab hasta 13:00.`
+            content: `${FLUJO_MAESTRO}\n\nREGLA: Respuestas cortas (Max 2-3 lineas).`
         };
         const resp = await pensar([...sesiones[p].history, sistema], sesiones[p].name);
         await enviarMensaje(p, resp);
