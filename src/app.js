@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
-import { pensar, transcribirAudio } from './brain.js'; // Simplificado
+import { pensar, transcribirAudio, diagnosticar } from './brain.js';
 import { FLUJO_MAESTRO } from './flow.js';
 
 const STAFF_NUMBERS = ['56955145504', '56983300262', '56937648536'];
@@ -25,10 +25,9 @@ function guardar() { try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, bot
 
 async function notificarStaff(t) { for (const n of STAFF_NUMBERS) try { await enviarMensaje(n, t); } catch(e){} }
 
-// --- ENCHUFES PARA EL DASHBOARD (ESTO FALTABA) ---
 export function getSesiones() { return sesiones; }
-export function getBotStatus() { return botStatus; } // <--- CRÍTICO
-export async function diagnosticarTodo() { return true; } // <--- CRÍTICO (Placeholder para que no falle server.js)
+export function getBotStatus() { return botStatus; }
+export async function diagnosticarTodo() { return true; } 
 
 export function updateTagManual(phone, tag) { 
     if(sesiones[phone]) { sesiones[phone].tag = tag; guardar(); return true; } 
@@ -56,15 +55,29 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
     return true;
 }
 
-export async function enviarMensajeManual(p, t, src='manual') {
-    if(!sesiones[p]) sesiones[p]={name:"Cliente", history:[], phone:p, tag:"NUEVO", lastInteraction:Date.now()};
-    sesiones[p].history.push({role:"assistant", content:t, timestamp:Date.now(), source:src});
+// --- FUNCIÓN MEJORADA: ACEPTA NOMBRE Y TAG ---
+export async function enviarMensajeManual(p, t, source='manual', nombreOverride=null, tagOverride=null) {
+    // Si no existe, lo creamos con los datos correctos
+    if(!sesiones[p]) {
+        sesiones[p] = { 
+            name: nombreOverride || "Cliente", 
+            history: [], 
+            phone: p, 
+            tag: tagOverride || "NUEVO", 
+            lastInteraction: Date.now() 
+        };
+    } else {
+        // Si ya existe, forzamos el tag si viene uno nuevo (ej: Reciclaje)
+        if (tagOverride) sesiones[p].tag = tagOverride;
+        if (nombreOverride && sesiones[p].name === "Cliente") sesiones[p].name = nombreOverride;
+    }
+
+    sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: source });
     sesiones[p].lastInteraction = Date.now();
     guardar();
     await enviarMensaje(p, t);
 }
 
-// CRONOS (Ejecuta Tareas)
 setInterval(async () => {
     const nowStr = DateTime.now().setZone('America/Santiago').toFormat("yyyy-MM-dd'T'HH:mm");
     for (const p of Object.keys(sesiones)) {
@@ -72,7 +85,7 @@ setInterval(async () => {
         if (u.notes) {
             for (let note of u.notes) {
                 if (note.status === 'pending' && note.scheduleTime <= nowStr) {
-                    const prompt = `IMPORTANTE: Cumple esta tarea: "${note.text}". Lee el historial y hazlo ahora.`;
+                    const prompt = `IMPORTANTE: Cumple esta tarea: "${note.text}". Lee el historial.`;
                     const resp = await pensar([...u.history, { role: "system", content: prompt }], u.name);
                     await enviarMensajeManual(p, resp, 'scheduled');
                     note.status = 'executed';
@@ -105,7 +118,6 @@ export async function procesarEvento(evento) {
 
     if (contenido.toLowerCase().includes('/reset')) { sesiones[p].history = []; guardar(); return; }
 
-    // AUTO-ETIQUETADO
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
         sesiones[p].tag = 'INTERESADO'; 
     }
@@ -115,10 +127,7 @@ export async function procesarEvento(evento) {
     guardar();
 
     if (botStatus[p] !== false) {
-        const sistema = {
-            role: "system",
-            content: `${FLUJO_MAESTRO}\n\nREGLA: Respuestas cortas (Max 2-3 lineas).`
-        };
+        const sistema = { role: "system", content: `${FLUJO_MAESTRO}\n\nREGLA: Respuestas cortas.` };
         const resp = await pensar([...sesiones[p].history, sistema], sesiones[p].name);
         await enviarMensaje(p, resp);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
