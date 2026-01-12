@@ -20,7 +20,7 @@ app.get('/monitor', (req, res) => {
             .main { flex:1; display:flex; flex-direction:column; background:#e5e7eb; } 
             .tools { width:300px; background:var(--bg-sidebar); border-left:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:15px; }
             .tabs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; padding:10px; border-bottom:1px solid var(--border); background:#f9fafb; }
-            .tab-btn { padding:8px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:10px; font-weight:600; text-align:center; }
+            .tab-btn { padding:8px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:10px; font-weight:600; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
             .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
             .lead-list { flex:1; overflow-y:auto; }
             .lead-card { padding:15px; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
@@ -89,9 +89,9 @@ app.get('/monitor', (req, res) => {
 
     <div id="bulkModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0">🚀 Carga Masiva (Con Nombre y Etiqueta)</h3>
-            <p style="font-size:11px; color:#666">Nuevo Formato: <b>TELEFONO, NOMBRE, MENSAJE</b> (Si usas 2 columnas, el nombre será 'Cliente').<br>Todos caerán en <b>♻️ RECICLAJE</b> automáticamente.</p>
-            <textarea id="bulkInput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:5px;" placeholder="56911112222, Juan Perez, Hola Juan tenemos oferta..."></textarea>
+            <h3 style="margin-top:0">🚀 Carga Masiva (3 Columnas)</h3>
+            <p style="font-size:11px; color:#666">Pega aquí tu Excel con la fórmula nueva.<br>Formato: <b>TELEFONO, NOMBRE, MENSAJE</b>.<br>Se etiquetarán como <b>♻️ RECICLAJE</b> automáticamente.</p>
+            <textarea id="bulkInput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:5px;" placeholder="56911112222, Juan, Hola Juan..."></textarea>
             <div id="bulkStatus" style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:10px"></div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
                 <button class="btn btn-outline" style="width:auto" onclick="closeModal()">Cancelar</button>
@@ -132,7 +132,7 @@ app.get('/monitor', (req, res) => {
         async function addNote(){ const n=document.getElementById('noteIn').value; const s=document.getElementById('checkZara').checked; const d=document.getElementById('dateIn').value; if(!n)return alert("Escribe algo"); await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:n,isScheduled:s,dateStr:d})}); document.getElementById('noteIn').value=''; toggleDateInput(); refresh(); }
         
         async function runBulk(){
-            const lines = document.getElementById('bulkInput').value.split('\n');
+            const lines = document.getElementById('bulkInput').value.split('\\n');
             const status = document.getElementById('bulkStatus');
             let count = 0;
             status.innerText = "Procesando...";
@@ -155,7 +155,7 @@ app.get('/monitor', (req, res) => {
                             body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) 
                         });
                         count++;
-                        status.innerText = `Enviando... (${count})`;
+                        status.innerText = \`Enviando... (\${count})\`;
                     }
                 }
             }

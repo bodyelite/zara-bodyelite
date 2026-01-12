@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { DateTime } from 'luxon';
 import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
-import { pensar, transcribirAudio } from './brain.js'; // CORREGIDO: Sin diagnosticar
+import { pensar, transcribirAudio } from './brain.js'; 
 import { FLUJO_MAESTRO } from './flow.js';
 
 const STAFF_NUMBERS = ['56955145504', '56983300262', '56937648536'];
@@ -25,9 +25,10 @@ function guardar() { try { fs.writeFileSync(FILE, JSON.stringify({ sesiones, bot
 
 async function notificarStaff(t) { for (const n of STAFF_NUMBERS) try { await enviarMensaje(n, t); } catch(e){} }
 
+// --- EXPORTACIONES CLAVE ---
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
-export async function diagnosticarTodo() { return true; } 
+export async function diagnosticarTodo() { return true; } // Placeholder para evitar crash
 
 export function updateTagManual(phone, tag) { 
     if(sesiones[phone]) { sesiones[phone].tag = tag; guardar(); return true; } 
@@ -55,7 +56,6 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
     return true;
 }
 
-// --- FUNCIÓN QUE RECIBE NOMBRE Y TAG ---
 export async function enviarMensajeManual(p, t, source='manual', nombreOverride=null, tagOverride=null) {
     if(!sesiones[p]) {
         sesiones[p] = { 
@@ -67,7 +67,7 @@ export async function enviarMensajeManual(p, t, source='manual', nombreOverride=
         };
     } else {
         if (tagOverride) sesiones[p].tag = tagOverride;
-        if (nombreOverride && sesiones[p].name === "Cliente") sesiones[p].name = nombreOverride;
+        if (nombreOverride && sesiones[p].name !== nombreOverride && nombreOverride !== "Cliente") sesiones[p].name = nombreOverride;
     }
 
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: source });
