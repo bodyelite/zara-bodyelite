@@ -11,7 +11,7 @@ app.get('/monitor', (req, res) => {
     <!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8"><title>ZARA PLATINUM</title>
+        <meta charset="UTF-8"><title>ZARA 11.0 DASHBOARD</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
         <style>
             :root { --bg-body:#f3f4f6; --bg-sidebar:#ffffff; --text:#1f2937; --primary:#2563eb; --bot-color:#2563eb; --border:#e5e7eb; }
@@ -34,6 +34,7 @@ app.get('/monitor', (req, res) => {
             .btn-blue { background:var(--primary); color:white; }
             .btn-outline { background:white; border:1px solid var(--border); }
             .btn-purple { background:#7c3aed; color:white; margin-top:10px; }
+            .btn-green { background:#10b981; color:white; margin-top:5px; }
             .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center; }
             .modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:600px; }
             textarea { resize:none; font-family:inherit; }
@@ -84,29 +85,32 @@ app.get('/monitor', (req, res) => {
         </div>
         <hr style="border:0; border-top:1px solid var(--border); width:100%; margin:10px 0;">
         <button class="btn btn-purple" onclick="openModal()">📂 Cargar Datos Externos</button>
+        <button class="btn btn-green" onclick="downloadReport()">📊 Descargar Reporte</button>
         <button class="btn btn-outline" style="margin-top:5px" onclick="location.reload()">🔄 Recargar</button>
     </div>
 
     <div id="bulkModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0">🚀 Carga Masiva (3 Columnas)</h3>
-            <p style="font-size:11px; color:#666">Pega aquí tu Excel.<br>Formato: <b>TELEFONO, NOMBRE, MENSAJE</b>.<br>Se etiquetarán como <b>♻️ RECICLAJE</b> y se corregirá el nombre automáticamente.</p>
-            <textarea id="bulkInput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:5px;" placeholder="56911112222, Juan, Hola Juan..."></textarea>
+            <h3 style="margin-top:0">🚀 Carga Masiva</h3>
+            <p style="font-size:11px; color:#666">Formato: TELEFONO, NOMBRE, MENSAJE</p>
+            <textarea id="bulkInput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:5px;" placeholder="569..., Juan, Hola..."></textarea>
             <div id="bulkStatus" style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:10px"></div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
                 <button class="btn btn-outline" style="width:auto" onclick="closeModal()">Cancelar</button>
-                <button class="btn btn-blue" style="width:auto" onclick="runBulk()">Lanzar Campaña</button>
+                <button class="btn btn-blue" style="width:auto" onclick="runBulk()">Lanzar</button>
             </div>
         </div>
     </div>
 
     <script>
         let curTab='NUEVO', curPhone=null, data={};
+        
         function toggleDateInput() { document.getElementById('dateIn').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
         function openModal(){ document.getElementById('bulkModal').style.display = 'flex'; }
         function closeModal(){ document.getElementById('bulkModal').style.display = 'none'; }
         
         async function refresh(){ try { const r=await fetch('/api/data'); data=await r.json(); renderList(); if(curPhone) renderChat(); } catch(e){} }
+        
         function renderList(){
             const list=document.getElementById('leadList'); list.innerHTML='';
             Object.values(data.users||{}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
@@ -115,22 +119,63 @@ app.get('/monitor', (req, res) => {
                 }
             });
         }
+        
         function selectLead(p){ curPhone=p; document.getElementById('tagSelect').value = data.users[p].tag||'NUEVO'; renderChat(); renderList(); }
+        
         function renderChat(){
             const u=data.users[curPhone]; if(!u) return;
             document.getElementById('uName').innerText=u.name; document.getElementById('uPhone').innerText=u.phone;
+            
             const status=data.botStatus[curPhone]!==false;
-            document.getElementById('botControl').innerHTML=\`<button onclick="toggleBot()" style="border:none; background:\${status?'#dcfce7':'#fee2e2'}; color:\${status?'#166534':'#991b1b'}; padding:5px 10px; border-radius:20px; font-weight:bold; font-size:11px; cursor:pointer">BOT \${status?'ON':'OFF'}</button>\`;
+            document.getElementById('botControl').innerHTML=\`<button type="button" onclick="toggleBot()" style="border:none; background:\${status?'#dcfce7':'#fee2e2'}; color:\${status?'#166534':'#991b1b'}; padding:5px 15px; border-radius:20px; font-weight:bold; font-size:11px; cursor:pointer; border:1px solid \${status?'#166534':'#991b1b'}">BOT \${status?'ON':'OFF'}</button>\`;
+            
             let html='';
             if(u.notes) u.notes.forEach(n=>{ html+=\`<div style="background:#fffbeb; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; color:#92400e;"><b>📝 Nota:</b> \${n.text}</div>\`; });
             (u.history||[]).forEach(m=>{ html+=\`<div style="display:flex; flex-direction:column; align-items:\${m.role==='user'?'flex-start':'flex-end'}"><div class="msg \${m.role}">\${m.content}</div><span style="font-size:9px; color:#999; margin-top:2px;">\${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>\`; });
-            const chatDiv=document.getElementById('chatBody'); chatDiv.innerHTML=html; chatDiv.scrollTop=chatDiv.scrollHeight;
+            
+            const chatDiv=document.getElementById('chatBody');
+            // FIX SCROLL: Solo baja si el usuario ya estaba abajo
+            const isAtBottom = (chatDiv.scrollHeight - chatDiv.scrollTop) <= (chatDiv.clientHeight + 100);
+            
+            chatDiv.innerHTML=html;
+            
+            if(isAtBottom) {
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            }
         }
+        
         async function sendManual(){ const t=document.getElementById('msgIn').value; if(!t)return; await fetch('/api/manual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:t})}); document.getElementById('msgIn').value=''; refresh(); }
-        async function toggleBot(){ await fetch('/api/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone})}); refresh(); }
+        
+        async function toggleBot(){ 
+            if(!curPhone) return alert("Selecciona un cliente primero");
+            await fetch('/api/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone})}); 
+            // Forzar actualización inmediata visual
+            if(data.botStatus[curPhone] === undefined) data.botStatus[curPhone] = true;
+            data.botStatus[curPhone] = !data.botStatus[curPhone];
+            renderChat();
+            refresh(); 
+        }
+        
         async function updateTag(){ await fetch('/api/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,tag:document.getElementById('tagSelect').value})}); refresh(); }
         async function addNote(){ const n=document.getElementById('noteIn').value; const s=document.getElementById('checkZara').checked; const d=document.getElementById('dateIn').value; if(!n)return alert("Escribe algo"); await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:n,isScheduled:s,dateStr:d})}); document.getElementById('noteIn').value=''; toggleDateInput(); refresh(); }
         
+        function downloadReport() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "FECHA,NOMBRE,TELEFONO,ESTADO,ULTIMO_MENSAJE\\n";
+            Object.values(data.users || {}).forEach(u => {
+                const date = new Date(u.lastInteraction).toLocaleDateString();
+                const lastMsg = u.history.length ? u.history[u.history.length-1].content.replace(/,/g, ' ') : '';
+                csvContent += \`\${date},\${u.name},\${u.phone},\${u.tag},\${lastMsg}\\n\`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "reporte_zara.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         async function runBulk(){
             const lines = document.getElementById('bulkInput').value.split('\\n');
             const status = document.getElementById('bulkStatus');
@@ -142,24 +187,16 @@ app.get('/monitor', (req, res) => {
                     let p = parts[0].trim();
                     let name = "Cliente";
                     let msg = "";
-                    if(parts.length >= 3) {
-                        name = parts[1].trim(); 
-                        msg = parts.slice(2).join(',').trim(); 
-                    } else {
-                        msg = parts.slice(1).join(',').trim(); 
-                    }
+                    if(parts.length >= 3) { name = parts[1].trim(); msg = parts.slice(2).join(',').trim(); } 
+                    else { msg = parts.slice(1).join(',').trim(); }
                     if(p && msg){
-                        await fetch('/api/manual', {
-                            method:'POST', 
-                            headers:{'Content-Type':'application/json'}, 
-                            body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) 
-                        });
+                        await fetch('/api/manual', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) });
                         count++;
                         status.innerText = \`Enviando... (\${count})\`;
                     }
                 }
             }
-            status.innerText = "✅ Listo! Revisa la pestaña 'RECICLAJE'.";
+            status.innerText = "✅ Listo!";
             setTimeout(() => { closeModal(); refresh(); }, 2000);
         }
 
