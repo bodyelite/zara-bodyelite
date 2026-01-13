@@ -16,8 +16,10 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const PERSONALIDAD_INTOCABLE = `
 IDENTIDAD:
 Eres Zara, Asesora Senior de Body Elite.
-- Tono: Cálido, usas emojis (✨, 🌸).
-- Misión: Guiar y Concretar.
+- Tono: Cálido, usas emojis (✨, 🌸), pero eres EJECUTIVA.
+- Misión: Guiar y Concretar Citas.
+- REGLA DE ORO: Si el cliente se despide, dice gracias, viaja o pospone, NO sigas vendiendo. Despídete corto y amable.
+- REGLA DE MEMORIA: Antes de preguntar, revisa si el cliente YA respondió eso en el mensaje anterior. NO repitas preguntas.
 `;
 
 export async function transcribirAudio(urlDescarga) {
@@ -39,7 +41,7 @@ export async function diagnosticar(historial) {
         const response = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
-                { role: "system", content: "CRM: Clasifica en 2 palabras: 'Esperando respuesta', 'En Seguimiento', 'Link Enviado', 'Posible Spam', 'Duda Técnica', 'Falla Precio'." },
+                { role: "system", content: "CRM: Clasifica en 2 palabras: 'Esperando respuesta', 'En Seguimiento', 'Link Enviado', 'Posible Spam', 'Duda Técnica', 'Falla Precio', 'Cerrado/Viaje'." },
                 ...historiaReciente
             ],
             temperature: 0,
@@ -58,6 +60,35 @@ export async function pensar(historial, nombreCliente) {
     const infoNegocio = JSON.stringify(NEGOCIO);
     const nombreSimple = nombreCliente ? nombreCliente.split(' ')[0] : "Linda";
 
+    // --- DETECCIÓN RÁPIDA DE CIERRE (Circuit Breaker) ---
+    // Si el último mensaje es claramente una despedida o postergación, forzamos respuesta final.
+    const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
+    const palabrasCierre = ["gracias", "viajo", "semana que viene", "despues te hablo", "te aviso", "muy amable", "ok gracias", "hasta pronto", "chau"];
+    const esCierre = palabrasCierre.some(p => ultimoMensaje.includes(p));
+
+    const SYSTEM_PROMPT = `
+    ${PERSONALIDAD_INTOCABLE}
+    HOY ES: ${diaSemana} ${fechaHoy}.
+    CLIENTE: ${nombreSimple}
+
+    ${esCierre ? "⚠️ MODO CIERRE ACTIVADO: El cliente se está despidiendo o postergando. Solo di: '¡Perfecto [Nombre]! Quedo atenta para cuando regreses/decidas. ¡Lindo día! ✨' y NADA MÁS." : `
+    📜 TU GUÍA ES EL ARCHIVO 'flow.js':
+    ${FLUJO_MAESTRO}
+    `}
+
+    🧠 CÓMO USAR LA AGENDA (PASO 5):
+    1. **Mira la 'DISPONIBILIDAD REAL' abajo.**
+    2. Si pide día X: Busca si hay cupo. Si no, ofrece el día más cercano.
+    3. Si NO pide día: Ofrece tú la hora más cercana.
+
+    📅 DISPONIBILIDAD REAL:
+    ${agendaInfo}
+
+    DATOS:
+    ${infoClinica}
+    ${infoNegocio}
+    `;
+
     const tools = [{
         type: "function",
         function: {
@@ -75,29 +106,6 @@ export async function pensar(historial, nombreCliente) {
         }
     }];
 
-    const SYSTEM_PROMPT = `
-    ${PERSONALIDAD_INTOCABLE}
-    HOY ES: ${diaSemana} ${fechaHoy}.
-    CLIENTE: ${nombreSimple}
-
-    📜 TU GUÍA ES EL ARCHIVO 'flow.js':
-    ${FLUJO_MAESTRO}
-
-    🧠 CÓMO USAR LA AGENDA (PASO 5):
-    1. **Mira la 'DISPONIBILIDAD REAL' abajo.** (Ahí verás los próximos 7 días).
-    2. **Si el cliente pide un día específico (ej: "Viernes"):** BUSCA ese día en la lista.
-       - Si hay horas: Dile "Sí tengo. ¿Qué hora te acomoda más?" (Y ofrece 2 opciones).
-       - Si NO hay horas ese día: Di "Ese día está full, pero tengo el [Día Alternativo]".
-    3. **Si el cliente NO dice día:** Ofrece tú la hora más cercana disponible.
-
-    📅 DISPONIBILIDAD REAL:
-    ${agendaInfo}
-
-    DATOS:
-    ${infoClinica}
-    ${infoNegocio}
-    `;
-
     try {
         const runner = await openai.chat.completions.create({
             model: "gpt-4o",
@@ -112,7 +120,7 @@ export async function pensar(historial, nombreCliente) {
             if (toolCall.function.name === "agendar_cita") {
                 const args = JSON.parse(toolCall.function.arguments);
                 const exito = await crearEvento(args.fecha_iso, nombreCliente || "Cliente", args.telefono || "");
-                const confirmacion = exito ? "¡Listo! Reserva confirmada para " + args.fecha_iso + ". ¡Te esperamos! ✨" : "Error técnico.";
+                const confirmacion = exito ? "¡Listo! Reserva confirmada para " + args.fecha_iso + ". ¡Te esperamos! ✨" : "Ups, justo me tomaron esa hora. ¿Probamos otra?";
                 const secondResponse = await openai.chat.completions.create({
                     model: "gpt-4o",
                     messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial, msg, { role: "tool", tool_call_id: toolCall.id, content: confirmacion }]
