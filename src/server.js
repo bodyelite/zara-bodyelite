@@ -49,6 +49,7 @@ app.get('/monitor', (req, res) => {
             <button class="tab-btn" onclick="setTab('HOT')">Hot 🔥</button>
             <button class="tab-btn" onclick="setTab('AGENDADO')">Citas</button>
             <button class="tab-btn" onclick="setTab('RECICLAJE')">♻️ Reciclaje</button>
+            <button class="tab-btn" onclick="setTab('ABANDONADOS')">💀 Abandonados</button>
             <button class="tab-btn" onclick="setTab('GESTIÓN FUTURA')">Futuro</button>
         </div>
         <div class="lead-list" id="leadList"></div>
@@ -69,7 +70,9 @@ app.get('/monitor', (req, res) => {
             <label style="font-size:11px; font-weight:700; color:#6b7280;">ESTADO</label>
             <select id="tagSelect" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; background:white;">
                 <option value="NUEVO">NUEVO</option><option value="INTERESADO">INTERESADO</option><option value="HOT">HOT 🔥</option>
-                <option value="AGENDADO">AGENDADO</option><option value="RECICLAJE">♻️ RECICLAJE</option><option value="GESTIÓN FUTURA">FUTURO</option>
+                <option value="AGENDADO">AGENDADO</option><option value="RECICLAJE">♻️ RECICLAJE</option>
+                <option value="ABANDONADOS">💀 ABANDONADOS</option>
+                <option value="GESTIÓN FUTURA">FUTURO</option>
                 <option value="DESCARTADO">DESCARTADO</option>
             </select>
             <button class="btn btn-blue" style="margin-top:5px;" onclick="updateTag()">Guardar Estado</button>
@@ -83,9 +86,19 @@ app.get('/monitor', (req, res) => {
             <input type="datetime-local" id="dateIn" style="display:none; width:100%; margin-top:5px; padding:5px; border:1px solid var(--border); border-radius:4px;">
             <button class="btn btn-outline" style="margin-top:5px;" onclick="addNote()">Guardar Tarea</button>
         </div>
+        
         <hr style="border:0; border-top:1px solid var(--border); width:100%; margin:10px 0;">
+        
+        <div style="background:#f0fdf4; padding:10px; border-radius:6px; border:1px solid #bbf7d0;">
+            <label style="font-size:10px; font-weight:bold; color:#166534">📅 REPORTE FUNNEL</label>
+            <div style="display:flex; gap:5px; margin:5px 0;">
+                <input type="date" id="dateStart" style="width:50%; border:1px solid #bbf7d0; border-radius:4px; font-size:10px; padding:3px;">
+                <input type="date" id="dateEnd" style="width:50%; border:1px solid #bbf7d0; border-radius:4px; font-size:10px; padding:3px;">
+            </div>
+            <button class="btn btn-green" onclick="downloadFunnel()">Descargar CSV</button>
+        </div>
+
         <button class="btn btn-purple" onclick="openModal()">📂 Cargar Datos Externos</button>
-        <button class="btn btn-green" onclick="downloadReport()">📊 Descargar Reporte</button>
         <button class="btn btn-outline" style="margin-top:5px" onclick="location.reload()">🔄 Recargar</button>
     </div>
 
@@ -134,7 +147,6 @@ app.get('/monitor', (req, res) => {
             (u.history||[]).forEach(m=>{ html+=\`<div style="display:flex; flex-direction:column; align-items:\${m.role==='user'?'flex-start':'flex-end'}"><div class="msg \${m.role}">\${m.content}</div><span style="font-size:9px; color:#999; margin-top:2px;">\${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>\`; });
             
             const chatDiv=document.getElementById('chatBody');
-            // FIX SCROLL: Solo baja si el usuario ya estaba abajo
             const isAtBottom = (chatDiv.scrollHeight - chatDiv.scrollTop) <= (chatDiv.clientHeight + 100);
             
             chatDiv.innerHTML=html;
@@ -149,7 +161,6 @@ app.get('/monitor', (req, res) => {
         async function toggleBot(){ 
             if(!curPhone) return alert("Selecciona un cliente primero");
             await fetch('/api/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone})}); 
-            // Forzar actualización inmediata visual
             if(data.botStatus[curPhone] === undefined) data.botStatus[curPhone] = true;
             data.botStatus[curPhone] = !data.botStatus[curPhone];
             renderChat();
@@ -159,18 +170,30 @@ app.get('/monitor', (req, res) => {
         async function updateTag(){ await fetch('/api/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,tag:document.getElementById('tagSelect').value})}); refresh(); }
         async function addNote(){ const n=document.getElementById('noteIn').value; const s=document.getElementById('checkZara').checked; const d=document.getElementById('dateIn').value; if(!n)return alert("Escribe algo"); await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:n,isScheduled:s,dateStr:d})}); document.getElementById('noteIn').value=''; toggleDateInput(); refresh(); }
         
-        function downloadReport() {
+        function downloadFunnel() {
+            const d1 = document.getElementById('dateStart').value;
+            const d2 = document.getElementById('dateEnd').value;
+            if(!d1 || !d2) return alert("Por favor selecciona fecha Inicio y Fin");
+
+            const start = new Date(d1).getTime();
+            const end = new Date(d2).getTime() + (24 * 60 * 60 * 1000); // Fin del día
+
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "FECHA,NOMBRE,TELEFONO,ESTADO,ULTIMO_MENSAJE\\n";
+            csvContent += "FECHA,NOMBRE,TELEFONO,ESTADO,MSJ_USUARIO,ULTIMO_MENSAJE\\n";
+            
             Object.values(data.users || {}).forEach(u => {
-                const date = new Date(u.lastInteraction).toLocaleDateString();
-                const lastMsg = u.history.length ? u.history[u.history.length-1].content.replace(/,/g, ' ') : '';
-                csvContent += \`\${date},\${u.name},\${u.phone},\${u.tag},\${lastMsg}\\n\`;
+                if(u.lastInteraction >= start && u.lastInteraction <= end) {
+                    const date = new Date(u.lastInteraction).toLocaleDateString();
+                    const lastMsg = u.history.length ? u.history[u.history.length-1].content.replace(/,/g, ' ').replace(/\\n/g, ' ') : '';
+                    const userMsgs = u.history.filter(m => m.role === 'user').length;
+                    csvContent += \`\${date},\${u.name},\${u.phone},\${u.tag},\${userMsgs},\${lastMsg}\\n\`;
+                }
             });
+            
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "reporte_zara.csv");
+            link.setAttribute("download", \`REPORTE_FUNNEL_\${d1}_\${d2}.csv\`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
