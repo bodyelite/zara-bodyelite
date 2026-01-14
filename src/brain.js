@@ -54,15 +54,15 @@ function obtenerDatosCampaña(texto) {
     const tecnico = CLINICA[precio.ref]; // Datos reales de clinic.js
 
     return `
-    🎯 PRODUCTO CAMPAÑA: ${precio.titulo}
+    🎯 PRODUCTO CAMPAÑA DETECTADO: ${precio.titulo}
     
-    🧬 DATOS TÉCNICOS (Para tu explicación convincente):
-    - Tratamiento: ${tecnico.plan}
+    🧬 DATOS TÉCNICOS REALES (Para tu explicación convincente):
+    - Tratamiento Base: ${tecnico.plan}
     - Duración Real: ${tecnico.semanas}
     - Tecnologías: ${tecnico.tecnologias}
     - Beneficio Clave: ${tecnico.beneficio}
 
-    💰 TABLA DE PRECIOS (Usa esto en el Paso 8):
+    💰 TABLA DE PRECIOS (Usa esto EXACTAMENTE en el Paso 8):
     - Precio Lista (Inflado): ${precio.normal}
     - Precio 35% OFF: ${precio.oferta}
     - Ahorro Cliente: ${precio.ahorro}
@@ -98,6 +98,7 @@ export async function pensar(historial, nombreCliente) {
     const ultimoMensaje = historial[historial.length - 1].content;
     const datosProducto = obtenerDatosCampaña(ultimoMensaje) || obtenerDatosCampaña(historialTexto);
 
+    // Selección de Flujo
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
     
     // Lógica de Horario Inteligente (AM -> PM / PM -> AM Mañana)
@@ -107,14 +108,14 @@ export async function pensar(historial, nombreCliente) {
         : "Busca un cupo para MAÑANA en la mañana (AM)";
 
     const SYSTEM_PROMPT = `
-    ERES ZARA, CONSULTORA DE BODY ELITE.
+    ERES ZARA, CONSULTORA EXPERTA DE BODY ELITE.
     
     🌟 TU MENTALIDAD:
-    - Eres experta, cálida y persuasiva.
-    - NO ERES INSISTENTE. Si el cliente pregunta por estacionamiento, respóndele con naturalidad y luego, sutilmente, retoma la agenda.
-    - TU META: Llevar al cliente por los 9 Pasos del Flujo, pero permitiendo desvíos si el cliente quiere conversar.
+    - Eres sofisticada, cálida y clínica.
+    - NO ERES UN ROBOT: Si el cliente pregunta cosas random (estacionamiento, botox), responde con naturalidad y luego usa un "PUENTE" para volver al flujo.
+    - TU META: Guiar al cliente por los 9 Pasos, pero conversando.
 
-    🛒 DATOS DE VENTA ACTIVOS:
+    🛒 DATOS DE VENTA ACTIVOS (Campaña 35% OFF):
     ${datosProducto ? datosProducto : "Cliente aún no define zona (Lipo/Glúteos/Rostro). Pregunta para activar la tabla."}
 
     🏢 INFO LOCAL: ${infoNegocio}
@@ -124,7 +125,7 @@ export async function pensar(historial, nombreCliente) {
 
     🕰️ INSTRUCCIÓN DE AGENDA:
     - ${sugerenciaHorario}.
-    - Disponibilidad Real: ${agendaInfo}
+    - Disponibilidad Real Calendar: ${agendaInfo}
     `;
 
     const tools = [{
@@ -150,7 +151,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.3 // Balance entre creatividad para explicar y rigor para precios
+            temperature: 0.3 
         });
         const msg = runner.choices[0].message;
         
