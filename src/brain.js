@@ -14,7 +14,6 @@ import { checkAvailability, crearEvento } from './google_calendar.js';
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// --- TABLA DE PRECIOS "INFLADOS" PARA CAMPAÑA ---
 const CAMPAÑA_SPECIALS = {
     "lipo": { 
         ref: "lipo_express", 
@@ -42,27 +41,22 @@ const CAMPAÑA_SPECIALS = {
 function obtenerDatosCampaña(texto) {
     const t = texto.toLowerCase();
     let key = null;
-    if (t.includes("culo") || t.includes("glúteos") || t.includes("gluteo") || t.includes("push")) key = "push_up";
-    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo")) key = "lipo";
+    if (t.includes("culo") || t.includes("glúteos") || t.includes("gluteo") || t.includes("push") || t.includes("cola")) key = "push_up";
+    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo") || t.includes("muslo")) key = "lipo";
     else if (t.includes("cara") || t.includes("rostro") || t.includes("antiage")) key = "rostro";
 
     if (!key) return null;
-
     const precio = CAMPAÑA_SPECIALS[key];
     const tecnico = CLINICA[precio.ref];
 
     return `
-    ✨ PRODUCTO ESTRELLA DETECTADO: ${precio.titulo}
-    
-    🧬 ARGUMENTOS DE VENTA (Seduce con esto):
-    - TECNOLOGÍAS (Úsalas TODAS): ${tecnico.tecnologias}
+    ✨ PRODUCTO CAMPAÑA: ${precio.titulo}
+    🧬 ARGUMENTOS DE PODER (Seduce y Afirma):
+    - TECNOLOGÍAS: ${tecnico.tecnologias}
     - DURACIÓN: ${tecnico.semanas}
     - BENEFICIO: ${tecnico.beneficio}
-
-    💥 TABLA DE PRECIOS (Presenta con emoción):
-    - Precio Normal: ${precio.normal}
-    - Precio CAMPAÑA: ${precio.oferta}
-    - AHORRO: ${precio.ahorro}
+    💰 PRECIOS (Urgencia 31 Enero):
+    - Normal: ${precio.normal} -> Oferta: ${precio.oferta}
     `;
 }
 
@@ -86,7 +80,6 @@ export async function pensar(historial, nombreCliente) {
     const nowChile = DateTime.now().setZone('America/Santiago');
     const infoNegocio = JSON.stringify(NEGOCIO);
 
-    // Contexto
     const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
     const triggersCampaña = ["35%", "off", "oferta", "lipo", "push", "glúteos", "culo", "precio", "valor"];
     const esDeCampaña = triggersCampaña.some(t => historialTexto.includes(t));
@@ -95,35 +88,27 @@ export async function pensar(historial, nombreCliente) {
     const datosProducto = obtenerDatosCampaña(ultimoMensaje) || obtenerDatosCampaña(historialTexto);
 
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
-
-    // LÓGICA DE AGENDA FRANCOTIRADOR (Elige 1 sola hora)
     const horaActual = nowChile.hour;
-    const momentoDia = horaActual < 13 ? "AM" : "PM";
     
     const SYSTEM_PROMPT = `
-    ERES ZARA, LA VENDEDORA ESTRELLA DE BODY ELITE. 🌟
+    ERES ZARA, EXPERTA EN BODY ELITE.
     
-    💃 TU PERSONALIDAD:
-    - Entusiasta, usas emojis (✨, 💆‍♀️, 🔥, 📅) para dar vida al texto.
-    - NO ERES UN ROBOT. Eres una asesora que ilusiona con el resultado.
-    - VALIDACIÓN INMEDIATA: Si el cliente viene de campaña, ¡FESTÉJALO! "¡Excelente elección! Ese descuento es una bomba".
+    🔥 TU ACTITUD (MODO CAMPAÑA):
+    - Entusiasta y Segura.
+    - **CERO DUDAS:** Cuando expliques el tratamiento, no preguntes "¿te tinca?". DICES: "Es la solución definitiva para esa zona. ¿Vamos por ese cambio?".
+    - **CIERRE AFIRMATIVO:** Llevas al cliente de la mano.
 
-    🎯 DATOS DE CAMPAÑA (ÚSALOS TODOS):
+    🎯 INFORMACIÓN CLAVE:
     ${datosProducto ? datosProducto : "Detectando zona..."}
 
-    💀 REGLAS DE MUERTE SÚBITA (SI FALLAS ESTO, PIERDES LA VENTA):
-    1. **URGENCIA:** Menciona SIEMPRE que el descuento vence el **31 DE ENERO**.
-    2. **AGENDA FRANCOTIRADOR:** - Abajo verás una lista de horas disponibles. **NO SE LA MUESTRES AL CLIENTE.**
-       - ELEGIRÁS SOLO UNA (1) HORA ESTRATÉGICA.
-       - Si es AM ahora 👉 Ofrece UNA hora PM de hoy.
-       - Si es PM ahora 👉 Ofrece UNA hora AM de mañana.
-       - Di: "Tengo un cupo perfecto mañana a las 10:00. ¿Te lo aseguro?" (Jamás digas "tengo a las 9, 10, 11, 12...").
-    
-    🗺️ TU GUIÓN:
+    📜 TU GUIÓN:
     ${GUION_ACTIVO}
 
-    📅 LISTA DE HORAS DISPONIBLES (SOLO PARA TUS OJOS, ELIGE UNA):
-    ${agendaRaw}
+    📅 REGLA DE AGENDA (FRANCOTIRADOR):
+    - NO des listas de horas. ELIGE UNA.
+    - AM ahora -> Ofrece UNA hora PM.
+    - PM ahora -> Ofrece UNA hora AM mañana.
+    - Disponibilidad: ${agendaRaw}
     `;
 
     const tools = [{
@@ -149,7 +134,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.5 // Subimos un poco para que tenga "chispa" y entusiasmo
+            temperature: 0.4
         });
         const msg = runner.choices[0].message;
         
@@ -159,10 +144,10 @@ export async function pensar(historial, nombreCliente) {
                 const args = JSON.parse(toolCall.function.arguments);
                 const exito = await crearEvento(args.fecha_iso, nombreCliente || "Cliente", args.telefono || "");
                 return exito 
-                    ? `¡Listo! 🎉 Quedó agendado para el ${args.fecha_iso}. Tu 35% OFF está asegurado hasta el 31 de Enero. ¡Nos vemos en Las Pircas! ✨`
+                    ? `¡Listo ${nombreCliente}! 🎉 Quedó agendado para el ${args.fecha_iso}. Tu 35% OFF está asegurado. ¡Vamos por esos resultados! 💪`
                     : "Ups, me ganaron ese horario. 🙈 ¿Te sirve un poco más tarde?";
             }
         }
         return msg.content; 
-    } catch (e) { return "Dame un segundo, estoy buscando el mejor cupo..."; }
+    } catch (e) { return "Dame un segundo, estoy cuadrando la agenda..."; }
 }

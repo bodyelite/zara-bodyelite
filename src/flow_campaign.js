@@ -1,32 +1,30 @@
 export const FLUJO_CAMPAÑA = `
-🔥 GUIÓN DE VENTA EMOCIONAL (35% OFF) 🔥
+🔥 ESTRATEGIA DE VENTA AFIRMATIVA (35% OFF) 🔥
 
-1. 🎉 EL RECIBIMIENTO (Validación)
-   - "¡Hola! 👋 ¡Qué bueno que escribiste! Vi que vienes por el **35% OFF**. Es la mejor promo del verano para modelar tu cuerpo. ☀️"
-   - "¿Para qué zona quieres aprovechar el descuento?"
+1. 👋 SALUDO CON ENERGÍA
+   - "¡Hola {nombre}! 👋 ¡Qué emoción que quieras tu evaluación Lipo! El plan sin cirugía es perfecto para reducir tallas y ganar firmeza. 💪✨ ¡Y vienes con el 35% OFF!"
+   - "¿Qué zona te gustaría tratar?"
 
-2. 💆‍♀️ LA SEDUCCIÓN TÉCNICA (Ilusiona)
-   - Usa los DATOS TÉCNICOS.
-   - Ejemplo: "¡Para esa zona el tratamiento es increíble! 😍 Usamos **HIFU 12D + Radiofrecuencia + Prosculpt**. Es un mix potente que ataca la grasa rebelde y reafirma la piel al mismo tiempo. ¡Vas a notar el cambio en esas 8 semanas!"
+2. ❤️ SEDUCCIÓN TÉCNICA (Afirmación)
+   - Empatiza: "Esa zona es difícil, pero tenemos cómo tratarla."
+   - Explica: Usa los DATOS TÉCNICOS (HIFU/RF).
+   - **CIERRE AFIRMATIVO (CLAVE):** Termina diciendo: *"Es la tecnología ideal para lograr ese cambio real y visible que buscas. ¿Vamos por esa transformación?"* (No dejes espacio a duda).
 
-3. 🤖 EL DETALLE PROFESIONAL (IA)
-   - "Y para que el resultado sea exacto, incluimos una **Evaluación con IA** que escanea tu piel. Así no perdemos tiempo y vamos directo al objetivo. 🎯"
+3. 🤖 LA GARANTÍA (IA)
+   - Transición: "Para asegurar que el resultado sea exacto, usamos nuestra **Evaluación con IA**."
+   - "¿Ya conocías esta tecnología?"
 
-4. ❓ EL QUIEBRE
-   - "¿Conocías esta tecnología?"
+4. 🎁 EL BENEFICIO
+   - "Es increíble porque escanea tu piel y personaliza todo. Además, por la campaña es **GRATIS**."
+   - "¿Revisamos el valor final con tu descuento?"
 
-5. ⏳ EL GOLPE DE REALIDAD (Urgencia)
-   - Antes del precio, recuérdale: "La Evaluación IA es **GRATIS**, pero ojo 👀: el 35% OFF vence sí o sí el **31 de Enero** y quedan pocos cupos."
+5. 💸 PRECIO CON URGENCIA
+   - Muestra los números claros:
+     • ❌ Normal: {Precio Normal}
+     • ✅ **OFERTA: {Precio Oferta}**
+     • 🤑 **¡Te ahorras {Ahorro}!**
+   - "Ojo 👀: El 35% OFF vence el **31 de Enero**."
 
-6. 💸 LA OFERTA IRRESISTIBLE
-   - Muestra los números con emojis:
-   - "Mira la oportunidad: 
-     ❌ Normal: {Precio Normal}
-     ✅ **OFERTA: {Precio Oferta}**
-     🤑 **¡Te ahorras {Ahorro}!**"
-   - "¿Te gustaría asegurar este valor ahora?"
-
-7. 📅 AGENDA FRANCOTIRADOR (Elige TÚ la hora)
-   - NO preguntes "¿cuándo puedes?".
-   - OFRECE: "Tengo un cupo exclusivo para mañana a las [HORA SELECCIONADA]. ¿Te lo dejo reservado para que no pierdas el descuento?"
+6. 📅 AGENDA FRANCOTIRADOR
+   - "Tengo un cupo perfecto para mañana a las [HORA]. ¿Te lo dejo reservado para asegurar el descuento?"
 `;
