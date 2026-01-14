@@ -7,19 +7,18 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import { CLINICA } from './config/clinic.js';
 import { NEGOCIO } from './config/business.js';
-import { FLUJO_MAESTRO } from './flow.js';
-import { FLUJO_CAMPAÑA } from './flow_campaign.js';
+import { FLUJO_MAESTRO } from './config/flow.js';
+import { FLUJO_CAMPAÑA } from './config/flow_campaign.js';
 import { checkAvailability, crearEvento } from './google_calendar.js';
 
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const PERSONALIDAD_BASE = `
-IDENTIDAD:
-Eres Zara, Asesora Senior de Body Elite (Ubicada en Las Pircas, Peñalolén).
-- Eres EMPÁTICA, SOFISTICADA y CÁLIDA.
-- No usas jerga robótica. Hablas como una experta de confianza.
-- **MEMORIA ABSOLUTA:** Si ya saludaste en el historial, NO repitas "Hola". Continúa la charla fluidamente.
+ERES ZARA, LA ASESORA ESTRELLA DE BODY ELITE.
+- Tienes "Clase": Eres educada, usas emojis pero no abusas.
+- Tienes "Cerebro": Conoces perfectamente los tratamientos (HIFU, RF, Semanas) gracias a tu base de datos.
+- Tienes "Olfato Comercial": Sabes cuándo escuchar y cuándo cerrar la venta.
 `;
 
 export async function transcribirAudio(urlDescarga) {
@@ -35,72 +34,56 @@ export async function transcribirAudio(urlDescarga) {
     } catch (e) { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); return null; }
 }
 
-export async function diagnosticar(historial) {
-    try {
-        const historiaReciente = historial.slice(-10);
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                { role: "system", content: "CRM: Clasifica en 2 palabras: 'Esperando respuesta', 'En Seguimiento', 'Link Enviado', 'Posible Spam', 'Duda Técnica', 'Falla Precio', 'Cerrado/Viaje', 'Lead Campaña'." },
-                ...historiaReciente
-            ],
-            temperature: 0,
-            max_tokens: 15
-        });
-        return response.choices[0].message.content;
-    } catch (e) { return "Analizando..."; }
-}
+export async function diagnosticar(historial) { return "Lead Activo"; }
 
 export async function pensar(historial, nombreCliente) {
     let agendaInfo = await checkAvailability();
     const nowChile = DateTime.now().setZone('America/Santiago');
-    const fechaHoy = nowChile.toFormat('yyyy-MM-dd HH:mm');
-    const diaSemana = nowChile.toFormat('cccc', { locale: 'es' });
     const infoClinica = JSON.stringify(CLINICA);
     const infoNegocio = JSON.stringify(NEGOCIO);
-    const nombreSimple = nombreCliente ? nombreCliente.split(' ')[0] : "Linda";
 
+    // --- DETECCIÓN DE CAMPAÑA ---
     const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
-    const esDeCampaña = historialTexto.includes("quiero mi evaluación") || 
-                        historialTexto.includes("vi el anuncio") ||
-                        historialTexto.includes("35% off") ||
-                        historialTexto.includes("30% off") ||
-                        historialTexto.includes("oferta enero");
+    const triggersCampaña = ["lipo", "evaluación", "evaluacion", "precio", "valor", "35%", "oferta", "campaña", "quiero", "glúteos", "rostro"];
+    const esDeCampaña = triggersCampaña.some(t => historialTexto.includes(t));
 
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
-
-    const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
-    const palabrasCierre = ["gracias", "viajo", "semana que viene", "despues te hablo", "te aviso", "ok gracias", "hasta pronto", "chau"];
-    const esCierre = palabrasCierre.some(p => ultimoMensaje.includes(p));
     
+    // Detectar si ya saludamos para no repetir "Hola"
     const yaSaludo = historial.filter(m => m.role === 'assistant').length > 0;
 
     const SYSTEM_PROMPT = `
     ${PERSONALIDAD_BASE}
-    HOY ES: ${diaSemana} ${fechaHoy}.
-    CLIENTE: ${nombreSimple}
-    CONTEXTO: ${yaSaludo ? "Conversación en curso (NO SALUDES DE NUEVO)." : "Inicio de conversación."}
     
-    ${esDeCampaña ? "MODO: EXPERTA EN CAMPAÑA (Usa precios de la tabla, empatiza, seduce)." : "MODO: CONSULTIVO GENERAL."}
+    ESTADO ACTUAL:
+    - Cliente: ${nombreCliente || "Usuario"}
+    - Fecha/Hora: ${nowChile.toFormat('cccc dd/MM HH:mm')}
+    - Contexto: ${esDeCampaña ? "MODO CAMPAÑA (35% OFF - VERANO)" : "MODO ORGÁNICO"}
+    - Saludo Inicial: ${yaSaludo ? "YA REALIZADO (Ve al grano)" : "PENDIENTE (Saluda calidamente)"}
 
-    ${esCierre ? "⚠️ MODO DESPEDIDA: Sé breve, amable y cierra." : `
-    📜 TU GUIÓN DE ÉXITO:
-    ${GUION_ACTIVO}
-    `}
-
-    📅 DISPONIBILIDAD REAL:
-    ${agendaInfo}
-
-    DATOS CLAVE:
+    📚 TUS CONOCIMIENTOS TÉCNICOS (NO INVENTES):
     ${infoClinica}
+
+    🏢 DATOS DEL NEGOCIO:
     ${infoNegocio}
+
+    🗺️ TU ESTRATEGIA DE CONVERSACIÓN (SÍGUELA CON INTELIGENCIA):
+    ${GUION_ACTIVO}
+    
+    ⚠️ INSTRUCCIÓN DE AGENDA:
+    - Revisa la disponibilidad abajo.
+    - Si es AM, ofrece PM hoy. Si es PM, ofrece AM mañana.
+    - Solo agenda si el cliente confirma una hora específica.
+
+    📅 DISPONIBILIDAD REAL CALENDAR:
+    ${agendaInfo}
     `;
 
     const tools = [{
         type: "function",
         function: {
             name: "agendar_cita",
-            description: "Reserva en Google Calendar.",
+            description: "Reserva final en Google Calendar cuando el cliente confirma hora.",
             parameters: {
                 type: "object",
                 properties: {
@@ -119,22 +102,20 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.3 
+            temperature: 0.4 // Temperatura media para que converse natural pero respete datos
         });
         const msg = runner.choices[0].message;
+        
         if (msg.tool_calls) {
             const toolCall = msg.tool_calls[0];
             if (toolCall.function.name === "agendar_cita") {
                 const args = JSON.parse(toolCall.function.arguments);
                 const exito = await crearEvento(args.fecha_iso, nombreCliente || "Cliente", args.telefono || "");
-                const confirmacion = exito ? "¡Listo! Reserva confirmada para " + args.fecha_iso + ". ¡Te esperamos! ✨" : "Ups, justo me tomaron esa hora. ¿Probamos otra?";
-                const secondResponse = await openai.chat.completions.create({
-                    model: "gpt-4o",
-                    messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial, msg, { role: "tool", tool_call_id: toolCall.id, content: confirmacion }]
-                });
-                return secondResponse.choices[0].message.content.replace(/^"|"$/g, '');
+                return exito 
+                    ? `¡Listo ${nombreCliente}! 🌟 Tu evaluación con el 35% OFF quedó reservada para el ${args.fecha_iso}. Te esperamos en Las Pircas.`
+                    : "Ups, justo alguien tomó ese horario hace un segundo. ¿Te acomoda una hora más tarde?";
             }
         }
-        return msg.content.replace(/^"|"$/g, ''); 
-    } catch (e) { return "Hola! 🌸"; }
+        return msg.content; 
+    } catch (e) { return "Hola! Estoy revisando la agenda para darte la mejor hora..."; }
 }
