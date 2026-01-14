@@ -14,12 +14,60 @@ import { checkAvailability, crearEvento } from './google_calendar.js';
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const PERSONALIDAD_BASE = `
-ERES ZARA, LA ASESORA ESTRELLA DE BODY ELITE.
-- Tienes "Clase": Eres educada, usas emojis pero no abusas.
-- Tienes "Cerebro": Conoces perfectamente los tratamientos (HIFU, RF, Semanas) gracias a tu base de datos.
-- Tienes "Olfato Comercial": Sabes cuándo escuchar y cuándo cerrar la venta.
-`;
+// --- TABLA DE PRECIOS "INFLADOS" PARA CAMPAÑA (NO TOCAR) ---
+const CAMPAÑA_SPECIALS = {
+    "lipo": { 
+        ref: "lipo_express", 
+        titulo: "LIPO SIN CIRUGÍA",
+        normal: "$565.500", 
+        oferta: "$395.850", 
+        ahorro: "$169.650" 
+    },
+    "push_up": { 
+        ref: "push_up", 
+        titulo: "PUSH UP GLÚTEOS",
+        normal: "$487.500", 
+        oferta: "$341.250", 
+        ahorro: "$146.250" 
+    },
+    "rostro": { 
+        ref: "face_antiage", 
+        titulo: "ROSTRO ANTIAGE",
+        normal: "$337.200", 
+        oferta: "$269.760", 
+        ahorro: "$67.440" 
+    }
+};
+
+function obtenerDatosCampaña(texto) {
+    const t = texto.toLowerCase();
+    let key = null;
+    
+    // Detector de intención (Slang incluido)
+    if (t.includes("culo") || t.includes("glúteos") || t.includes("gluteo") || t.includes("poto") || t.includes("push")) key = "push_up";
+    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo")) key = "lipo";
+    else if (t.includes("cara") || t.includes("rostro") || t.includes("antiage") || t.includes("arrugas")) key = "rostro";
+
+    if (!key) return null;
+
+    const precio = CAMPAÑA_SPECIALS[key];
+    const tecnico = CLINICA[precio.ref]; // Datos reales de clinic.js
+
+    return `
+    🎯 PRODUCTO CAMPAÑA: ${precio.titulo}
+    
+    🧬 DATOS TÉCNICOS (Para tu explicación convincente):
+    - Tratamiento: ${tecnico.plan}
+    - Duración Real: ${tecnico.semanas}
+    - Tecnologías: ${tecnico.tecnologias}
+    - Beneficio Clave: ${tecnico.beneficio}
+
+    💰 TABLA DE PRECIOS (Usa esto en el Paso 8):
+    - Precio Lista (Inflado): ${precio.normal}
+    - Precio 35% OFF: ${precio.oferta}
+    - Ahorro Cliente: ${precio.ahorro}
+    `;
+}
 
 export async function transcribirAudio(urlDescarga) {
     const tempPath = path.join(os.tmpdir(), `audio_${Date.now()}.ogg`);
@@ -39,51 +87,51 @@ export async function diagnosticar(historial) { return "Lead Activo"; }
 export async function pensar(historial, nombreCliente) {
     let agendaInfo = await checkAvailability();
     const nowChile = DateTime.now().setZone('America/Santiago');
-    const infoClinica = JSON.stringify(CLINICA);
     const infoNegocio = JSON.stringify(NEGOCIO);
 
-    // --- DETECCIÓN DE CAMPAÑA ---
+    // Contexto
     const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
-    const triggersCampaña = ["lipo", "evaluación", "evaluacion", "precio", "valor", "35%", "oferta", "campaña", "quiero", "glúteos", "rostro"];
+    const triggersCampaña = ["35%", "off", "oferta", "lipo", "push", "glúteos", "culo", "precio", "valor"];
     const esDeCampaña = triggersCampaña.some(t => historialTexto.includes(t));
+    
+    // Datos del producto actual (si aplica)
+    const ultimoMensaje = historial[historial.length - 1].content;
+    const datosProducto = obtenerDatosCampaña(ultimoMensaje) || obtenerDatosCampaña(historialTexto);
 
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
     
-    // Detectar si ya saludamos para no repetir "Hola"
-    const yaSaludo = historial.filter(m => m.role === 'assistant').length > 0;
+    // Lógica de Horario Inteligente (AM -> PM / PM -> AM Mañana)
+    const horaActual = nowChile.hour;
+    const sugerenciaHorario = horaActual < 13 
+        ? "Busca un cupo para HOY en la tarde (PM)" 
+        : "Busca un cupo para MAÑANA en la mañana (AM)";
 
     const SYSTEM_PROMPT = `
-    ${PERSONALIDAD_BASE}
+    ERES ZARA, CONSULTORA DE BODY ELITE.
     
-    ESTADO ACTUAL:
-    - Cliente: ${nombreCliente || "Usuario"}
-    - Fecha/Hora: ${nowChile.toFormat('cccc dd/MM HH:mm')}
-    - Contexto: ${esDeCampaña ? "MODO CAMPAÑA (35% OFF - VERANO)" : "MODO ORGÁNICO"}
-    - Saludo Inicial: ${yaSaludo ? "YA REALIZADO (Ve al grano)" : "PENDIENTE (Saluda calidamente)"}
+    🌟 TU MENTALIDAD:
+    - Eres experta, cálida y persuasiva.
+    - NO ERES INSISTENTE. Si el cliente pregunta por estacionamiento, respóndele con naturalidad y luego, sutilmente, retoma la agenda.
+    - TU META: Llevar al cliente por los 9 Pasos del Flujo, pero permitiendo desvíos si el cliente quiere conversar.
 
-    📚 TUS CONOCIMIENTOS TÉCNICOS (NO INVENTES):
-    ${infoClinica}
+    🛒 DATOS DE VENTA ACTIVOS:
+    ${datosProducto ? datosProducto : "Cliente aún no define zona (Lipo/Glúteos/Rostro). Pregunta para activar la tabla."}
 
-    🏢 DATOS DEL NEGOCIO:
-    ${infoNegocio}
+    🏢 INFO LOCAL: ${infoNegocio}
 
-    🗺️ TU ESTRATEGIA DE CONVERSACIÓN (SÍGUELA CON INTELIGENCIA):
+    📜 TU MAPA DE RUTA (9 PASOS):
     ${GUION_ACTIVO}
-    
-    ⚠️ INSTRUCCIÓN DE AGENDA:
-    - Revisa la disponibilidad abajo.
-    - Si es AM, ofrece PM hoy. Si es PM, ofrece AM mañana.
-    - Solo agenda si el cliente confirma una hora específica.
 
-    📅 DISPONIBILIDAD REAL CALENDAR:
-    ${agendaInfo}
+    🕰️ INSTRUCCIÓN DE AGENDA:
+    - ${sugerenciaHorario}.
+    - Disponibilidad Real: ${agendaInfo}
     `;
 
     const tools = [{
         type: "function",
         function: {
             name: "agendar_cita",
-            description: "Reserva final en Google Calendar cuando el cliente confirma hora.",
+            description: "Reserva en Google Calendar.",
             parameters: {
                 type: "object",
                 properties: {
@@ -102,7 +150,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.4 
+            temperature: 0.3 // Balance entre creatividad para explicar y rigor para precios
         });
         const msg = runner.choices[0].message;
         
@@ -112,10 +160,10 @@ export async function pensar(historial, nombreCliente) {
                 const args = JSON.parse(toolCall.function.arguments);
                 const exito = await crearEvento(args.fecha_iso, nombreCliente || "Cliente", args.telefono || "");
                 return exito 
-                    ? `¡Listo ${nombreCliente}! 🌟 Tu evaluación con el 35% OFF quedó reservada para el ${args.fecha_iso}. Te esperamos en Las Pircas.`
-                    : "Ups, justo alguien tomó ese horario hace un segundo. ¿Te acomoda una hora más tarde?";
+                    ? `¡Listo! Quedó agendado para el ${args.fecha_iso}. ${esDeCampaña ? "Tu 35% OFF está asegurado." : "Te esperamos."} ✨`
+                    : "Ese cupo se acaba de ocupar. ¿Buscamos otro?";
             }
         }
         return msg.content; 
-    } catch (e) { return "Hola! Estoy revisando la agenda para darte la mejor hora..."; }
+    } catch (e) { return "Un momento, estoy verificando..."; }
 }
