@@ -16,10 +16,10 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const PERSONALIDAD_BASE = `
 IDENTIDAD:
-Eres Zara, Asesora Senior de Body Elite.
-- Tono: Cálido, usas emojis (✨, 🌸), pero eres EJECUTIVA.
-- Misión: Guiar y Concretar Citas.
-- MEMORIA: Lee los mensajes anteriores para no repetir preguntas.
+Eres Zara, Asesora Senior de Body Elite (Ubicada en Las Pircas, Peñalolén).
+- Eres EMPÁTICA, SOFISTICADA y CÁLIDA.
+- No usas jerga robótica. Hablas como una experta de confianza.
+- **MEMORIA ABSOLUTA:** Si ya saludaste en el historial, NO repitas "Hola". Continúa la charla fluidamente.
 `;
 
 export async function transcribirAudio(urlDescarga) {
@@ -60,37 +60,41 @@ export async function pensar(historial, nombreCliente) {
     const infoNegocio = JSON.stringify(NEGOCIO);
     const nombreSimple = nombreCliente ? nombreCliente.split(' ')[0] : "Linda";
 
-    // --- 1. DETECCIÓN DE ORIGEN (ENRUTADOR) ---
+    // --- ENRUTADOR INTELIGENTE ---
     const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
-    // Palabras clave que vienen SOLO de los botones de tus anuncios
     const esDeCampaña = historialTexto.includes("quiero mi evaluación") || 
                         historialTexto.includes("vi el anuncio") ||
-                        historialTexto.includes("35% off");
+                        historialTexto.includes("35% off") ||
+                        historialTexto.includes("30% off") ||
+                        historialTexto.includes("oferta enero");
 
-    // Seleccionamos el guion correcto
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
 
-    // --- 2. CIRCUIT BREAKER (CIERRE) ---
+    // --- DETECCIÓN DE CONTEXTO ---
     const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
-    const palabrasCierre = ["gracias", "viajo", "semana que viene", "despues te hablo", "te aviso", "muy amable", "ok gracias", "hasta pronto", "chau"];
+    const palabrasCierre = ["gracias", "viajo", "semana que viene", "despues te hablo", "te aviso", "ok gracias", "hasta pronto", "chau"];
     const esCierre = palabrasCierre.some(p => ultimoMensaje.includes(p));
+    
+    // Evitar saludo doble
+    const yaSaludo = historial.filter(m => m.role === 'assistant').length > 0;
 
     const SYSTEM_PROMPT = `
     ${PERSONALIDAD_BASE}
     HOY ES: ${diaSemana} ${fechaHoy}.
     CLIENTE: ${nombreSimple}
+    CONTEXTO: ${yaSaludo ? "Conversación en curso (NO SALUDES DE NUEVO)." : "Inicio de conversación."}
     
-    ${esDeCampaña ? "MODO: ATENCIÓN DE CAMPAÑA (Responde según el interés exacto: Glúteos, Lipo o Rostro)." : "MODO: CONSULTIVO GENERAL."}
+    ${esDeCampaña ? "MODO: EXPERTA EN CAMPAÑA (Usa precios de la tabla, empatiza, seduce)." : "MODO: CONSULTIVO GENERAL."}
 
-    ${esCierre ? "⚠️ MODO CIERRE: El cliente se despide. Di solo: '¡Perfecto [Nombre]! Quedo atenta. ¡Lindo día! ✨' y corta." : `
-    📜 TU GUÍA MAESTRA ES:
+    ${esCierre ? "⚠️ MODO DESPEDIDA: Sé breve, amable y cierra." : `
+    📜 TU GUIÓN DE ÉXITO:
     ${GUION_ACTIVO}
     `}
 
     📅 DISPONIBILIDAD REAL:
     ${agendaInfo}
 
-    DATOS:
+    DATOS CLAVE:
     ${infoClinica}
     ${infoNegocio}
     `;
@@ -118,7 +122,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.1
+            temperature: 0.3 // Un poco más de creatividad para la empatía
         });
         const msg = runner.choices[0].message;
         if (msg.tool_calls) {
