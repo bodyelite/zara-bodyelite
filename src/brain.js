@@ -42,21 +42,21 @@ function obtenerDatosCampaña(texto) {
     const t = texto.toLowerCase();
     let key = null;
     
-    // Detector de intención
-    if (t.includes("culo") || t.includes("glúteos") || t.includes("gluteo") || t.includes("push") || t.includes("cola")) key = "push_up";
-    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo") || t.includes("brazo") || t.includes("espalda") || t.includes("muslo")) key = "lipo";
-    else if (t.includes("cara") || t.includes("rostro") || t.includes("antiage") || t.includes("arrugas")) key = "rostro";
+    if (t.includes("glúteos") || t.includes("gluteos") || t.includes("culo") || t.includes("push")) key = "push_up";
+    else if (t.includes("lipo") || t.includes("guata") || t.includes("abdomen") || t.includes("cintura") || t.includes("espalda") || t.includes("brazo")) key = "lipo";
+    else if (t.includes("rostro") || t.includes("cara") || t.includes("antiage")) key = "rostro";
 
     if (!key) return null;
+    
     const precio = CAMPAÑA_SPECIALS[key];
     const tecnico = CLINICA[precio.ref];
 
     return `
-    ✨ PRODUCTO DETECTADO: ${precio.titulo}
-    🧬 DATOS TÉCNICOS (Para profundizar):
+    ✨ PRODUCTO CAMPAÑA: ${precio.titulo}
+    🧬 ARGUMENTOS TÉCNICOS (SOLO USAR DESPUÉS DE SABER EL DOLOR):
     - TECNOLOGÍAS: ${tecnico.tecnologias}
     - DURACIÓN: ${tecnico.semanas}
-    - EFECTO: ${tecnico.beneficio}
+    - BENEFICIO: ${tecnico.beneficio}
     💰 PRECIOS (Urgencia 31 Enero):
     - Normal: ${precio.normal} -> Oferta: ${precio.oferta}
     - Ahorro: ${precio.ahorro}
@@ -83,36 +83,36 @@ export async function pensar(historial, nombreCliente) {
     const nowChile = DateTime.now().setZone('America/Santiago');
     const infoNegocio = JSON.stringify(NEGOCIO);
 
+    // Detección estricta de botón Meta
     const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
-    const triggersCampaña = ["35%", "off", "oferta", "lipo", "push", "glúteos", "culo", "precio", "valor"];
-    const esDeCampaña = triggersCampaña.some(t => historialTexto.includes(t));
+    const triggerSagrado = "quiero mi evaluación"; 
+    const esDeCampaña = historialTexto.includes(triggerSagrado) || historialTexto.includes("quiero mi evaluacion");
     
-    const ultimoMensaje = historial[historial.length - 1].content;
-    const datosProducto = obtenerDatosCampaña(ultimoMensaje) || obtenerDatosCampaña(historialTexto);
-
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
-    
+
+    const ultimoMensaje = historial[historial.length - 1].content;
+    const datosProducto = esDeCampaña ? (obtenerDatosCampaña(ultimoMensaje) || obtenerDatosCampaña(historialTexto)) : null;
+
     const SYSTEM_PROMPT = `
-    ERES ZARA, CONSULTORA DE BODY ELITE. 🌟
+    ERES ZARA, CONSULTORA DE BODY ELITE.
     
-    ❤️ TU ACTITUD:
-    - Entusiasta y Empática.
-    - **FLUJO TÉCNICO DOBLE:**
-      1. Cuando dicen la zona -> Das una intro general + Preguntas qué molesta.
-      2. Cuando dicen qué molesta -> Explicas las tecnologías a fondo conectándolas con ese dolor.
-    - **CIERRE:** Siempre afirmando ("¿Te hace sentido?", "¿Vamos por eso?").
-    - **URGENCIA:** El 35% OFF vence el **31 de Enero**.
+    🚨 MODO CAMPAÑA: ${esDeCampaña ? "ACTIVADO ✅" : "DESACTIVADO ❌"}
 
-    🎯 INFO TÉCNICA Y PRECIOS:
-    ${datosProducto ? datosProducto : "Esperando zona..."}
+    ${esDeCampaña ? `
+    🔥 REGLAS DE ORO DEL MODO CAMPAÑA:
+    1. **INDAGACIÓN PURA:** Cuando el cliente diga la zona (ej: "Cintura"), **TIENES PROHIBIDO** hablar de tecnologías (HIFU/RF). Tu única misión es preguntar: "¿Te molesta más la grasa (volumen) o la flacidez?".
+    2. **GOLPE DE AUTORIDAD:** Si el cliente dice "no sé" o "ustedes son los expertos", TOMA EL MANDO. Di: "¡Perfecto! Entonces déjamelo a mí. Lo que necesitas es..." (y ahí sueltas la tecnología).
+    3. **MANEJO DE OBJECIONES:** Si dice "No" a la cita, NO DIGAS ADIÓS. Pregunta: "¿Te complica el horario o te gustaría saber más del procedimiento primero?".
+    4. **PRECIOS VISUALES:** Usa saltos de línea y emojis.
 
-    📜 TU GUIÓN DE CAMPAÑA:
-    ${GUION_ACTIVO}
+    🎯 DATOS TÉCNICOS: ${datosProducto || "Esperando zona..."}
+    ` : `
+    💁‍♀️ MODO ATENCIÓN GENERAL: Responde dudas puntuales sin script de ventas.
+    `}
 
-    📅 AGENDA (ELIGE UNA SOLA HORA):
-    - AM ahora -> Ofrece PM hoy.
-    - PM ahora -> Ofrece AM mañana.
-    - Disponibilidad: ${agendaRaw}
+    🏢 INFO NEGOCIO: ${infoNegocio}
+    📜 TU GUIÓN: ${GUION_ACTIVO}
+    📅 AGENDA: ${agendaRaw}
     `;
 
     const tools = [{
@@ -138,7 +138,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.4
+            temperature: 0.3
         });
         const msg = runner.choices[0].message;
         
@@ -148,10 +148,10 @@ export async function pensar(historial, nombreCliente) {
                 const args = JSON.parse(toolCall.function.arguments);
                 const exito = await crearEvento(args.fecha_iso, nombreCliente || "Cliente", args.telefono || "");
                 return exito 
-                    ? `¡Listo ${nombreCliente}! 🎉 Quedó agendado para el ${args.fecha_iso}. Tu 35% OFF está seguro hasta el 31 de Enero. ¡Te va a encantar el cambio! ✨`
-                    : "Ups, justo se ocupó. 🙈 ¿Te sirve un poco más tarde?";
+                    ? `¡Listo ${nombreCliente}! Quedó agendado para el ${args.fecha_iso}. Tu 35% OFF está blindado hasta el 31 de Enero. ✨`
+                    : "Ups, se ocupó. ¿Busquemos otro?";
             }
         }
         return msg.content; 
-    } catch (e) { return "Dame un segundo, estoy cuadrando la agenda..."; }
+    } catch (e) { return "Dame un segundo..."; }
 }

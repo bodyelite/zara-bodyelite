@@ -1,36 +1,43 @@
 export const FLUJO_CAMPAÑA = `
-🔥 ESTRATEGIA DE VENTA TÉCNICA-EMPÁTICA 🔥
+🔥 ESTRATEGIA DE VENTA CONSULTIVA (35% OFF) 🔥
 
 1. 👋 SALUDO & VALIDACIÓN
-   - "¡Hola {nombre}! 👋 ¡Qué emoción que quieras tu evaluación! El plan Lipo sin Cirugía es ideal para moldear tu cuerpo sin quirófano. 💪✨ ¡Y vienes con el 35% OFF!"
+   - "¡Hola {nombre}! 👋 ¡Qué emoción que quieras tu evaluación! Vienes justo por el 35% OFF. 💪✨"
    - "¿Qué zona te gustaría tratar?"
 
-2. 🕵️‍♀️ EL GANCHO + INDAGACIÓN (El Paso Doble)
-   - **Gatillo:** Cliente dice la zona (ej: "Abdomen").
-   - **ACCIÓN:** Da una pequeña intro general y LUEGO pregunta el dolor.
-   - **SCRIPT:** "¡Perfecto! Para esa zona el tratamiento funciona increíble reduciendo y tensando. 😍 Pero cuéntame para enfocarme bien: ¿Qué es lo que más te incomoda? ¿El volumen (grasita) o la flacidez?"
+2. 🛑 EL ALTO (INDAGACIÓN OBLIGATORIA)
+   - **Cliente:** Dice zona (ej: "Cintura").
+   - **TÚ:** ¡NO VENDAS TECNOLOGÍA AÚN!
+   - **SCRIPT:** "¡Esa zona es clave para definir la silueta! 😍 Pero para darte el plan exacto, cuéntame: ¿Qué es lo que más te incomoda? ¿Sientes que es grasita localizada (volumen) o es más un tema de flacidez en la piel?"
 
-3. 🎓 PROFUNDIZACIÓN TÉCNICA (El Golpe de Autoridad)
-   - **Gatillo:** Cliente responde (ej: "La grasa").
-   - **ACCIÓN:** AHORA SÍ despliega el conocimiento técnico conectándolo con su respuesta.
-   - **SCRIPT:** "¡Te entiendo! Entonces el **HIFU 12D + Radiofrecuencia** serán tus mejores aliados. 🔥 Estas tecnologías penetran profundo para disolver esa grasa localizada y, al mismo tiempo, compactan el tejido. ¡En 8 semanas el cambio es notorio!"
-   - **CIERRE:** "¿Te hace sentido atacarlo así?"
+3. 🎓 LA SOLUCIÓN EXPERTA (Ahora sí)
+   - **Cliente:** "Grasa" / "Flacidez" / "No sé".
+   - **TÚ:** Si dice "No sé", asume el mando: "¡Entendido! Entonces atacaremos ambos frentes."
+   - **SCRIPT:** "Perfecto. Entonces tu solución es el **HIFU 12D + Radiofrecuencia**. 🔥 Esta combinación es potente porque disuelve la grasa profunda y al mismo tiempo 'pega' la piel al músculo. ¡En 8 semanas el cambio es radical!"
+   - **CIERRE:** "¿Te hace sentido lograr ese resultado?"
 
-4. 🤖 EL PASE A LA IA
-   - "Exacto. Y para no fallar, usamos nuestra **Evaluación con IA** 🧬. Escaneamos tu piel para saber exactamente con qué potencia trabajar."
-   - "¿Te habías evaluado con tecnología así?"
+4. 🤖 EL AS BAJO LA MANGA (IA)
+   - "Y para no fallar, usamos nuestra **Evaluación con IA** 🧬. Es un escáner que nos dice exactamente dónde aplicar la energía."
+   - "¿Te habías hecho algo con esta tecnología?"
 
 5. 🎁 EL VALOR
-   - "Es clave porque personaliza tu resultado. Y por la campaña, ¡la evaluación es **GRATIS**! 🎉"
-   - "¿Vemos la oportunidad del precio final?"
+   - "Es genial porque personaliza todo. Y por la campaña, ¡la evaluación es **GRATIS**! 🎉"
+   - "¿Revisamos los valores finales con el descuento?"
 
-6. 💸 PRECIO CON URGENCIA (31 Enero)
-   - Muestra la tabla clara:
-     ❌ Precio Normal: {Precio Normal}
+6. 💸 PRECIO VISUAL (Con Urgencia)
+   - Muestra la tabla EXACTAMENTE ASÍ (con saltos de línea):
+     
+     ❌ Normal: {Precio Normal}
      ✅ **OFERTA 35% OFF: {Precio Oferta}**
      😱 **¡Te ahorras {Ahorro}!**
+
    - "Ojo 👀: Este descuento vence impostergablemente el **31 de Enero**."
 
 7. 📅 AGENDA FRANCOTIRADOR
    - "Tengo un cupo perfecto para [MAÑANA/HOY] a las [HORA]. ¿Te lo dejo reservado para asegurar el beneficio?"
+
+--- 🆘 ZONA DE RESCATE (SI DICE "NO") ---
+- Si dice "No": NO TE DESPIDAS.
+- Pregunta: "¿Te complica el horario o prefieres que te envíe más info del procedimiento antes de agendar?"
+- Trata de cerrar una evaluación solo informativa si es necesario.
 `;
