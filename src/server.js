@@ -11,7 +11,7 @@ app.get('/monitor', (req, res) => {
     <!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8"><title>ZARA 11.0 DASHBOARD</title>
+        <meta charset="UTF-8"><title>ZARA 7.0 DASHBOARD</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
         <style>
             :root { --bg-body:#f3f4f6; --bg-sidebar:#ffffff; --text:#1f2937; --primary:#2563eb; --bot-color:#2563eb; --border:#e5e7eb; }
@@ -42,7 +42,7 @@ app.get('/monitor', (req, res) => {
     </head>
     <body>
     <div class="sidebar">
-        <div style="padding:15px; font-weight:700; font-size:16px; color:var(--primary); border-bottom:1px solid var(--border)">ZARA 11.0</div>
+        <div style="padding:15px; font-weight:700; font-size:16px; color:var(--primary); border-bottom:1px solid var(--border)">ZARA 7.0</div>
         <div class="tabs-grid">
             <button class="tab-btn active" onclick="setTab('NUEVO')">Nuevos</button>
             <button class="tab-btn" onclick="setTab('INTERESADO')">Interés</button>
@@ -117,13 +117,10 @@ app.get('/monitor', (req, res) => {
 
     <script>
         let curTab='NUEVO', curPhone=null, data={};
-        
         function toggleDateInput() { document.getElementById('dateIn').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
         function openModal(){ document.getElementById('bulkModal').style.display = 'flex'; }
         function closeModal(){ document.getElementById('bulkModal').style.display = 'none'; }
-        
         async function refresh(){ try { const r=await fetch('/api/data'); data=await r.json(); renderList(); if(curPhone) renderChat(); } catch(e){} }
-        
         function renderList(){
             const list=document.getElementById('leadList'); list.innerHTML='';
             Object.values(data.users||{}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
@@ -132,55 +129,35 @@ app.get('/monitor', (req, res) => {
                 }
             });
         }
-        
         function selectLead(p){ curPhone=p; document.getElementById('tagSelect').value = data.users[p].tag||'NUEVO'; renderChat(); renderList(); }
-        
         function renderChat(){
             const u=data.users[curPhone]; if(!u) return;
             document.getElementById('uName').innerText=u.name; document.getElementById('uPhone').innerText=u.phone;
-            
             const status=data.botStatus[curPhone]!==false;
             document.getElementById('botControl').innerHTML=\`<button type="button" onclick="toggleBot()" style="border:none; background:\${status?'#dcfce7':'#fee2e2'}; color:\${status?'#166534':'#991b1b'}; padding:5px 15px; border-radius:20px; font-weight:bold; font-size:11px; cursor:pointer; border:1px solid \${status?'#166534':'#991b1b'}">BOT \${status?'ON':'OFF'}</button>\`;
-            
             let html='';
             if(u.notes) u.notes.forEach(n=>{ html+=\`<div style="background:#fffbeb; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; color:#92400e;"><b>📝 Nota:</b> \${n.text}</div>\`; });
             (u.history||[]).forEach(m=>{ html+=\`<div style="display:flex; flex-direction:column; align-items:\${m.role==='user'?'flex-start':'flex-end'}"><div class="msg \${m.role}">\${m.content}</div><span style="font-size:9px; color:#999; margin-top:2px;">\${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>\`; });
-            
             const chatDiv=document.getElementById('chatBody');
             const isAtBottom = (chatDiv.scrollHeight - chatDiv.scrollTop) <= (chatDiv.clientHeight + 100);
-            
             chatDiv.innerHTML=html;
-            
-            if(isAtBottom) {
-                chatDiv.scrollTop = chatDiv.scrollHeight;
-            }
+            if(isAtBottom) { chatDiv.scrollTop = chatDiv.scrollHeight; }
         }
-        
         async function sendManual(){ const t=document.getElementById('msgIn').value; if(!t)return; await fetch('/api/manual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:t})}); document.getElementById('msgIn').value=''; refresh(); }
-        
         async function toggleBot(){ 
             if(!curPhone) return alert("Selecciona un cliente primero");
             await fetch('/api/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone})}); 
             if(data.botStatus[curPhone] === undefined) data.botStatus[curPhone] = true;
             data.botStatus[curPhone] = !data.botStatus[curPhone];
-            renderChat();
-            refresh(); 
+            renderChat(); refresh(); 
         }
-        
         async function updateTag(){ await fetch('/api/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,tag:document.getElementById('tagSelect').value})}); refresh(); }
         async function addNote(){ const n=document.getElementById('noteIn').value; const s=document.getElementById('checkZara').checked; const d=document.getElementById('dateIn').value; if(!n)return alert("Escribe algo"); await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:curPhone,text:n,isScheduled:s,dateStr:d})}); document.getElementById('noteIn').value=''; toggleDateInput(); refresh(); }
-        
         function downloadFunnel() {
-            const d1 = document.getElementById('dateStart').value;
-            const d2 = document.getElementById('dateEnd').value;
+            const d1 = document.getElementById('dateStart').value; const d2 = document.getElementById('dateEnd').value;
             if(!d1 || !d2) return alert("Por favor selecciona fecha Inicio y Fin");
-
-            const start = new Date(d1).getTime();
-            const end = new Date(d2).getTime() + (24 * 60 * 60 * 1000); // Fin del día
-
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "FECHA,NOMBRE,TELEFONO,ESTADO,MSJ_USUARIO,ULTIMO_MENSAJE\\n";
-            
+            const start = new Date(d1).getTime(); const end = new Date(d2).getTime() + (24 * 60 * 60 * 1000);
+            let csvContent = "data:text/csv;charset=utf-8,FECHA,NOMBRE,TELEFONO,ESTADO,MSJ_USUARIO,ULTIMO_MENSAJE\\n";
             Object.values(data.users || {}).forEach(u => {
                 if(u.lastInteraction >= start && u.lastInteraction <= end) {
                     const date = new Date(u.lastInteraction).toLocaleDateString();
@@ -189,40 +166,22 @@ app.get('/monitor', (req, res) => {
                     csvContent += \`\${date},\${u.name},\${u.phone},\${u.tag},\${userMsgs},\${lastMsg}\\n\`;
                 }
             });
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", \`REPORTE_FUNNEL_\${d1}_\${d2}.csv\`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", \`REPORTE_FUNNEL_\${d1}_\${d2}.csv\`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
-
         async function runBulk(){
-            const lines = document.getElementById('bulkInput').value.split('\\n');
-            const status = document.getElementById('bulkStatus');
-            let count = 0;
-            status.innerText = "Procesando...";
+            const lines = document.getElementById('bulkInput').value.split('\\n'); const status = document.getElementById('bulkStatus');
+            let count = 0; status.innerText = "Procesando...";
             for(let line of lines){
                 const parts = line.split(',');
                 if(parts.length >= 2){
-                    let p = parts[0].trim();
-                    let name = "Cliente";
-                    let msg = "";
+                    let p = parts[0].trim(); let name = "Cliente"; let msg = "";
                     if(parts.length >= 3) { name = parts[1].trim(); msg = parts.slice(2).join(',').trim(); } 
                     else { msg = parts.slice(1).join(',').trim(); }
-                    if(p && msg){
-                        await fetch('/api/manual', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) });
-                        count++;
-                        status.innerText = \`Enviando... (\${count})\`;
-                    }
+                    if(p && msg){ await fetch('/api/manual', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) }); count++; status.innerText = \`Enviando... (\${count})\`; }
                 }
             }
-            status.innerText = "✅ Listo!";
-            setTimeout(() => { closeModal(); refresh(); }, 2000);
+            status.innerText = "✅ Listo!"; setTimeout(() => { closeModal(); refresh(); }, 2000);
         }
-
         function setTab(t){ curTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.innerText.includes(t.substring(0,3)))); renderList(); }
         setInterval(refresh, 3000); refresh();
     </script>
