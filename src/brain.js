@@ -42,21 +42,23 @@ function obtenerDatosCampaña(texto) {
     const t = texto.toLowerCase();
     let key = null;
     if (t.includes("culo") || t.includes("glúteos") || t.includes("gluteo") || t.includes("push") || t.includes("cola")) key = "push_up";
-    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo") || t.includes("muslo")) key = "lipo";
-    else if (t.includes("cara") || t.includes("rostro") || t.includes("antiage")) key = "rostro";
+    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo") || t.includes("muslo") || t.includes("espalda")) key = "lipo";
+    else if (t.includes("cara") || t.includes("rostro") || t.includes("antiage") || t.includes("arrugas")) key = "rostro";
 
     if (!key) return null;
     const precio = CAMPAÑA_SPECIALS[key];
     const tecnico = CLINICA[precio.ref];
 
     return `
-    ✨ PRODUCTO CAMPAÑA: ${precio.titulo}
-    🧬 ARGUMENTOS DE PODER (Seduce y Afirma):
+    ✨ PRODUCTO DETECTADO: ${precio.titulo}
+    🧬 ARGUMENTOS TÉCNICOS (Para conectar con el dolor del cliente):
     - TECNOLOGÍAS: ${tecnico.tecnologias}
     - DURACIÓN: ${tecnico.semanas}
     - BENEFICIO: ${tecnico.beneficio}
-    💰 PRECIOS (Urgencia 31 Enero):
-    - Normal: ${precio.normal} -> Oferta: ${precio.oferta}
+    💰 PRECIOS (Usa emojis y listas):
+    - Normal: ${precio.normal}
+    - Oferta: ${precio.oferta}
+    - Ahorro: ${precio.ahorro}
     `;
 }
 
@@ -88,26 +90,23 @@ export async function pensar(historial, nombreCliente) {
     const datosProducto = obtenerDatosCampaña(ultimoMensaje) || obtenerDatosCampaña(historialTexto);
 
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
-    const horaActual = nowChile.hour;
     
     const SYSTEM_PROMPT = `
-    ERES ZARA, EXPERTA EN BODY ELITE.
+    ERES ZARA, CONSULTORA ESTÉTICA DE BODY ELITE. 🌟
     
-    🔥 TU ACTITUD (MODO CAMPAÑA):
-    - Entusiasta y Segura.
-    - **CERO DUDAS:** Cuando expliques el tratamiento, no preguntes "¿te tinca?". DICES: "Es la solución definitiva para esa zona. ¿Vamos por ese cambio?".
-    - **CIERRE AFIRMATIVO:** Llevas al cliente de la mano.
+    ❤️ TU ACTITUD:
+    - Súper empática y entusiasta ("¡Me encanta!", "¡Te entiendo perfecto!").
+    - Usas Emojis para resaltar ideas (✨, 💪, 😱, 🔥).
+    - **ESCUCHA ACTIVA:** Si el cliente dice la zona (ej: "espalda"), NO VENDAS DE INMEDIATO. Pregunta qué le molesta específicamente (rollito, flacidez) para generar conexión.
 
-    🎯 INFORMACIÓN CLAVE:
-    ${datosProducto ? datosProducto : "Detectando zona..."}
+    🎯 INFORMACIÓN DE CAMPAÑA:
+    ${datosProducto ? datosProducto : "Esperando que el cliente indique zona..."}
 
-    📜 TU GUIÓN:
+    📜 TU ESTRATEGIA (SÍGUELA):
     ${GUION_ACTIVO}
 
-    📅 REGLA DE AGENDA (FRANCOTIRADOR):
-    - NO des listas de horas. ELIGE UNA.
-    - AM ahora -> Ofrece UNA hora PM.
-    - PM ahora -> Ofrece UNA hora AM mañana.
+    📅 AGENDA (ELIGE TÚ LA HORA):
+    - No des listas. Di: "Tengo un cupo perfecto mañana a las 10:00".
     - Disponibilidad: ${agendaRaw}
     `;
 
@@ -134,7 +133,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.4
+            temperature: 0.5 // Más chispa y calidez
         });
         const msg = runner.choices[0].message;
         
@@ -144,8 +143,8 @@ export async function pensar(historial, nombreCliente) {
                 const args = JSON.parse(toolCall.function.arguments);
                 const exito = await crearEvento(args.fecha_iso, nombreCliente || "Cliente", args.telefono || "");
                 return exito 
-                    ? `¡Listo ${nombreCliente}! 🎉 Quedó agendado para el ${args.fecha_iso}. Tu 35% OFF está asegurado. ¡Vamos por esos resultados! 💪`
-                    : "Ups, me ganaron ese horario. 🙈 ¿Te sirve un poco más tarde?";
+                    ? `¡Listo ${nombreCliente}! 🎉 Quedó agendado para el ${args.fecha_iso}. ¡Prepárate para el cambio! Tu 35% OFF está asegurado. ✨`
+                    : "Ups, justo se ocupó ese horario. 🙈 ¿Te sirve un poco más tarde?";
             }
         }
         return msg.content; 
