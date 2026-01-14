@@ -8,18 +8,18 @@ import dotenv from 'dotenv';
 import { CLINICA } from './config/clinic.js';
 import { NEGOCIO } from './config/business.js';
 import { FLUJO_MAESTRO } from './config/flow.js';
+import { FLUJO_CAMPAÑA } from './config/flow_campaign.js';
 import { checkAvailability, crearEvento } from './google_calendar.js';
 
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const PERSONALIDAD_INTOCABLE = `
+const PERSONALIDAD_BASE = `
 IDENTIDAD:
 Eres Zara, Asesora Senior de Body Elite.
 - Tono: Cálido, usas emojis (✨, 🌸), pero eres EJECUTIVA.
 - Misión: Guiar y Concretar Citas.
-- REGLA DE ORO: Si el cliente se despide, dice gracias, viaja o pospone, NO sigas vendiendo. Despídete corto y amable.
-- REGLA DE MEMORIA: Antes de preguntar, revisa si el cliente YA respondió eso en el mensaje anterior. NO repitas preguntas.
+- MEMORIA: Lee los mensajes anteriores para no repetir preguntas.
 `;
 
 export async function transcribirAudio(urlDescarga) {
@@ -41,7 +41,7 @@ export async function diagnosticar(historial) {
         const response = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
-                { role: "system", content: "CRM: Clasifica en 2 palabras: 'Esperando respuesta', 'En Seguimiento', 'Link Enviado', 'Posible Spam', 'Duda Técnica', 'Falla Precio', 'Cerrado/Viaje'." },
+                { role: "system", content: "CRM: Clasifica en 2 palabras: 'Esperando respuesta', 'En Seguimiento', 'Link Enviado', 'Posible Spam', 'Duda Técnica', 'Falla Precio', 'Cerrado/Viaje', 'Lead Campaña'." },
                 ...historiaReciente
             ],
             temperature: 0,
@@ -60,26 +60,32 @@ export async function pensar(historial, nombreCliente) {
     const infoNegocio = JSON.stringify(NEGOCIO);
     const nombreSimple = nombreCliente ? nombreCliente.split(' ')[0] : "Linda";
 
-    // --- DETECCIÓN RÁPIDA DE CIERRE (Circuit Breaker) ---
-    // Si el último mensaje es claramente una despedida o postergación, forzamos respuesta final.
+    // --- 1. DETECCIÓN DE ORIGEN (ENRUTADOR) ---
+    const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
+    // Palabras clave que vienen SOLO de los botones de tus anuncios
+    const esDeCampaña = historialTexto.includes("quiero mi evaluación") || 
+                        historialTexto.includes("vi el anuncio") ||
+                        historialTexto.includes("35% off");
+
+    // Seleccionamos el guion correcto
+    const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
+
+    // --- 2. CIRCUIT BREAKER (CIERRE) ---
     const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
     const palabrasCierre = ["gracias", "viajo", "semana que viene", "despues te hablo", "te aviso", "muy amable", "ok gracias", "hasta pronto", "chau"];
     const esCierre = palabrasCierre.some(p => ultimoMensaje.includes(p));
 
     const SYSTEM_PROMPT = `
-    ${PERSONALIDAD_INTOCABLE}
+    ${PERSONALIDAD_BASE}
     HOY ES: ${diaSemana} ${fechaHoy}.
     CLIENTE: ${nombreSimple}
+    
+    ${esDeCampaña ? "MODO: ATENCIÓN DE CAMPAÑA (Responde según el interés exacto: Glúteos, Lipo o Rostro)." : "MODO: CONSULTIVO GENERAL."}
 
-    ${esCierre ? "⚠️ MODO CIERRE ACTIVADO: El cliente se está despidiendo o postergando. Solo di: '¡Perfecto [Nombre]! Quedo atenta para cuando regreses/decidas. ¡Lindo día! ✨' y NADA MÁS." : `
-    📜 TU GUÍA ES EL ARCHIVO 'flow.js':
-    ${FLUJO_MAESTRO}
+    ${esCierre ? "⚠️ MODO CIERRE: El cliente se despide. Di solo: '¡Perfecto [Nombre]! Quedo atenta. ¡Lindo día! ✨' y corta." : `
+    📜 TU GUÍA MAESTRA ES:
+    ${GUION_ACTIVO}
     `}
-
-    🧠 CÓMO USAR LA AGENDA (PASO 5):
-    1. **Mira la 'DISPONIBILIDAD REAL' abajo.**
-    2. Si pide día X: Busca si hay cupo. Si no, ofrece el día más cercano.
-    3. Si NO pide día: Ofrece tú la hora más cercana.
 
     📅 DISPONIBILIDAD REAL:
     ${agendaInfo}
