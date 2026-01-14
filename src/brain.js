@@ -7,8 +7,8 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import { CLINICA } from './config/clinic.js';
 import { NEGOCIO } from './config/business.js';
-import { FLUJO_MAESTRO } from './config/flow.js';
-import { FLUJO_CAMPAÑA } from './config/flow_campaign.js';
+import { FLUJO_MAESTRO } from './flow.js';
+import { FLUJO_CAMPAÑA } from './flow_campaign.js';
 import { checkAvailability, crearEvento } from './google_calendar.js';
 
 dotenv.config();
@@ -102,7 +102,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.4 // Temperatura media para que converse natural pero respete datos
+            temperature: 0.4 
         });
         const msg = runner.choices[0].message;
         
