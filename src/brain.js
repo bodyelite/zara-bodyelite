@@ -7,8 +7,8 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import { CLINICA } from './config/clinic.js';
 import { NEGOCIO } from './config/business.js';
-import { FLUJO_MAESTRO } from './config/flow.js';
-import { FLUJO_CAMPAÑA } from './config/flow_campaign.js';
+import { FLUJO_MAESTRO } from './flow.js';
+import { FLUJO_CAMPAÑA } from './flow_campaign.js';
 import { checkAvailability, crearEvento } from './google_calendar.js';
 
 dotenv.config();
@@ -60,7 +60,6 @@ export async function pensar(historial, nombreCliente) {
     const infoNegocio = JSON.stringify(NEGOCIO);
     const nombreSimple = nombreCliente ? nombreCliente.split(' ')[0] : "Linda";
 
-    // --- ENRUTADOR INTELIGENTE ---
     const historialTexto = historial.map(m => m.content.toLowerCase()).join(" ");
     const esDeCampaña = historialTexto.includes("quiero mi evaluación") || 
                         historialTexto.includes("vi el anuncio") ||
@@ -70,12 +69,10 @@ export async function pensar(historial, nombreCliente) {
 
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
 
-    // --- DETECCIÓN DE CONTEXTO ---
     const ultimoMensaje = historial.length > 0 ? historial[historial.length - 1].content.toLowerCase() : "";
     const palabrasCierre = ["gracias", "viajo", "semana que viene", "despues te hablo", "te aviso", "ok gracias", "hasta pronto", "chau"];
     const esCierre = palabrasCierre.some(p => ultimoMensaje.includes(p));
     
-    // Evitar saludo doble
     const yaSaludo = historial.filter(m => m.role === 'assistant').length > 0;
 
     const SYSTEM_PROMPT = `
@@ -122,7 +119,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.3 // Un poco más de creatividad para la empatía
+            temperature: 0.3 
         });
         const msg = runner.choices[0].message;
         if (msg.tool_calls) {
