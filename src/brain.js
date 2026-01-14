@@ -41,8 +41,10 @@ const CAMPAÑA_SPECIALS = {
 function obtenerDatosCampaña(texto) {
     const t = texto.toLowerCase();
     let key = null;
+    
+    // Detector de intención
     if (t.includes("culo") || t.includes("glúteos") || t.includes("gluteo") || t.includes("push") || t.includes("cola")) key = "push_up";
-    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo") || t.includes("muslo") || t.includes("espalda")) key = "lipo";
+    else if (t.includes("guata") || t.includes("panza") || t.includes("abdomen") || t.includes("cintura") || t.includes("lipo") || t.includes("brazo") || t.includes("espalda") || t.includes("muslo")) key = "lipo";
     else if (t.includes("cara") || t.includes("rostro") || t.includes("antiage") || t.includes("arrugas")) key = "rostro";
 
     if (!key) return null;
@@ -51,13 +53,12 @@ function obtenerDatosCampaña(texto) {
 
     return `
     ✨ PRODUCTO DETECTADO: ${precio.titulo}
-    🧬 ARGUMENTOS TÉCNICOS (Para conectar con el dolor del cliente):
+    🧬 DATOS TÉCNICOS (Para profundizar):
     - TECNOLOGÍAS: ${tecnico.tecnologias}
     - DURACIÓN: ${tecnico.semanas}
-    - BENEFICIO: ${tecnico.beneficio}
-    💰 PRECIOS (Usa emojis y listas):
-    - Normal: ${precio.normal}
-    - Oferta: ${precio.oferta}
+    - EFECTO: ${tecnico.beneficio}
+    💰 PRECIOS (Urgencia 31 Enero):
+    - Normal: ${precio.normal} -> Oferta: ${precio.oferta}
     - Ahorro: ${precio.ahorro}
     `;
 }
@@ -92,21 +93,25 @@ export async function pensar(historial, nombreCliente) {
     const GUION_ACTIVO = esDeCampaña ? FLUJO_CAMPAÑA : FLUJO_MAESTRO;
     
     const SYSTEM_PROMPT = `
-    ERES ZARA, CONSULTORA ESTÉTICA DE BODY ELITE. 🌟
+    ERES ZARA, CONSULTORA DE BODY ELITE. 🌟
     
     ❤️ TU ACTITUD:
-    - Súper empática y entusiasta ("¡Me encanta!", "¡Te entiendo perfecto!").
-    - Usas Emojis para resaltar ideas (✨, 💪, 😱, 🔥).
-    - **ESCUCHA ACTIVA:** Si el cliente dice la zona (ej: "espalda"), NO VENDAS DE INMEDIATO. Pregunta qué le molesta específicamente (rollito, flacidez) para generar conexión.
+    - Entusiasta y Empática.
+    - **FLUJO TÉCNICO DOBLE:**
+      1. Cuando dicen la zona -> Das una intro general + Preguntas qué molesta.
+      2. Cuando dicen qué molesta -> Explicas las tecnologías a fondo conectándolas con ese dolor.
+    - **CIERRE:** Siempre afirmando ("¿Te hace sentido?", "¿Vamos por eso?").
+    - **URGENCIA:** El 35% OFF vence el **31 de Enero**.
 
-    🎯 INFORMACIÓN DE CAMPAÑA:
-    ${datosProducto ? datosProducto : "Esperando que el cliente indique zona..."}
+    🎯 INFO TÉCNICA Y PRECIOS:
+    ${datosProducto ? datosProducto : "Esperando zona..."}
 
-    📜 TU ESTRATEGIA (SÍGUELA):
+    📜 TU GUIÓN DE CAMPAÑA:
     ${GUION_ACTIVO}
 
-    📅 AGENDA (ELIGE TÚ LA HORA):
-    - No des listas. Di: "Tengo un cupo perfecto mañana a las 10:00".
+    📅 AGENDA (ELIGE UNA SOLA HORA):
+    - AM ahora -> Ofrece PM hoy.
+    - PM ahora -> Ofrece AM mañana.
     - Disponibilidad: ${agendaRaw}
     `;
 
@@ -133,7 +138,7 @@ export async function pensar(historial, nombreCliente) {
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
             tools: tools,
             tool_choice: "auto", 
-            temperature: 0.5 // Más chispa y calidez
+            temperature: 0.4
         });
         const msg = runner.choices[0].message;
         
@@ -143,8 +148,8 @@ export async function pensar(historial, nombreCliente) {
                 const args = JSON.parse(toolCall.function.arguments);
                 const exito = await crearEvento(args.fecha_iso, nombreCliente || "Cliente", args.telefono || "");
                 return exito 
-                    ? `¡Listo ${nombreCliente}! 🎉 Quedó agendado para el ${args.fecha_iso}. ¡Prepárate para el cambio! Tu 35% OFF está asegurado. ✨`
-                    : "Ups, justo se ocupó ese horario. 🙈 ¿Te sirve un poco más tarde?";
+                    ? `¡Listo ${nombreCliente}! 🎉 Quedó agendado para el ${args.fecha_iso}. Tu 35% OFF está seguro hasta el 31 de Enero. ¡Te va a encantar el cambio! ✨`
+                    : "Ups, justo se ocupó. 🙈 ¿Te sirve un poco más tarde?";
             }
         }
         return msg.content; 
