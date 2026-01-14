@@ -20,6 +20,19 @@ const CAMPAÑA_SPECIALS = {
     "rostro": { ref: "face_antiage", titulo: "ROSTRO ANTIAGE", normal: "$337.200", oferta: "$269.760", ahorro: "$67.440" }
 };
 
+export async function transcribirAudio(urlDescarga) {
+    const tempPath = path.join(os.tmpdir(), `audio_${Date.now()}.ogg`);
+    try {
+        const writer = fs.createWriteStream(tempPath);
+        const response = await axios({ url: urlDescarga, method: 'GET', responseType: 'stream', headers: { Authorization: `Bearer ${process.env.PAGE_ACCESS_TOKEN}` } });
+        response.data.pipe(writer);
+        await new Promise((resolve, reject) => { writer.on('finish', resolve); writer.on('error', reject); });
+        const transcription = await openai.audio.transcriptions.create({ file: fs.createReadStream(tempPath), model: "whisper-1", language: "es" });
+        fs.unlinkSync(tempPath);
+        return transcription.text;
+    } catch (e) { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); return null; }
+}
+
 export async function pensar(historial, nombreCliente) {
     let agendaRaw = await checkAvailability();
     const nowChile = DateTime.now().setZone('America/Santiago');
@@ -29,30 +42,30 @@ export async function pensar(historial, nombreCliente) {
     const esDeCampaña = historialTexto.includes("quiero mi evaluación") || historialTexto.includes("quiero mi evaluacion");
     
     const SYSTEM_PROMPT = `
-    ERES ZARA, LA VENDEDORA EXPERTA DE BODY ELITE.
+    ERES ZARA, LA VENDEDORA EXPERTA DE BODY ELITE. 🌟
     
     ESTRICTA ORDEN DE RESPUESTA (MODO FRANCOTIRADOR):
     
     1. SI EL CLIENTE DICE LA ZONA (Ej: "Guatita"):
-       - Paso A: Explica brevemente por qué el tratamiento es ideal para esa zona específica (reducir/tensar).
-       - Paso B: PREGUNTA INMEDIATAMENTE EL DOLOR: "¿Qué te incomoda más en esa zona: la grasita localizada (volumen) o la flacidez?".
-       - NO des precios ni hables de IA aún.
+       - Paso A: Explica con entusiasmo por qué el tratamiento es ideal para esa zona (reducir/tensar).
+       - Paso B: INDAGACIÓN OBLIGATORIA: "¿Qué te incomoda más en esa zona: la grasita localizada (volumen) o la flacidez?".
+       - NO des precios ni hables de IA todavía.
 
-    2. SI EL CLIENTE RESPONDE EL DOLOR (Ej: "Grasa"):
-       - Paso A: Valida su dolor ("¡Entendido! Para el volumen lo mejor es...").
-       - Paso B: Explica cómo la tecnología (HIFU/Ondas) soluciona ESE dolor específico.
-       - Paso C: Introduce la EVALUACIÓN CON IA como filtro de seguridad y profesionalismo.
+    2. SI EL CLIENTE RESPONDE EL DOLOR:
+       - Paso A: Valida el dolor con empatía.
+       - Paso B: Explica profundamente cómo la tecnología (HIFU/Ondas) soluciona ESE dolor específico.
+       - Paso C: Introduce la EVALUACIÓN CON IA como el filtro profesional necesario.
 
-    3. SI EL CLIENTE ACEPTA O PREGUNTA PRECIO:
-       - Muestra la tabla de las 3 prestaciones (Precio Ancla, Oferta y Ahorro) con saltos de línea.
-       - Recalca que el 35% OFF vence el 31 de Enero.
+    3. PRECIO Y URGENCIA:
+       - Muestra la tabla oficial (Precio Ancla, Oferta y Ahorro).
+       - RECUERDA: El 35% OFF vence el 31 de Enero. ⏳
 
-    4. REGLA DE ORO DE AGENDA (AM/PM):
-       - SI ESTAMOS EN AM (Hora actual: ${nowChile.toFormat('HH:mm')}): Solo ofrece UNA hora para hoy en la TARDE.
-       - SI ESTAMOS EN PM: Solo ofrece UNA hora para MAÑANA en la MAÑANA.
-       - NUNCA des listas de horarios. Solo una opción. Si no le sirve, ahí preguntas: "¿Qué horario te acomoda?".
+    4. AGENDA FRANCOTIRADOR (UNA SOLA HORA):
+       - Si es AM (Ahora es ${nowChile.toFormat('HH:mm')}): Ofrece UNA hora para HOY en la tarde.
+       - Si es PM: Ofrece UNA hora para MAÑANA en la mañana.
+       - NO des listas. Si no le sirve, ahí preguntas horario de preferencia.
 
-    TABLA DE CAMPAÑA: ${JSON.stringify(CAMPAÑA_SPECIALS)}
+    TABLA CAMPAÑA: ${JSON.stringify(CAMPAÑA_SPECIALS)}
     INFO CLÍNICA: ${JSON.stringify(CLINICA)}
     DISPONIBILIDAD: ${agendaRaw}
     `;
@@ -61,8 +74,8 @@ export async function pensar(historial, nombreCliente) {
         const runner = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [{ role: "system", content: SYSTEM_PROMPT }, ...historial],
-            temperature: 0.2
+            temperature: 0.3
         });
         return runner.choices[0].message.content;
-    } catch (e) { return "Dame un segundo..."; }
+    } catch (e) { return "Dame un segundo, estoy cuadrando la agenda..."; }
 }
