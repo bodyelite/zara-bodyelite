@@ -12,10 +12,8 @@ const FILE = path.join(process.cwd(), 'data', 'sesiones.json');
 let sesiones = {}; 
 let botStatus = {}; 
 
-// Crear carpeta data si no existe
 if (!fs.existsSync(path.join(process.cwd(), 'data'))) fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
 
-// Cargar base de datos
 try { 
     if (fs.existsSync(FILE)) {
         const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); 
@@ -58,7 +56,6 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
     return true;
 }
 
-// --- ENVÍO MANUAL AGRESIVO ---
 export async function enviarMensajeManual(p, t, source='manual', nombreOverride=null, tagOverride=null) {
     if(!sesiones[p]) {
         sesiones[p] = { 
@@ -81,7 +78,6 @@ export async function enviarMensajeManual(p, t, source='manual', nombreOverride=
     await enviarMensaje(p, t);
 }
 
-// Loop de tareas programadas
 setInterval(async () => {
     const nowStr = DateTime.now().setZone('America/Santiago').toFormat("yyyy-MM-dd'T'HH:mm");
     for (const p of Object.keys(sesiones)) {
@@ -124,7 +120,6 @@ export async function procesarEvento(evento) {
 
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     
-    // --- CLASIFICACIÓN INTELIGENTE ---
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
         sesiones[p].tag = 'INTERESADO'; 
     }
@@ -138,7 +133,7 @@ export async function procesarEvento(evento) {
     guardar();
 
     if (botStatus[p] !== false) {
-        // CORRECCIÓN: Ya no inyectamos el sistema manual, brain.js lo hace automáticamente
+        // ZARA CEREBRO UNIFICADO
         const resp = await pensar(sesiones[p].history, sesiones[p].name);
         
         await enviarMensaje(p, resp);
@@ -152,7 +147,6 @@ export async function procesarEvento(evento) {
     }
 }
 
-// --- SERVER & DASHBOARD ---
 const app = express();
 app.use(express.json());
 app.use(cors());
