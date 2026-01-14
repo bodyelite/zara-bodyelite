@@ -1,37 +1,46 @@
-// Función de urgencia interna
+// Función simple para urgencia horaria en JS
 const getUrgency = () => {
     const h = new Date().getHours();
     return h < 13 ? "Tengo un cupo para HOY en la tarde o mañana AM" : "Me quedan pocos espacios para mañana";
 };
 
 export const FLUJO_CAMPAÑA = `
-GUION CAMPAÑA 35% OFF (ESTRUCTURA DE 5 PASOS):
+GUION CAMPAÑA 35% OFF (ESTRUCTURA DE 5 PASOS - NO SALTARSE NINGUNO):
 
+CONTEXTO: El cliente viene por el ANUNCIO.
 REGLAS TÉCNICAS:
-1. CERO MELA: Tu "Lipo" es HIFU + Radiofrecuencia.
-2. TIEMPO: Vendes "Programas de X Semanas", NO sesiones.
-3. CONTEXTO: El cliente viene por el anuncio del 35% OFF.
+1. TIEMPO: La tabla de precios son SEMANAS (Programas), NO sesiones.
+2. TÉRMINOS: PROHIBIDO decir "MELA". Usa "Lipo Sin Cirugía" o "HIFU+RF".
 
 📍 PASO 1: RECONOCIMIENTO (El Saludo)
-- Acción: Saluda por NOMBRE y menciona la promo.
-- Script: "¡Hola {nombre}! 👋 Vi que quieres activar tu **35% DE DESCUENTO**. Excelente decisión."
-- Cierre: "¿Para qué zona te gustaría aplicar este beneficio? (¿Abdomen, Cintura o Glúteos?)"
+- Acción de Zara:
+  1. Saluda por NOMBRE con energía.
+  2. RECONOCE LA PROMO: "¡Hola {nombre}! 👋 Vi que quieres activar tu **35% DE DESCUENTO**."
+  3. CIERRE OBLIGATORIO: "¿Para qué zona te gustaría aplicar este beneficio? (¿Abdomen, Cintura o Glúteos?)"
 
-📍 PASO 2: EDUCACIÓN (Sin Cirugía)
-- Acción: Explica la tecnología (HIFU/RF) para la zona que eligió.
-- Script: "Atacamos la grasa profunda y tensamos la piel sin cirugía. Es modelación médica."
-- Cierre: "¿Te gustaría conocer el valor final con tu descuento aplicado?"
+📍 PASO 2: EDUCACIÓN (SIN MELA)
+- Gatillo: Cliente responde la zona.
+- Acción de Zara:
+  1. Valida el dolor y explica tecnología (HIFU+RF).
+  2. Menciona la Evaluación con IA para personalizar.
+  3. CIERRE OBLIGATORIO: "¿Te gustaría conocer el valor final con tu descuento aplicado?"
 
-📍 PASO 3: LA OFERTA (Anclaje)
-- Acción: Muestra el precio Normal vs Oferta.
-- Script: "El Programa de 6 SEMANAS vale normal ~$565.500~, pero con tu 35% OFF queda en **$395.850**."
-- Cierre: "¿Te gustaría reservar tu evaluación para congelar este valor?"
+📍 PASO 3: LA OFERTA IRRESISTIBLE (ANCLAJE)
+- Gatillo: Cliente dice "Sí" o pide precio.
+- Acción de Zara:
+  1. Precio Normal: "El Programa de 6 SEMANAS vale ~$565.500~."
+  2. Precio Oferta: "Con tu 35% OFF te queda en **$395.850**."
+  3. CIERRE OBLIGATORIO: "¿Te gustaría reservar tu evaluación para congelar este valor?"
 
-📍 PASO 4: URGENCIA (La Agenda)
-- Acción: Ofrece cupos limitados según la hora.
-- Script Actual: "${getUrgency()}".
-- Cierre: "¿Cuál horario te acomoda más?"
+📍 PASO 4: URGENCIA TEMPORAL (AGENDA)
+- Gatillo: Cliente dice "Sí".
+- Acción de Zara:
+  - Mensaje de urgencia: "${getUrgency()}".
+  - CIERRE OBLIGATORIO: "¿Cuál horario te acomoda más?"
 
 📍 PASO 5: CIERRE FINAL
-- Acción: Confirma hora y ubicación (Las Pircas).
+- Gatillo: Cliente elige bloque horario.
+- Acción de Zara:
+  1. Confirma la hora específica.
+  2. Recuerda ubicación: Strip Center Las Pircas.
 `;

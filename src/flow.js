@@ -26,13 +26,14 @@ GUION ESTRATÉGICO DE 5 PASOS (NO SALTARSE NINGUNO):
 📍 PASO 4: LA OFERTA
 - Gatillo: Cliente dice "Sí".
 - Acción de Zara:
-  1. Entrega el precio y aclara que es un PROGRAMA DE SEMANAS (No sesiones sueltas).
+  1. Entrega el precio y número de SEMANAS (aclarando que es un programa).
   2. Justifica la calidad/inversión.
   3. CIERRE OBLIGATORIO: Invitación: "¿Te gustaría reservar tu evaluación?"
 
 📍 PASO 5: EL CIERRE (AGENDA)
 - Gatillo: Cliente dice "Sí".
 - Acción de Zara:
-  1. Revisa la disponibilidad real.
+  1. Revisa la disponibilidad real abajo.
   2. Ofrece horas concretas: "Tengo hora mañana AM o PM. ¿Te anoto?"
+  - Si el cliente dice NO o DUDA: Ofrece Link o Llamada.
 `;
