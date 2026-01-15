@@ -116,13 +116,30 @@ export async function procesarEvento(evento) {
 
     if (contenido.toLowerCase().includes('/reset')) { sesiones[p].history = []; guardar(); return; }
 
+    // --- CLASIFICACIÓN DE CAMPAÑA (SIN ENSUCIAR EL NOMBRE) ---
+    // Guardamos el tipo de campaña en una propiedad oculta 'campaign'
+    if (contenido === "Quiero mi evaluación Lipo") {
+        sesiones[p].tag = "CAMPAÑA";
+        sesiones[p].campaign = "lipo"; 
+    }
+    else if (contenido === "Quiero mi evaluación Glúteos") {
+        sesiones[p].tag = "CAMPAÑA";
+        sesiones[p].campaign = "push_up";
+    }
+    else if (contenido === "Quiero mi evaluación Rostro") {
+        sesiones[p].tag = "CAMPAÑA";
+        sesiones[p].campaign = "rostro";
+    }
+
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     
+    // Reglas de flujo de estados
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
         sesiones[p].tag = 'INTERESADO'; 
     }
     
     const mensajesUsuario = sesiones[p].history.filter(m => m.role === 'user').length;
+    // Si era NUEVO y habla, pasa a INTERESADO. Si es CAMPAÑA, se mantiene en CAMPAÑA para no perderlo de vista
     if (sesiones[p].tag === 'NUEVO' && mensajesUsuario >= 2) {
         sesiones[p].tag = 'INTERESADO';
     }

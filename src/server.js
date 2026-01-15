@@ -44,13 +44,14 @@ app.get('/monitor', (req, res) => {
     <div class="sidebar">
         <div style="padding:15px; font-weight:700; font-size:16px; color:var(--primary); border-bottom:1px solid var(--border)">ZARA 7.0</div>
         <div class="tabs-grid">
-            <button class="tab-btn active" onclick="setTab('NUEVO')">Nuevos</button>
+            <button class="tab-btn" onclick="setTab('NUEVO')">Nuevos</button>
+            <button class="tab-btn active" style="background:#fefce8; color:#854d0e; border-color:#fde047" onclick="setTab('CAMPAÑA')">💎 Campaña</button>
             <button class="tab-btn" onclick="setTab('INTERESADO')">Interés</button>
             <button class="tab-btn" onclick="setTab('HOT')">Hot 🔥</button>
             <button class="tab-btn" onclick="setTab('AGENDADO')">Citas</button>
-            <button class="tab-btn" onclick="setTab('RECICLAJE')">♻️ Reciclaje</button>
-            <button class="tab-btn" onclick="setTab('ABANDONADOS')">💀 Abandonados</button>
+            <button class="tab-btn" onclick="setTab('RECICLAJE')">♻️ Recic.</button>
             <button class="tab-btn" onclick="setTab('GESTIÓN FUTURA')">Futuro</button>
+            <button class="tab-btn" onclick="setTab('ABANDONADOS')">💀 Aband.</button>
         </div>
         <div class="lead-list" id="leadList"></div>
     </div>
@@ -69,8 +70,12 @@ app.get('/monitor', (req, res) => {
         <div>
             <label style="font-size:11px; font-weight:700; color:#6b7280;">ESTADO</label>
             <select id="tagSelect" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; background:white;">
-                <option value="NUEVO">NUEVO</option><option value="INTERESADO">INTERESADO</option><option value="HOT">HOT 🔥</option>
-                <option value="AGENDADO">AGENDADO</option><option value="RECICLAJE">♻️ RECICLAJE</option>
+                <option value="NUEVO">NUEVO</option>
+                <option value="CAMPAÑA">💎 CAMPAÑA</option>
+                <option value="INTERESADO">INTERESADO</option>
+                <option value="HOT">HOT 🔥</option>
+                <option value="AGENDADO">AGENDADO</option>
+                <option value="RECICLAJE">♻️ RECICLAJE</option>
                 <option value="ABANDONADOS">💀 ABANDONADOS</option>
                 <option value="GESTIÓN FUTURA">FUTURO</option>
                 <option value="DESCARTADO">DESCARTADO</option>
@@ -116,19 +121,27 @@ app.get('/monitor', (req, res) => {
     </div>
 
     <script>
-        let curTab='NUEVO', curPhone=null, data={};
+        let curTab='CAMPAÑA', curPhone=null, data={};
         function toggleDateInput() { document.getElementById('dateIn').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
         function openModal(){ document.getElementById('bulkModal').style.display = 'flex'; }
         function closeModal(){ document.getElementById('bulkModal').style.display = 'none'; }
         async function refresh(){ try { const r=await fetch('/api/data'); data=await r.json(); renderList(); if(curPhone) renderChat(); } catch(e){} }
+        
         function renderList(){
             const list=document.getElementById('leadList'); list.innerHTML='';
             Object.values(data.users||{}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
                 if(u.tag===curTab || (curTab==='NUEVO' && !u.tag)){
-                    list.innerHTML+=\`<div class="lead-card \${curPhone===u.phone?'active':''}" onclick="selectLead('\${u.phone}')"><div><b>\${u.name}</b><br><span style="font-size:11px; color:#6b7280">\${u.phone}</span></div></div>\`;
+                    // IDENTIFICADOR VISUAL DE CAMPAÑA (SOLO EN PANTALLA, NO BD)
+                    let icon = '';
+                    if (u.campaign === 'lipo') icon = '👙 ';
+                    else if (u.campaign === 'push_up') icon = '🍑 ';
+                    else if (u.campaign === 'rostro') icon = '✨ ';
+                    
+                    list.innerHTML+=\`<div class="lead-card \${curPhone===u.phone?'active':''}" onclick="selectLead('\${u.phone}')"><div><b>\${icon}\${u.name}</b><br><span style="font-size:11px; color:#6b7280">\${u.phone}</span></div></div>\`;
                 }
             });
         }
+        
         function selectLead(p){ curPhone=p; document.getElementById('tagSelect').value = data.users[p].tag||'NUEVO'; renderChat(); renderList(); }
         function renderChat(){
             const u=data.users[curPhone]; if(!u) return;
