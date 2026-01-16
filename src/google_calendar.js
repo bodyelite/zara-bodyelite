@@ -6,7 +6,6 @@ dotenv.config();
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 
-// Función auxiliar para obtener cliente autenticado fresco
 function getAuthClient() {
     let key = process.env.GOOGLE_PRIVATE_KEY;
     const email = process.env.GOOGLE_CLIENT_EMAIL;
@@ -16,17 +15,13 @@ function getAuthClient() {
         return null;
     }
 
-    // Limpieza agresiva de la llave
-    // 1. Quitar comillas extra si las hubiera
     key = key.replace(/^"|"$/g, '');
-    // 2. Asegurar saltos de línea reales
     if (!key.includes('-----BEGIN PRIVATE KEY-----')) {
-        console.error("❌ ERROR: La llave no parece una llave RSA válida (falta header).");
+        console.error("❌ ERROR: La llave no parece una llave RSA válida.");
         return null;
     }
     key = key.replace(/\\n/g, '\n');
 
-    // USAMOS GoogleAuth (Más moderno y seguro que JWT directo)
     return new google.auth.GoogleAuth({
         credentials: {
             client_email: email,
@@ -40,19 +35,14 @@ const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
 
 export async function checkAvailability() {
     try {
-        console.log("🔄 Iniciando verificación de calendario...");
         const auth = getAuthClient();
-        if (!auth) return "Error técnico: Credenciales mal configuradas.";
+        if (!auth) return "Error de credenciales.";
 
-        // Instanciamos el calendario con el cliente auth moderno
         const calendar = google.calendar({ version: 'v3', auth });
-
         const timeZone = 'America/Santiago';
         const now = DateTime.now().setZone(timeZone);
         const start = now.startOf('hour').plus({ hours: 1 });
         const end = now.plus({ days: 7 }).endOf('day');
-
-        console.log(`📅 Consultando agenda para: ${CALENDAR_ID}`);
         
         const response = await calendar.events.list({
             calendarId: CALENDAR_ID,
@@ -71,10 +61,9 @@ export async function checkAvailability() {
         let freeSlots = [];
         let currentDay = now;
 
-        // Lógica simplificada de búsqueda de huecos
         for (let i = 0; i < 7; i++) {
             let dayStart = currentDay.plus({ days: i }).set({ hour: 9, minute: 0, second: 0, millisecond: 0 });
-            let dayEnd = currentDay.plus({ days: i }).set({ hour: 19, minute: 0, second: 0, millisecond: 0 });
+            let dayEnd = currentDay.plus({ days: i }).set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
 
             if (dayStart.weekday === 7) continue; 
 
@@ -82,7 +71,7 @@ export async function checkAvailability() {
             while (slot < dayEnd) {
                 let isBusy = busySlots.some(busy => 
                     (slot >= busy.start && slot < busy.end) || 
-                    (slot.plus({ minutes: 30 }) > busy.start && slot.plus({ minutes: 30 }) <= busy.end)
+                    (slot.plus({ minutes: 29 }) > busy.start && slot.plus({ minutes: 29 }) <= busy.end)
                 );
 
                 if (!isBusy && slot > now) freeSlots.push(slot);
@@ -90,13 +79,13 @@ export async function checkAvailability() {
             }
         }
 
-        if (freeSlots.length === 0) return "Agenda llena próximos 7 días.";
+        if (freeSlots.length === 0) return "Agenda llena próximos 7 días. (Sugerir revisar semana siguiente)";
 
         let output = "";
         let lastDate = "";
-        const relevantSlots = freeSlots.filter((slot, index) => index % 2 === 0);
-
-        relevantSlots.forEach(slot => {
+        
+        // MOSTRAR TODO (Sin filtros de % 2)
+        freeSlots.forEach(slot => {
             let dateStr = slot.toFormat('cccc d LLLL', { locale: 'es' });
             let timeStr = slot.toFormat('HH:mm');
             if (dateStr !== lastDate) {
@@ -109,11 +98,8 @@ export async function checkAvailability() {
         return output;
 
     } catch (error) {
-        console.error("❌ ERROR CALENDARIO REAL:", error.message);
-        if (error.code === 401 || error.message.includes('invalid_grant')) {
-            console.error("⚠️ La llave privada es incorrecta o está revocada.");
-        }
-        return "Tengo un problema momentáneo para ver la agenda.";
+        console.error("❌ ERROR CALENDARIO:", error.message);
+        return "Error consultando agenda.";
     }
 }
 
