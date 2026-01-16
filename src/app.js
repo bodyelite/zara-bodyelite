@@ -28,6 +28,16 @@ export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
 export async function diagnosticarTodo() { return true; }
 
+// --- NUEVA FUNCIÓN: MARCAR COMO LEÍDO ---
+export function markRead(phone) {
+    if (sesiones[phone]) {
+        sesiones[phone].unread = false;
+        guardar();
+        return true;
+    }
+    return false;
+}
+
 export function updateTagManual(phone, tag) { 
     if(sesiones[phone]) { sesiones[phone].tag = tag; guardar(); return true; } 
     return false; 
@@ -61,7 +71,8 @@ export async function enviarMensajeManual(p, t, source='manual', nombreOverride=
             history: [], 
             phone: p, 
             tag: tagOverride || "NUEVO", 
-            lastInteraction: Date.now() 
+            lastInteraction: Date.now(),
+            unread: false
         };
     } else {
         if (tagOverride) sesiones[p].tag = tagOverride;
@@ -103,8 +114,11 @@ export async function procesarEvento(evento) {
     const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
     if (!sesiones[p]) { 
-        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now() }; 
+        sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now(), unread: true }; 
         await notificarStaff(`🚨 NUEVO LEAD: ${nombre}`);
+    } else {
+        // MARCAR COMO NO LEÍDO SI HABLA EL CLIENTE
+        sesiones[p].unread = true;
     }
     
     let contenido = "";
@@ -116,8 +130,7 @@ export async function procesarEvento(evento) {
 
     if (contenido.toLowerCase().includes('/reset')) { sesiones[p].history = []; guardar(); return; }
 
-    // --- CLASIFICACIÓN DE CAMPAÑA (SIN ENSUCIAR EL NOMBRE) ---
-    // Guardamos el tipo de campaña en una propiedad oculta 'campaign'
+    // IDENTIFICADOR VISUAL DE CAMPAÑA (SIN ENSUCIAR EL NOMBRE)
     if (contenido === "Quiero mi evaluación Lipo") {
         sesiones[p].tag = "CAMPAÑA";
         sesiones[p].campaign = "lipo"; 
@@ -133,13 +146,11 @@ export async function procesarEvento(evento) {
 
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     
-    // Reglas de flujo de estados
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
         sesiones[p].tag = 'INTERESADO'; 
     }
     
     const mensajesUsuario = sesiones[p].history.filter(m => m.role === 'user').length;
-    // Si era NUEVO y habla, pasa a INTERESADO. Si es CAMPAÑA, se mantiene en CAMPAÑA para no perderlo de vista
     if (sesiones[p].tag === 'NUEVO' && mensajesUsuario >= 2) {
         sesiones[p].tag = 'INTERESADO';
     }
