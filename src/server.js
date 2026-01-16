@@ -20,36 +20,39 @@ app.get('/monitor', (req, res) => {
             
             /* Sidebar y Tabs */
             .sidebar { width:350px; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
-            /* GRID DE 3 COLUMNAS PARA QUE QUEPAN LOS 9 ESTADOS */
             .tabs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; padding:10px; border-bottom:1px solid var(--border); background:#f9fafb; }
             .tab-btn { padding:8px 4px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:10px; font-weight:600; text-align:center; transition:all 0.1s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-            .tab-btn:hover { background:#f3f4f6; }
-            .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.2); transform: translateY(-1px); }
+            .tab-btn:hover { background:#f3f4f6; transform:translateY(-1px); }
+            .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
             .tab-btn.campana-active { background:linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color:white; border:none; }
 
-            /* Lista de Leads */
+            /* Lista de Leads (MEJORADA) */
             .lead-list { flex:1; overflow-y:auto; overflow-x:hidden; }
             .lead-card { 
-                padding:12px 15px; 
                 border-bottom:1px solid var(--border); 
-                cursor:pointer; 
                 display:flex; 
                 align-items:center; 
-                gap:12px; 
                 transition:background 0.1s;
                 position: relative;
+                height: 60px; /* Altura fija para consistencia */
             }
             .lead-card:hover { background:#f8fafc; }
             .lead-card.active { background:#eff6ff; border-left:4px solid var(--primary); }
             
-            .lead-checkbox { 
-                width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); 
-                margin: 0; flex-shrink: 0;
+            /* ÁREA DE CHECKBOX (Separa el clic) */
+            .checkbox-area {
+                width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;
+                border-right: 1px solid transparent; cursor: pointer;
             }
+            .checkbox-area:hover { background: rgba(0,0,0,0.03); }
+            .lead-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); pointer-events: none; } /* El clic lo captura el padre div */
             
-            .lead-info { flex:1; overflow:hidden; }
+            /* ÁREA DE INFO (Clic para abrir chat) */
+            .lead-info { 
+                flex:1; padding: 0 15px; height: 100%; display: flex; flex-direction: column; justify-content: center; cursor: pointer; 
+            }
             .lead-name-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
-            .lead-name { font-weight:600; font-size:13px; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .lead-name { font-weight:600; font-size:13px; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 200px; }
             .lead-phone { font-size:11px; color:#6b7280; }
             
             .unread-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; flex-shrink:0; }
@@ -88,6 +91,13 @@ app.get('/monitor', (req, res) => {
             .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center; }
             .modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; }
             select, textarea, input[type="text"], input[type="date"] { width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; font-family:inherit; font-size:12px; }
+            
+            /* Botón Seleccionar Todos */
+            .select-all-btn { 
+                width: 100%; padding: 5px; margin-bottom: 5px; border: 1px dashed #cbd5e1; 
+                background: #f8fafc; color: #64748b; font-size: 10px; cursor: pointer; border-radius: 4px;
+            }
+            .select-all-btn:hover { background: #e2e8f0; color: var(--primary); border-color: var(--primary); }
         </style>
     </head>
     <body>
@@ -115,6 +125,10 @@ app.get('/monitor', (req, res) => {
             <button id="tab-DESCARTADO" class="tab-btn" onclick="setTab('DESCARTADO')" style="color:#9ca3af">DESCART.</button>
         </div>
         
+        <div style="padding: 0 10px;">
+            <button class="select-all-btn" onclick="toggleSelectAll()">✅ Seleccionar Todos en esta lista</button>
+        </div>
+
         <div class="lead-list" id="leadList"></div>
     </div>
 
@@ -205,6 +219,7 @@ app.get('/monitor', (req, res) => {
     <script>
         let curTab='NUEVO', curPhone=null, data={};
         let selectedLeads = new Set(); 
+        let displayedPhones = []; // Para "Seleccionar Todos"
 
         function toggleDateInput() { document.getElementById('dateIn').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
         function openBulkStatusModal() { document.getElementById('bulkStatusModal').style.display = 'flex'; }
@@ -222,6 +237,7 @@ app.get('/monitor', (req, res) => {
         function renderList(){
             const list=document.getElementById('leadList'); 
             list.innerHTML='';
+            displayedPhones = []; // Reiniciamos lista visible
             
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('active', 'campana-active');
@@ -233,6 +249,8 @@ app.get('/monitor', (req, res) => {
 
             Object.values(data.users||{}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
                 if(u.tag===curTab || (curTab==='NUEVO' && !u.tag)){
+                    displayedPhones.push(u.phone); // Guardamos para select all
+                    
                     let icon = '';
                     if (u.campaign === 'lipo') icon = '👙 ';
                     else if (u.campaign === 'push_up') icon = '🍑 ';
@@ -244,7 +262,9 @@ app.get('/monitor', (req, res) => {
 
                     list.innerHTML += \`
                     <div class="lead-card \${curPhone===u.phone?'active':''} \${isUnread}">
-                        <input type="checkbox" class="lead-checkbox" \${isChecked} onclick="toggleSelect('\${u.phone}', event)">
+                        <div class="checkbox-area" onclick="toggleSelect('\${u.phone}', event)">
+                            <input type="checkbox" class="lead-checkbox" \${isChecked}>
+                        </div>
                         <div class="lead-info" onclick="selectLead('\${u.phone}')">
                             <div class="lead-name-row">
                                 <span class="lead-name">\${icon}\${u.name}</span>
@@ -259,10 +279,20 @@ app.get('/monitor', (req, res) => {
         }
 
         function toggleSelect(phone, event) {
-            event.stopPropagation();
+            event.stopPropagation(); // Evita abrir el chat
             if (selectedLeads.has(phone)) selectedLeads.delete(phone);
             else selectedLeads.add(phone);
             updateBulkToolbar();
+            renderList(); // Re-render para mostrar checks
+        }
+        
+        function toggleSelectAll() {
+            if (selectedLeads.size === displayedPhones.length) {
+                selectedLeads.clear();
+            } else {
+                displayedPhones.forEach(p => selectedLeads.add(p));
+            }
+            renderList();
         }
         
         function clearSelection() { selectedLeads.clear(); renderList(); }
