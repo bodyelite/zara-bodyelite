@@ -22,6 +22,26 @@ export async function enviarMensaje(telefono, texto) {
     } catch (e) { return false; }
 }
 
+export async function enviarImagen(telefono, url, caption = "") {
+    try {
+        if (!token || !phoneId) return false;
+        await axios.post(
+            `https://graph.facebook.com/v21.0/${phoneId}/messages`,
+            {
+                messaging_product: "whatsapp",
+                to: telefono,
+                type: "image",
+                image: { link: url, caption: caption }
+            },
+            { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+        );
+        return true;
+    } catch (e) { 
+        console.error("Error enviando imagen:", e.response ? e.response.data : e.message);
+        return false; 
+    }
+}
+
 export async function obtenerUrlMedia(mediaId) {
     try {
         const response = await axios.get(

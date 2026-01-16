@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { DateTime } from 'luxon';
-import { enviarMensaje, obtenerUrlMedia } from './whatsapp.js';
+import { enviarMensaje, enviarImagen, obtenerUrlMedia } from './whatsapp.js';
 import { pensar, transcribirAudio } from './brain.js'; 
 
 const STAFF_NUMBERS = ['56955145504', '56983300262', '56937648536'];
@@ -29,11 +29,7 @@ export function getBotStatus() { return botStatus; }
 export async function diagnosticarTodo() { return true; }
 
 export function markRead(phone) {
-    if (sesiones[phone]) {
-        sesiones[phone].unread = false;
-        guardar();
-        return true;
-    }
+    if (sesiones[phone]) { sesiones[phone].unread = false; guardar(); return true; }
     return false;
 }
 
@@ -65,21 +61,11 @@ export function agregarNota(phone, text, isScheduled, dateStr) {
 
 export async function enviarMensajeManual(p, t, source='manual', nombreOverride=null, tagOverride=null) {
     if(!sesiones[p]) {
-        sesiones[p] = { 
-            name: nombreOverride || "Cliente", 
-            history: [], 
-            phone: p, 
-            tag: tagOverride || "NUEVO", 
-            lastInteraction: Date.now(),
-            unread: false
-        };
+        sesiones[p] = { name: nombreOverride || "Cliente", history: [], phone: p, tag: tagOverride || "NUEVO", lastInteraction: Date.now(), unread: false };
     } else {
         if (tagOverride) sesiones[p].tag = tagOverride;
-        if (nombreOverride && nombreOverride.trim() !== "" && nombreOverride !== "Cliente") {
-            sesiones[p].name = nombreOverride;
-        }
+        if (nombreOverride && nombreOverride !== "Cliente") sesiones[p].name = nombreOverride;
     }
-
     sesiones[p].history.push({ role: "assistant", content: t, timestamp: Date.now(), source: source });
     sesiones[p].lastInteraction = Date.now();
     guardar();
@@ -140,7 +126,6 @@ export async function procesarEvento(evento) {
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     
     if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { sesiones[p].tag = 'INTERESADO'; }
-    
     const mensajesUsuario = sesiones[p].history.filter(m => m.role === 'user').length;
     if (sesiones[p].tag === 'NUEVO' && mensajesUsuario >= 2) { sesiones[p].tag = 'INTERESADO'; }
 
@@ -149,7 +134,19 @@ export async function procesarEvento(evento) {
 
     if (botStatus[p] !== false) {
         const resp = await pensar(sesiones[p].history, sesiones[p].name);
-        await enviarMensaje(p, resp);
+        
+        // LOGICA DE FOTOS: Si la IA devuelve [IMAGEN:URL], la separamos
+        if (resp.includes('[IMAGEN:')) {
+            const partes = resp.split('[IMAGEN:');
+            const texto = partes[0].trim();
+            const urlImagen = partes[1].replace(']', '').trim();
+            
+            if (texto) await enviarMensaje(p, texto);
+            if (urlImagen) await enviarImagen(p, urlImagen);
+        } else {
+            await enviarMensaje(p, resp);
+        }
+
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
         
         if (resp.includes('reservo.cl') || resp.includes('agendada')) {
