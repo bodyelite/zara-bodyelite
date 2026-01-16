@@ -113,11 +113,11 @@ export async function procesarEvento(evento) {
     const p = msg.from; 
     const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
+    // Si es nuevo o ya existe, marcamos como NO LEÍDO porque acaba de hablar
     if (!sesiones[p]) { 
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now(), unread: true }; 
         await notificarStaff(`🚨 NUEVO LEAD: ${nombre}`);
     } else {
-        // MARCAR COMO NO LEÍDO SI HABLA EL CLIENTE
         sesiones[p].unread = true;
     }
     
@@ -130,7 +130,7 @@ export async function procesarEvento(evento) {
 
     if (contenido.toLowerCase().includes('/reset')) { sesiones[p].history = []; guardar(); return; }
 
-    // IDENTIFICADOR VISUAL DE CAMPAÑA (SIN ENSUCIAR EL NOMBRE)
+    // IDENTIFICADOR VISUAL DE CAMPAÑA
     if (contenido === "Quiero mi evaluación Lipo") {
         sesiones[p].tag = "CAMPAÑA";
         sesiones[p].campaign = "lipo"; 

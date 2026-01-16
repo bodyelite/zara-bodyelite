@@ -11,85 +11,93 @@ app.get('/monitor', (req, res) => {
     <!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8"><title>ZARA 7.0 DASHBOARD</title>
+        <meta charset="UTF-8"><title>ZARA CRM 7.0</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
         <style>
             :root { --bg-body:#f3f4f6; --bg-sidebar:#ffffff; --text:#1f2937; --primary:#2563eb; --bot-color:#2563eb; --border:#e5e7eb; }
             body { margin:0; font-family:'Inter',sans-serif; background:var(--bg-body); color:var(--text); display:flex; height:100vh; overflow:hidden; font-size:13px; }
-            .sidebar { width:360px; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; }
-            .main { flex:1; display:flex; flex-direction:column; background:#e5e7eb; position:relative; } 
-            .tools { width:300px; background:var(--bg-sidebar); border-left:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:15px; }
-            .tabs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; padding:10px; border-bottom:1px solid var(--border); background:#f9fafb; }
             
-            /* ESTILO PESTAÑAS ACTIVAS */
-            .tab-btn { padding:8px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:10px; font-weight:600; text-align:center; transition:all 0.2s; }
+            /* Sidebar y Tabs */
+            .sidebar { width:350px; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; }
+            .tabs-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; padding:10px; border-bottom:1px solid var(--border); background:#f9fafb; }
+            .tab-btn { padding:8px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:11px; font-weight:600; text-align:center; }
             .tab-btn:hover { background:#f3f4f6; }
-            .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
-            /* Estilo especial para Campaña */
-            .tab-btn.campana-active { background:linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color:white; border:none; }
+            
+            /* ESTADO ACTIVO DESTACADO */
+            .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.3); transform: translateY(-1px); }
+            .tab-btn.campana-active { background:linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color:white; border:none; box-shadow: 0 2px 4px rgba(109, 40, 217, 0.3); }
 
+            /* Lista de Leads */
             .lead-list { flex:1; overflow-y:auto; }
-            .lead-card { padding:12px; border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.2s; }
+            .lead-card { padding:12px; border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; gap:10px; transition:all 0.2s; }
             .lead-card:hover { background:#f8fafc; }
             .lead-card.active { background:#eff6ff; border-left:4px solid var(--primary); }
             
-            /* PUNTO NO LEIDO */
-            .unread-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; display:none; }
+            /* PUNTO ROJO NO LEIDO */
+            .unread-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; display:none; margin-left:5px; }
             .lead-card.unread .unread-dot { display:inline-block; }
-            .lead-card.unread b { color:#1f2937; font-weight:800; }
+            .lead-card.unread b { color:#111827; font-weight:800; }
 
+            /* Barra Masiva Flotante */
+            .bulk-toolbar {
+                position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+                background: #111827; color: white; padding: 12px 25px; border-radius: 40px;
+                display: none; align-items: center; gap: 15px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            }
+            .bulk-toolbar.visible { display: flex; animation: slideUp 0.3s ease; }
+            @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+            .bulk-btn { background: #374151; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.2s; }
+            .bulk-btn:hover { background: #4b5563; }
+
+            /* Chat y Herramientas */
+            .main { flex:1; display:flex; flex-direction:column; background:#e5e7eb; position:relative; } 
+            .tools { width:300px; background:var(--bg-sidebar); border-left:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:15px; }
             .chat-body { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; background:#f0f2f5; }
             .msg { padding:12px 16px; border-radius:12px; font-size:13px; box-shadow:0 1px 2px rgba(0,0,0,0.1); max-width:75%; line-height:1.4; }
             .msg.user { background:#ffffff; align-self:flex-start; }
             .msg.bot { background:var(--bot-color); color:white; align-self:flex-end; }
+            .msg-date { font-size:10px; opacity:0.7; margin-top:4px; display:block; text-align:right; }
             
-            .btn { width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; }
+            /* Botones Generales */
+            .btn { width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; transition: opacity 0.2s; }
             .btn-blue { background:var(--primary); color:white; }
+            .btn-blue:hover { opacity: 0.9; }
             .btn-outline { background:white; border:1px solid var(--border); }
             .btn-purple { background:#7c3aed; color:white; margin-top:10px; }
             
-            /* BARRA ACCIONES MASIVAS */
-            .bulk-toolbar {
-                position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-                background: #1f2937; color: white; padding: 10px 20px; border-radius: 30px;
-                display: none; align-items: center; gap: 15px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            }
-            .bulk-toolbar.visible { display: flex; }
-            .bulk-btn { background: #374151; border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; }
-            .bulk-btn:hover { background: #4b5563; }
-
+            /* Notas */
             .note-card { background:#fffbeb; padding:10px; border-radius:6px; margin-bottom:10px; font-size:12px; border-left:3px solid #f59e0b; }
-            .note-date { font-size:10px; color:#92400e; display:block; margin-bottom:4px; font-weight:bold; }
             
+            /* Modal */
             .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center; }
-            .modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:600px; }
+            .modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; }
+            select, textarea, input { width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; font-family:inherit; }
         </style>
     </head>
     <body>
     
     <div id="bulkToolbar" class="bulk-toolbar">
-        <span id="selectedCount" style="font-weight:bold">0</span> seleccionados
+        <span id="selectedCount" style="font-weight:bold; color:#60a5fa">0</span> seleccionados
         <div style="height:20px; width:1px; background:#4b5563"></div>
-        <button class="bulk-btn" onclick="bulkAction('tag')">🏷 Cambiar Estado</button>
-        <button class="bulk-btn" onclick="bulkAction('msg')">💬 Ejecutar Zara</button>
-        <button class="bulk-btn" style="color:#ef4444" onclick="clearSelection()">✖</button>
+        <button class="bulk-btn" onclick="openBulkStatusModal()">🏷 Cambiar Estado</button>
+        <button class="bulk-btn" style="background:#15803d" onclick="openBulkMsgModal()">💬 Enviar Zara</button>
+        <button class="bulk-btn" style="color:#ef4444; background:transparent" onclick="clearSelection()">✖ Cancelar</button>
     </div>
 
     <div class="sidebar">
-        <div style="padding:15px; font-weight:700; font-size:16px; color:var(--primary); border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-            <span>ZARA 7.0</span>
-            <span style="font-size:10px; background:#dbeafe; padding:2px 6px; border-radius:4px; color:#1e40af">CRM PRO</span>
-        </div>
+        <div style="padding:15px; font-weight:800; font-size:18px; color:var(--primary); border-bottom:1px solid var(--border); letter-spacing:-0.5px">ZARA CRM</div>
+        
         <div class="tabs-grid">
-            <button id="tab-NUEVO" class="tab-btn" onclick="setTab('NUEVO')">Nuevos</button>
-            <button id="tab-CAMPAÑA" class="tab-btn" onclick="setTab('CAMPAÑA')">💎 Campaña</button>
-            <button id="tab-INTERESADO" class="tab-btn" onclick="setTab('INTERESADO')">Interés</button>
-            <button id="tab-HOT" class="tab-btn" onclick="setTab('HOT')">Hot 🔥</button>
-            <button id="tab-AGENDADO" class="tab-btn" onclick="setTab('AGENDADO')">Citas</button>
-            <button id="tab-RECICLAJE" class="tab-btn" onclick="setTab('RECICLAJE')">Reciclaje</button>
-            <button id="tab-GESTIÓN FUTURA" class="tab-btn" onclick="setTab('GESTIÓN FUTURA')">Futuro</button>
-            <button id="tab-ABANDONADOS" class="tab-btn" onclick="setTab('ABANDONADOS')">Aband.</button>
+            <button id="tab-NUEVO" class="tab-btn" onclick="setTab('NUEVO')">NUEVO</button>
+            <button id="tab-CAMPAÑA" class="tab-btn" onclick="setTab('CAMPAÑA')">💎 CAMPAÑA</button>
+            <button id="tab-INTERESADO" class="tab-btn" onclick="setTab('INTERESADO')">INTERESADO</button>
+            <button id="tab-HOT" class="tab-btn" onclick="setTab('HOT')">HOT 🔥</button>
+            <button id="tab-AGENDADO" class="tab-btn" onclick="setTab('AGENDADO')">AGENDADO</button>
+            <button id="tab-RECICLAJE" class="tab-btn" onclick="setTab('RECICLAJE')">RECICLAJE</button>
+            <button id="tab-GESTIÓN FUTURA" class="tab-btn" onclick="setTab('GESTIÓN FUTURA')">FUTURO</button>
+            <button id="tab-ABANDONADOS" class="tab-btn" onclick="setTab('ABANDONADOS')">ABANDON.</button>
         </div>
+        
         <div class="lead-list" id="leadList"></div>
     </div>
 
@@ -100,7 +108,7 @@ app.get('/monitor', (req, res) => {
         </div>
         <div class="chat-body" id="chatBody"></div>
         <div style="padding:15px; background:white; border-top:1px solid var(--border); display:flex; gap:10px">
-            <input type="text" id="msgIn" style="flex:1; padding:10px; border:1px solid var(--border); border-radius:6px; outline:none;" placeholder="Escribir mensaje manual..." onkeypress="if(event.key==='Enter') sendManual()">
+            <input type="text" id="msgIn" style="flex:1;" placeholder="Escribir mensaje manual..." onkeypress="if(event.key==='Enter') sendManual()">
             <button class="btn btn-blue" style="width:80px;" onclick="sendManual()">ENVIAR</button>
         </div>
     </div>
@@ -108,26 +116,26 @@ app.get('/monitor', (req, res) => {
     <div class="tools">
         <div>
             <label style="font-size:11px; font-weight:700; color:#6b7280;">ESTADO ACTUAL</label>
-            <select id="tagSelect" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; background:white;">
+            <select id="tagSelect">
                 <option value="NUEVO">NUEVO</option>
                 <option value="CAMPAÑA">💎 CAMPAÑA</option>
                 <option value="INTERESADO">INTERESADO</option>
                 <option value="HOT">HOT 🔥</option>
                 <option value="AGENDADO">AGENDADO</option>
-                <option value="RECICLAJE">♻️ RECICLAJE</option>
-                <option value="ABANDONADOS">💀 ABANDONADOS</option>
+                <option value="RECICLAJE">RECICLAJE</option>
+                <option value="ABANDONADOS">ABANDONADOS</option>
                 <option value="GESTIÓN FUTURA">FUTURO</option>
                 <option value="DESCARTADO">DESCARTADO</option>
             </select>
             <button class="btn btn-blue" style="margin-top:5px;" onclick="updateTag()">Guardar Estado</button>
         </div>
         <div>
-            <label style="font-size:11px; font-weight:700; color:#6b7280;">PROGRAMAR TAREA ZARA</label>
-            <textarea id="noteIn" style="width:100%; height:60px; border:1px solid var(--border); border-radius:6px; margin-top:5px; padding:5px;" placeholder="Ej: Preguntar mañana por su decisión..."></textarea>
+            <label style="font-size:11px; font-weight:700; color:#6b7280;">PROGRAMAR TAREA</label>
+            <textarea id="noteIn" style="height:60px;" placeholder="Ej: Llamar mañana..."></textarea>
             <div style="margin-top:5px; display:flex; align-items:center; gap:5px; font-size:12px;">
                 <input type="checkbox" id="checkZara" onchange="toggleDateInput()"> Asignar a Zara
             </div>
-            <input type="datetime-local" id="dateIn" style="display:none; width:100%; margin-top:5px; padding:5px; border:1px solid var(--border); border-radius:4px;">
+            <input type="datetime-local" id="dateIn" style="display:none;">
             <button class="btn btn-outline" style="margin-top:5px;" onclick="addNote()">Guardar Tarea</button>
         </div>
         
@@ -136,36 +144,52 @@ app.get('/monitor', (req, res) => {
         <div style="background:#f0fdf4; padding:10px; border-radius:6px; border:1px solid #bbf7d0;">
             <label style="font-size:10px; font-weight:bold; color:#166534">📅 REPORTE CSV</label>
             <div style="display:flex; gap:5px; margin:5px 0;">
-                <input type="date" id="dateStart" style="width:50%; border:1px solid #bbf7d0; border-radius:4px; font-size:10px; padding:3px;">
-                <input type="date" id="dateEnd" style="width:50%; border:1px solid #bbf7d0; border-radius:4px; font-size:10px; padding:3px;">
+                <input type="date" id="dateStart" style="font-size:10px">
+                <input type="date" id="dateEnd" style="font-size:10px">
             </div>
-            <button class="btn btn-green" onclick="downloadFunnel()">Descargar</button>
+            <button class="btn btn-green" style="margin-top:5px; background:#16a34a; color:white" onclick="downloadFunnel()">Descargar</button>
         </div>
-
-        <button class="btn btn-purple" onclick="openModal()">📂 Cargar Datos Externos</button>
-        <button class="btn btn-outline" style="margin-top:5px" onclick="location.reload()">🔄 Recargar Todo</button>
+        <button class="btn btn-outline" style="margin-top:10px" onclick="location.reload()">🔄 Recargar</button>
     </div>
 
-    <div id="bulkModal" class="modal">
+    <div id="bulkStatusModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0">🚀 Carga Masiva</h3>
-            <p style="font-size:11px; color:#666">Formato: TELEFONO, NOMBRE, MENSAJE</p>
-            <textarea id="bulkInput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:5px;" placeholder="569..., Juan, Hola..."></textarea>
-            <div id="bulkStatus" style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:10px"></div>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button class="btn btn-outline" style="width:auto" onclick="closeModal()">Cancelar</button>
-                <button class="btn btn-blue" style="width:auto" onclick="runBulk()">Lanzar</button>
+            <h3>Cambiar Estado Masivo</h3>
+            <p>Selecciona el nuevo estado para los clientes marcados:</p>
+            <select id="bulkTagSelect">
+                <option value="NUEVO">NUEVO</option>
+                <option value="CAMPAÑA">💎 CAMPAÑA</option>
+                <option value="INTERESADO">INTERESADO</option>
+                <option value="HOT">HOT 🔥</option>
+                <option value="AGENDADO">AGENDADO</option>
+                <option value="RECICLAJE">RECICLAJE</option>
+                <option value="ABANDONADOS">ABANDONADOS</option>
+                <option value="GESTIÓN FUTURA">FUTURO</option>
+                <option value="DESCARTADO">DESCARTADO</option>
+            </select>
+            <div style="display:flex; gap:10px; margin-top:15px; justify-content:flex-end;">
+                <button class="btn btn-outline" style="width:auto" onclick="document.getElementById('bulkStatusModal').style.display='none'">Cancelar</button>
+                <button class="btn btn-blue" style="width:auto" onclick="confirmBulkTag()">Aplicar Cambio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bulkMsgModal" class="modal">
+        <div class="modal-content">
+            <h3>Mensaje Masivo (Zara)</h3>
+            <textarea id="bulkMsgInput" style="height:100px" placeholder="Hola, te recuerdo que..."></textarea>
+            <div style="display:flex; gap:10px; margin-top:15px; justify-content:flex-end;">
+                <button class="btn btn-outline" style="width:auto" onclick="document.getElementById('bulkMsgModal').style.display='none'">Cancelar</button>
+                <button class="btn btn-blue" style="width:auto" onclick="confirmBulkMsg()">Enviar</button>
             </div>
         </div>
     </div>
 
     <script>
         let curTab='NUEVO', curPhone=null, data={};
-        let selectedLeads = new Set(); // Para selección múltiple
+        let selectedLeads = new Set(); 
 
         function toggleDateInput() { document.getElementById('dateIn').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
-        function openModal(){ document.getElementById('bulkModal').style.display = 'flex'; }
-        function closeModal(){ document.getElementById('bulkModal').style.display = 'none'; }
         
         async function refresh(){ 
             try { 
@@ -176,12 +200,11 @@ app.get('/monitor', (req, res) => {
             } catch(e){} 
         }
 
-        // --- RENDERIZADO LISTA ---
         function renderList(){
             const list=document.getElementById('leadList'); 
             list.innerHTML='';
             
-            // Actualizar Tabs Visualmente
+            // Highlight Pestaña Activa
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('active', 'campana-active');
                 if(b.id === 'tab-'+curTab) {
@@ -192,7 +215,6 @@ app.get('/monitor', (req, res) => {
 
             Object.values(data.users||{}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
                 if(u.tag===curTab || (curTab==='NUEVO' && !u.tag)){
-                    // Iconos Campaña
                     let icon = '';
                     if (u.campaign === 'lipo') icon = '👙 ';
                     else if (u.campaign === 'push_up') icon = '🍑 ';
@@ -217,7 +239,6 @@ app.get('/monitor', (req, res) => {
             updateBulkToolbar();
         }
 
-        // --- LOGICA SELECCIÓN MULTIPLE ---
         function toggleSelect(phone, event) {
             event.stopPropagation();
             if (selectedLeads.has(phone)) selectedLeads.delete(phone);
@@ -225,10 +246,7 @@ app.get('/monitor', (req, res) => {
             updateBulkToolbar();
         }
         
-        function clearSelection() {
-            selectedLeads.clear();
-            renderList();
-        }
+        function clearSelection() { selectedLeads.clear(); renderList(); }
 
         function updateBulkToolbar() {
             const toolbar = document.getElementById('bulkToolbar');
@@ -237,35 +255,35 @@ app.get('/monitor', (req, res) => {
             else toolbar.classList.remove('visible');
         }
 
-        async function bulkAction(type) {
+        // FUNCIONES MASIVAS
+        function openBulkStatusModal() { document.getElementById('bulkStatusModal').style.display = 'flex'; }
+        function openBulkMsgModal() { document.getElementById('bulkMsgModal').style.display = 'flex'; }
+
+        async function confirmBulkTag() {
+            const newTag = document.getElementById('bulkTagSelect').value;
             const phones = Array.from(selectedLeads);
-            if(phones.length === 0) return;
-            
-            if (type === 'tag') {
-                const newTag = prompt("Escribe el NUEVO ESTADO para " + phones.length + " clientes:");
-                if(newTag) {
-                    for (let p of phones) await fetch('/api/tag', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,tag:newTag.toUpperCase()})});
-                    clearSelection(); refresh();
-                }
-            } else if (type === 'msg') {
-                const msg = prompt("Escribe la TAREA PARA ZARA (se enviará a " + phones.length + " clientes):");
-                if(msg) {
-                    for (let p of phones) await fetch('/api/manual', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,text:msg})});
-                    alert("Enviando mensajes... esto puede tomar unos segundos.");
-                    clearSelection(); refresh();
-                }
-            }
+            for (let p of phones) await fetch('/api/tag', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,tag:newTag})});
+            document.getElementById('bulkStatusModal').style.display='none';
+            clearSelection(); refresh();
         }
 
-        // --- RENDERIZADO CHAT ---
+        async function confirmBulkMsg() {
+            const msg = document.getElementById('bulkMsgInput').value;
+            if(!msg) return;
+            const phones = Array.from(selectedLeads);
+            alert("Enviando " + phones.length + " mensajes. Esto puede tardar...");
+            for (let p of phones) await fetch('/api/manual', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,text:msg})});
+            document.getElementById('bulkMsgModal').style.display='none';
+            clearSelection(); refresh();
+        }
+
         async function selectLead(p){ 
             curPhone=p; 
             document.getElementById('tagSelect').value = data.users[p].tag||'NUEVO';
-            // Marcar como leido al abrir
+            // Marcar como leido
             await fetch('/api/read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
-            data.users[p].unread = false; // Optimistic UI update
-            renderChat(); 
-            renderList(); 
+            if(data.users[p]) data.users[p].unread = false; 
+            renderChat(); renderList(); 
         }
 
         function renderChat(){
@@ -276,22 +294,20 @@ app.get('/monitor', (req, res) => {
             
             let html='';
             
-            // Render Notas con Fecha de Ejecución
             if(u.notes) u.notes.forEach(n=>{ 
-                const created = new Date(n.date).toLocaleDateString();
+                const created = new Date(n.date).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
                 let scheduledHtml = '';
                 if(n.scheduleTime) {
-                    const sched = new Date(n.scheduleTime);
-                    scheduledHtml = \`<br>⏰ <b>Ejecutar:</b> \${sched.toLocaleDateString()} \${sched.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}\`;
+                    const sched = new Date(n.scheduleTime).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+                    scheduledHtml = \`<br>⏰ <b>Ejecutar:</b> \${sched}\`;
                 }
                 html+=\`<div class="note-card"><span class="note-date">Creada: \${created}</span>\${n.text}\${scheduledHtml}</div>\`; 
             });
 
-            // Render Historial con Fecha Completa
             (u.history||[]).forEach(m=>{ 
                 const dateObj = new Date(m.timestamp);
-                const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-                html+=\`<div style="display:flex; flex-direction:column; align-items:\${m.role==='user'?'flex-start':'flex-end'}"><div class="msg \${m.role}">\${m.content}</div><span style="font-size:9px; color:#999; margin-top:2px;">\${dateStr}</span></div>\`; 
+                const dateStr = dateObj.toLocaleDateString([],{day:'2-digit',month:'2-digit'}) + ' ' + dateObj.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+                html+=\`<div style="display:flex; flex-direction:column; align-items:\${m.role==='user'?'flex-start':'flex-end'}"><div class="msg \${m.role}">\${m.content}<span class="msg-date">\${dateStr}</span></div></div>\`; 
             });
             
             const chatDiv=document.getElementById('chatBody');
@@ -321,20 +337,6 @@ app.get('/monitor', (req, res) => {
             const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", \`REPORTE_FUNNEL_\${d1}_\${d2}.csv\`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        async function runBulk(){
-            const lines = document.getElementById('bulkInput').value.split('\\n'); const status = document.getElementById('bulkStatus');
-            let count = 0; status.innerText = "Procesando...";
-            for(let line of lines){
-                const parts = line.split(',');
-                if(parts.length >= 2){
-                    let p = parts[0].trim(); let name = "Cliente"; let msg = "";
-                    if(parts.length >= 3) { name = parts[1].trim(); msg = parts.slice(2).join(',').trim(); } else { msg = parts.slice(1).join(',').trim(); }
-                    if(p && msg){ await fetch('/api/manual', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ phone:p, text:msg, name: name, tag: 'RECICLAJE' }) }); count++; status.innerText = \`Enviando... (\${count})\`; }
-                }
-            }
-            status.innerText = "✅ Listo!"; setTimeout(() => { closeModal(); refresh(); }, 2000);
-        }
-
         function setTab(t){ curTab=t; renderList(); }
         setInterval(refresh, 3000); refresh();
     </script>
@@ -346,7 +348,7 @@ app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body
 app.post('/api/tag', (req, res) => res.json({ success: updateTagManual(req.body.phone, req.body.tag) }));
 app.post('/api/toggle', (req, res) => res.json({ status: toggleBot(req.body.phone) }));
 app.post('/api/note', (req, res) => res.json({ success: agregarNota(req.body.phone, req.body.text, req.body.isScheduled, req.body.dateStr) }));
-app.post('/api/read', (req, res) => { const success = markRead(req.body.phone); res.json({ success }); }); // NUEVA API LEIDO
+app.post('/api/read', (req, res) => { const success = markRead(req.body.phone); res.json({ success }); });
 app.post('/api/diagnostic', async (req, res) => { await diagnosticarTodo(); res.json({ success: true }); });
 app.post('/webhook', async (req, res) => { await procesarEvento(req.body); res.sendStatus(200); });
 app.get('/webhook', (req, res) => {
