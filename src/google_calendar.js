@@ -79,12 +79,11 @@ export async function checkAvailability() {
             }
         }
 
-        if (freeSlots.length === 0) return "Agenda llena próximos 7 días. (Sugerir revisar semana siguiente)";
+        if (freeSlots.length === 0) return "Agenda llena próximos 7 días.";
 
         let output = "";
         let lastDate = "";
         
-        // MOSTRAR TODO (Sin filtros de % 2)
         freeSlots.forEach(slot => {
             let dateStr = slot.toFormat('cccc d LLLL', { locale: 'es' });
             let timeStr = slot.toFormat('HH:mm');

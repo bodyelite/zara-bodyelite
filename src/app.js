@@ -28,7 +28,6 @@ export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
 export async function diagnosticarTodo() { return true; }
 
-// --- NUEVA FUNCIÓN: MARCAR COMO LEÍDO ---
 export function markRead(phone) {
     if (sesiones[phone]) {
         sesiones[phone].unread = false;
@@ -113,10 +112,9 @@ export async function procesarEvento(evento) {
     const p = msg.from; 
     const nombre = val.contacts?.[0]?.profile?.name || "Cliente";
     
-    // Si es nuevo o ya existe, marcamos como NO LEÍDO porque acaba de hablar
     if (!sesiones[p]) { 
         sesiones[p] = { name: nombre, history: [], phone: p, tag: "NUEVO", lastInteraction: Date.now(), unread: true }; 
-        await notificarStaff(`🚨 NUEVO LEAD: ${nombre}`);
+        await notificarStaff(`🚨 NUEVO LEAD: ${nombre} (${p})`);
     } else {
         sesiones[p].unread = true;
     }
@@ -130,41 +128,31 @@ export async function procesarEvento(evento) {
 
     if (contenido.toLowerCase().includes('/reset')) { sesiones[p].history = []; guardar(); return; }
 
-    // IDENTIFICADOR VISUAL DE CAMPAÑA
-    if (contenido === "Quiero mi evaluación Lipo") {
-        sesiones[p].tag = "CAMPAÑA";
-        sesiones[p].campaign = "lipo"; 
+    if (/(llamen|llamar|llamada|teléfono|telefono|celular)/i.test(contenido) && /(quiero|pueden|favor|necesito)/i.test(contenido)) {
+        await notificarStaff(`📞 SOLICITUD DE LLAMADO: ${nombre} pide contacto. Tel: ${p}`);
+        sesiones[p].tag = "HOT";
     }
-    else if (contenido === "Quiero mi evaluación Glúteos") {
-        sesiones[p].tag = "CAMPAÑA";
-        sesiones[p].campaign = "push_up";
-    }
-    else if (contenido === "Quiero mi evaluación Rostro") {
-        sesiones[p].tag = "CAMPAÑA";
-        sesiones[p].campaign = "rostro";
-    }
+
+    if (contenido === "Quiero mi evaluación Lipo") { sesiones[p].tag = "CAMPAÑA"; sesiones[p].campaign = "lipo"; }
+    else if (contenido === "Quiero mi evaluación Glúteos") { sesiones[p].tag = "CAMPAÑA"; sesiones[p].campaign = "push_up"; }
+    else if (contenido === "Quiero mi evaluación Rostro") { sesiones[p].tag = "CAMPAÑA"; sesiones[p].campaign = "rostro"; }
 
     sesiones[p].history.push({ role: "user", content: contenido, timestamp: Date.now() });
     
-    if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { 
-        sesiones[p].tag = 'INTERESADO'; 
-    }
+    if (sesiones[p].tag === 'GESTIÓN FUTURA' || sesiones[p].tag === 'RECICLAJE') { sesiones[p].tag = 'INTERESADO'; }
     
     const mensajesUsuario = sesiones[p].history.filter(m => m.role === 'user').length;
-    if (sesiones[p].tag === 'NUEVO' && mensajesUsuario >= 2) {
-        sesiones[p].tag = 'INTERESADO';
-    }
+    if (sesiones[p].tag === 'NUEVO' && mensajesUsuario >= 2) { sesiones[p].tag = 'INTERESADO'; }
 
     sesiones[p].lastInteraction = Date.now();
     guardar();
 
     if (botStatus[p] !== false) {
         const resp = await pensar(sesiones[p].history, sesiones[p].name);
-        
         await enviarMensaje(p, resp);
         sesiones[p].history.push({ role: "assistant", content: resp, timestamp: Date.now(), source: 'bot' });
         
-        if (resp.includes('reservo.cl')) {
+        if (resp.includes('reservo.cl') || resp.includes('agendada')) {
             sesiones[p].tag = "HOT";
             await notificarStaff(`📅 CITA AGENDADA: ${nombre}`);
         }

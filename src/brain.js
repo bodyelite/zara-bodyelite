@@ -30,8 +30,6 @@ export async function transcribirAudio(urlDescarga) {
 export async function pensar(historial, nombreCliente) {
     let agendaRaw = await checkAvailability();
     const nowChile = DateTime.now().setZone('America/Santiago').toFormat('HH:mm');
-    
-    // Inyectamos el prompt dinámico unificado
     const SYSTEM_PROMPT = GENERAR_PROMPT(nombreCliente, nowChile, agendaRaw);
 
     try {
@@ -41,7 +39,7 @@ export async function pensar(historial, nombreCliente) {
                 { role: "system", content: SYSTEM_PROMPT }, 
                 ...historial
             ],
-            temperature: 0.2, 
+            temperature: 0.3, 
             max_tokens: 350
         });
         return runner.choices[0].message.content;

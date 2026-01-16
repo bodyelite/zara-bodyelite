@@ -29,8 +29,5 @@ export async function obtenerUrlMedia(mediaId) {
             { headers: { Authorization: `Bearer ${token}` } }
         );
         return response.data.url;
-    } catch (e) {
-        console.error("Error obteniendo URL media:", e.message);
-        return null;
-    }
+    } catch (e) { return null; }
 }
