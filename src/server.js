@@ -41,20 +41,27 @@ app.get('/monitor', (req, res) => {
             
             /* ÁREA DE CHECKBOX (Separa el clic) */
             .checkbox-area {
-                width: 40px; height: 100%; display: flex; align-items: center; justify-content: center;
-                border-right: 1px solid transparent; cursor: pointer;
+                width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;
+                border-right: 1px solid transparent; cursor: pointer; padding-left:10px;
             }
-            .checkbox-area:hover { background: rgba(0,0,0,0.03); }
-            .lead-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); pointer-events: none; } /* El clic lo captura el padre div */
+            .lead-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); pointer-events: none; }
             
             /* ÁREA DE INFO (Clic para abrir chat) */
             .lead-info { 
-                flex:1; padding: 0 15px; height: 100%; display: flex; flex-direction: column; justify-content: center; cursor: pointer; 
+                flex:1; padding: 0 10px; height: 100%; display: flex; flex-direction: column; justify-content: center; cursor: pointer; 
             }
             .lead-name-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
-            .lead-name { font-weight:600; font-size:13px; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 200px; }
+            .lead-name { font-weight:600; font-size:13px; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 180px; }
             .lead-phone { font-size:11px; color:#6b7280; }
             
+            /* BOTON LLAMAR LISTA */
+            .call-btn-list {
+                width: 30px; height: 30px; display:flex; align-items:center; justify-content:center;
+                background: #f0fdf4; border-radius: 50%; color: #15803d; text-decoration: none;
+                margin-right: 10px; border: 1px solid #bbf7d0; transition: all 0.2s;
+            }
+            .call-btn-list:hover { background: #15803d; color: white; transform: scale(1.1); }
+
             .unread-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; flex-shrink:0; }
             .lead-card.unread .lead-name { color:#000; font-weight:800; }
 
@@ -92,7 +99,6 @@ app.get('/monitor', (req, res) => {
             .modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; }
             select, textarea, input[type="text"], input[type="date"] { width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; font-family:inherit; font-size:12px; }
             
-            /* Botón Seleccionar Todos */
             .select-all-btn { 
                 width: 100%; padding: 5px; margin-bottom: 5px; border: 1px dashed #cbd5e1; 
                 background: #f8fafc; color: #64748b; font-size: 10px; cursor: pointer; border-radius: 4px;
@@ -134,7 +140,13 @@ app.get('/monitor', (req, res) => {
 
     <div class="main">
         <div style="padding:15px; background:white; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-            <div><h3 id="uName" style="margin:0; font-size:15px; font-weight:700">Selecciona cliente</h3><small id="uPhone" style="color:#6b7280"></small></div>
+            <div style="display:flex; align-items:center; gap:10px">
+                <div>
+                    <h3 id="uName" style="margin:0; font-size:15px; font-weight:700">Selecciona cliente</h3>
+                    <small id="uPhone" style="color:#6b7280"></small>
+                </div>
+                <a id="headerCallBtn" href="#" class="call-btn-list" style="display:none; background:#dcfce7; color:#166534" title="Llamar ahora">📞</a>
+            </div>
             <div id="botControl"></div>
         </div>
         <div class="chat-body" id="chatBody"></div>
@@ -219,7 +231,7 @@ app.get('/monitor', (req, res) => {
     <script>
         let curTab='NUEVO', curPhone=null, data={};
         let selectedLeads = new Set(); 
-        let displayedPhones = []; // Para "Seleccionar Todos"
+        let displayedPhones = [];
 
         function toggleDateInput() { document.getElementById('dateIn').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
         function openBulkStatusModal() { document.getElementById('bulkStatusModal').style.display = 'flex'; }
@@ -237,7 +249,7 @@ app.get('/monitor', (req, res) => {
         function renderList(){
             const list=document.getElementById('leadList'); 
             list.innerHTML='';
-            displayedPhones = []; // Reiniciamos lista visible
+            displayedPhones = []; 
             
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('active', 'campana-active');
@@ -249,7 +261,7 @@ app.get('/monitor', (req, res) => {
 
             Object.values(data.users||{}).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
                 if(u.tag===curTab || (curTab==='NUEVO' && !u.tag)){
-                    displayedPhones.push(u.phone); // Guardamos para select all
+                    displayedPhones.push(u.phone); 
                     
                     let icon = '';
                     if (u.campaign === 'lipo') icon = '👙 ';
@@ -272,6 +284,7 @@ app.get('/monitor', (req, res) => {
                             </div>
                             <div class="lead-phone">\${u.phone}</div>
                         </div>
+                        <a href="tel:\${u.phone}" class="call-btn-list" title="Llamar" onclick="event.stopPropagation()">📞</a>
                     </div>\`;
                 }
             });
@@ -279,19 +292,16 @@ app.get('/monitor', (req, res) => {
         }
 
         function toggleSelect(phone, event) {
-            event.stopPropagation(); // Evita abrir el chat
+            event.stopPropagation();
             if (selectedLeads.has(phone)) selectedLeads.delete(phone);
             else selectedLeads.add(phone);
             updateBulkToolbar();
-            renderList(); // Re-render para mostrar checks
+            renderList(); 
         }
         
         function toggleSelectAll() {
-            if (selectedLeads.size === displayedPhones.length) {
-                selectedLeads.clear();
-            } else {
-                displayedPhones.forEach(p => selectedLeads.add(p));
-            }
+            if (selectedLeads.size === displayedPhones.length) selectedLeads.clear();
+            else displayedPhones.forEach(p => selectedLeads.add(p));
             renderList();
         }
         
@@ -325,6 +335,11 @@ app.get('/monitor', (req, res) => {
         async function selectLead(p){ 
             curPhone=p; 
             document.getElementById('tagSelect').value = data.users[p].tag||'NUEVO';
+            // Configurar botón llamar cabecera
+            const btn = document.getElementById('headerCallBtn');
+            btn.href = 'tel:' + p;
+            btn.style.display = 'flex';
+            
             await fetch('/api/read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
             if(data.users[p]) data.users[p].unread = false; 
             renderChat(); renderList(); 
@@ -337,7 +352,6 @@ app.get('/monitor', (req, res) => {
             document.getElementById('botControl').innerHTML=\`<button type="button" onclick="toggleBot()" style="border:none; background:\${status?'#dcfce7':'#fee2e2'}; color:\${status?'#166534':'#991b1b'}; padding:5px 15px; border-radius:20px; font-weight:bold; font-size:11px; cursor:pointer; border:1px solid \${status?'#166534':'#991b1b'}">BOT \${status?'ON':'OFF'}</button>\`;
             
             let html='';
-            
             if(u.notes) u.notes.forEach(n=>{ 
                 const created = new Date(n.date).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
                 let scheduledHtml = '';
