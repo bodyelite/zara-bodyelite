@@ -12,48 +12,67 @@ app.get('/monitor', (req, res) => {
     <html lang="es">
     <head>
         <meta charset="UTF-8"><title>ZARA CRM 7.0</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <style>
             :root { --bg-body:#f3f4f6; --bg-sidebar:#ffffff; --text:#1f2937; --primary:#2563eb; --bot-color:#2563eb; --border:#e5e7eb; }
+            * { box-sizing: border-box; }
             body { margin:0; font-family:'Inter',sans-serif; background:var(--bg-body); color:var(--text); display:flex; height:100vh; overflow:hidden; font-size:13px; }
             
             /* Sidebar y Tabs */
-            .sidebar { width:350px; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; }
+            .sidebar { width:350px; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
             .tabs-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; padding:10px; border-bottom:1px solid var(--border); background:#f9fafb; }
-            .tab-btn { padding:8px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:11px; font-weight:600; text-align:center; }
+            .tab-btn { padding:8px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:11px; font-weight:600; text-align:center; transition:all 0.1s; }
             .tab-btn:hover { background:#f3f4f6; }
-            
-            /* ESTADO ACTIVO DESTACADO */
-            .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.3); transform: translateY(-1px); }
-            .tab-btn.campana-active { background:linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color:white; border:none; box-shadow: 0 2px 4px rgba(109, 40, 217, 0.3); }
+            .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.2); transform: translateY(-1px); }
+            .tab-btn.campana-active { background:linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color:white; border:none; }
 
-            /* Lista de Leads */
-            .lead-list { flex:1; overflow-y:auto; }
-            .lead-card { padding:12px; border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; gap:10px; transition:all 0.2s; }
+            /* Lista de Leads (FIX VISUAL) */
+            .lead-list { flex:1; overflow-y:auto; overflow-x:hidden; }
+            .lead-card { 
+                padding:12px 15px; 
+                border-bottom:1px solid var(--border); 
+                cursor:pointer; 
+                display:flex; 
+                align-items:center; 
+                gap:12px; 
+                transition:background 0.1s;
+                position: relative;
+            }
             .lead-card:hover { background:#f8fafc; }
             .lead-card.active { background:#eff6ff; border-left:4px solid var(--primary); }
             
+            /* Checkbox mejorado */
+            .lead-checkbox { 
+                width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); 
+                margin: 0; flex-shrink: 0;
+            }
+            
+            /* Info del Lead */
+            .lead-info { flex:1; overflow:hidden; }
+            .lead-name-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+            .lead-name { font-weight:600; font-size:13px; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .lead-phone { font-size:11px; color:#6b7280; }
+            
             /* PUNTO ROJO NO LEIDO */
-            .unread-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; display:none; margin-left:5px; }
-            .lead-card.unread .unread-dot { display:inline-block; }
-            .lead-card.unread b { color:#111827; font-weight:800; }
+            .unread-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; flex-shrink:0; }
+            .lead-card.unread .lead-name { color:#000; font-weight:800; }
 
             /* Barra Masiva Flotante */
             .bulk-toolbar {
                 position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-                background: #111827; color: white; padding: 12px 25px; border-radius: 40px;
+                background: #111827; color: white; padding: 10px 20px; border-radius: 40px;
                 display: none; align-items: center; gap: 15px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             }
             .bulk-toolbar.visible { display: flex; animation: slideUp 0.3s ease; }
             @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-            .bulk-btn { background: #374151; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.2s; }
+            .bulk-btn { background: #374151; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
             .bulk-btn:hover { background: #4b5563; }
 
             /* Chat y Herramientas */
-            .main { flex:1; display:flex; flex-direction:column; background:#e5e7eb; position:relative; } 
-            .tools { width:300px; background:var(--bg-sidebar); border-left:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:15px; }
+            .main { flex:1; display:flex; flex-direction:column; background:#e5e7eb; position:relative; min-width: 0; } 
+            .tools { width:300px; background:var(--bg-sidebar); border-left:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:15px; flex-shrink:0; }
             .chat-body { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; background:#f0f2f5; }
-            .msg { padding:12px 16px; border-radius:12px; font-size:13px; box-shadow:0 1px 2px rgba(0,0,0,0.1); max-width:75%; line-height:1.4; }
+            .msg { padding:12px 16px; border-radius:12px; font-size:13px; box-shadow:0 1px 2px rgba(0,0,0,0.1); max-width:75%; line-height:1.4; word-wrap: break-word; }
             .msg.user { background:#ffffff; align-self:flex-start; }
             .msg.bot { background:var(--bot-color); color:white; align-self:flex-end; }
             .msg-date { font-size:10px; opacity:0.7; margin-top:4px; display:block; text-align:right; }
@@ -64,14 +83,16 @@ app.get('/monitor', (req, res) => {
             .btn-blue:hover { opacity: 0.9; }
             .btn-outline { background:white; border:1px solid var(--border); }
             .btn-purple { background:#7c3aed; color:white; margin-top:10px; }
+            .btn-green { background:#16a34a; color:white; margin-top:5px; }
             
             /* Notas */
             .note-card { background:#fffbeb; padding:10px; border-radius:6px; margin-bottom:10px; font-size:12px; border-left:3px solid #f59e0b; }
+            .note-date { font-size:10px; color:#92400e; display:block; margin-bottom:4px; font-weight:bold; }
             
             /* Modal */
             .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center; }
             .modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; }
-            select, textarea, input { width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; font-family:inherit; }
+            select, textarea, input[type="text"], input[type="date"] { width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; font-family:inherit; font-size:12px; }
         </style>
     </head>
     <body>
@@ -103,7 +124,7 @@ app.get('/monitor', (req, res) => {
 
     <div class="main">
         <div style="padding:15px; background:white; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-            <div><h3 id="uName" style="margin:0; font-size:15px">Selecciona cliente</h3><small id="uPhone" style="color:#6b7280"></small></div>
+            <div><h3 id="uName" style="margin:0; font-size:15px; font-weight:700">Selecciona cliente</h3><small id="uPhone" style="color:#6b7280"></small></div>
             <div id="botControl"></div>
         </div>
         <div class="chat-body" id="chatBody"></div>
@@ -135,7 +156,7 @@ app.get('/monitor', (req, res) => {
             <div style="margin-top:5px; display:flex; align-items:center; gap:5px; font-size:12px;">
                 <input type="checkbox" id="checkZara" onchange="toggleDateInput()"> Asignar a Zara
             </div>
-            <input type="datetime-local" id="dateIn" style="display:none;">
+            <input type="datetime-local" id="dateIn" style="display:none; width:100%; margin-top:5px;">
             <button class="btn btn-outline" style="margin-top:5px;" onclick="addNote()">Guardar Tarea</button>
         </div>
         
@@ -144,10 +165,10 @@ app.get('/monitor', (req, res) => {
         <div style="background:#f0fdf4; padding:10px; border-radius:6px; border:1px solid #bbf7d0;">
             <label style="font-size:10px; font-weight:bold; color:#166534">📅 REPORTE CSV</label>
             <div style="display:flex; gap:5px; margin:5px 0;">
-                <input type="date" id="dateStart" style="font-size:10px">
-                <input type="date" id="dateEnd" style="font-size:10px">
+                <input type="date" id="dateStart">
+                <input type="date" id="dateEnd">
             </div>
-            <button class="btn btn-green" style="margin-top:5px; background:#16a34a; color:white" onclick="downloadFunnel()">Descargar</button>
+            <button class="btn btn-green" onclick="downloadFunnel()">Descargar</button>
         </div>
         <button class="btn btn-outline" style="margin-top:10px" onclick="location.reload()">🔄 Recargar</button>
     </div>
@@ -155,7 +176,7 @@ app.get('/monitor', (req, res) => {
     <div id="bulkStatusModal" class="modal">
         <div class="modal-content">
             <h3>Cambiar Estado Masivo</h3>
-            <p>Selecciona el nuevo estado para los clientes marcados:</p>
+            <p>Selecciona el nuevo estado:</p>
             <select id="bulkTagSelect">
                 <option value="NUEVO">NUEVO</option>
                 <option value="CAMPAÑA">💎 CAMPAÑA</option>
@@ -190,6 +211,8 @@ app.get('/monitor', (req, res) => {
         let selectedLeads = new Set(); 
 
         function toggleDateInput() { document.getElementById('dateIn').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
+        function openBulkStatusModal() { document.getElementById('bulkStatusModal').style.display = 'flex'; }
+        function openBulkMsgModal() { document.getElementById('bulkMsgModal').style.display = 'flex'; }
         
         async function refresh(){ 
             try { 
@@ -204,7 +227,7 @@ app.get('/monitor', (req, res) => {
             const list=document.getElementById('leadList'); 
             list.innerHTML='';
             
-            // Highlight Pestaña Activa
+            // Tabs activas
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('active', 'campana-active');
                 if(b.id === 'tab-'+curTab) {
@@ -222,16 +245,17 @@ app.get('/monitor', (req, res) => {
 
                     const isUnread = u.unread ? 'unread' : '';
                     const isChecked = selectedLeads.has(u.phone) ? 'checked' : '';
+                    const hasUnreadDot = u.unread ? '<span class="unread-dot"></span>' : '';
 
                     list.innerHTML += \`
                     <div class="lead-card \${curPhone===u.phone?'active':''} \${isUnread}">
-                        <input type="checkbox" \${isChecked} onclick="toggleSelect('\${u.phone}', event)">
-                        <div onclick="selectLead('\${u.phone}')" style="flex:1">
-                            <div style="display:flex; justify-content:space-between;">
-                                <b>\${icon}\${u.name}</b>
-                                <span class="unread-dot"></span>
+                        <input type="checkbox" class="lead-checkbox" \${isChecked} onclick="toggleSelect('\${u.phone}', event)">
+                        <div class="lead-info" onclick="selectLead('\${u.phone}')">
+                            <div class="lead-name-row">
+                                <span class="lead-name">\${icon}\${u.name}</span>
+                                \${hasUnreadDot}
                             </div>
-                            <span style="font-size:11px; color:#6b7280">\${u.phone}</span>
+                            <div class="lead-phone">\${u.phone}</div>
                         </div>
                     </div>\`;
                 }
@@ -255,10 +279,6 @@ app.get('/monitor', (req, res) => {
             else toolbar.classList.remove('visible');
         }
 
-        // FUNCIONES MASIVAS
-        function openBulkStatusModal() { document.getElementById('bulkStatusModal').style.display = 'flex'; }
-        function openBulkMsgModal() { document.getElementById('bulkMsgModal').style.display = 'flex'; }
-
         async function confirmBulkTag() {
             const newTag = document.getElementById('bulkTagSelect').value;
             const phones = Array.from(selectedLeads);
@@ -271,7 +291,7 @@ app.get('/monitor', (req, res) => {
             const msg = document.getElementById('bulkMsgInput').value;
             if(!msg) return;
             const phones = Array.from(selectedLeads);
-            alert("Enviando " + phones.length + " mensajes. Esto puede tardar...");
+            alert("Enviando " + phones.length + " mensajes...");
             for (let p of phones) await fetch('/api/manual', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,text:msg})});
             document.getElementById('bulkMsgModal').style.display='none';
             clearSelection(); refresh();
@@ -280,7 +300,6 @@ app.get('/monitor', (req, res) => {
         async function selectLead(p){ 
             curPhone=p; 
             document.getElementById('tagSelect').value = data.users[p].tag||'NUEVO';
-            // Marcar como leido
             await fetch('/api/read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
             if(data.users[p]) data.users[p].unread = false; 
             renderChat(); renderList(); 
