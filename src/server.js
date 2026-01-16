@@ -20,13 +20,14 @@ app.get('/monitor', (req, res) => {
             
             /* Sidebar y Tabs */
             .sidebar { width:350px; background:var(--bg-sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
-            .tabs-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; padding:10px; border-bottom:1px solid var(--border); background:#f9fafb; }
-            .tab-btn { padding:8px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:11px; font-weight:600; text-align:center; transition:all 0.1s; }
+            /* GRID DE 3 COLUMNAS PARA QUE QUEPAN LOS 9 ESTADOS */
+            .tabs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; padding:10px; border-bottom:1px solid var(--border); background:#f9fafb; }
+            .tab-btn { padding:8px 4px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; color:#6b7280; font-size:10px; font-weight:600; text-align:center; transition:all 0.1s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
             .tab-btn:hover { background:#f3f4f6; }
             .tab-btn.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.2); transform: translateY(-1px); }
             .tab-btn.campana-active { background:linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color:white; border:none; }
 
-            /* Lista de Leads (FIX VISUAL) */
+            /* Lista de Leads */
             .lead-list { flex:1; overflow-y:auto; overflow-x:hidden; }
             .lead-card { 
                 padding:12px 15px; 
@@ -41,23 +42,20 @@ app.get('/monitor', (req, res) => {
             .lead-card:hover { background:#f8fafc; }
             .lead-card.active { background:#eff6ff; border-left:4px solid var(--primary); }
             
-            /* Checkbox mejorado */
             .lead-checkbox { 
                 width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); 
                 margin: 0; flex-shrink: 0;
             }
             
-            /* Info del Lead */
             .lead-info { flex:1; overflow:hidden; }
             .lead-name-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
             .lead-name { font-weight:600; font-size:13px; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
             .lead-phone { font-size:11px; color:#6b7280; }
             
-            /* PUNTO ROJO NO LEIDO */
             .unread-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; flex-shrink:0; }
             .lead-card.unread .lead-name { color:#000; font-weight:800; }
 
-            /* Barra Masiva Flotante */
+            /* Barra Masiva */
             .bulk-toolbar {
                 position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
                 background: #111827; color: white; padding: 10px 20px; border-radius: 40px;
@@ -68,7 +66,7 @@ app.get('/monitor', (req, res) => {
             .bulk-btn { background: #374151; border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
             .bulk-btn:hover { background: #4b5563; }
 
-            /* Chat y Herramientas */
+            /* Layout Principal */
             .main { flex:1; display:flex; flex-direction:column; background:#e5e7eb; position:relative; min-width: 0; } 
             .tools { width:300px; background:var(--bg-sidebar); border-left:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:15px; flex-shrink:0; }
             .chat-body { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; background:#f0f2f5; }
@@ -77,7 +75,6 @@ app.get('/monitor', (req, res) => {
             .msg.bot { background:var(--bot-color); color:white; align-self:flex-end; }
             .msg-date { font-size:10px; opacity:0.7; margin-top:4px; display:block; text-align:right; }
             
-            /* Botones Generales */
             .btn { width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; transition: opacity 0.2s; }
             .btn-blue { background:var(--primary); color:white; }
             .btn-blue:hover { opacity: 0.9; }
@@ -85,11 +82,9 @@ app.get('/monitor', (req, res) => {
             .btn-purple { background:#7c3aed; color:white; margin-top:10px; }
             .btn-green { background:#16a34a; color:white; margin-top:5px; }
             
-            /* Notas */
             .note-card { background:#fffbeb; padding:10px; border-radius:6px; margin-bottom:10px; font-size:12px; border-left:3px solid #f59e0b; }
             .note-date { font-size:10px; color:#92400e; display:block; margin-bottom:4px; font-weight:bold; }
             
-            /* Modal */
             .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center; }
             .modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; }
             select, textarea, input[type="text"], input[type="date"] { width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; margin-top:5px; font-family:inherit; font-size:12px; }
@@ -98,11 +93,11 @@ app.get('/monitor', (req, res) => {
     <body>
     
     <div id="bulkToolbar" class="bulk-toolbar">
-        <span id="selectedCount" style="font-weight:bold; color:#60a5fa">0</span> seleccionados
+        <span id="selectedCount" style="font-weight:bold; color:#60a5fa">0</span> selec.
         <div style="height:20px; width:1px; background:#4b5563"></div>
-        <button class="bulk-btn" onclick="openBulkStatusModal()">🏷 Cambiar Estado</button>
-        <button class="bulk-btn" style="background:#15803d" onclick="openBulkMsgModal()">💬 Enviar Zara</button>
-        <button class="bulk-btn" style="color:#ef4444; background:transparent" onclick="clearSelection()">✖ Cancelar</button>
+        <button class="bulk-btn" onclick="openBulkStatusModal()">🏷 Estado</button>
+        <button class="bulk-btn" style="background:#15803d" onclick="openBulkMsgModal()">💬 Zara</button>
+        <button class="bulk-btn" style="color:#ef4444; background:transparent" onclick="clearSelection()">✖</button>
     </div>
 
     <div class="sidebar">
@@ -110,13 +105,14 @@ app.get('/monitor', (req, res) => {
         
         <div class="tabs-grid">
             <button id="tab-NUEVO" class="tab-btn" onclick="setTab('NUEVO')">NUEVO</button>
-            <button id="tab-CAMPAÑA" class="tab-btn" onclick="setTab('CAMPAÑA')">💎 CAMPAÑA</button>
-            <button id="tab-INTERESADO" class="tab-btn" onclick="setTab('INTERESADO')">INTERESADO</button>
+            <button id="tab-CAMPAÑA" class="tab-btn" onclick="setTab('CAMPAÑA')">💎 PROMO</button>
+            <button id="tab-INTERESADO" class="tab-btn" onclick="setTab('INTERESADO')">INTERES.</button>
             <button id="tab-HOT" class="tab-btn" onclick="setTab('HOT')">HOT 🔥</button>
             <button id="tab-AGENDADO" class="tab-btn" onclick="setTab('AGENDADO')">AGENDADO</button>
             <button id="tab-RECICLAJE" class="tab-btn" onclick="setTab('RECICLAJE')">RECICLAJE</button>
             <button id="tab-GESTIÓN FUTURA" class="tab-btn" onclick="setTab('GESTIÓN FUTURA')">FUTURO</button>
             <button id="tab-ABANDONADOS" class="tab-btn" onclick="setTab('ABANDONADOS')">ABANDON.</button>
+            <button id="tab-DESCARTADO" class="tab-btn" onclick="setTab('DESCARTADO')" style="color:#9ca3af">DESCART.</button>
         </div>
         
         <div class="lead-list" id="leadList"></div>
@@ -139,7 +135,7 @@ app.get('/monitor', (req, res) => {
             <label style="font-size:11px; font-weight:700; color:#6b7280;">ESTADO ACTUAL</label>
             <select id="tagSelect">
                 <option value="NUEVO">NUEVO</option>
-                <option value="CAMPAÑA">💎 CAMPAÑA</option>
+                <option value="CAMPAÑA">💎 CAMPAÑA (PROMO)</option>
                 <option value="INTERESADO">INTERESADO</option>
                 <option value="HOT">HOT 🔥</option>
                 <option value="AGENDADO">AGENDADO</option>
@@ -227,7 +223,6 @@ app.get('/monitor', (req, res) => {
             const list=document.getElementById('leadList'); 
             list.innerHTML='';
             
-            // Tabs activas
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('active', 'campana-active');
                 if(b.id === 'tab-'+curTab) {
