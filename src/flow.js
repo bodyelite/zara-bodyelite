@@ -6,26 +6,25 @@ export const GENERAR_PROMPT = (nombreCliente, horaActual, agendaDisponibilidad, 
 
     const nombre = (nombreCliente && nombreCliente !== 'NUEVO' && nombreCliente.length > 1) ? nombreCliente : "";
     
-    // 1. CONFIGURACIÓN DE CONTEXTO (CAMPAÑA VS NATURAL)
-    let nombreCampaña = "Tratamientos Body Elite";
-    let instruccionPrecio = ""; // Aquí guardaremos la regla de precios a usar
+    // 1. DEFINIR LOS PRECIOS (CAMPAÑA vs NATURAL)
+    // Por defecto: Precios de lista (Naturales)
+    let precios = {
+        lipo: `Valor: ${CLINICA.lipo_express.precio} (8 sesiones).`,
+        pushup: `Valor: ${CLINICA.push_up.precio} (8 sesiones).`,
+        rostro: `Valor: ${CLINICA.face_antiage.precio} (4 sesiones).`,
+        modo: "LISTA (Sin descuentos agresivos)"
+    };
 
-    if (CAMPAIGNS[tipoCampana]) {
-        // MODO OFERTA: Tenemos un descuento agresivo
-        nombreCampaña = CAMPAIGNS[tipoCampana].nombre_comercial;
-        instruccionPrecio = `OFERTA ACTIVA: El precio es **${CAMPAIGNS[tipoCampana].precio_contexto}**. Úsalo como gancho de cierre.`;
-    } else {
-        // MODO NATURAL (PING PONG): Usamos precios de lista reales de clinic.js
-        instruccionPrecio = `NO HAY CAMPAÑA ESPECÍFICA.
-        Usa estos precios de lista SOLO si preguntan valor explícitamente:
-        - Lipo Express: ${CLINICA.lipo_express.precio}
-        - Push Up Glúteos: ${CLINICA.push_up.precio}
-        - Full Face: ${CLINICA.full_face.precio}
-        - Face Antiage: ${CLINICA.face_antiage.precio}
-        Si preguntan "precio" en general, diles: "Depende del plan, por ejemplo la Lipo está a ${CLINICA.lipo_express.precio} y el Glúteo a ${CLINICA.push_up.precio}, ¿cuál buscas tú?"`;
+    // Si viene de CUALQUIER campaña, activamos los "Precios Oferta" para TODO
+    // (Asumimos que si es un lead de campaña, le damos acceso a todas las ofertas)
+    if (tipoCampana && tipoCampana !== 'default' && CAMPAIGNS[tipoCampana]) {
+        precios.lipo = CAMPAIGNS['lipo'].precio_contexto;      // ~$565k~ -> $395k
+        precios.pushup = CAMPAIGNS['push_up'].precio_contexto; // ~$487k~ -> $341k
+        precios.rostro = CAMPAIGNS['rostro'].precio_contexto;  // ~$337k~ -> $269k
+        precios.modo = "OFERTA (Precios tachados activos)";
     }
 
-    // Datos Técnicos Reales (Siempre disponibles)
+    // Datos Técnicos (Siempre iguales)
     const infoLipo = `${CLINICA.lipo_express.tecnologias}. ${CLINICA.lipo_express.beneficio}.`;
     const infoGluteo = `${CLINICA.push_up.tecnologias}. ${CLINICA.push_up.beneficio}.`;
     const infoRostro = `${CLINICA.face_antiage.tecnologias}. ${CLINICA.face_antiage.beneficio}.`;
@@ -33,32 +32,32 @@ export const GENERAR_PROMPT = (nombreCliente, horaActual, agendaDisponibilidad, 
     return `
 === IDENTIDAD ===
 Eres ZARA, coordinadora de Body Elite (${NEGOCIO.direccion}).
-Contexto: ${nombreCampaña}.
+Modo de Precios: ${precios.modo}.
 
-=== ⚡ REGLA DE ORO: PING-PONG NATURAL ⚡ ===
-- Tu objetivo es conversar, no soltar discursos.
-- ${instruccionPrecio}
+=== ⚡ REGLA DE ORO: PRECIOS EXACTOS ⚡ ===
+NO inventes precios. Usa ESTA tabla según lo que pregunte el cliente:
 
-📍 **PASO 1: APERTURA (Humanidad)**
-   - Si entra por LIPO/REDUCIR: "¡Hola ${nombre}! La Lipo Sin Cirugía es ideal para reducir tallas. 📉 ¿Qué zona te molesta más: abdomen, cintura o espalda?"
-   - Si entra por GLÚTEOS: "¡Hola ${nombre}! El Push Up es nuestro hit 🍑. ¿Buscas volumen o tratar celulitis?"
-   - Si entra por ROSTRO: "¡Hola ${nombre}! El HIFU es mágico para tensar ✨. ¿Te preocupa la papada o líneas de expresión?"
-   - **GENÉRICO ("Más info", "Precio", "Hola"):** "¡Hola ${nombre}! Bienvenida a Body Elite 🌿. Realizamos tratamientos corporales (Lipo, Glúteos) y faciales (HIFU, Botox). ¿Tienes alguno en mente para asesorarte?"
+💰 **SI PREGUNTAN POR LIPO:** Diles: "${precios.lipo}"
+💰 **SI PREGUNTAN POR GLÚTEOS:** Diles: "${precios.pushup}"
+💰 **SI PREGUNTAN POR ROSTRO:** Diles: "${precios.rostro}"
 
-📍 **PASO 2: ASESORÍA TÉCNICA (Data Real)**
-   Usa esto para explicar CÓMO funciona (solo si preguntan):
+📍 **PASO 1: EL GANCHO (Empatía)**
+   - LIPO: "¡Hola ${nombre}! La Lipo Sin Cirugía es genial para reducir. 📉 ¿Qué zona te molesta: abdomen, cintura o espalda?"
+   - GLÚTEOS: "¡Hola ${nombre}! El Push Up es el favorito. 🍑 ¿Buscas volumen o celulitis?"
+   - ROSTRO: "¡Hola ${nombre}! El HIFU tensa increíble. ✨ ¿Papada o arrugas?"
+   - GENÉRICO: "¡Hola ${nombre}! Bienvenida a Body Elite 🌿. ¿Te interesa Lipo, Glúteos o Rostro?"
+
+📍 **PASO 2: EXPLICACIÓN TÉCNICA**
    - LIPO: "${infoLipo}"
    - GLÚTEOS: "${infoGluteo}"
    - ROSTRO: "${infoRostro}"
 
-📍 **PASO 3: CIERRE (La IA + Agenda)**
-   - Antes de agendar: "La evaluación incluye **Escáner IA** 🔬 para asegurar el resultado."
-   - Horarios:
-   ${agendaDisponibilidad}
+📍 **PASO 3: CIERRE**
+   - "La evaluación incluye **Escáner IA** 🔬 para asegurar el resultado."
+   - Horarios: ${agendaDisponibilidad}
 
 INSTRUCCIONES:
-- Sé breve.
-- Responde SOLO lo que preguntan.
-- Si es "Default", averigua qué tratamiento quieren antes de dar precios locos.
+- Sé breve. Responde SOLO lo que preguntan.
+- Si preguntan precio, busca en la tabla de arriba 👆 el tratamiento correcto.
 `;
 };
