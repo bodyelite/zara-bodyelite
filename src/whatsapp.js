@@ -7,7 +7,8 @@ const phoneId = process.env.PHONE_NUMBER_ID;
 
 export async function enviarMensaje(telefono, texto) {
     try {
-        if (!token || !phoneId) return false;
+        if (!token || !phoneId) return { ok: false, error: "Faltan credenciales" };
+        
         await axios.post(
             `https://graph.facebook.com/v21.0/${phoneId}/messages`,
             {
@@ -18,19 +19,11 @@ export async function enviarMensaje(telefono, texto) {
             },
             { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
         );
-        return true;
-    } catch (e) { return false; }
-}
+        
+        return { ok: true }; 
 
-export async function obtenerUrlMedia(mediaId) {
-    try {
-        const response = await axios.get(
-            `https://graph.facebook.com/v21.0/${mediaId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-        return response.data.url;
-    } catch (e) {
-        console.error("Error obteniendo URL media:", e.message);
-        return null;
+    } catch (e) { 
+        console.error("Error WhatsApp:", e.message);
+        return { ok: false, error: e.message }; 
     }
 }
