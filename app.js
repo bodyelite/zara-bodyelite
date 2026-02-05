@@ -17,12 +17,48 @@ try {
         const data = JSON.parse(fs.readFileSync(FILE, 'utf8')); 
         sesiones = data.sesiones || {}; 
         botStatus = data.botStatus || {}; 
+        Object.keys(sesiones).forEach(p => {
+            if (!sesiones[p].lastInteraction) sesiones[p].lastInteraction = Date.now();
+        });
     }
 } catch (e) { console.error("Error DB:", e); }
 
 function guardar() { fs.writeFileSync(FILE, JSON.stringify({ sesiones, botStatus })); }
 
 async function notificarStaff(texto) { for (const n of STAFF_NUMBERS) { try { await enviarMensaje(n, texto); } catch(e){} } }
+
+function recalcularEstado(p) {
+    const u = sesiones[p];
+    if (!u) return;
+    
+    // Si ya es AGENDADO, no lo movemos automáticamente
+    if (u.tag === 'AGENDADO') return; 
+
+    // Si tiene tarea pendiente, es GESTIÓN
+    const tieneTarea = u.notes && u.notes.some(n => n.status === 'pending');
+    if (tieneTarea) { u.tag = 'GESTIÓN'; return; }
+
+    const now = Date.now();
+    const hoursSince = (now - (u.lastInteraction || now)) / 36e5;
+    const history = u.history || [];
+    const userMsgs = history.filter(m => m.role === 'user').length;
+    const lastMsg = history.length > 0 ? history[history.length - 1] : null;
+
+    // LÓGICA CORREGIDA:
+    // Solo marcamos ABANDONADOS si han pasado 48 horas (no 24) Y no es un cliente NUEVO reciente.
+    // Esto evita que al meter una nota, salte de inmediato a abandonados.
+    if (lastMsg && lastMsg.role !== 'user' && hoursSince > 48 && u.tag !== 'NUEVO') { 
+        u.tag = 'ABANDONADOS'; 
+        return; 
+    }
+
+    const text = history.map(m => m.content.toLowerCase()).join(' ');
+    if (text.includes('precio') || text.includes('agendar')) { u.tag = 'HOT'; return; }
+    if (userMsgs > 2) { u.tag = 'INTERESADO'; return; }
+    
+    // Si no tiene tag, calculamos base
+    if (!u.tag) u.tag = (u.origin === 'push') ? 'PUSH' : 'NUEVO';
+}
 
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
@@ -34,6 +70,8 @@ export async function enviarMensajeManual(p, t) {
     const r = await enviarMensaje(p, t); 
     if(r.ok && sesiones[p]){ 
         sesiones[p].history.push({role:'assistant', content:t, timestamp:Date.now(), source:'manual'}); 
+        sesiones[p].lastInteraction=Date.now(); // Actualiza interacción
+        recalcularEstado(p); 
         guardar(); 
     } 
     return r.ok; 
@@ -43,7 +81,30 @@ export function agregarNota(p, t, s, d) {
     if(!sesiones[p]) return false; 
     if(!sesiones[p].notes) sesiones[p].notes=[]; 
     sesiones[p].notes.push({date:Date.now(), text:t, isScheduled:!!s, targetDate:d||"", status:s?'pending':'note'}); 
-    guardar(); return true; 
+    
+    // CLAVE: Al agregar nota, "revivimos" al cliente para que no se vaya a abandonados
+    sesiones[p].lastInteraction = Date.now();
+    
+    recalcularEstado(p); 
+    guardar(); 
+    return true; 
+}
+
+export function eliminarNota(p, i) { 
+    if(sesiones[p]?.notes?.[i]) { sesiones[p].notes.splice(i,1); recalcularEstado(p); guardar(); return true; } return false; 
+}
+
+export async function procesarPushBatch(l) { 
+    let c=0; 
+    for(const i of l){ 
+        try{ 
+            const p=i.telefono.replace(/\D/g,''); if(p.length<8)continue; 
+            if(!sesiones[p]) { sesiones[p]={name:i.nombre, history:[], phone:p, tag:"PUSH", origin:"push", lastInteraction:Date.now(), unread:false, notes:[]}; } 
+            else { sesiones[p].tag='PUSH'; sesiones[p].origin='push'; sesiones[p].lastInteraction=Date.now(); }
+            const r=await enviarMensaje(p,i.mensaje); 
+            if(r.ok){ sesiones[p].history.push({role:'assistant', content:i.mensaje, timestamp:Date.now(), source:'push'}); c++; } 
+        }catch(e){} 
+    } guardar(); return c; 
 }
 
 export async function procesarEvento(e) { 
@@ -59,6 +120,7 @@ export async function procesarEvento(e) {
     } else { 
         sesiones[p].unread = true; 
         sesiones[p].lastInteraction=Date.now();
+        if (sesiones[p].tag === 'ABANDONADOS') sesiones[p].tag = 'INTERESADO'; // Revivir si habla
     } 
     
     let c=m.type==="text"?m.text.body:""; 
@@ -66,9 +128,10 @@ export async function procesarEvento(e) {
     guardar(); 
 
     if(botStatus[p]!==false) { 
-        // Pasamos las notas de la bitácora al pensar()
         const r=await pensar(sesiones[p].history, sesiones[p].name, sesiones[p].campaign, sesiones[p].tag, sesiones[p].notes); 
         const s=await enviarMensaje(p,r); 
         if(s.ok) { sesiones[p].history.push({role:"assistant", content:r, timestamp:Date.now(), source:'bot'}); guardar(); } 
     } 
 }
+
+export function forzarRecalculo() { let c=0; Object.keys(sesiones).forEach(p => { recalcularEstado(p); c++; }); guardar(); return c; }
