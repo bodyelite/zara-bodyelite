@@ -1,15 +1,13 @@
 import express from 'express';
 import cors from 'cors';
-// IMPORTAMOS SOLO LO QUE EXISTE EN APP.JS REALMENTE
 import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, agregarNota, eliminarNota, procesarEvento, forzarRecalculo, procesarPushBatch, marcarLeido } from './app.js';
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// MONITOR ZARA 10.4 (Compatible y Limpio)
 app.get('/monitor', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><title>ZARA 10.4</title>
+    res.send(`<!DOCTYPE html><html><head><title>ZARA 10.5</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta charset="UTF-8">
     <style>
@@ -35,7 +33,7 @@ app.get('/monitor', (req, res) => {
     </head><body><div class="d-flex w-100 h-100">
     <div class="sidebar">
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-            <span class="fw-bold text-primary">ZARA 10.4</span> 
+            <span class="fw-bold text-primary">ZARA 10.5</span> 
             <span id="connStatus" class="badge bg-success" style="font-size:9px">ONLINE</span>
         </div>
         <div class="p-2 border-bottom bg-white"><input id="search" class="form-control form-control-sm" placeholder="🔍 Buscar..." onkeyup="renderList()"></div>
@@ -94,9 +92,15 @@ app.get('/monitor', (req, res) => {
     </div>
     <script>
     let d={users:{}}; let cur=null; let tab='NUEVO';
+    
+    // FORMATEADOR DE FECHA CHILE
+    const fmt = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+    const fmtTime = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false });
+
     function toggleDate(){ document.getElementById('dateInput').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
     async function r(){ try{ const x=await fetch('/api/data'); d=await x.json(); renderList(); if(cur && d.users[cur]) renderChat(); }catch(e){} }
     setInterval(r,3000); r();
+    
     function renderList(){
         const l=document.getElementById('list'); l.innerHTML='';
         const s=document.getElementById('search').value.toLowerCase();
@@ -104,7 +108,7 @@ app.get('/monitor', (req, res) => {
             let show = (tab==='TODOS' || u.tag===tab || (tab==='NUEVO' && (!u.tag || u.tag==='NUEVO')));
             if(s) show = (u.name.toLowerCase().includes(s) || u.phone.includes(s));
             if(show){
-                const time = new Date(u.lastInteraction).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+                const time = fmtTime.format(new Date(u.lastInteraction)); // HORA CHILE
                 const badgeColor = u.tag==='HOT'?'bg-HOT':(u.tag==='PUSH'?'bg-PUSH':'bg-NUEVO');
                 const badge = u.tag ? \`<span class="badge-tag \${badgeColor}">\${u.tag}</span>\` : '';
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
@@ -115,26 +119,48 @@ app.get('/monitor', (req, res) => {
                     <div style="width:20px;text-align:right">\${dot}</div></div>\`;
             }
         });
+        
+        // ACTUALIZAR BOTON SI HAY USER SELECCIONADO
+        if(cur && d.users[cur]) {
+             const btn = document.getElementById('botToggle');
+             const isOn = d.botStatus[cur] !== false;
+             btn.className = \`btn btn-sm \${isOn?'btn-success':'btn-secondary'}\`;
+             btn.innerText = isOn ? 'BOT ON 🤖' : 'BOT OFF 🛑';
+        }
     }
+
     function selectUser(p){
         cur=p; fetch('/api/leido', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p})}); r();
         const u = d.users[p];
-        document.getElementById('chatHeader').innerHTML = \`<div><span class="fw-bold">\${u.name}</span> <span class="text-muted small">\${u.phone}</span></div><button onclick="toggleBot('\${p}')" class="btn btn-sm \${d.botStatus[p]!==false?'btn-success':'btn-secondary'}" style="font-size:10px">\${d.botStatus[p]!==false?'BOT ON':'BOT OFF'}</button>\`;
+        // Header se actualiza en renderList para reactividad
+        document.getElementById('chatHeader').innerHTML = \`<div><span class="fw-bold">\${u.name}</span> <span class="text-muted small">\${u.phone}</span></div><button id="botToggle" onclick="toggleBot('\${p}')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>\`;
         document.getElementById('tagSelector').value = u.tag || 'NUEVO';
         renderLog(u);
     }
+
     function renderChat(){
         const c=document.getElementById('chat'); const u = d.users[cur];
-        c.innerHTML=(u.history||[]).map(m=>\`<div class="msg \${m.role==='user'?'msg-user':'msg-bot'}">\${m.content}<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px">\${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>\`).join('');
+        c.innerHTML=(u.history||[]).map(m=>{
+            const dateStr = fmt.format(new Date(m.timestamp)); // FECHA Y HORA CHILE
+            return \`<div class="msg \${m.role==='user'?'msg-user':'msg-bot'}">\${m.content}<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px">\${dateStr}</div></div>\`;
+        }).join('');
     }
+
     function renderLog(u){
         const log = document.getElementById('log');
         if(!u.notes || u.notes.length===0) { log.innerHTML='<div class="text-center text-muted mt-3" style="font-size:10px">Sin notas</div>'; return; }
-        log.innerHTML = u.notes.map((n,i)=>\`<div style="padding:5px;border-bottom:1px solid #eee;font-size:11px;background:\${n.status==='executed'?'#dcfce7':'#fff'}"><div class="d-flex justify-content-between"><b>\${n.isScheduled?'⏰':'📝'} \${new Date(n.date).toLocaleDateString()}</b><span style="cursor:pointer;color:red" onclick="delNote('\${u.phone}',\${i})">×</span></div><div>\${n.text}</div>\${n.targetDate ? \`<div class="text-primary">📅 \${new Date(n.targetDate).toLocaleString()}</div>\` : ''}</div>\`).reverse().join('');
+        log.innerHTML = u.notes.map((n,i)=>\`<div style="padding:5px;border-bottom:1px solid #eee;font-size:11px;background:\${n.status==='executed'?'#dcfce7':'#fff'}"><div class="d-flex justify-content-between"><b>\${n.isScheduled?'⏰':'📝'} \${fmt.format(new Date(n.date))}</b><span style="cursor:pointer;color:red" onclick="delNote('\${u.phone}',\${i})">×</span></div><div>\${n.text}</div>\${n.targetDate ? \`<div class="text-primary">📅 \${fmt.format(new Date(n.targetDate))}</div>\` : ''}</div>\`).reverse().join('');
     }
+
     function setFiltro(t,e){tab=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));e.classList.add('active');renderList();}
     async function send(){const t=document.getElementById('txt').value; if(t){await fetch('/api/manual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,text:t})});document.getElementById('txt').value='';r();}}
-    async function toggleBot(p){await fetch('/api/bot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});r();}
+    async function toggleBot(p){
+        // Feedback visual inmediato
+        const btn = document.getElementById('botToggle');
+        btn.innerText = '...';
+        await fetch('/api/bot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
+        r();
+    }
     async function updateTag(){const t=document.getElementById('tagSelector').value; await fetch('/api/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,tag:t})});r();}
     async function recalc(){await fetch('/api/recalc');r();}
     async function addNote(){const t=document.getElementById('noteInput').value; const d=document.getElementById('dateInput').value; const c=document.getElementById('checkZara').checked; await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,text:t,isScheduled:c,targetDate:d})}); document.getElementById('noteInput').value=''; r();}
@@ -164,4 +190,4 @@ app.get('/webhook', (req, res) => { if (req.query['hub.verify_token'] === 'BODYE
 app.post('/webhook', async (req, res) => { try { await procesarEvento(req.body); res.sendStatus(200); } catch (e) { console.error(e); res.sendStatus(500); } });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`ZARA 10.4 VISUAL UP 🚀`));
+app.listen(PORT, () => console.log(`ZARA 10.5 VISUAL UP 🚀`));
