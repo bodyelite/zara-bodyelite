@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, agregarNota, eliminarNota, procesarEvento, forzarRecalculo, procesarPushBatch, marcarLeido } from './app.js';
+import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, agregarNota, eliminarNota, procesarEvento, forzarRecalculo, procesarPushBatch, marcarLeido, marcarComoNoLeido, eliminarCliente } from './app.js';
 
 const app = express();
 app.use(express.json());
@@ -29,12 +29,15 @@ app.get('/monitor', (req, res) => {
         .tabs-container{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;background:#f9fafb;border-bottom:1px solid #e5e7eb}
         .badge-tag { padding:2px 6px; border-radius:4px; font-size:9px; font-weight:bold; color:white; }
         .bg-HOT { background:#f59e0b; color:black; } .bg-NUEVO { background:#3b82f6; } .bg-PUSH { background:#db2777; }
+        /* Nuevos estilos para botones de acción */
+        .action-btn { border:none; background:none; padding:0 5px; cursor:pointer; font-size:14px; opacity:0.6; }
+        .action-btn:hover { opacity:1; transform:scale(1.1); }
     </style>
     </head><body><div class="d-flex w-100 h-100">
     <div class="sidebar">
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
             <span class="fw-bold text-primary">ZARA 10.5</span> 
-            <span id="connStatus" class="badge bg-success" style="font-size:9px">ONLINE</span>
+            <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️ Borrar Sel.</button>
         </div>
         <div class="p-2 border-bottom bg-white"><input id="search" class="form-control form-control-sm" placeholder="🔍 Buscar..." onkeyup="renderList()"></div>
         <div class="tabs-container">
@@ -113,10 +116,28 @@ app.get('/monitor', (req, res) => {
                 const badge = u.tag ? \`<span class="badge-tag \${badgeColor}">\${u.tag}</span>\` : '';
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
                 const active = cur===u.phone ? 'active' : '';
-                l.innerHTML += \`<div class="client-item \${active}" onclick="selectUser('\${u.phone}')">
-                    <div style="flex:1"><div class="d-flex justify-content-between align-items-center"><span class="fw-bold text-truncate" style="max-width:140px">\${u.name}</span><span style="font-size:10px;color:#9ca3af">\${time}</span></div>
-                    <div class="d-flex justify-content-between align-items-center mt-1"><span style="font-size:10px;color:#6b7280">\${u.phone}</span>\${badge}</div></div>
-                    <div style="width:20px;text-align:right">\${dot}</div></div>\`;
+                
+                // CAMBIO: Checkbox + Contenedor clickeable + Botones de acción
+                l.innerHTML += \`<div class="client-item \${active}">
+                    <input type="checkbox" class="cb m-0 me-2" data-p="\${u.phone}" onclick="event.stopPropagation()">
+                    
+                    <div style="flex:1; overflow:hidden;" onclick="selectUser('\${u.phone}')">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-truncate" style="max-width:120px">\${u.name}</span>
+                            <span style="font-size:10px;color:#9ca3af">\${time}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <span style="font-size:10px;color:#6b7280">\${u.phone}</span>
+                            \${badge}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center ms-2 gap-1">
+                         \${dot}
+                         <button class="action-btn text-primary" onclick="event.stopPropagation();markUnread('\${u.phone}')" title="Marcar No Leído">📩</button>
+                         <button class="action-btn text-danger" onclick="event.stopPropagation();delClient('\${u.phone}')" title="Eliminar">×</button>
+                    </div>
+                </div>\`;
             }
         });
         
@@ -166,6 +187,17 @@ app.get('/monitor', (req, res) => {
     async function addNote(){const t=document.getElementById('noteInput').value; const d=document.getElementById('dateInput').value; const c=document.getElementById('checkZara').checked; await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,text:t,isScheduled:c,targetDate:d})}); document.getElementById('noteInput').value=''; r();}
     async function delNote(p,i){if(confirm('Borrar?')) await fetch('/api/delete-note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,index:i})}); r();}
     async function processCsv(){const raw=document.getElementById('csvInput').value; if(!raw)return; await fetch('/api/push-batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw})}); alert('Enviando...'); document.getElementById('csvInput').value=''; r();}
+    
+    // --- NUEVAS FUNCIONES ---
+    async function markUnread(p){ await fetch('/api/unread',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); r(); }
+    async function delClient(p){ if(confirm('¿Eliminar cliente?')) await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); if(cur===p) cur=null; r(); }
+    async function delMasivo(){ 
+        const s = Array.from(document.querySelectorAll('.cb:checked')).map(c=>c.dataset.p);
+        if(s.length && confirm('¿Borrar '+s.length+' clientes?')) {
+            for(let p of s) await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
+            r();
+        }
+    }
     </script></body></html>`);
 });
 
@@ -185,6 +217,10 @@ app.post('/api/push-batch', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/leido', (req, res) => { marcarLeido(req.body.phone); res.json({ok:true}); });
+
+// ENDPOINTS NUEVOS
+app.post('/api/unread', (req, res) => { marcarComoNoLeido(req.body.phone); res.json({ok:true}); });
+app.post('/api/delete-client', (req, res) => { eliminarCliente(req.body.phone); res.json({ok:true}); });
 
 app.get('/webhook', (req, res) => { if (req.query['hub.verify_token'] === 'BODYELITE_SECRET_123') res.send(req.query['hub.challenge']); else res.sendStatus(403); });
 app.post('/webhook', async (req, res) => { try { await procesarEvento(req.body); res.sendStatus(200); } catch (e) { console.error(e); res.sendStatus(500); } });
