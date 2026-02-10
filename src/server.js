@@ -29,7 +29,6 @@ app.get('/monitor', (req, res) => {
         .tabs-container{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;background:#f9fafb;border-bottom:1px solid #e5e7eb}
         .badge-tag { padding:2px 6px; border-radius:4px; font-size:9px; font-weight:bold; color:white; }
         .bg-HOT { background:#f59e0b; color:black; } .bg-NUEVO { background:#3b82f6; } .bg-PUSH { background:#db2777; }
-        /* Nuevos estilos para botones de acción */
         .action-btn { border:none; background:none; padding:0 5px; cursor:pointer; font-size:14px; opacity:0.6; }
         .action-btn:hover { opacity:1; transform:scale(1.1); }
     </style>
@@ -105,6 +104,9 @@ app.get('/monitor', (req, res) => {
     setInterval(r,3000); r();
     
     function renderList(){
+        // 1. MEMORIZAR SELECCIONADOS ACTUALES
+        const checkedList = Array.from(document.querySelectorAll('.cb:checked')).map(c => c.dataset.p);
+
         const l=document.getElementById('list'); l.innerHTML='';
         const s=document.getElementById('search').value.toLowerCase();
         Object.values(d.users).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
@@ -117,9 +119,11 @@ app.get('/monitor', (req, res) => {
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
                 const active = cur===u.phone ? 'active' : '';
                 
-                // CAMBIO: Checkbox + Contenedor clickeable + Botones de acción
+                // 2. RECUPERAR ESTADO DEL CHECKBOX
+                const isChecked = checkedList.includes(u.phone) ? 'checked' : '';
+                
                 l.innerHTML += \`<div class="client-item \${active}">
-                    <input type="checkbox" class="cb m-0 me-2" data-p="\${u.phone}" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="cb m-0 me-2" data-p="\${u.phone}" onclick="event.stopPropagation()" \${isChecked}>
                     
                     <div style="flex:1; overflow:hidden;" onclick="selectUser('\${u.phone}')">
                         <div class="d-flex justify-content-between align-items-center">
@@ -141,7 +145,6 @@ app.get('/monitor', (req, res) => {
             }
         });
         
-        // ACTUALIZAR BOTON SI HAY USER SELECCIONADO
         if(cur && d.users[cur]) {
              const btn = document.getElementById('botToggle');
              const isOn = d.botStatus[cur] !== false;
@@ -153,7 +156,6 @@ app.get('/monitor', (req, res) => {
     function selectUser(p){
         cur=p; fetch('/api/leido', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p})}); r();
         const u = d.users[p];
-        // Header se actualiza en renderList para reactividad
         document.getElementById('chatHeader').innerHTML = \`<div><span class="fw-bold">\${u.name}</span> <span class="text-muted small">\${u.phone}</span></div><button id="botToggle" onclick="toggleBot('\${p}')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>\`;
         document.getElementById('tagSelector').value = u.tag || 'NUEVO';
         renderLog(u);
@@ -176,7 +178,6 @@ app.get('/monitor', (req, res) => {
     function setFiltro(t,e){tab=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));e.classList.add('active');renderList();}
     async function send(){const t=document.getElementById('txt').value; if(t){await fetch('/api/manual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,text:t})});document.getElementById('txt').value='';r();}}
     async function toggleBot(p){
-        // Feedback visual inmediato
         const btn = document.getElementById('botToggle');
         btn.innerText = '...';
         await fetch('/api/bot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
@@ -188,7 +189,7 @@ app.get('/monitor', (req, res) => {
     async function delNote(p,i){if(confirm('Borrar?')) await fetch('/api/delete-note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,index:i})}); r();}
     async function processCsv(){const raw=document.getElementById('csvInput').value; if(!raw)return; await fetch('/api/push-batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw})}); alert('Enviando...'); document.getElementById('csvInput').value=''; r();}
     
-    // --- NUEVAS FUNCIONES ---
+    // FUNCIONES DEL MONITOR
     async function markUnread(p){ await fetch('/api/unread',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); r(); }
     async function delClient(p){ if(confirm('¿Eliminar cliente?')) await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); if(cur===p) cur=null; r(); }
     async function delMasivo(){ 
