@@ -94,10 +94,8 @@ app.get('/monitor', (req, res) => {
     </div>
     <script>
     let d={users:{}}; let cur=null; let tab='NUEVO';
-    // AQUÍ ESTÁ EL CAMBIO CLAVE: Memoria persistente
     let selection = new Set(); 
     
-    // FORMATEADOR DE FECHA CHILE
     const fmt = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
     const fmtTime = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false });
 
@@ -106,50 +104,55 @@ app.get('/monitor', (req, res) => {
     setInterval(r,3000); r();
     
     function toggleSel(p, event) {
-        event.stopPropagation(); // Evitar que seleccione el chat
+        event.stopPropagation();
         if(selection.has(p)) {
             selection.delete(p);
         } else {
             selection.add(p);
         }
-        // No llamamos a renderList() aquí para evitar parpadeos, el checkbox nativo ya cambia visualmente
-        // y el próximo ciclo de renderizado mantendrá el estado gracias a 'selection'
     }
 
     function renderList(){
         const l=document.getElementById('list'); l.innerHTML='';
         const s=document.getElementById('search').value.toLowerCase();
-        Object.values(d.users).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
+        
+        // CORRECCIÓN CLAVE: Usamos 'Object.entries' para obtener el ID real (key) aunque el dato interno esté corrupto (undefined)
+        Object.entries(d.users).sort(([,a],[,b])=>b.lastInteraction-a.lastInteraction).forEach(([key, u])=>{
+            
+            // Usamos 'key' (el teléfono real) en lugar de u.phone si este último falla
+            const phone = u.phone || key;
+            
             let show = (tab==='TODOS' || u.tag===tab || (tab==='NUEVO' && (!u.tag || u.tag==='NUEVO')));
-            if(s) show = (u.name.toLowerCase().includes(s) || u.phone.includes(s));
+            if(s) show = (u.name.toLowerCase().includes(s) || phone.includes(s));
+            
             if(show){
                 const time = fmtTime.format(new Date(u.lastInteraction)); 
                 const badgeColor = u.tag==='HOT'?'bg-HOT':(u.tag==='PUSH'?'bg-PUSH':'bg-NUEVO');
                 const badge = u.tag ? \`<span class="badge-tag \${badgeColor}">\${u.tag}</span>\` : '';
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
-                const active = cur===u.phone ? 'active' : '';
+                const active = cur===phone ? 'active' : '';
                 
-                // VERIFICAR SI ESTÁ EN LA MEMORIA GLOBAL
-                const isChecked = selection.has(u.phone) ? 'checked' : '';
+                // Verificamos usando la llave sólida 'phone'
+                const isChecked = selection.has(phone) ? 'checked' : '';
                 
                 l.innerHTML += \`<div class="client-item \${active}">
-                    <input type="checkbox" class="cb m-0 me-2" onclick="toggleSel('\${u.phone}', event)" \${isChecked}>
+                    <input type="checkbox" class="cb m-0 me-2" onclick="toggleSel('\${phone}', event)" \${isChecked}>
                     
-                    <div style="flex:1; overflow:hidden;" onclick="selectUser('\${u.phone}')">
+                    <div style="flex:1; overflow:hidden;" onclick="selectUser('\${phone}')">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-bold text-truncate" style="max-width:120px">\${u.name}</span>
                             <span style="font-size:10px;color:#9ca3af">\${time}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-1">
-                            <span style="font-size:10px;color:#6b7280">\${u.phone}</span>
+                            <span style="font-size:10px;color:#6b7280">\${phone}</span>
                             \${badge}
                         </div>
                     </div>
                     
                     <div class="d-flex align-items-center ms-2 gap-1">
                          \${dot}
-                         <button class="action-btn text-primary" onclick="event.stopPropagation();markUnread('\${u.phone}')" title="Marcar No Leído">📩</button>
-                         <button class="action-btn text-danger" onclick="event.stopPropagation();delClient('\${u.phone}')" title="Eliminar">×</button>
+                         <button class="action-btn text-primary" onclick="event.stopPropagation();markUnread('\${phone}')" title="Marcar No Leído">📩</button>
+                         <button class="action-btn text-danger" onclick="event.stopPropagation();delClient('\${phone}')" title="Eliminar">×</button>
                     </div>
                 </div>\`;
             }
@@ -166,7 +169,9 @@ app.get('/monitor', (req, res) => {
     function selectUser(p){
         cur=p; fetch('/api/leido', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p})}); r();
         const u = d.users[p];
-        document.getElementById('chatHeader').innerHTML = \`<div><span class="fw-bold">\${u.name}</span> <span class="text-muted small">\${u.phone}</span></div><button id="botToggle" onclick="toggleBot('\${p}')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>\`;
+        // Header seguro
+        const phone = u.phone || p;
+        document.getElementById('chatHeader').innerHTML = \`<div><span class="fw-bold">\${u.name}</span> <span class="text-muted small">\${phone}</span></div><button id="botToggle" onclick="toggleBot('\${phone}')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>\`;
         document.getElementById('tagSelector').value = u.tag || 'NUEVO';
         renderLog(u);
     }
@@ -181,8 +186,9 @@ app.get('/monitor', (req, res) => {
 
     function renderLog(u){
         const log = document.getElementById('log');
+        const phone = u.phone || cur; 
         if(!u.notes || u.notes.length===0) { log.innerHTML='<div class="text-center text-muted mt-3" style="font-size:10px">Sin notas</div>'; return; }
-        log.innerHTML = u.notes.map((n,i)=>\`<div style="padding:5px;border-bottom:1px solid #eee;font-size:11px;background:\${n.status==='executed'?'#dcfce7':'#fff'}"><div class="d-flex justify-content-between"><b>\${n.isScheduled?'⏰':'📝'} \${fmt.format(new Date(n.date))}</b><span style="cursor:pointer;color:red" onclick="delNote('\${u.phone}',\${i})">×</span></div><div>\${n.text}</div>\${n.targetDate ? \`<div class="text-primary">📅 \${fmt.format(new Date(n.targetDate))}</div>\` : ''}</div>\`).reverse().join('');
+        log.innerHTML = u.notes.map((n,i)=>\`<div style="padding:5px;border-bottom:1px solid #eee;font-size:11px;background:\${n.status==='executed'?'#dcfce7':'#fff'}"><div class="d-flex justify-content-between"><b>\${n.isScheduled?'⏰':'📝'} \${fmt.format(new Date(n.date))}</b><span style="cursor:pointer;color:red" onclick="delNote('\${phone}',\${i})">×</span></div><div>\${n.text}</div>\${n.targetDate ? \`<div class="text-primary">📅 \${fmt.format(new Date(n.targetDate))}</div>\` : ''}</div>\`).reverse().join('');
     }
 
     function setFiltro(t,e){tab=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));e.classList.add('active');renderList();}
@@ -204,15 +210,15 @@ app.get('/monitor', (req, res) => {
         if(confirm('¿Eliminar cliente?')) {
             await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); 
             if(cur===p) cur=null; 
-            if(selection.has(p)) selection.delete(p); // Limpiar memoria si se borra
+            if(selection.has(p)) selection.delete(p); 
             r(); 
         }
     }
     async function delMasivo(){ 
-        const s = Array.from(selection); // USAR LA MEMORIA, NO EL DOM
+        const s = Array.from(selection);
         if(s.length && confirm('¿Borrar '+s.length+' clientes?')) {
             for(let p of s) await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
-            selection.clear(); // Limpiar selección
+            selection.clear();
             r();
         }
     }
