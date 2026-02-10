@@ -94,6 +94,8 @@ app.get('/monitor', (req, res) => {
     </div>
     <script>
     let d={users:{}}; let cur=null; let tab='NUEVO';
+    // AQUÍ ESTÁ EL CAMBIO CLAVE: Memoria persistente
+    let selection = new Set(); 
     
     // FORMATEADOR DE FECHA CHILE
     const fmt = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
@@ -103,27 +105,35 @@ app.get('/monitor', (req, res) => {
     async function r(){ try{ const x=await fetch('/api/data'); d=await x.json(); renderList(); if(cur && d.users[cur]) renderChat(); }catch(e){} }
     setInterval(r,3000); r();
     
-    function renderList(){
-        // 1. MEMORIZAR SELECCIONADOS ACTUALES
-        const checkedList = Array.from(document.querySelectorAll('.cb:checked')).map(c => c.dataset.p);
+    function toggleSel(p, event) {
+        event.stopPropagation(); // Evitar que seleccione el chat
+        if(selection.has(p)) {
+            selection.delete(p);
+        } else {
+            selection.add(p);
+        }
+        // No llamamos a renderList() aquí para evitar parpadeos, el checkbox nativo ya cambia visualmente
+        // y el próximo ciclo de renderizado mantendrá el estado gracias a 'selection'
+    }
 
+    function renderList(){
         const l=document.getElementById('list'); l.innerHTML='';
         const s=document.getElementById('search').value.toLowerCase();
         Object.values(d.users).sort((a,b)=>b.lastInteraction-a.lastInteraction).forEach(u=>{
             let show = (tab==='TODOS' || u.tag===tab || (tab==='NUEVO' && (!u.tag || u.tag==='NUEVO')));
             if(s) show = (u.name.toLowerCase().includes(s) || u.phone.includes(s));
             if(show){
-                const time = fmtTime.format(new Date(u.lastInteraction)); // HORA CHILE
+                const time = fmtTime.format(new Date(u.lastInteraction)); 
                 const badgeColor = u.tag==='HOT'?'bg-HOT':(u.tag==='PUSH'?'bg-PUSH':'bg-NUEVO');
                 const badge = u.tag ? \`<span class="badge-tag \${badgeColor}">\${u.tag}</span>\` : '';
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
                 const active = cur===u.phone ? 'active' : '';
                 
-                // 2. RECUPERAR ESTADO DEL CHECKBOX
-                const isChecked = checkedList.includes(u.phone) ? 'checked' : '';
+                // VERIFICAR SI ESTÁ EN LA MEMORIA GLOBAL
+                const isChecked = selection.has(u.phone) ? 'checked' : '';
                 
                 l.innerHTML += \`<div class="client-item \${active}">
-                    <input type="checkbox" class="cb m-0 me-2" data-p="\${u.phone}" onclick="event.stopPropagation()" \${isChecked}>
+                    <input type="checkbox" class="cb m-0 me-2" onclick="toggleSel('\${u.phone}', event)" \${isChecked}>
                     
                     <div style="flex:1; overflow:hidden;" onclick="selectUser('\${u.phone}')">
                         <div class="d-flex justify-content-between align-items-center">
@@ -164,7 +174,7 @@ app.get('/monitor', (req, res) => {
     function renderChat(){
         const c=document.getElementById('chat'); const u = d.users[cur];
         c.innerHTML=(u.history||[]).map(m=>{
-            const dateStr = fmt.format(new Date(m.timestamp)); // FECHA Y HORA CHILE
+            const dateStr = fmt.format(new Date(m.timestamp));
             return \`<div class="msg \${m.role==='user'?'msg-user':'msg-bot'}">\${m.content}<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px">\${dateStr}</div></div>\`;
         }).join('');
     }
@@ -189,13 +199,20 @@ app.get('/monitor', (req, res) => {
     async function delNote(p,i){if(confirm('Borrar?')) await fetch('/api/delete-note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,index:i})}); r();}
     async function processCsv(){const raw=document.getElementById('csvInput').value; if(!raw)return; await fetch('/api/push-batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw})}); alert('Enviando...'); document.getElementById('csvInput').value=''; r();}
     
-    // FUNCIONES DEL MONITOR
     async function markUnread(p){ await fetch('/api/unread',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); r(); }
-    async function delClient(p){ if(confirm('¿Eliminar cliente?')) await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); if(cur===p) cur=null; r(); }
+    async function delClient(p){ 
+        if(confirm('¿Eliminar cliente?')) {
+            await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); 
+            if(cur===p) cur=null; 
+            if(selection.has(p)) selection.delete(p); // Limpiar memoria si se borra
+            r(); 
+        }
+    }
     async function delMasivo(){ 
-        const s = Array.from(document.querySelectorAll('.cb:checked')).map(c=>c.dataset.p);
+        const s = Array.from(selection); // USAR LA MEMORIA, NO EL DOM
         if(s.length && confirm('¿Borrar '+s.length+' clientes?')) {
             for(let p of s) await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
+            selection.clear(); // Limpiar selección
             r();
         }
     }
@@ -218,8 +235,6 @@ app.post('/api/push-batch', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/leido', (req, res) => { marcarLeido(req.body.phone); res.json({ok:true}); });
-
-// ENDPOINTS NUEVOS
 app.post('/api/unread', (req, res) => { marcarComoNoLeido(req.body.phone); res.json({ok:true}); });
 app.post('/api/delete-client', (req, res) => { eliminarCliente(req.body.phone); res.json({ok:true}); });
 
