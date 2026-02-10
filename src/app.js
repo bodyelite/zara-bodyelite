@@ -53,9 +53,20 @@ function recalcularEstado(p) {
 // EXPORTS
 export function getSesiones() { return sesiones; }
 export function getBotStatus() { return botStatus; }
-export function toggleBot(p) { botStatus[p]=!botStatus[p]; guardar(); return botStatus[p]; }
+export function toggleBot(p) { 
+    if(botStatus[p] === undefined) botStatus[p] = true; // Asegurar estado inicial
+    botStatus[p]=!botStatus[p]; 
+    guardar(); 
+    return botStatus[p]; 
+}
 export function updateTagManual(p, t) { if(sesiones[p]){ sesiones[p].tag=t; guardar(); return true;} return false;}
 export function marcarLeido(p) { if(sesiones[p]) { sesiones[p].unread = false; guardar(); return true; } return false; }
+
+// --- NUEVAS FUNCIONES AGREGADAS PARA EL MONITOR ---
+export function marcarComoNoLeido(p) { if(sesiones[p]) { sesiones[p].unread = true; guardar(); return true; } return false; }
+export function eliminarCliente(p) { if(sesiones[p]) { delete sesiones[p]; guardar(); return true; } return false; }
+// ---------------------------------------------------
+
 export function forzarRecalculo() { let c=0; Object.keys(sesiones).forEach(p => { recalcularEstado(p); c++; }); guardar(); return c; }
 export async function enviarMensajeManual(p, t) { 
     const r = await enviarMensaje(p, t); 
