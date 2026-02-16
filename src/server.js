@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get('/monitor', (req, res) => {
-    res.send(`<!DOCTYPE html><html><head><title>ZARA 10.5</title>
+    res.send(\`<!DOCTYPE html><html><head><title>ZARA 10.5</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta charset="UTF-8">
     <style>
@@ -102,16 +102,13 @@ app.get('/monitor', (req, res) => {
     let selection = new Set(); 
     let lastGlobalTime = 0;
     
-    // --- SISTEMA DE AUDIO POTENCIADO ---
+    // --- SISTEMA DE AUDIO (BLINDADO) ---
     let audioCtx = null;
     let audioEnabled = false;
 
     function playBeep() {
         if (!audioCtx) return;
-        // 1. DESPERTAR AUDIO SI ESTÁ SUSPENDIDO (Esto evita que deje de sonar)
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
 
         try {
             const osc = audioCtx.createOscillator();
@@ -119,11 +116,9 @@ app.get('/monitor', (req, res) => {
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             
-            // 2. SONIDO MÁS FUERTE (Triangle Wave)
-            osc.type = 'triangle'; 
-            osc.frequency.value = 900; // Tono más agudo y claro
+            osc.type = 'triangle'; // Tono fuerte
+            osc.frequency.value = 900; 
             
-            // 3. VOLUMEN MÁS ALTO (0.5 es bastante fuerte, antes era 0.1)
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
             
@@ -134,20 +129,14 @@ app.get('/monitor', (req, res) => {
 
     function enableAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         playBeep();
         
         audioEnabled = true;
         const btn = document.getElementById('btnSound');
         btn.className = 'btn btn-xs btn-success fw-bold';
         btn.innerText = '🔊 ON';
-        // 4. EL BOTÓN YA NO DESAPARECE
     }
-    // --------------------------------------------------
     
     const fmt = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
     const fmtTime = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false });
@@ -163,14 +152,11 @@ app.get('/monitor', (req, res) => {
             Object.values(d.users).forEach(u => {
                 const history = u.history || [];
                 const lastMsg = history.length > 0 ? history[history.length - 1] : null;
-                
-                // DETECTAR MENSAJE USUARIO
                 if (lastMsg && lastMsg.role === 'user' && u.lastInteraction > maxT) {
                     maxT = u.lastInteraction;
                 }
             });
 
-            // Si hay mensaje nuevo Y audio activado
             if(audioEnabled && lastGlobalTime > 0 && maxT > lastGlobalTime) {
                 playBeep();
             }
@@ -184,11 +170,8 @@ app.get('/monitor', (req, res) => {
     
     function toggleSel(p, event) {
         event.stopPropagation();
-        if(selection.has(p)) {
-            selection.delete(p);
-        } else {
-            selection.add(p);
-        }
+        if(selection.has(p)) selection.delete(p);
+        else selection.add(p);
     }
 
     function renderList(){
@@ -196,48 +179,43 @@ app.get('/monitor', (req, res) => {
         const s=document.getElementById('search').value.toLowerCase();
         
         Object.entries(d.users).sort(([,a],[,b])=>b.lastInteraction-a.lastInteraction).forEach(([key, u])=>{
-            
             const phone = u.phone || key;
-            
             let show = (tab==='TODOS' || u.tag===tab || (tab==='NUEVO' && (!u.tag || u.tag==='NUEVO')));
             if(s) show = (u.name.toLowerCase().includes(s) || phone.includes(s));
             
             if(show){
                 const time = fmtTime.format(new Date(u.lastInteraction)); 
                 const badgeColor = u.tag==='HOT'?'bg-HOT':(u.tag==='PUSH'?'bg-PUSH':'bg-NUEVO');
-                const badge = u.tag ? `<span class="badge-tag ${badgeColor}">${u.tag}</span>` : '';
+                const badge = u.tag ? \`<span class="badge-tag \${badgeColor}">\${u.tag}</span>\` : '';
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
                 const active = cur===phone ? 'active' : '';
-                
                 const isChecked = selection.has(phone) ? 'checked' : '';
                 
-                l.innerHTML += `<div class="client-item ${active}">
-                    <input type="checkbox" class="cb m-0 me-2" onclick="toggleSel('${phone}', event)" ${isChecked}>
-                    
-                    <div style="flex:1; overflow:hidden;" onclick="selectUser('${phone}')">
+                l.innerHTML += \`<div class="client-item \${active}">
+                    <input type="checkbox" class="cb m-0 me-2" onclick="toggleSel('\${phone}', event)" \${isChecked}>
+                    <div style="flex:1; overflow:hidden;" onclick="selectUser('\${phone}')">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-truncate" style="max-width:120px">${u.name}</span>
-                            <span style="font-size:10px;color:#9ca3af">${time}</span>
+                            <span class="fw-bold text-truncate" style="max-width:120px">\${u.name}</span>
+                            <span style="font-size:10px;color:#9ca3af">\${time}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-1">
-                            <span style="font-size:10px;color:#6b7280">${phone}</span>
-                            ${badge}
+                            <span style="font-size:10px;color:#6b7280">\${phone}</span>
+                            \${badge}
                         </div>
                     </div>
-                    
                     <div class="d-flex align-items-center ms-2 gap-1">
-                         ${dot}
-                         <button class="action-btn text-primary" onclick="event.stopPropagation();markUnread('${phone}')" title="Marcar No Leído">📩</button>
-                         <button class="action-btn text-danger" onclick="event.stopPropagation();delClient('${phone}')" title="Eliminar">×</button>
+                         \${dot}
+                         <button class="action-btn text-primary" onclick="event.stopPropagation();markUnread('\${phone}')" title="Marcar No Leído">📩</button>
+                         <button class="action-btn text-danger" onclick="event.stopPropagation();delClient('\${phone}')" title="Eliminar">×</button>
                     </div>
-                </div>`;
+                </div>\`;
             }
         });
         
         if(cur && d.users[cur]) {
              const btn = document.getElementById('botToggle');
              const isOn = d.botStatus[cur] !== false;
-             btn.className = `btn btn-sm ${isOn?'btn-success':'btn-secondary'}`;
+             btn.className = \`btn btn-sm \${isOn?'btn-success':'btn-secondary'}\`;
              btn.innerText = isOn ? 'BOT ON 🤖' : 'BOT OFF 🛑';
         }
     }
@@ -246,7 +224,7 @@ app.get('/monitor', (req, res) => {
         cur=p; fetch('/api/leido', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p})}); r();
         const u = d.users[p];
         const phone = u.phone || p;
-        document.getElementById('chatHeader').innerHTML = `<div><span class="fw-bold">${u.name}</span> <span class="text-muted small">${phone}</span></div><button id="botToggle" onclick="toggleBot('${phone}')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>`;
+        document.getElementById('chatHeader').innerHTML = \`<div><span class="fw-bold">\${u.name}</span> <span class="text-muted small">\${phone}</span></div><button id="botToggle" onclick="toggleBot('\${phone}')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>\`;
         document.getElementById('tagSelector').value = u.tag || 'NUEVO';
         renderLog(u);
     }
@@ -255,7 +233,7 @@ app.get('/monitor', (req, res) => {
         const c=document.getElementById('chat'); const u = d.users[cur];
         c.innerHTML=(u.history||[]).map(m=>{
             const dateStr = fmt.format(new Date(m.timestamp));
-            return `<div class="msg ${m.role==='user'?'msg-user':'msg-bot'}">${m.content}<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px">${dateStr}</div></div>`;
+            return \`<div class="msg \${m.role==='user'?'msg-user':'msg-bot'}">\${m.content}<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px">\${dateStr}</div></div>\`;
         }).join('');
     }
 
@@ -263,7 +241,7 @@ app.get('/monitor', (req, res) => {
         const log = document.getElementById('log');
         const phone = u.phone || cur; 
         if(!u.notes || u.notes.length===0) { log.innerHTML='<div class="text-center text-muted mt-3" style="font-size:10px">Sin notas</div>'; return; }
-        log.innerHTML = u.notes.map((n,i)=>`<div style="padding:5px;border-bottom:1px solid #eee;font-size:11px;background:${n.status==='executed'?'#dcfce7':'#fff'}"><div class="d-flex justify-content-between"><b>${n.isScheduled?'⏰':'📝'} ${fmt.format(new Date(n.date))}</b><span style="cursor:pointer;color:red" onclick="delNote('${phone}',${i})">×</span></div><div>${n.text}</div>${n.targetDate ? `<div class="text-primary">📅 ${fmt.format(new Date(n.targetDate))}</div>` : ''}</div>`).reverse().join('');
+        log.innerHTML = u.notes.map((n,i)=>\`<div style="padding:5px;border-bottom:1px solid #eee;font-size:11px;background:\${n.status==='executed'?'#dcfce7':'#fff'}"><div class="d-flex justify-content-between"><b>\${n.isScheduled?'⏰':'📝'} \${fmt.format(new Date(n.date))}</b><span style="cursor:pointer;color:red" onclick="delNote('\${phone}',\${i})">×</span></div><div>\${n.text}</div>\${n.targetDate ? \`<div class="text-primary">📅 \${fmt.format(new Date(n.targetDate))}</div>\` : ''}</div>\`).reverse().join('');
     }
 
     function setFiltro(t,e){tab=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));e.classList.add('active');renderList();}
@@ -297,7 +275,7 @@ app.get('/monitor', (req, res) => {
             r();
         }
     }
-    </script></body></html>`);
+    </script></body></html>\`);
 });
 
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
