@@ -32,11 +32,18 @@ app.get('/monitor', (req, res) => {
         .action-btn { border:none; background:none; padding:0 5px; cursor:pointer; font-size:14px; opacity:0.6; }
         .action-btn:hover { opacity:1; transform:scale(1.1); }
     </style>
-    </head><body><div class="d-flex w-100 h-100">
+    </head><body>
+    
+    <audio id="notifSound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" preload="auto"></audio>
+
+    <div class="d-flex w-100 h-100">
     <div class="sidebar">
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
             <span class="fw-bold text-primary">ZARA 10.5</span> 
-            <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️ Borrar Sel.</button>
+            <div class="d-flex gap-1">
+                <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇 ACTIVAR SONIDO</button>
+                <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️ Borrar Sel.</button>
+            </div>
         </div>
         <div class="p-2 border-bottom bg-white"><input id="search" class="form-control form-control-sm" placeholder="🔍 Buscar..." onkeyup="renderList()"></div>
         <div class="tabs-container">
@@ -95,12 +102,57 @@ app.get('/monitor', (req, res) => {
     <script>
     let d={users:{}}; let cur=null; let tab='NUEVO';
     let selection = new Set(); 
+    let lastGlobalTime = 0;
+    let audioEnabled = false; // ESTADO DEL SONIDO
     
     const fmt = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
     const fmtTime = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false });
 
+    // FUNCIÓN PARA ACTIVAR EL AUDIO MANUALMENTE UNA VEZ
+    function enableAudio() {
+        const audio = document.getElementById('notifSound');
+        audio.play().then(() => {
+            audioEnabled = true;
+            const btn = document.getElementById('btnSound');
+            btn.className = 'btn btn-xs btn-success fw-bold';
+            btn.innerText = '🔊 ON';
+            setTimeout(() => btn.style.display = 'none', 2000); // Ocultar después de 2 seg
+        }).catch(e => alert("El navegador bloqueó el sonido. Intenta de nuevo."));
+    }
+
     function toggleDate(){ document.getElementById('dateInput').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
-    async function r(){ try{ const x=await fetch('/api/data'); d=await x.json(); renderList(); if(cur && d.users[cur]) renderChat(); }catch(e){} }
+    
+    async function r(){ 
+        try{ 
+            const x=await fetch('/api/data'); 
+            d=await x.json(); 
+            
+            // --- DETECTOR DE NUEVOS MENSAJES DE USUARIOS ---
+            let maxT = 0;
+            Object.values(d.users).forEach(u => {
+                // Solo nos interesa si el último mensaje fue del USUARIO (role: user)
+                const history = u.history || [];
+                const lastMsg = history.length > 0 ? history[history.length - 1] : null;
+                
+                if (lastMsg && lastMsg.role === 'user' && u.lastInteraction > maxT) {
+                    maxT = u.lastInteraction;
+                }
+            });
+
+            // Si hay un mensaje de usuario más nuevo que la última vez Y el audio está activado
+            if(audioEnabled && lastGlobalTime > 0 && maxT > lastGlobalTime) {
+                const audio = document.getElementById('notifSound');
+                audio.currentTime = 0; // Reiniciar sonido
+                audio.play().catch(e => console.error("Error audio fondo", e));
+            }
+            // Actualizamos el tiempo global (incluso si el audio está apagado, para no sonar todo de golpe al activar)
+            if (maxT > lastGlobalTime) lastGlobalTime = maxT;
+            // -----------------------------------------------
+
+            renderList(); 
+            if(cur && d.users[cur]) renderChat(); 
+        }catch(e){} 
+    }
     setInterval(r,3000); r();
     
     function toggleSel(p, event) {
@@ -116,10 +168,8 @@ app.get('/monitor', (req, res) => {
         const l=document.getElementById('list'); l.innerHTML='';
         const s=document.getElementById('search').value.toLowerCase();
         
-        // CORRECCIÓN CLAVE: Usamos 'Object.entries' para obtener el ID real (key) aunque el dato interno esté corrupto (undefined)
         Object.entries(d.users).sort(([,a],[,b])=>b.lastInteraction-a.lastInteraction).forEach(([key, u])=>{
             
-            // Usamos 'key' (el teléfono real) en lugar de u.phone si este último falla
             const phone = u.phone || key;
             
             let show = (tab==='TODOS' || u.tag===tab || (tab==='NUEVO' && (!u.tag || u.tag==='NUEVO')));
@@ -132,7 +182,6 @@ app.get('/monitor', (req, res) => {
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
                 const active = cur===phone ? 'active' : '';
                 
-                // Verificamos usando la llave sólida 'phone'
                 const isChecked = selection.has(phone) ? 'checked' : '';
                 
                 l.innerHTML += \`<div class="client-item \${active}">
@@ -169,7 +218,6 @@ app.get('/monitor', (req, res) => {
     function selectUser(p){
         cur=p; fetch('/api/leido', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p})}); r();
         const u = d.users[p];
-        // Header seguro
         const phone = u.phone || p;
         document.getElementById('chatHeader').innerHTML = \`<div><span class="fw-bold">\${u.name}</span> <span class="text-muted small">\${phone}</span></div><button id="botToggle" onclick="toggleBot('\${phone}')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>\`;
         document.getElementById('tagSelector').value = u.tag || 'NUEVO';
