@@ -34,8 +34,6 @@ app.get('/monitor', (req, res) => {
     </style>
     </head><body>
     
-    <audio id="notifSound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" preload="auto"></audio>
-
     <div class="d-flex w-100 h-100">
     <div class="sidebar">
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
@@ -103,22 +101,52 @@ app.get('/monitor', (req, res) => {
     let d={users:{}}; let cur=null; let tab='NUEVO';
     let selection = new Set(); 
     let lastGlobalTime = 0;
-    let audioEnabled = false; // ESTADO DEL SONIDO
+    
+    // --- SISTEMA DE AUDIO (Oscilador Web Audio API) ---
+    let audioCtx = null;
+    let audioEnabled = false;
+
+    function playBeep() {
+        if (!audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // Configuración del sonido (Tipo "Ping" suave)
+            osc.type = 'sine';
+            osc.frequency.value = 880; // Tono A5
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch(e) { console.error("Error audio", e); }
+    }
+
+    function enableAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Resumir contexto si está suspendido (Chrome policy)
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+        // Tocar un beep de prueba
+        playBeep();
+        
+        // Actualizar UI
+        audioEnabled = true;
+        const btn = document.getElementById('btnSound');
+        btn.className = 'btn btn-xs btn-success fw-bold';
+        btn.innerText = '🔊 ON';
+        setTimeout(() => btn.style.display = 'none', 2000);
+    }
+    // --------------------------------------------------
     
     const fmt = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
     const fmtTime = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false });
-
-    // FUNCIÓN PARA ACTIVAR EL AUDIO MANUALMENTE UNA VEZ
-    function enableAudio() {
-        const audio = document.getElementById('notifSound');
-        audio.play().then(() => {
-            audioEnabled = true;
-            const btn = document.getElementById('btnSound');
-            btn.className = 'btn btn-xs btn-success fw-bold';
-            btn.innerText = '🔊 ON';
-            setTimeout(() => btn.style.display = 'none', 2000); // Ocultar después de 2 seg
-        }).catch(e => alert("El navegador bloqueó el sonido. Intenta de nuevo."));
-    }
 
     function toggleDate(){ document.getElementById('dateInput').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
     
@@ -130,7 +158,6 @@ app.get('/monitor', (req, res) => {
             // --- DETECTOR DE NUEVOS MENSAJES DE USUARIOS ---
             let maxT = 0;
             Object.values(d.users).forEach(u => {
-                // Solo nos interesa si el último mensaje fue del USUARIO (role: user)
                 const history = u.history || [];
                 const lastMsg = history.length > 0 ? history[history.length - 1] : null;
                 
@@ -139,13 +166,10 @@ app.get('/monitor', (req, res) => {
                 }
             });
 
-            // Si hay un mensaje de usuario más nuevo que la última vez Y el audio está activado
+            // Si hay mensaje nuevo Y audio activado
             if(audioEnabled && lastGlobalTime > 0 && maxT > lastGlobalTime) {
-                const audio = document.getElementById('notifSound');
-                audio.currentTime = 0; // Reiniciar sonido
-                audio.play().catch(e => console.error("Error audio fondo", e));
+                playBeep();
             }
-            // Actualizamos el tiempo global (incluso si el audio está apagado, para no sonar todo de golpe al activar)
             if (maxT > lastGlobalTime) lastGlobalTime = maxT;
             // -----------------------------------------------
 
