@@ -22,16 +22,49 @@ export async function checkAvailability() {
         
         const response = await calendar.events.list({
             calendarId: CALENDAR_ID,
-            timeMin: now.plus({ hours: 2 }).toISO(),
+            timeMin: now.toISO(),
             timeMax: now.plus({ days: 10 }).endOf('day').toISO(),
             singleEvents: true,
             orderBy: 'startTime',
         });
 
         const events = response.data.items || [];
-        // Filtramos y mostramos solo los 3 primeros para no abrumar
-        const slots = events.slice(0, 3).map(e => DateTime.fromISO(e.start.dateTime).setZone('America/Santiago').toFormat('dd/MM HH:mm')).join(', ');
+        if (events.length === 0) return "La agenda está completamente libre.";
+
+        // Extraemos los eventos existentes y le decimos a Zara que están OCUPADOS
+        const ocupados = events
+            .filter(e => e.start.dateTime)
+            .slice(0, 10)
+            .map(e => DateTime.fromISO(e.start.dateTime).setZone('America/Santiago').toFormat('dd/MM HH:mm'))
+            .join(', ');
         
-        return slots ? `Disponibles: ${slots}` : "Agenda abierta";
-    } catch (e) { return "Agenda disponible."; }
+        return ocupados ? `Atención, estas horas ya están OCUPADAS: ${ocupados}. No las ofrezcas.` : "Agenda libre.";
+    } catch (e) { 
+        console.error("Error leyendo calendario:", e);
+        return "Agenda con disponibilidad, pero confirma antes de asegurar."; 
+    }
+}
+
+export async function agendarEvento(nombre, fechaInicioISO) {
+    try {
+        const auth = getAuthClient();
+        const calendar = google.calendar({ version: 'v3', auth });
+        
+        const inicio = DateTime.fromISO(fechaInicioISO).setZone('America/Santiago');
+        const fin = inicio.plus({ hours: 1 });
+
+        const response = await calendar.events.insert({
+            calendarId: CALENDAR_ID,
+            resource: {
+                summary: `[Reservo] - ${nombre}`,
+                description: "Cita agendada automáticamente por ZARA 7.0.",
+                start: { dateTime: inicio.toISO(), timeZone: 'America/Santiago' },
+                end: { dateTime: fin.toISO(), timeZone: 'America/Santiago' },
+            }
+        });
+        return response.data.htmlLink ? true : false;
+    } catch (e) {
+        console.error("Error escribiendo en calendario:", e);
+        return false;
+    }
 }
