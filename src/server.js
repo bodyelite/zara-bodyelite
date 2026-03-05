@@ -6,6 +6,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+
+const pathTool = require('path');
+app.use('/assets', express.static(pathTool.join(__dirname, 'public')));
+app.get('/auditoria', (req, res) => {
+    res.sendFile(pathTool.join(__dirname, 'public', 'auditoria.html'));
+});
+
 app.get('/monitor', (req, res) => {
     // Usamos una variable para construir el HTML y evitar conflictos de comillas
     let html = `<!DOCTYPE html><html><head><title>ZARA 10.5</title>
@@ -324,3 +331,4 @@ app.post('/webhook', async (req, res) => { try { await procesarEvento(req.body);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`ZARA 10.5 VISUAL UP 🚀`));
+// Revision Auditoria: 1772743730652
