@@ -18,15 +18,19 @@
         td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
         tr:hover { background: #f8fafc; }
         .fuga-badge { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #1d4ed8; }
+        #btn-procesar { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        #btn-procesar:disabled { background: #94a3b8; cursor: not-allowed; }
+        #loader { display: none; font-weight: bold; color: #2563eb; margin-left: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🛡️ Altar de Números: Auditoría Body Elite</h1>
-            <button onclick="procesar()">EJECUTAR ANÁLISIS QUIRÚRGICO</button>
+            <div>
+                <span id="loader">⚙️ Procesando Datos...</span>
+                <button id="btn-procesar" onclick="procesar()">EJECUTAR ANÁLISIS QUIRÚRGICO</button>
+            </div>
         </div>
 
         <div class="config-bar">
@@ -76,72 +80,79 @@
         async function procesar() {
             const fm = document.getElementById('fm').files[0];
             const fr = document.getElementById('fr').files[0];
+            const btn = document.getElementById('btn-procesar');
+            const loader = document.getElementById('loader');
+
             if(!fm || !fr) return alert('Subí los archivos.');
 
-            const dMeta = await leer(fm);
-            const dReservo = await leer(fr);
-            const resApi = await fetch('/api/data');
-            const dMonitor = await resApi.json();
+            // Bloqueamos para evitar clics dobles y mostramos feedback
+            btn.disabled = true;
+            loader.style.display = 'inline';
 
-            let ads = {};
+            try {
+                const dMeta = await leer(fm);
+                const dReservo = await leer(fr);
+                const resApi = await fetch('/api/data');
+                const dMonitor = await resApi.json();
 
-            // 1. Procesar Meta
-            dMeta.forEach(row => {
-                const name = row['Nombre del anuncio'] || row['Ad Name'] || 'Desconocido';
-                const gasto = parseFloat(row['Importe gastado (CLP)'] || row['Amount spent'] || 0);
-                if(!ads[name]) ads[name] = { gasto: 0, leads: 0, fugas: 0, asistidas: 0 };
-                ads[name].gasto += gasto;
-            });
+                let ads = {};
 
-            // 2. Procesar Monitor y Cruce
-            dMonitor.forEach(lead => {
-                const f = new Date(lead.lastMessageDate);
-                // Vinculación por frase de entrada o nombre de anuncio si existe
-                const adName = Object.keys(ads).find(n => n.includes(lead.adName) || n === lead.adName) || 'Otros';
-                if(!ads[adName]) ads[adName] = { gasto: 0, leads: 0, fugas: 0, asistidas: 0 };
-                
-                ads[adName].leads++;
-                
-                const num = lead.number.replace(/\D/g,'').slice(-8);
-                const cita = dReservo.find(c => String(c['Teléfono']).replace(/\D/g,'').includes(num));
-                
-                if(cita && (cita['Estado de la cita'] === 'Asiste' || cita['Estado de la cita'] === 'Realizado')) {
-                    ads[adName].asistidas++;
-                } else if(lead.status === 'HOT') {
-                    ads[adName].fugas++;
-                }
-            });
+                dMeta.forEach(row => {
+                    const name = row['Nombre del anuncio'] || row['Ad Name'] || 'Desconocido';
+                    const gasto = parseFloat(row['Importe gastado (CLP)'] || row['Amount spent'] || 0);
+                    if(!ads[name]) ads[name] = { gasto: 0, leads: 0, fugas: 0, asistidas: 0 };
+                    ads[name].gasto += gasto;
+                });
 
-            // 3. Renderizar Tabla
-            const cuerpo = document.getElementById('cuerpo-ads');
-            cuerpo.innerHTML = '';
-            let tGasto = 0, tLeads = 0, tAsist = 0;
+                dMonitor.forEach(lead => {
+                    const f = new Date(lead.lastMessageDate);
+                    const adName = Object.keys(ads).find(n => n.includes(lead.adName) || n === lead.adName) || 'Otros';
+                    if(!ads[adName]) ads[adName] = { gasto: 0, leads: 0, fugas: 0, asistidas: 0 };
+                    ads[adName].leads++;
+                    const num = lead.number.replace(/\D/g,'').slice(-8);
+                    const cita = dReservo.find(c => String(c['Teléfono']).replace(/\D/g,'').includes(num));
+                    if(cita && (cita['Estado de la cita'] === 'Asiste' || cita['Estado de la cita'] === 'Realizado')) {
+                        ads[adName].asistidas++;
+                    } else if(lead.status === 'HOT') {
+                        ads[adName].fugas++;
+                    }
+                });
 
-            Object.keys(ads).forEach(name => {
-                const a = ads[name];
-                const cac = a.asistidas > 0 ? (a.gasto / a.asistidas) : a.gasto;
-                tGasto += a.gasto; tLeads += a.leads; tAsist += a.asistidas;
+                const cuerpo = document.getElementById('cuerpo-ads');
+                cuerpo.innerHTML = '';
+                let tGasto = 0, tLeads = 0, tAsist = 0;
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${name}</b></td>
-                    <td>${a.gasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</td>
-                    <td>${a.leads}</td>
-                    <td><span class="${a.fugas > 0 ? 'fuga-badge' : ''}">${a.fugas}</span></td>
-                    <td>${a.asistidas}</td>
-                    <td style="font-weight:bold; color:${cac < 10000 ? '#16a34a' : '#dc2626'}">${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</td>
-                `;
-                cuerpo.appendChild(tr);
-            });
+                Object.keys(ads).forEach(name => {
+                    const a = ads[name];
+                    const cac = a.asistidas > 0 ? (a.gasto / a.asistidas) : a.gasto;
+                    tGasto += a.gasto; tLeads += a.leads; tAsist += a.asistidas;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><b>${name}</b></td>
+                        <td>${a.gasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</td>
+                        <td>${a.leads}</td>
+                        <td><span class="${a.fugas > 0 ? 'fuga-badge' : ''}">${a.fugas}</span></td>
+                        <td>${a.asistidas}</td>
+                        <td style="font-weight:bold; color:${cac < 10000 ? '#16a34a' : '#dc2626'}">${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</td>
+                    `;
+                    cuerpo.appendChild(tr);
+                });
 
-            document.getElementById('mGasto').innerText = tGasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
-            document.getElementById('mLeads').innerText = tLeads;
-            document.getElementById('mAsist').innerText = tAsist;
-            const cacTotal = tAsist > 0 ? (tGasto / tAsist) : tGasto;
-            document.getElementById('mCac').innerText = cacTotal.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
+                document.getElementById('mGasto').innerText = tGasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
+                document.getElementById('mLeads').innerText = tLeads;
+                document.getElementById('mAsist').innerText = tAsist;
+                const cacTotal = tAsist > 0 ? (tGasto / tAsist) : tGasto;
+                document.getElementById('mCac').innerText = cacTotal.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
 
-            document.getElementById('resumen').style.display = 'grid';
-            document.getElementById('analisis-anuncios').style.display = 'block';
+                document.getElementById('resumen').style.display = 'grid';
+                document.getElementById('analisis-anuncios').style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                alert('Fallo en el altar: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+            }
         }
     </script>
 </body>
