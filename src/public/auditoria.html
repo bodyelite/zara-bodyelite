@@ -5,22 +5,22 @@
     <title>Dashboard Estratégico Body Elite</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px; color: #0f172a; }
-        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
-        .config-bar { background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; border: 1px solid #e2e8f0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #f1f5f9; padding: 20px; color: #0f172a; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .config-bar { background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; border: 1px solid #e2e8f0; }
         .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
-        .card h3 { font-size: 14px; color: #64748b; margin: 0; text-transform: uppercase; }
-        .card p { font-size: 24px; font-weight: bold; margin: 10px 0 0; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; font-size: 13px; }
-        th { background: #1e293b; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-        tr:hover { background: #f8fafc; }
+        .card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card h3 { font-size: 13px; color: #64748b; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .card p { font-size: 26px; font-weight: 800; margin: 10px 0 0; }
+        table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; font-size: 13px; margin-top: 20px; }
+        th { background: #1e293b; color: white; padding: 15px; text-align: left; }
+        td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
         .fuga-badge { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        #btn-procesar { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        #btn-procesar { background: #2563eb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
         #btn-procesar:disabled { background: #94a3b8; cursor: not-allowed; }
-        #loader { display: none; font-weight: bold; color: #2563eb; margin-left: 10px; }
+        #loader { display: none; font-weight: bold; color: #2563eb; margin-right: 15px; }
     </style>
 </head>
 <body>
@@ -28,44 +28,41 @@
         <div class="header">
             <h1>🛡️ Altar de Números: Auditoría Body Elite</h1>
             <div>
-                <span id="loader">⚙️ Procesando Datos...</span>
-                <button id="btn-procesar" onclick="procesar()">EJECUTAR ANÁLISIS QUIRÚRGICO</button>
+                <span id="loader">⚙️ Procesando con Perfección Suiza...</span>
+                <button id="btn-procesar" onclick="procesar()">AUDITAR AHORA</button>
             </div>
         </div>
-
         <div class="config-bar">
             <div><label>Desde:</label><input type="date" id="fi" value="2026-03-01"></div>
             <div><label>Hasta:</label><input type="date" id="ff" value="2026-03-31"></div>
-            <div><label>Reporte Meta:</label><input type="file" id="fm"></div>
-            <div><label>Reporte Reservo:</label><input type="file" id="fr"></div>
+            <div><label>Meta (Excel):</label><input type="file" id="fm"></div>
+            <div><label>Reservo (Excel):</label><input type="file" id="fr"></div>
         </div>
-
         <div id="resumen" class="metric-grid" style="display:none;">
             <div class="card"><h3>Inversión</h3><p id="mGasto">$0</p></div>
-            <div class="card"><h3>Leads Totales</h3><p id="mLeads">0</p></div>
+            <div class="card"><h3>Leads Zara</h3><p id="mLeads">0</p></div>
             <div class="card"><h3>Asistidas</h3><p id="mAsist">0</p></div>
             <div class="card"><h3>CAC Real</h3><p id="mCac" style="color:#16a34a;">$0</p></div>
         </div>
-
         <div id="analisis-anuncios" style="display:none;">
-            <h2>Análisis de Rendimiento por Anuncio</h2>
+            <h2>Rendimiento por Pieza Creativa</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Nombre del Anuncio</th>
-                        <th>Gasto CLP</th>
-                        <th>Leads Zara</th>
-                        <th>Fugas (HOT s/Cita)</th>
-                        <th>Asistidas (Reservo)</th>
-                        <th>CAC por Anuncio</th>
+                        <th>Anuncio</th>
+                        <th>Gasto</th>
+                        <th>Leads</th>
+                        <th>Fugas (HOT)</th>
+                        <th>Logradas</th>
+                        <th>CAC Real</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpo-ads"></tbody>
             </table>
         </div>
     </div>
-
     <script>
+        const cleanNum = (n) => String(n).replace(/\D/g,'').slice(-8);
         async function leer(f) {
             return new Promise(r => {
                 const reader = new FileReader();
@@ -76,83 +73,58 @@
                 reader.readAsArrayBuffer(f);
             });
         }
-
         async function procesar() {
             const fm = document.getElementById('fm').files[0];
             const fr = document.getElementById('fr').files[0];
-            const btn = document.getElementById('btn-procesar');
-            const loader = document.getElementById('loader');
-
-            if(!fm || !fr) return alert('Subí los archivos.');
-
-            // Bloqueamos para evitar clics dobles y mostramos feedback
-            btn.disabled = true;
-            loader.style.display = 'inline';
-
+            const fi = new Date(document.getElementById('fi').value);
+            const ff = new Date(document.getElementById('ff').value);
+            if(!fm || !fr) return alert('Subí los reportes.');
+            document.getElementById('btn-procesar').disabled = true;
+            document.getElementById('loader').style.display = 'inline';
             try {
-                const dMeta = await leer(fm);
-                const dReservo = await leer(fr);
-                const resApi = await fetch('/api/data');
+                const [dMeta, dReservo, resApi] = await Promise.all([leer(fm), leer(fr), fetch('/api/data')]);
                 const dMonitor = await resApi.json();
-
                 let ads = {};
-
                 dMeta.forEach(row => {
                     const name = row['Nombre del anuncio'] || row['Ad Name'] || 'Desconocido';
-                    const gasto = parseFloat(row['Importe gastado (CLP)'] || row['Amount spent'] || 0);
+                    const v = row['Importe gastado (CLP)'] || row['Amount spent'] || 0;
                     if(!ads[name]) ads[name] = { gasto: 0, leads: 0, fugas: 0, asistidas: 0 };
-                    ads[name].gasto += gasto;
+                    ads[name].gasto += parseFloat(v.toString().replace(/[^0-9.]/g, '')) || 0;
                 });
-
                 dMonitor.forEach(lead => {
                     const f = new Date(lead.lastMessageDate);
-                    const adName = Object.keys(ads).find(n => n.includes(lead.adName) || n === lead.adName) || 'Otros';
-                    if(!ads[adName]) ads[adName] = { gasto: 0, leads: 0, fugas: 0, asistidas: 0 };
-                    ads[adName].leads++;
-                    const num = lead.number.replace(/\D/g,'').slice(-8);
-                    const cita = dReservo.find(c => String(c['Teléfono']).replace(/\D/g,'').includes(num));
+                    if(f < fi || f > ff) return;
+                    const ad = Object.keys(ads).find(n => n.includes(lead.adName) || n === lead.adName) || 'Otros';
+                    if(!ads[ad]) ads[ad] = { gasto:0, leads:0, fugas:0, asistidas:0 };
+                    ads[ad].leads++;
+                    const num = cleanNum(lead.number);
+                    const cita = dReservo.find(c => cleanNum(c['Teléfono']) === num);
                     if(cita && (cita['Estado de la cita'] === 'Asiste' || cita['Estado de la cita'] === 'Realizado')) {
-                        ads[adName].asistidas++;
+                        ads[ad].asistidas++;
                     } else if(lead.status === 'HOT') {
-                        ads[adName].fugas++;
+                        ads[ad].fugas++;
                     }
                 });
-
                 const cuerpo = document.getElementById('cuerpo-ads');
                 cuerpo.innerHTML = '';
-                let tGasto = 0, tLeads = 0, tAsist = 0;
-
-                Object.keys(ads).forEach(name => {
-                    const a = ads[name];
+                let tG, tL, tA; tG=tL=tA=0;
+                Object.keys(ads).forEach(n => {
+                    const a = ads[n]; if(a.gasto === 0 && a.leads === 0) return;
                     const cac = a.asistidas > 0 ? (a.gasto / a.asistidas) : a.gasto;
-                    tGasto += a.gasto; tLeads += a.leads; tAsist += a.asistidas;
+                    tG += a.gasto; tL += a.leads; tA += a.asistidas;
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><b>${name}</b></td>
-                        <td>${a.gasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</td>
-                        <td>${a.leads}</td>
-                        <td><span class="${a.fugas > 0 ? 'fuga-badge' : ''}">${a.fugas}</span></td>
-                        <td>${a.asistidas}</td>
-                        <td style="font-weight:bold; color:${cac < 10000 ? '#16a34a' : '#dc2626'}">${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</td>
-                    `;
+                    tr.innerHTML = `<td><b>${n}</b></td><td>${a.gasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td><td>${a.leads}</td><td><span class="${a.fugas>0?'fuga-badge':''}">${a.fugas}</span></td><td>${a.asistidas}</td><td style="font-weight:bold;color:${cac<10000?'#16a34a':'#dc2626'}">${cac.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td>`;
                     cuerpo.appendChild(tr);
                 });
-
-                document.getElementById('mGasto').innerText = tGasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
-                document.getElementById('mLeads').innerText = tLeads;
-                document.getElementById('mAsist').innerText = tAsist;
-                const cacTotal = tAsist > 0 ? (tGasto / tAsist) : tGasto;
-                document.getElementById('mCac').innerText = cacTotal.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
-
+                document.getElementById('mGasto').innerText = tG.toLocaleString('es-CL',{style:'currency',currency:'CLP'});
+                document.getElementById('mLeads').innerText = tL;
+                document.getElementById('mAsist').innerText = tA;
+                const cacT = tA > 0 ? (tG / tA) : tG;
+                document.getElementById('mCac').innerText = cacT.toLocaleString('es-CL',{style:'currency',currency:'CLP'});
                 document.getElementById('resumen').style.display = 'grid';
                 document.getElementById('analisis-anuncios').style.display = 'block';
-            } catch (err) {
-                console.error(err);
-                alert('Fallo en el altar: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                loader.style.display = 'none';
-            }
+            } catch (err) { alert('Fallo: ' + err.message); }
+            finally { document.getElementById('btn-procesar').disabled = false; document.getElementById('loader').style.display = 'none'; }
         }
     </script>
 </body>
