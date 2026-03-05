@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Auditoría Zara 7.0</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+.container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+h1 { color: #333; font-size: 24px; text-transform: uppercase; }
+input[type="file"] { margin: 10px 0; display: block; }
+button { background: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; margin-top: 15px; }
+button:hover { background: #218838; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #111; color: white; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Auditoría Meta Ads vs Reservo</h1>
+<label>1. Sube el CSV de Meta Ads:</label>
+<input type="file" id="fileMeta" accept=".csv">
+<label>2. Sube el Excel/CSV de Reservo:</label>
+<input type="file" id="fileReservo" accept=".csv">
+<button onclick="procesarArchivos()">Cruzar Datos y Calcular CAC Real</button>
+<div id="resultados"></div>
+</div>
+</body>
+</html>
