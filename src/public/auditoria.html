@@ -2,129 +2,154 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Estratégico Body Elite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría Estratégica Body Elite</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Inter', -apple-system, sans-serif; background: #f1f5f9; padding: 20px; color: #0f172a; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .config-bar { background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; border: 1px solid #e2e8f0; }
-        .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .card h3 { font-size: 13px; color: #64748b; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
-        .card p { font-size: 26px; font-weight: 800; margin: 10px 0 0; }
-        table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; font-size: 13px; margin-top: 20px; }
-        th { background: #1e293b; color: white; padding: 15px; text-align: left; }
-        td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
-        .fuga-badge { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        #btn-procesar { background: #2563eb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        #btn-procesar:disabled { background: #94a3b8; cursor: not-allowed; }
-        #loader { display: none; font-weight: bold; color: #2563eb; margin-right: 15px; }
+        :root { --primary: #2563eb; --success: #16a34a; --danger: #dc2626; --bg: #f8fafc; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; background: #f1f5f9; padding: 20px; border-radius: 12px; }
+        label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 16px; transition: 0.2s; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
+        .card h3 { font-size: 12px; color: #64748b; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .card p { font-size: 24px; font-weight: 800; margin: 10px 0 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 8px; overflow: hidden; font-size: 13px; }
+        th { background: #334155; color: white; padding: 15px; text-align: left; position: sticky; top: 0; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .hot { background: #fee2e2; color: #991b1b; }
+        .fuga { background: #fff7ed; border: 1px solid #fb923c; color: #9a3412; }
+        .loader { display: none; margin-top: 10px; font-weight: 600; color: var(--primary); }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🛡️ Altar de Números: Auditoría Body Elite</h1>
-            <div>
-                <span id="loader">⚙️ Procesando con Perfección Suiza...</span>
-                <button id="btn-procesar" onclick="procesar()">AUDITAR AHORA</button>
-            </div>
+            <div id="loader" class="loader">⚙️ Procesando Datos...</div>
         </div>
-        <div class="config-bar">
+
+        <div class="config-grid">
             <div><label>Desde:</label><input type="date" id="fi" value="2026-03-01"></div>
             <div><label>Hasta:</label><input type="date" id="ff" value="2026-03-31"></div>
-            <div><label>Meta (Excel):</label><input type="file" id="fm"></div>
-            <div><label>Reservo (Excel):</label><input type="file" id="fr"></div>
+            <div><label>Excel Meta Ads:</label><input type="file" id="fm" accept=".xls,.xlsx,.csv"></div>
+            <div><label>Excel Reservo:</label><input type="file" id="fr" accept=".xls,.xlsx,.csv"></div>
         </div>
-        <div id="resumen" class="metric-grid" style="display:none;">
-            <div class="card"><h3>Inversión</h3><p id="mGasto">$0</p></div>
-            <div class="card"><h3>Leads Zara</h3><p id="mLeads">0</p></div>
-            <div class="card"><h3>Asistidas</h3><p id="mAsist">0</p></div>
-            <div class="card"><h3>CAC Real</h3><p id="mCac" style="color:#16a34a;">$0</p></div>
-        </div>
-        <div id="analisis-anuncios" style="display:none;">
-            <h2>Rendimiento por Pieza Creativa</h2>
-            <table>
+
+        <button id="btn" onclick="analizar()">EJECUTAR AUDITORÍA QUIRÚRGICA</button>
+
+        <div id="dashboard" style="display:none; margin-top:40px;">
+            <div class="metrics">
+                <div class="card"><h3>Inversión</h3><p id="resGasto">$0</p></div>
+                <div class="card"><h3>Leads Monitor</h3><p id="resLeads">0</p></div>
+                <div class="card"><h3>Asistidas</h3><p id="resAsist">0</p></div>
+                <div class="card"><h3>CAC REAL</h3><p id="resCac" style="color:var(--success);">$0</p></div>
+            </div>
+
+            <table id="tabla">
                 <thead>
                     <tr>
-                        <th>Anuncio</th>
-                        <th>Gasto</th>
-                        <th>Leads</th>
-                        <th>Fugas (HOT)</th>
-                        <th>Logradas</th>
-                        <th>CAC Real</th>
+                        <th>Lead</th>
+                        <th>Estado</th>
+                        <th>Origen</th>
+                        <th>Bitácora / Notas</th>
+                        <th>Reservo</th>
+                        <th>Veredicto</th>
                     </tr>
                 </thead>
-                <tbody id="cuerpo-ads"></tbody>
+                <tbody id="cuerpo"></tbody>
             </table>
         </div>
     </div>
+
     <script>
-        const cleanNum = (n) => String(n).replace(/\D/g,'').slice(-8);
-        async function leer(f) {
-            return new Promise(r => {
+        const clean = (n) => String(n).replace(/\D/g,'').slice(-8);
+
+        async function read(file) {
+            return new Promise(resolve => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                    r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+                    resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
                 };
-                reader.readAsArrayBuffer(f);
+                reader.readAsArrayBuffer(file);
             });
         }
-        async function procesar() {
+
+        async function analizar() {
             const fm = document.getElementById('fm').files[0];
             const fr = document.getElementById('fr').files[0];
             const fi = new Date(document.getElementById('fi').value);
             const ff = new Date(document.getElementById('ff').value);
-            if(!fm || !fr) return alert('Subí los reportes.');
-            document.getElementById('btn-procesar').disabled = true;
-            document.getElementById('loader').style.display = 'inline';
+            const btn = document.getElementById('btn');
+            const load = document.getElementById('loader');
+
+            if(!fm || !fr) return alert('Subí los reportes, Juan Carlos.');
+
+            btn.disabled = true;
+            load.style.display = 'block';
+
             try {
-                const [dMeta, dReservo, resApi] = await Promise.all([leer(fm), leer(fr), fetch('/api/data')]);
-                const dMonitor = await resApi.json();
-                let ads = {};
+                const [dMeta, dReservo, resApi] = await Promise.all([
+                    read(fm), read(fr), fetch('/api/data').then(r => r.json())
+                ]);
+
+                let totalGasto = 0;
                 dMeta.forEach(row => {
-                    const name = row['Nombre del anuncio'] || row['Ad Name'] || 'Desconocido';
                     const v = row['Importe gastado (CLP)'] || row['Amount spent'] || 0;
-                    if(!ads[name]) ads[name] = { gasto: 0, leads: 0, fugas: 0, asistidas: 0 };
-                    ads[name].gasto += parseFloat(v.toString().replace(/[^0-9.]/g, '')) || 0;
+                    totalGasto += parseFloat(v.toString().replace(/[^0-9.]/g, '')) || 0;
                 });
-                dMonitor.forEach(lead => {
+
+                const cuerpo = document.getElementById('cuerpo');
+                cuerpo.innerHTML = '';
+                let asistidas = 0;
+                let leadsContados = 0;
+
+                resApi.forEach(lead => {
                     const f = new Date(lead.lastMessageDate);
                     if(f < fi || f > ff) return;
-                    const ad = Object.keys(ads).find(n => n.includes(lead.adName) || n === lead.adName) || 'Otros';
-                    if(!ads[ad]) ads[ad] = { gasto:0, leads:0, fugas:0, asistidas:0 };
-                    ads[ad].leads++;
-                    const num = cleanNum(lead.number);
-                    const cita = dReservo.find(c => cleanNum(c['Teléfono']) === num);
-                    if(cita && (cita['Estado de la cita'] === 'Asiste' || cita['Estado de la cita'] === 'Realizado')) {
-                        ads[ad].asistidas++;
-                    } else if(lead.status === 'HOT') {
-                        ads[ad].fugas++;
-                    }
-                });
-                const cuerpo = document.getElementById('cuerpo-ads');
-                cuerpo.innerHTML = '';
-                let tG, tL, tA; tG=tL=tA=0;
-                Object.keys(ads).forEach(n => {
-                    const a = ads[n]; if(a.gasto === 0 && a.leads === 0) return;
-                    const cac = a.asistidas > 0 ? (a.gasto / a.asistidas) : a.gasto;
-                    tG += a.gasto; tL += a.leads; tA += a.asistidas;
+                    leadsContados++;
+
+                    const num = clean(lead.number);
+                    const cita = dReservo.find(c => clean(c['Teléfono']) === num);
+                    const esAsist = cita && (cita['Estado de la cita'] === 'Asiste' || cita['Estado de la cita'] === 'Realizado');
+                    if(esAsist) asistidas++;
+
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td><b>${n}</b></td><td>${a.gasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td><td>${a.leads}</td><td><span class="${a.fugas>0?'fuga-badge':''}">${a.fugas}</span></td><td>${a.asistidas}</td><td style="font-weight:bold;color:${cac<10000?'#16a34a':'#dc2626'}">${cac.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td>`;
+                    const esFuga = !cita && lead.status === 'HOT';
+                    if(esFuga) tr.style.background = '#fff7ed';
+
+                    tr.innerHTML = `
+                        <td><b>${lead.name}</b><br><small>${lead.number}</small></td>
+                        <td><span class="badge ${lead.status.toLowerCase()}">${lead.status}</span></td>
+                        <td>${lead.adName || lead.firstMessage || 'Orgánico'}</td>
+                        <td><div style="max-width:300px; font-style:italic;">${lead.notes || 'Sin notas'}</div></td>
+                        <td>${cita ? '✅ ' + cita['Estado de la cita'] : '❌ No figura'}</td>
+                        <td style="font-weight:bold;">${esAsist ? 'LOGRADO' : (esFuga ? 'FUGA CALIENTE' : 'SEGUIMIENTO')}</td>
+                    `;
                     cuerpo.appendChild(tr);
                 });
-                document.getElementById('mGasto').innerText = tG.toLocaleString('es-CL',{style:'currency',currency:'CLP'});
-                document.getElementById('mLeads').innerText = tL;
-                document.getElementById('mAsist').innerText = tA;
-                const cacT = tA > 0 ? (tG / tA) : tG;
-                document.getElementById('mCac').innerText = cacT.toLocaleString('es-CL',{style:'currency',currency:'CLP'});
-                document.getElementById('resumen').style.display = 'grid';
-                document.getElementById('analisis-anuncios').style.display = 'block';
-            } catch (err) { alert('Fallo: ' + err.message); }
-            finally { document.getElementById('btn-procesar').disabled = false; document.getElementById('loader').style.display = 'none'; }
+
+                document.getElementById('resGasto').innerText = totalGasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'});
+                document.getElementById('resLeads').innerText = leadsContados;
+                document.getElementById('resAsist').innerText = asistidas;
+                const cac = asistidas > 0 ? (totalGasto / asistidas) : totalGasto;
+                document.getElementById('resCac').innerText = cac.toLocaleString('es-CL',{style:'currency',currency:'CLP'});
+
+                document.getElementById('dashboard').style.display = 'block';
+            } catch (e) {
+                alert('Error en el Altar: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                load.style.display = 'none';
+            }
         }
     </script>
 </body>
