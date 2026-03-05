@@ -1,3 +1,7 @@
+import pathTool from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = pathTool.dirname(__filename);
 import express from 'express';
 import cors from 'cors';
 import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, agregarNota, eliminarNota, procesarEvento, forzarRecalculo, procesarPushBatch, marcarLeido, marcarComoNoLeido, eliminarCliente } from './app.js';
@@ -7,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 
-import pathTool from 'path';
+
 app.use('/assets', express.static(pathTool.join(__dirname, 'public')));
 app.get('/auditoria', (req, res) => {
     res.sendFile(pathTool.join(__dirname, 'public', 'auditoria.html'));
