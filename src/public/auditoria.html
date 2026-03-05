@@ -3,67 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <title>Auditoría Zara 7.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 40px; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h1 { color: #1a1a1a; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .upload-section { margin: 25px 0; padding: 20px; border: 1px dashed #ccc; border-radius: 8px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
-        input[type="file"] { margin-bottom: 20px; width: 100%; }
-        button { background: #28a745; color: white; border: none; padding: 15px 30px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; font-size: 16px; transition: 0.3s; }
-        button:hover { background: #218838; }
-        #resultados { margin-top: 30px; }
-        .card { padding: 20px; border-radius: 10px; background: #f0fff4; border: 2px solid #28a745; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .upload { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
+        button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .res { margin-top: 20px; padding: 20px; border-radius: 10px; background: #f0fff4; border: 2px solid #28a745; display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Auditoría de Conversión Real</h1>
-        <div class="upload-section">
-            <label>1. Reporte de Meta Ads (CSV):</label>
-            <input type="file" id="fileMeta" accept=".csv">
-            <label>2. Reporte de Reservo (CSV):</label>
-            <input type="file" id="fileReservo" accept=".csv">
+        <h1>📊 Auditoría Body Elite (Excel/CSV)</h1>
+        <div class="upload">
+            <label>1. Meta Ads (Inversión):</label>
+            <input type="file" id="fMeta">
         </div>
-        <button onclick="procesar()">Cruzar Datos y Calcular CAC</button>
-        <div id="resultados"></div>
+        <div class="upload">
+            <label>2. Reservo (Citas):</label>
+            <input type="file" id="fReservo">
+        </div>
+        <div class="upload">
+            <label>Desde:</label> <input type="date" id="fechaInicio" value="2026-03-01">
+            <label>Hasta:</label> <input type="date" id="fechaFin" value="2026-03-31">
+        </div>
+        <button onclick="procesar()">Calcular CAC Quirúrgico</button>
+        <div id="resultados" class="res"></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
     <script>
+        async function leerExcel(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    resolve(XLSX.utils.sheet_to_json(sheet));
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
         async function procesar() {
-            const fMeta = document.getElementById('fileMeta').files[0];
-            const fReservo = document.getElementById('fileReservo').files[0];
-            const resDiv = document.getElementById('resultados');
+            const fm = document.getElementById('fMeta').files[0];
+            const fr = document.getElementById('fReservo').files[0];
+            const inicio = new Date(document.getElementById('fechaInicio').value);
+            const fin = new Date(document.getElementById('fechaFin').value);
 
-            if (!fMeta || !fReservo) { alert('Subí ambos archivos, Juan Carlos.'); return; }
-            resDiv.innerHTML = '<p>Analizando datos con precisión suiza... ⏳</p>';
+            if (!fm || !fr) return alert('Subí los archivos, boludo.');
 
-            const leer = (f) => new Promise(r => Papa.parse(f, {header:true, skipEmptyLines:true, complete:res => r(res.data)}));
-            
-            const dataMeta = await leer(fMeta);
-            const dataReservo = await leer(fReservo);
+            const dMeta = await leerExcel(fm);
+            const dReservo = await leerExcel(fr);
 
-            let gastoTotal = 0;
-            dataMeta.forEach(row => {
-                let valor = row['Importe gastado (CLP)'] || row['Amount spent'] || "0";
-                gastoTotal += parseFloat(valor.toString().replace(/[^0-9.]/g, '')) || 0;
+            let gasto = 0;
+            dMeta.forEach(r => {
+                let v = r['Importe gastado (CLP)'] || r['Amount spent'] || 0;
+                gasto += parseFloat(v.toString().replace(/[^0-9.]/g, '')) || 0;
             });
 
-            const efectivas = dataReservo.filter(c => 
-                c['Estado de la cita'] === 'Asiste' || c['Estado de la cita'] === 'Realizado'
-            ).length;
+            const efectivas = dReservo.filter(c => {
+                const fCita = new Date(c['Fecha']);
+                const asiste = c['Estado de la cita'] === 'Asiste' || c['Estado de la cita'] === 'Realizado';
+                return asiste && fCita >= inicio && fCita <= fin;
+            }).length;
 
-            const cac = efectivas > 0 ? (gastoTotal / efectivas) : gastoTotal;
-
-            resDiv.innerHTML = `
-                <div class="card">
-                    <h2 style="margin-top:0; color:#155724;">Veredicto Final</h2>
-                    <p>💰 <b>Inversión Meta:</b> ${gastoTotal.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</p>
-                    <p>✅ <b>Citas Realizadas/Asiste:</b> ${efectivas}</p>
-                    <hr style="border:0; border-top:1px solid #c3e6cb">
-                    <h1 style="margin-bottom:0; color:#28a745;">CAC Real: ${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</h1>
-                </div>
+            const cac = efectivas > 0 ? (gasto / efectivas) : gasto;
+            const res = document.getElementById('resultados');
+            res.style.display = 'block';
+            res.innerHTML = `
+                <h2>Veredicto</h2>
+                <p>💰 Inversión: ${gasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</p>
+                <p>✅ Citas (${efectivas}): Personas que pisaron la clínica en el rango.</p>
+                <hr>
+                <h1 style="color:#28a745">CAC REAL: ${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</h1>
             `;
         }
     </script>
