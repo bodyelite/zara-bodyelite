@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cors());
 
 
-const pathTool = require('path');
+import pathTool from 'path';
 app.use('/assets', express.static(pathTool.join(__dirname, 'public')));
 app.get('/auditoria', (req, res) => {
     res.sendFile(pathTool.join(__dirname, 'public', 'auditoria.html'));
