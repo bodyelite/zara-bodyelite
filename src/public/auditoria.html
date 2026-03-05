@@ -1,78 +1,71 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Auditoría Zara 7.0</title>
-<style>
-body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
-.container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-h1 { color: #333; font-size: 24px; text-transform: uppercase; }
-input[type="file"] { margin: 10px 0; display: block; }
-button { background: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; margin-top: 15px; }
-button:hover { background: #218838; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-th { background-color: #111; color: white; }
-</style>
+    <meta charset="UTF-8">
+    <title>Auditoría Zara 7.0</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 40px; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { color: #1a1a1a; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .upload-section { margin: 25px 0; padding: 20px; border: 1px dashed #ccc; border-radius: 8px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
+        input[type="file"] { margin-bottom: 20px; width: 100%; }
+        button { background: #28a745; color: white; border: none; padding: 15px 30px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #218838; }
+        #resultados { margin-top: 30px; }
+        .card { padding: 20px; border-radius: 10px; background: #f0fff4; border: 2px solid #28a745; }
+    </style>
 </head>
 <body>
-<div class="container">
-<h1>Auditoría Meta Ads vs Reservo</h1>
-<label>1. Sube el CSV de Meta Ads:</label>
-<input type="file" id="fileMeta" accept=".csv">
-<label>2. Sube el Excel/CSV de Reservo:</label>
-<input type="file" id="fileReservo" accept=".csv">
-<button onclick="procesarArchivos()">Cruzar Datos y Calcular CAC Real</button>
-<div id="resultados"></div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
-<script>
-async function procesarArchivos() {
-    const fileMeta = document.getElementById('fileMeta').files[0];
-    const fileReservo = document.getElementById('fileReservo').files[0];
-    const resDiv = document.getElementById('resultados');
-
-    if (!fileMeta || !fileReservo) {
-        alert('Subí ambos archivos, no seas boludo.');
-        return;
-    }
-
-    resDiv.innerHTML = '<p>Procesando con perfección suiza... ⏳</p>';
-
-    const leerCSV = (file) => {
-        return new Promise((resolve) => {
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: (results) => resolve(results.data)
-            });
-        });
-    };
-
-    const dataMeta = await leerCSV(fileMeta);
-    const dataReservo = await leerCSV(fileReservo);
-
-    // Lógica de cruce simplificada (por nombre o teléfono si coinciden las columnas)
-    let gastoTotal = 0;
-    dataMeta.forEach(row => {
-        const valor = parseFloat(row['Importe gastado (CLP)']) || parseFloat(row['Amount spent']) || 0;
-        gastoTotal += valor;
-    });
-
-    const citasConfirmadas = dataReservo.length;
-    const cac = citasConfirmadas > 0 ? (gastoTotal / citasConfirmadas) : 0;
-
-    resDiv.innerHTML = `
-        <div style="margin-top:20px; padding:15px; border:2px solid #28a745; border-radius:8px;">
-            <h3 style="margin-top:0">📊 Resultado de la Auditoría</h3>
-            <p><b>Inversión Total Meta:</b> ${gastoTotal.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</p>
-            <p><b>Citas en Reservo:</b> ${citasConfirmadas}</p>
-            <hr>
-            <h2 style="color:#28a745">CAC Real: ${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})} por cita</h2>
+    <div class="container">
+        <h1>📊 Auditoría de Conversión Real</h1>
+        <div class="upload-section">
+            <label>1. Reporte de Meta Ads (CSV):</label>
+            <input type="file" id="fileMeta" accept=".csv">
+            <label>2. Reporte de Reservo (CSV):</label>
+            <input type="file" id="fileReservo" accept=".csv">
         </div>
-    `;
-}
-</script>
+        <button onclick="procesar()">Cruzar Datos y Calcular CAC</button>
+        <div id="resultados"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
+    <script>
+        async function procesar() {
+            const fMeta = document.getElementById('fileMeta').files[0];
+            const fReservo = document.getElementById('fileReservo').files[0];
+            const resDiv = document.getElementById('resultados');
+
+            if (!fMeta || !fReservo) { alert('Subí ambos archivos, Juan Carlos.'); return; }
+            resDiv.innerHTML = '<p>Analizando datos con precisión suiza... ⏳</p>';
+
+            const leer = (f) => new Promise(r => Papa.parse(f, {header:true, skipEmptyLines:true, complete:res => r(res.data)}));
+            
+            const dataMeta = await leer(fMeta);
+            const dataReservo = await leer(fReservo);
+
+            let gastoTotal = 0;
+            dataMeta.forEach(row => {
+                let valor = row['Importe gastado (CLP)'] || row['Amount spent'] || "0";
+                gastoTotal += parseFloat(valor.toString().replace(/[^0-9.]/g, '')) || 0;
+            });
+
+            const efectivas = dataReservo.filter(c => 
+                c['Estado de la cita'] === 'Asiste' || c['Estado de la cita'] === 'Realizado'
+            ).length;
+
+            const cac = efectivas > 0 ? (gastoTotal / efectivas) : gastoTotal;
+
+            resDiv.innerHTML = `
+                <div class="card">
+                    <h2 style="margin-top:0; color:#155724;">Veredicto Final</h2>
+                    <p>💰 <b>Inversión Meta:</b> ${gastoTotal.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</p>
+                    <p>✅ <b>Citas Realizadas/Asiste:</b> ${efectivas}</p>
+                    <hr style="border:0; border-top:1px solid #c3e6cb">
+                    <h1 style="margin-bottom:0; color:#28a745;">CAC Real: ${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</h1>
+                </div>
+            `;
+        }
+    </script>
 </body>
 </html>
