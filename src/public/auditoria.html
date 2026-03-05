@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,69 +5,45 @@
     <title>Auditoría Estratégica Body Elite</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; padding: 30px; color: #1e293b; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; background: #f1f5f9; padding: 20px; border-radius: 12px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; }
-        button { background: #2563eb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.2s; }
-        button:hover { background: #1d4ed8; }
-        table { width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 13px; }
-        th { background: #334155; color: white; padding: 15px; text-align: left; position: sticky; top: 0; }
-        td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; padding: 20px; color: #1e293b; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; background: #f1f5f9; padding: 20px; border-radius: 12px; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        button { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 12px; }
+        th { background: #334155; color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         .hot { background: #fee2e2; color: #991b1b; }
-        .agendado { background: #dcfce7; color: #166534; }
-        .no-agendado { background: #fef9c3; color: #854d0e; }
-        .bitacora-text { font-size: 11px; color: #64748b; font-style: italic; max-width: 250px; }
+        .fuga { background: #fff7ed; border: 1px solid #fb923c; color: #9a3412; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🛡️ Auditoría de Conversión Blindada</h1>
-            <div id="status-servidor">Conectado al Monitor ✅</div>
-        </div>
-
+        <h1>🛡️ Auditoría de Conversión Estratégica</h1>
         <div class="config-grid">
-            <div>
-                <label>Rango Desde:</label>
-                <input type="date" id="fechaInicio" value="2026-03-01">
-            </div>
-            <div>
-                <label>Hasta:</label>
-                <input type="date" id="fechaFin" value="2026-03-31">
-            </div>
-            <div>
-                <label>Excel Meta:</label>
-                <input type="file" id="fileMeta">
-            </div>
-            <div>
-                <label>Excel Reservo:</label>
-                <input type="file" id="fileReservo">
-            </div>
+            <div><label>Desde:</label><input type="date" id="fechaInicio" value="2026-03-01"></div>
+            <div><label>Hasta:</label><input type="date" id="fechaFin" value="2026-03-31"></div>
+            <div><label>Meta (Excel):</label><input type="file" id="fileMeta"></div>
+            <div><label>Reservo (Excel):</label><input type="file" id="fileReservo"></div>
         </div>
-
-        <button onclick="ejecutarAuditoria()">EJECUTAR CRUCE DE INTELIGENCIA</button>
-
-        <div id="dashboard" style="display:none; margin-top:40px;">
-            <div id="resumen-metrica" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-bottom:30px;"></div>
+        <button onclick="ejecutarAuditoria()">AUDITAR AHORA</button>
+        <div id="dashboard" style="display:none;">
             <table id="tabla-maestra">
                 <thead>
                     <tr>
                         <th>Lead (Monitor)</th>
                         <th>Estado</th>
-                        <th>Origen (Anuncio)</th>
-                        <th>Bitácora/Conversación</th>
+                        <th>Origen (Frase)</th>
+                        <th>Bitácora</th>
                         <th>Reservo</th>
-                        <th>Resultado</th>
+                        <th>Veredicto</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpo-tabla"></tbody>
             </table>
         </div>
     </div>
-
     <script>
         async function leerExcel(file) {
             return new Promise((resolve) => {
@@ -80,54 +55,43 @@
                 reader.readAsArrayBuffer(file);
             });
         }
-
         async function ejecutarAuditoria() {
             const fm = document.getElementById('fileMeta').files[0];
             const fr = document.getElementById('fileReservo').files[0];
             const inicio = new Date(document.getElementById('fechaInicio').value);
             const fin = new Date(document.getElementById('fechaFin').value);
-
-            if (!fm || !fr) return alert('Subí los reportes de Meta y Reservo, Juan Carlos.');
-
-            // 1. Obtener datos reales del Monitor/Zara
-            const response = await fetch('/api/data');
-            const dataMonitor = await response.json();
-            
-            // 2. Leer Excels
-            const dMeta = await leerExcel(fm);
-            const dReservo = await leerExcel(fr);
-
-            const tabla = document.getElementById('cuerpo-tabla');
-            tabla.innerHTML = '';
-            let convertidosNoAgendados = 0;
-
-            dataMonitor.forEach(lead => {
-                const fUltima = new Date(lead.lastMessageDate);
-                if (fUltima < inicio || fUltima > fin) return;
-
-                // Buscar en Reservo por teléfono
-                const cita = dReservo.find(c => String(c.Teléfono).includes(lead.number.slice(-8)));
-                
-                // Buscar Anuncio por frase de entrada
-                const anuncio = dMeta.find(a => a['Texto del anuncio']?.includes(lead.firstMessage) || a['Ad Name'] === lead.adName);
-
-                const row = document.createElement('tr');
-                const esAgendado = !!cita;
-                if (!esAgendado && lead.status === 'HOT') convertidosNoAgendados++;
-
-                row.innerHTML = `
-                    <td><b>${lead.name}</b><br><small>${lead.number}</small></td>
-                    <td><span class="status-badge ${lead.status.toLowerCase()}">${lead.status}</span></td>
-                    <td>${anuncio ? anuncio['Nombre del anuncio'] || 'Anuncio Detectado' : 'Orgánico / Sin Info'}</td>
-                    <td><div class="bitacora-text"><b>Bitácora:</b> ${lead.notes || 'Sin notas'}<br><b>Entrada:</b> ${lead.firstMessage || '-'}</div></td>
-                    <td>${esAgendado ? '✅ ' + cita['Estado de la cita'] : '❌ No figura'}</td>
-                    <td><b>${esAgendado ? 'LOGRADO' : (lead.status === 'HOT' ? 'FUGA CALIENTE' : 'EN SEGUIMIENTO')}</b></td>
-                `;
-                tabla.appendChild(tr);
-            });
-
-            document.getElementById('dashboard').style.display = 'block';
-            alert('Análisis completado. Detectadas ' + convertidosNoAgendados + ' fugas calientes en el rango.');
+            if (!fm || !fr) return alert('Subí los archivos.');
+            try {
+                const resApi = await fetch('/api/data');
+                const dataMonitor = await resApi.json();
+                const dMeta = await leerExcel(fm);
+                const dReservo = await leerExcel(fr);
+                const tabla = document.getElementById('cuerpo-tabla');
+                tabla.innerHTML = '';
+                dataMonitor.forEach(lead => {
+                    const fUltima = new Date(lead.lastMessageDate);
+                    if (fUltima < inicio || fUltima > fin) return;
+                    const numLimpio = lead.number.replace(/\D/g,'').slice(-8);
+                    const cita = dReservo.find(c => String(c['Teléfono']).replace(/\D/g,'').includes(numLimpio));
+                    const row = document.createElement('tr');
+                    const esAgendado = !!cita;
+                    const esFuga = !esAgendado && lead.status === 'HOT';
+                    if (esFuga) row.className = 'fuga';
+                    row.innerHTML = `
+                        <td><b>${lead.name}</b><br>${lead.number}</td>
+                        <td><span class="status-badge ${lead.status.toLowerCase()}">${lead.status}</span></td>
+                        <td>${lead.firstMessage || '-'}</td>
+                        <td style="font-size:10px;">${lead.notes || 'Sin notas'}</td>
+                        <td>${esAgendado ? '✅ ' + cita['Estado de la cita'] : '❌ No figura'}</td>
+                        <td><b>${esAgendado ? 'LOGRADO' : (esFuga ? 'FUGA CALIENTE' : 'SEGUIMIENTO')}</b></td>
+                    `;
+                    tabla.appendChild(row);
+                });
+                document.getElementById('dashboard').style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                alert('Error al procesar. Revisá la consola.');
+            }
         }
     </script>
 </body>
