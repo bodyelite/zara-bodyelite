@@ -2,59 +2,92 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Auditoría Zara 7.0</title>
+    <title>Auditoría Estratégica Zara 7.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .upload { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
-        button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .res { margin-top: 20px; padding: 20px; border-radius: 10px; background: #f0fff4; border: 2px solid #28a745; display: none; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .box { padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background: #fafafa; }
+        button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .results { margin-top: 30px; display: none; }
+        .metric-card { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #ddd; text-align: center; }
+        .metric-value { display: block; font-size: 28px; font-weight: bold; color: #2d3748; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
+        th { background: #f8f9fa; color: #4a5568; }
+        .status-asiste { color: #28a745; font-weight: bold; }
+        .status-futura { color: #1a73e8; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Auditoría Body Elite (Excel/CSV)</h1>
-        <div class="upload">
-            <label>1. Meta Ads (Inversión):</label>
-            <input type="file" id="fMeta">
+        <h1>🚀 Auditoría de Rendimiento: Meta vs Reservo</h1>
+        <div class="grid">
+            <div class="box">
+                <label><b>1. Archivo Meta Ads:</b></label>
+                <input type="file" id="fMeta" accept=".xls,.xlsx,.csv" style="margin-top:10px; width:100%;">
+            </div>
+            <div class="box">
+                <label><b>2. Archivo Reservo:</b></label>
+                <input type="file" id="fReservo" accept=".xls,.xlsx,.csv" style="margin-top:10px; width:100%;">
+            </div>
         </div>
-        <div class="upload">
-            <label>2. Reservo (Citas):</label>
-            <input type="file" id="fReservo">
+        <button onclick="ejecutarAnalisis()">AUDITAR AHORA</button>
+
+        <div id="results" class="results">
+            <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="metric-card">
+                    <span class="metric-value" id="totalGasto">$0</span>
+                    <label>Inversión Total</label>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value" id="totalAsistidas">0</span>
+                    <label>Asistidas (Ventas)</label>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value" id="cacReal" style="color: #28a745;">$0</span>
+                    <label>CAC Real</label>
+                </div>
+            </div>
+
+            <h3>Detalle de Conversión y Bitácora</h3>
+            <div style="overflow-x:auto;">
+                <table id="tablaDetalle">
+                    <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Bitácora Reservo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="upload">
-            <label>Desde:</label> <input type="date" id="fechaInicio" value="2026-03-01">
-            <label>Hasta:</label> <input type="date" id="fechaFin" value="2026-03-31">
-        </div>
-        <button onclick="procesar()">Calcular CAC Quirúrgico</button>
-        <div id="resultados" class="res"></div>
     </div>
 
     <script>
-        async function leerExcel(file) {
-            return new Promise((resolve) => {
+        async function leer(f) {
+            return new Promise((r) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    resolve(XLSX.utils.sheet_to_json(sheet));
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                    r(XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]));
                 };
-                reader.readAsArrayBuffer(file);
+                reader.readAsArrayBuffer(f);
             });
         }
 
-        async function procesar() {
+        async function ejecutarAnalisis() {
             const fm = document.getElementById('fMeta').files[0];
             const fr = document.getElementById('fReservo').files[0];
-            const inicio = new Date(document.getElementById('fechaInicio').value);
-            const fin = new Date(document.getElementById('fechaFin').value);
+            if (!fm || !fr) return alert('Subí los dos archivos, boludo.');
 
-            if (!fm || !fr) return alert('Subí los archivos, boludo.');
-
-            const dMeta = await leerExcel(fm);
-            const dReservo = await leerExcel(fr);
+            const dMeta = await leer(fm);
+            const dReservo = await leer(fr);
 
             let gasto = 0;
             dMeta.forEach(r => {
@@ -62,22 +95,28 @@
                 gasto += parseFloat(v.toString().replace(/[^0-9.]/g, '')) || 0;
             });
 
-            const efectivas = dReservo.filter(c => {
-                const fCita = new Date(c['Fecha']);
-                const asiste = c['Estado de la cita'] === 'Asiste' || c['Estado de la cita'] === 'Realizado';
-                return asiste && fCita >= inicio && fCita <= fin;
-            }).length;
+            const asistidas = dReservo.filter(c => c['Estado de la cita'] === 'Asiste' || c['Estado de la cita'] === 'Realizado').length;
+            const cac = asistidas > 0 ? (gasto / asistidas) : gasto;
 
-            const cac = efectivas > 0 ? (gasto / efectivas) : gasto;
-            const res = document.getElementById('resultados');
-            res.style.display = 'block';
-            res.innerHTML = `
-                <h2>Veredicto</h2>
-                <p>💰 Inversión: ${gasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</p>
-                <p>✅ Citas (${efectivas}): Personas que pisaron la clínica en el rango.</p>
-                <hr>
-                <h1 style="color:#28a745">CAC REAL: ${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</h1>
-            `;
+            document.getElementById('totalGasto').innerText = gasto.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
+            document.getElementById('totalAsistidas').innerText = asistidas;
+            document.getElementById('cacReal').innerText = cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'});
+
+            const tabla = document.getElementById('cuerpoTabla');
+            tabla.innerHTML = '';
+            dReservo.forEach(c => {
+                const tr = document.createElement('tr');
+                const statusClass = c['Estado de la cita'] === 'Asiste' ? 'status-asiste' : (c['Estado de la cita'] === 'Agendada' ? 'status-futura' : '');
+                tr.innerHTML = `
+                    <td>${c['Paciente'] || 'S/N'}</td>
+                    <td class="${statusClass}">${c['Estado de la cita']}</td>
+                    <td>${c['Fecha'] || '-'}</td>
+                    <td style="font-size:11px; color:#666;">${c['Bitácora'] || 'Sin registro'}</td>
+                `;
+                tabla.appendChild(tr);
+            });
+
+            document.getElementById('results').style.display = 'block';
         }
     </script>
 </body>
