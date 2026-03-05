@@ -25,5 +25,54 @@ th { background-color: #111; color: white; }
 <button onclick="procesarArchivos()">Cruzar Datos y Calcular CAC Real</button>
 <div id="resultados"></div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
+<script>
+async function procesarArchivos() {
+    const fileMeta = document.getElementById('fileMeta').files[0];
+    const fileReservo = document.getElementById('fileReservo').files[0];
+    const resDiv = document.getElementById('resultados');
+
+    if (!fileMeta || !fileReservo) {
+        alert('Subí ambos archivos, no seas boludo.');
+        return;
+    }
+
+    resDiv.innerHTML = '<p>Procesando con perfección suiza... ⏳</p>';
+
+    const leerCSV = (file) => {
+        return new Promise((resolve) => {
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => resolve(results.data)
+            });
+        });
+    };
+
+    const dataMeta = await leerCSV(fileMeta);
+    const dataReservo = await leerCSV(fileReservo);
+
+    // Lógica de cruce simplificada (por nombre o teléfono si coinciden las columnas)
+    let gastoTotal = 0;
+    dataMeta.forEach(row => {
+        const valor = parseFloat(row['Importe gastado (CLP)']) || parseFloat(row['Amount spent']) || 0;
+        gastoTotal += valor;
+    });
+
+    const citasConfirmadas = dataReservo.length;
+    const cac = citasConfirmadas > 0 ? (gastoTotal / citasConfirmadas) : 0;
+
+    resDiv.innerHTML = `
+        <div style="margin-top:20px; padding:15px; border:2px solid #28a745; border-radius:8px;">
+            <h3 style="margin-top:0">📊 Resultado de la Auditoría</h3>
+            <p><b>Inversión Total Meta:</b> ${gastoTotal.toLocaleString('es-CL', {style:'currency', currency:'CLP'})}</p>
+            <p><b>Citas en Reservo:</b> ${citasConfirmadas}</p>
+            <hr>
+            <h2 style="color:#28a745">CAC Real: ${cac.toLocaleString('es-CL', {style:'currency', currency:'CLP'})} por cita</h2>
+        </div>
+    `;
+}
+</script>
 </body>
 </html>
