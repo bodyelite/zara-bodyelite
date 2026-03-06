@@ -8,6 +8,7 @@
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
         .container { max-width: 1200px; margin: auto; background: #1e293b; padding: 30px; border-radius: 8px; border: 1px solid #334155; }
         .box { background: #0f172a; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; box-sizing: border-box; }
@@ -23,9 +24,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>⛰️ LA MONTAÑA: FUNNEL POR ANUNCIO</h1>
+        <h1>⛰️ LA MONTAÑA: FUNNEL POR ANUNCIO CON FILTRO TEMPORAL</h1>
         
         <div class="box">
+            <div class="grid-2">
+                <div><label>DESDE (Fecha de ingreso del Lead)</label><input type="date" id="fi" value="2026-03-01"></div>
+                <div><label>HASTA</label><input type="date" id="ff" value="2026-03-31"></div>
+            </div>
             <div class="grid-3">
                 <div><label>1. META (EXCEL)</label><input type="file" id="fm" accept=".xlsx,.xls,.csv"></div>
                 <div><label>2. RESERVO (EXCEL)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
@@ -40,7 +45,7 @@
                 <thead>
                     <tr>
                         <th>Anuncio (Meta)</th>
-                        <th>Gasto</th>
+                        <th>Gasto Meta</th>
                         <th>Conv. Meta</th>
                         <th>Leads Reales (Zara)</th>
                         <th>Calidad (No Challa)</th>
@@ -59,7 +64,6 @@
         async function rx(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]])); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
-        // Mapeo básico de palabras clave del primer mensaje al anuncio (Ajustar según necesidad)
         function guessAd(firstMsg) {
             const m = String(firstMsg).toLowerCase();
             if (m.includes('lipo')) return 'Lipo';
@@ -72,13 +76,22 @@
             const fm = document.getElementById('fm').files[0], fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0];
             if(!fm || !fr || !fz) return alert('Señor de los números, faltan archivos para la magia.');
             
+            const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
+            const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
+
             const [meta, reser, monRaw] = await Promise.all([rx(fm), rx(fr), rj(fz)]);
             const usersObj = monRaw.users || monRaw || {};
             const leads = Array.isArray(usersObj) ? usersObj : Object.values(usersObj);
             
-            // 1. Agrupar Leads por Ad Inferido
             const zaraStats = {};
+            
             leads.forEach(l => {
+                let ts = l.lastInteraction || 0;
+                if(l.history && l.history.length > 0) { ts = l.history[0].timestamp || ts; }
+                
+                // EL FILTRO SUMERIO: Si el lead no está en la fecha, se ignora
+                if(ts < fi || ts > ff) return;
+
                 let firstMsg = '';
                 if(l.history && l.history.length > 0) firstMsg = l.history[0].content;
                 const adCat = guessAd(firstMsg);
@@ -86,10 +99,8 @@
                 if(!zaraStats[adCat]) zaraStats[adCat] = { leads: 0, calidad: 0, agendados: 0, asistidos: 0 };
                 zaraStats[adCat].leads++;
                 
-                // Calidad (No challa = HOT, AGENDADO, o que cruzaron 2 mensajes)
                 if(l.tag === 'HOT' || l.tag === 'AGENDADO' || (l.history && l.history.length > 2)) zaraStats[adCat].calidad++;
 
-                // Cruce Reservo
                 const num = clean(l.phone || l.number);
                 const cita = reser.find(c => clean(c['Teléfono'] || c['Teléfonos']) === num);
                 
@@ -102,7 +113,6 @@
                 }
             });
 
-            // 2. Procesar Meta y cruzar
             const cuerpo = document.getElementById('cuerpoCerro'); cuerpo.innerHTML = '';
             let tGasto = 0, tMeta = 0, tZara = 0, tCal = 0, tAge = 0, tAsi = 0;
 
@@ -110,14 +120,13 @@
                 const nombre = r['Nombre del anuncio'] || 'Desconocido';
                 const gasto = parseFloat(String(r['Importe gastado (CLP)'] || 0).replace(/[^0-9.]/g, '')) || 0;
                 const convMeta = parseFloat(r['Resultados']) || 0;
-                if(gasto === 0 && convMeta === 0) return; // Ignorar basura vacía
+                if(gasto === 0 && convMeta === 0) return; 
                 
-                const adCat = guessAd(nombre); // Intentar emparejar el nombre del anuncio con la categoría
+                const adCat = guessAd(nombre); 
                 const stats = zaraStats[adCat] || { leads: 0, calidad: 0, agendados: 0, asistidos: 0 };
                 
-                // Evitar doble conteo si agrupamos varios anuncios en la misma categoría
                 const leadsReales = stats.leads; 
-                stats.leads = 0; // Limpiar para el próximo loop si hay colisión
+                stats.leads = 0; 
 
                 tGasto += gasto; tMeta += convMeta; tZara += leadsReales;
                 tCal += stats.calidad; tAge += stats.agendados; tAsi += stats.asistidos;
@@ -139,7 +148,6 @@
                 `;
             });
 
-            // Fila de Totales
             const tCac = tAsi > 0 ? (tGasto / tAsi) : 0;
             cuerpo.innerHTML += `
                 <tr class="total-row">
