@@ -2,49 +2,56 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>AUDITORÍA PRO: CERO ESTUPIDEZ</title>
+    <title>RADAR DE TRÁFICO AÉREO - BODY ELITE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: #1e293b; padding: 30px; border-radius: 8px; border: 1px solid #334155; }
+        .container { max-width: 1300px; margin: auto; background: #1e293b; padding: 30px; border-radius: 8px; border: 1px solid #334155; }
         .box { background: #0f172a; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
+        label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         input[type="date"], input[type="file"] { width: 100%; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; }
-        button { background: #f43f5e; color: #fff; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; transition: 0.2s; border-radius: 4px; }
-        button:hover { background: #e11d48; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 20px; background: #0f172a; }
-        th { background: #334155; color: #38bdf8; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #334155; vertical-align: top; }
+        button { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; transition: 0.2s; border-radius: 4px; letter-spacing: 1px; }
+        button:hover { background: #0ea5e9; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; background: #0f172a; }
+        th { background: #334155; color: #38bdf8; padding: 14px; text-align: left; text-transform: uppercase; border-right: 1px solid #1e293b; }
+        th:last-child { border-right: none; }
+        td { padding: 14px; border-bottom: 1px solid #334155; vertical-align: middle; border-right: 1px solid #1e293b; }
+        td:last-child { border-right: none; }
+        .frase { font-weight: bold; color: #f8fafc; max-width: 250px; line-height: 1.4; }
         .win { color: #10b981; font-weight: bold; }
         .lose { color: #f43f5e; font-weight: bold; }
-        .challa { color: #94a3b8; }
+        .warn { color: #fbbf24; font-weight: bold; }
+        .challa { color: #64748b; }
+        .badge { background: #1e293b; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin-right: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔪 LA VERDAD CRUDA (POR FRASE DE META)</h1>
+        <h1>✈️ RADAR DE CONTROL DE TRÁFICO (PIPELINE REAL)</h1>
         
         <div class="box">
             <div class="grid-2">
-                <div><label>DESDE</label><input type="date" id="fi" value="2026-03-01"></div>
-                <div><label>HASTA</label><input type="date" id="ff" value="2026-03-31"></div>
+                <div><label>Filtro Zara: Desde</label><input type="date" id="fi" value="2026-03-01"></div>
+                <div><label>Filtro Zara: Hasta</label><input type="date" id="ff" value="2026-03-31"></div>
             </div>
-            <label>1. RESERVO (EXCEL DE CITAS)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv">
-            <label>2. MONITOR ZARA (JSON DE VERDAD)</label><input type="file" id="fz" accept=".json">
+            <label>1. CARGAR RESERVO (EXCEL CITAS)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv">
+            <label>2. CARGAR MONITOR ZARA (JSON BRUTAL)</label><input type="file" id="fz" accept=".json">
         </div>
 
-        <button onclick="ejecutarVerdad()">MOSTRARME LOS NÚMEROS REALES</button>
+        <button onclick="ejecutarRadar()">DESPLEGAR PIPELINE QUIRÚRGICO</button>
 
         <div id="res" style="display:none;">
             <table>
                 <thead>
                     <tr>
-                        <th>Frase Gatillo (El Anuncio Real)</th>
-                        <th>Leads Entrantes</th>
-                        <th>Calidad (Hot/Agenda/>2 Msg)</th>
-                        <th>Agendados en Reservo</th>
-                        <th>Asistidos Reales</th>
+                        <th>Campaña (Frase Gatillo)</th>
+                        <th>Tráfico (Leads)</th>
+                        <th>Tracción (Calidad)</th>
+                        <th style="background:#1e293b; border-bottom: 2px solid #38bdf8;">Agendados Totales</th>
+                        <th>⏳ Futuros (Pendientes)</th>
+                        <th>💰 Asistidos (En Caja)</th>
+                        <th>💀 Caídos (Fuga)</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -57,13 +64,13 @@
         async function rx(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]])); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
-        async function ejecutarVerdad() {
+        async function ejecutarRadar() {
             const fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0];
-            if(!fr || !fz) return alert('Subí Reservo y el JSON de Zara. No te saltes pasos.');
+            if(!fr || !fz) return alert('El radar necesita Reservo y Zara para funcionar.');
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
-
+            
             const [reser, monRaw] = await Promise.all([rx(fr), rj(fz)]);
             const usersObj = monRaw.users || monRaw || {};
             const leads = Array.isArray(usersObj) ? usersObj : Object.values(usersObj);
@@ -73,50 +80,63 @@
             leads.forEach(l => {
                 let ts = l.lastInteraction || 0;
                 if(l.history && l.history.length > 0) { ts = l.history[0].timestamp || ts; }
-                if(ts < fi || ts > ff) return; // Filtro estricto de fechas
+                if(ts < fi || ts > ff) return;
 
-                // Extraer la frase exacta que gatilló el bot
                 let frase = "Sin frase inicial / Retargeting";
                 if(l.history && l.history.length > 0) frase = l.history[0].content.trim();
                 
-                if(!statsPorFrase[frase]) statsPorFrase[frase] = { leads: 0, calidad: 0, agendados: 0, asistidos: 0 };
+                if(!statsPorFrase[frase]) statsPorFrase[frase] = { leads: 0, calidad: 0, agendados: 0, futuros: 0, asistidos: 0, caidos: 0 };
                 const s = statsPorFrase[frase];
-                
                 s.leads++;
                 
-                // Definición de calidad: Está HOT, AGENDADO, o cruzó más de 2 mensajes con el bot
                 if(l.tag === 'HOT' || l.tag === 'AGENDADO' || (l.history && l.history.length > 2)) s.calidad++;
 
                 const num = clean(l.phone || l.number);
-                const cita = reser.find(c => clean(c['Teléfono'] || c['Teléfonos']) === num);
-                
-                if(cita) {
-                    s.agendados++;
-                    const estadoCita = String(cita['Estado cita'] || cita['Estado de la cita']).toLowerCase();
-                    if(estadoCita.includes('asiste') || estadoCita.includes('realizado') || estadoCita.includes('atendido')) {
-                        s.asistidos++;
+                if (num.length >= 8) {
+                    const citasPaciente = reser.filter(c => {
+                        const telReservo = clean(c['Teléfono'] || c['Teléfonos']);
+                        return telReservo.length >= 8 && telReservo === num;
+                    });
+                    
+                    if(citasPaciente.length > 0) {
+                        s.agendados++;
+                        let estadoFinal = 'futuro'; 
+                        
+                        citasPaciente.forEach(cita => {
+                            const est = String(cita['Estado cita'] || cita['Estado de la cita']).toLowerCase();
+                            if(est.includes('asiste') || est.includes('realizado') || est.includes('atendido')) {
+                                estadoFinal = 'asistido';
+                            } else if (est.includes('no llegó') || est.includes('anula') || est.includes('no asiste')) {
+                                if(estadoFinal !== 'asistido') estadoFinal = 'caido';
+                            }
+                        });
+
+                        if(estadoFinal === 'asistido') s.asistidos++;
+                        else if(estadoFinal === 'caido') s.caidos++;
+                        else s.futuros++;
                     }
                 }
             });
 
             const cuerpo = document.getElementById('cuerpoTabla'); cuerpo.innerHTML = '';
-
-            // Ordenar por volumen de leads para ver la basura primero y el oro después
-            const frasesOrdenadas = Object.keys(statsPorFrase).sort((a,b) => statsPorFrase[b].leads - statsPorFrase[a].leads);
+            const frasesOrdenadas = Object.keys(statsPorFrase).sort((a,b) => statsPorFrase[b].agendados - statsPorFrase[a].agendados || statsPorFrase[b].leads - statsPorFrase[a].leads);
 
             frasesOrdenadas.forEach(f => {
                 const s = statsPorFrase[f];
+                if(s.leads === 0) return;
+                
                 cuerpo.innerHTML += `
                     <tr>
-                        <td style="max-width:300px; font-weight:bold;">"${f}"</td>
-                        <td>${s.leads}</td>
+                        <td class="frase">"${f}"</td>
+                        <td><span class="badge">${s.leads}</span></td>
                         <td class="${s.calidad > 0 ? 'win' : 'challa'}">${s.calidad}</td>
-                        <td class="${s.agendados > 0 ? 'win' : (s.leads > 0 ? 'lose' : '')}">${s.agendados}</td>
+                        <td style="background:#1e293b; font-size:15px; font-weight:bold; text-align:center;">${s.agendados}</td>
+                        <td class="${s.futuros > 0 ? 'warn' : 'challa'}">${s.futuros}</td>
                         <td class="${s.asistidos > 0 ? 'win' : 'challa'}">${s.asistidos}</td>
+                        <td class="${s.caidos > 0 ? 'lose' : 'challa'}">${s.caidos}</td>
                     </tr>
                 `;
             });
-
             document.getElementById('res').style.display = 'block';
         }
     </script>
