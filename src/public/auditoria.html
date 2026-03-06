@@ -2,101 +2,158 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>AUDITORÍA PRO BODY ELITE</title>
+    <title>AUDITORÍA ESTRATÉGICA BODY ELITE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
         .container { max-width: 1200px; margin: auto; background: #1e293b; padding: 30px; border-radius: 8px; border: 1px solid #334155; }
         .box { background: #0f172a; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; box-sizing: border-box; }
         button { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; transition: 0.2s; }
         button:hover { background: #0ea5e9; }
-        .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 30px 0; }
-        .card { background: #0f172a; padding: 20px; border: 1px solid #334155; text-align: center; border-radius: 6px; }
-        .card h3 { font-size: 11px; color: #94a3b8; margin: 0; }
-        .card p { font-size: 24px; margin: 10px 0 0; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 20px; }
-        th { background: #334155; color: #38bdf8; padding: 12px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 20px; background: #0f172a; }
+        th { background: #334155; color: #38bdf8; padding: 12px; text-align: left; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #334155; }
-        .fuga { color: #f43f5e; font-weight: bold; }
-        .logrado { color: #10b981; font-weight: bold; }
+        .win { color: #10b981; font-weight: bold; }
+        .lose { color: #f43f5e; font-weight: bold; }
+        .total-row { background: #1e293b; font-weight: bold; color: #38bdf8; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🛡️ ALTAR DE NÚMEROS: AUDITORÍA EN RENDER</h1>
+        <h1>⛰️ LA MONTAÑA: FUNNEL POR ANUNCIO</h1>
         
         <div class="box">
-            <div class="grid-2">
-                <div><label>DESDE (Fecha de ingreso del Lead)</label><input type="date" id="fi" value="2026-03-01"></div>
-                <div><label>HASTA</label><input type="date" id="ff" value="2026-03-31"></div>
-            </div>
             <div class="grid-3">
                 <div><label>1. META (EXCEL)</label><input type="file" id="fm" accept=".xlsx,.xls,.csv"></div>
                 <div><label>2. RESERVO (EXCEL)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
-                <div><label>3. MONITOR (JSON)</label><input type="file" id="fz" accept=".json"></div>
+                <div><label>3. MONITOR ZARA (JSON)</label><input type="file" id="fz" accept=".json"></div>
             </div>
         </div>
 
-        <button onclick="auditar()">EJECUTAR CRUCE QUIRÚRGICO</button>
+        <button onclick="auditarCerro()">CRUZAR DATOS Y SUBIR AL CERRO</button>
 
         <div id="res" style="display:none;">
-            <div class="metric-grid" id="kpis"></div>
-            <table>
-                <thead><tr><th>FECHA</th><th>LEAD</th><th>ESTADO (ZARA)</th><th>RESERVO</th><th>VEREDICTO</th></tr></thead>
-                <tbody id="cuerpo"></tbody>
+            <table id="tablaCerro">
+                <thead>
+                    <tr>
+                        <th>Anuncio (Meta)</th>
+                        <th>Gasto</th>
+                        <th>Conv. Meta</th>
+                        <th>Leads Reales (Zara)</th>
+                        <th>Calidad (No Challa)</th>
+                        <th>Agendados (Reservo)</th>
+                        <th>Asistidos</th>
+                        <th>CAC Asistido</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoCerro"></tbody>
             </table>
         </div>
     </div>
+
     <script>
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
         async function rx(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]])); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
-        async function auditar() {
+        // Mapeo básico de palabras clave del primer mensaje al anuncio (Ajustar según necesidad)
+        function guessAd(firstMsg) {
+            const m = String(firstMsg).toLowerCase();
+            if (m.includes('lipo')) return 'Lipo';
+            if (m.includes('rostro') || m.includes('facial') || m.includes('tensor')) return 'Rostro/Facial';
+            if (m.includes('gluteos') || m.includes('glúteos') || m.includes('push')) return 'Gluteos';
+            return 'Otros/Video';
+        }
+
+        async function auditarCerro() {
             const fm = document.getElementById('fm').files[0], fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0];
-            if(!fm || !fr || !fz) return alert('Faltan archivos en el altar. Subí los 3.');
-            
-            const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
-            const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
+            if(!fm || !fr || !fz) return alert('Señor de los números, faltan archivos para la magia.');
             
             const [meta, reser, monRaw] = await Promise.all([rx(fm), rx(fr), rj(fz)]);
-            
-            let gasto = 0;
-            meta.forEach(r => { gasto += parseFloat(String(r['Importe gastado (CLP)'] || r['Amount spent'] || 0).replace(/[^0-9.]/g, '')) || 0; });
-            
             const usersObj = monRaw.users || monRaw || {};
-            const usersArr = Array.isArray(usersObj) ? usersObj : Object.values(usersObj);
+            const leads = Array.isArray(usersObj) ? usersObj : Object.values(usersObj);
             
-            const cuerpo = document.getElementById('cuerpo'); cuerpo.innerHTML = '';
-            let asist = 0;
-            let leadsRango = 0;
-            
-            usersArr.forEach(l => {
-                let ts = l.lastInteraction || 0;
-                if(l.history && l.history.length > 0) { ts = l.history[0].timestamp || ts; }
+            // 1. Agrupar Leads por Ad Inferido
+            const zaraStats = {};
+            leads.forEach(l => {
+                let firstMsg = '';
+                if(l.history && l.history.length > 0) firstMsg = l.history[0].content;
+                const adCat = guessAd(firstMsg);
                 
-                if(ts < fi || ts > ff) return;
+                if(!zaraStats[adCat]) zaraStats[adCat] = { leads: 0, calidad: 0, agendados: 0, asistidos: 0 };
+                zaraStats[adCat].leads++;
                 
-                leadsRango++;
+                // Calidad (No challa = HOT, AGENDADO, o que cruzaron 2 mensajes)
+                if(l.tag === 'HOT' || l.tag === 'AGENDADO' || (l.history && l.history.length > 2)) zaraStats[adCat].calidad++;
+
+                // Cruce Reservo
                 const num = clean(l.phone || l.number);
-                const cita = reser.find(c => clean(c['Teléfono']) === num);
-                const esA = cita && (cita['Estado de la cita'] === 'Asiste' || cita['Estado de la cita'] === 'Realizado');
-                if(esA) asist++;
+                const cita = reser.find(c => clean(c['Teléfono'] || c['Teléfonos']) === num);
                 
-                const tr = document.createElement('tr');
-                const esF = !cita && (l.tag === 'HOT' || l.status === 'HOT');
-                const fechaStr = new Date(ts).toLocaleDateString('es-CL');
-                
-                tr.innerHTML = `<td>${fechaStr}</td><td>${l.name}<br><small>${l.phone || ''}</small></td><td>${l.tag || l.status || '-'}</td><td>${cita ? cita['Estado de la cita'] : '❌'}</td><td class="${esA ? 'logrado' : (esF ? 'fuga' : '')}">${esA ? 'LOGRADO' : (esF ? 'FUGA HOT' : 'SEGUIMIENTO')}</td>`;
-                cuerpo.appendChild(tr);
+                if(cita) {
+                    zaraStats[adCat].agendados++;
+                    const estadoCita = String(cita['Estado cita'] || cita['Estado de la cita']).toLowerCase();
+                    if(estadoCita.includes('asiste') || estadoCita.includes('realizado') || estadoCita.includes('atendido')) {
+                        zaraStats[adCat].asistidos++;
+                    }
+                }
             });
-            
-            const cac = asist > 0 ? (gasto / asist) : gasto;
-            document.getElementById('kpis').innerHTML = `<div class="card"><h3>INVERSIÓN META</h3><p>${gasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</p></div><div class="card"><h3>LEADS EN RANGO</h3><p>${leadsRango}</p></div><div class="card"><h3>ASISTIDAS (RESERVO)</h3><p>${asist}</p></div><div class="card"><h3 style="color:#10b981">CAC REAL</h3><p style="color:#10b981">${cac.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</p></div>`;
+
+            // 2. Procesar Meta y cruzar
+            const cuerpo = document.getElementById('cuerpoCerro'); cuerpo.innerHTML = '';
+            let tGasto = 0, tMeta = 0, tZara = 0, tCal = 0, tAge = 0, tAsi = 0;
+
+            meta.forEach(r => {
+                const nombre = r['Nombre del anuncio'] || 'Desconocido';
+                const gasto = parseFloat(String(r['Importe gastado (CLP)'] || 0).replace(/[^0-9.]/g, '')) || 0;
+                const convMeta = parseFloat(r['Resultados']) || 0;
+                if(gasto === 0 && convMeta === 0) return; // Ignorar basura vacía
+                
+                const adCat = guessAd(nombre); // Intentar emparejar el nombre del anuncio con la categoría
+                const stats = zaraStats[adCat] || { leads: 0, calidad: 0, agendados: 0, asistidos: 0 };
+                
+                // Evitar doble conteo si agrupamos varios anuncios en la misma categoría
+                const leadsReales = stats.leads; 
+                stats.leads = 0; // Limpiar para el próximo loop si hay colisión
+
+                tGasto += gasto; tMeta += convMeta; tZara += leadsReales;
+                tCal += stats.calidad; tAge += stats.agendados; tAsi += stats.asistidos;
+
+                const cac = stats.asistidos > 0 ? (gasto / stats.asistidos) : 0;
+                const cacStr = cac > 0 ? cac.toLocaleString('es-CL',{style:'currency',currency:'CLP'}) : '💀 SIN ASISTENCIA';
+
+                cuerpo.innerHTML += `
+                    <tr>
+                        <td><strong>${nombre}</strong></td>
+                        <td>${gasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td>
+                        <td>${convMeta}</td>
+                        <td>${leadsReales}</td>
+                        <td class="${stats.calidad > 0 ? 'win' : ''}">${stats.calidad}</td>
+                        <td class="${stats.agendados > 0 ? 'win' : ''}">${stats.agendados}</td>
+                        <td class="${stats.asistidos > 0 ? 'win' : 'lose'}">${stats.asistidos}</td>
+                        <td class="${stats.asistidos > 0 ? 'win' : 'lose'}">${cacStr}</td>
+                    </tr>
+                `;
+            });
+
+            // Fila de Totales
+            const tCac = tAsi > 0 ? (tGasto / tAsi) : 0;
+            cuerpo.innerHTML += `
+                <tr class="total-row">
+                    <td>TOTALES (EL SILO)</td>
+                    <td>${tGasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td>
+                    <td>${tMeta}</td>
+                    <td>${tZara}</td>
+                    <td>${tCal}</td>
+                    <td>${tAge}</td>
+                    <td>${tAsi}</td>
+                    <td>${tCac.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td>
+                </tr>
+            `;
+
             document.getElementById('res').style.display = 'block';
         }
     </script>
