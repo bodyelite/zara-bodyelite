@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>RADAR DE TRÁFICO AÉREO - BODY ELITE</title>
+    <title>RADAR DE TRÁFICO - BODY ELITE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
@@ -28,7 +28,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>✈️ RADAR DE CONTROL DE TRÁFICO (PIPELINE REAL)</h1>
+        <h1>✈️ RADAR DE CONTROL DE TRÁFICO (MODO COLUMNA N)</h1>
         
         <div class="box">
             <div class="grid-2">
@@ -61,20 +61,36 @@
 
     <script>
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
-        async function rx(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]])); reader.readAsArrayBuffer(f); }); }
+        const cleanName = (n) => String(n || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, ' ').trim();
+
+        // Leemos el Excel como un array de arrays (header: 1) para ubicar columnas por posición exacta
+        async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
         async function ejecutarRadar() {
             const fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0];
-            if(!fr || !fz) return alert('El radar necesita Reservo y Zara para funcionar.');
+            if(!fr || !fz) return alert('Subí los archivos.');
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
             
-            const [reser, monRaw] = await Promise.all([rx(fr), rj(fz)]);
+            const [reserArr, monRaw] = await Promise.all([rxArray(fr), rj(fz)]);
             const usersObj = monRaw.users || monRaw || {};
             const leads = Array.isArray(usersObj) ? usersObj : Object.values(usersObj);
             
+            // Procesamos Reservo desde el array crudo
+            const headers = reserArr[0] || [];
+            // Buscamos dinámicamente qué columnas tienen Teléfono y Nombre, pero forzamos Estado en la Columna N (índice 13)
+            let colTel = headers.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
+            let colNombre = headers.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
+            const colEstadoN = 13; // 0=A, 1=B, ..., 13=N
+
+            const reserData = reserArr.slice(1).map(row => ({
+                telefono: row[colTel] ? clean(row[colTel]) : '',
+                nombre: row[colNombre] ? cleanName(row[colNombre]) : '',
+                estadoColumnaN: String(row[colEstadoN] || '').toLowerCase()
+            }));
+
             const statsPorFrase = {};
 
             leads.forEach(l => {
@@ -91,30 +107,33 @@
                 
                 if(l.tag === 'HOT' || l.tag === 'AGENDADO' || (l.history && l.history.length > 2)) s.calidad++;
 
-                const num = clean(l.phone || l.number);
-                if (num.length >= 8) {
-                    const citasPaciente = reser.filter(c => {
-                        const telReservo = clean(c['Teléfono'] || c['Teléfonos']);
-                        return telReservo.length >= 8 && telReservo === num;
-                    });
-                    
-                    if(citasPaciente.length > 0) {
-                        s.agendados++;
-                        let estadoFinal = 'futuro'; 
-                        
-                        citasPaciente.forEach(cita => {
-                            const est = String(cita['Estado cita'] || cita['Estado de la cita']).toLowerCase();
-                            if(est.includes('asiste') || est.includes('realizado') || est.includes('atendido')) {
-                                estadoFinal = 'asistido';
-                            } else if (est.includes('no llegó') || est.includes('anula') || est.includes('no asiste')) {
-                                if(estadoFinal !== 'asistido') estadoFinal = 'caido';
-                            }
-                        });
+                const numZara = clean(l.phone || l.number);
+                const nombreZara = cleanName(l.name);
 
-                        if(estadoFinal === 'asistido') s.asistidos++;
-                        else if(estadoFinal === 'caido') s.caidos++;
-                        else s.futuros++;
-                    }
+                const citasPaciente = reserData.filter(c => {
+                    const matchPhone = (numZara.length >= 8 && c.telefono === numZara);
+                    const matchName = (nombreZara.length > 4 && c.nombre.length > 4) && 
+                                      (nombreZara.includes(c.nombre) || c.nombre.includes(nombreZara));
+                    return matchPhone || matchName;
+                });
+                
+                if(citasPaciente.length > 0) {
+                    s.agendados++;
+                    let estadoFinal = 'futuro'; 
+                    
+                    citasPaciente.forEach(cita => {
+                        const est = cita.estadoColumnaN;
+                        // Evaluación estricta de la Columna N
+                        if(est.includes('asiste') || est.includes('realizado') || est.includes('atendido')) {
+                            estadoFinal = 'asistido';
+                        } else if (est.includes('no llegó') || est.includes('anula') || est.includes('no asiste') || est.includes('cancelad')) {
+                            if(estadoFinal !== 'asistido') estadoFinal = 'caido';
+                        }
+                    });
+
+                    if(estadoFinal === 'asistido') s.asistidos++;
+                    else if(estadoFinal === 'caido') s.caidos++;
+                    else s.futuros++;
                 }
             });
 
