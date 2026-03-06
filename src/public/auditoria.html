@@ -20,11 +20,12 @@
         .win { color: #10b981; font-weight: bold; }
         .lose { color: #f43f5e; font-weight: bold; }
         .total-row { background: #1e293b; font-weight: bold; color: #38bdf8; font-size: 14px; }
+        .ad-names { font-size: 10px; color: #94a3b8; display: block; margin-top: 4px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>⛰️ LA MONTAÑA: FUNNEL POR ANUNCIO CON FILTRO TEMPORAL</h1>
+        <h1>⛰️ LA MONTAÑA: FUNNEL CONSOLIDADO CON FILTRO TEMPORAL</h1>
         
         <div class="box">
             <div class="grid-2">
@@ -44,7 +45,7 @@
             <table id="tablaCerro">
                 <thead>
                     <tr>
-                        <th>Anuncio (Meta)</th>
+                        <th>Categoría / Anuncios</th>
                         <th>Gasto Meta</th>
                         <th>Conv. Meta</th>
                         <th>Leads Reales (Zara)</th>
@@ -64,8 +65,8 @@
         async function rx(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]])); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
-        function guessAd(firstMsg) {
-            const m = String(firstMsg).toLowerCase();
+        function guessAd(text) {
+            const m = String(text).toLowerCase();
             if (m.includes('lipo')) return 'Lipo';
             if (m.includes('rostro') || m.includes('facial') || m.includes('tensor')) return 'Rostro/Facial';
             if (m.includes('gluteos') || m.includes('glúteos') || m.includes('push')) return 'Gluteos';
@@ -74,7 +75,7 @@
 
         async function auditarCerro() {
             const fm = document.getElementById('fm').files[0], fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0];
-            if(!fm || !fr || !fz) return alert('Señor de los números, faltan archivos para la magia.');
+            if(!fm || !fr || !fz) return alert('Faltan archivos para ejecutar.');
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
@@ -83,67 +84,82 @@
             const usersObj = monRaw.users || monRaw || {};
             const leads = Array.isArray(usersObj) ? usersObj : Object.values(usersObj);
             
-            const zaraStats = {};
-            
+            // Diccionario consolidado por categoría
+            const stats = {};
+            const getStats = (cat) => {
+                if(!stats[cat]) stats[cat] = { ads: [], gasto: 0, metaConv: 0, zaraLeads: 0, calidad: 0, agendados: 0, asistidos: 0 };
+                return stats[cat];
+            };
+
+            // 1. Procesar Zara (Silo Real)
             leads.forEach(l => {
                 let ts = l.lastInteraction || 0;
                 if(l.history && l.history.length > 0) { ts = l.history[0].timestamp || ts; }
                 
-                // EL FILTRO SUMERIO: Si el lead no está en la fecha, se ignora
-                if(ts < fi || ts > ff) return;
+                if(ts < fi || ts > ff) return; // Filtro sumerio
 
                 let firstMsg = '';
                 if(l.history && l.history.length > 0) firstMsg = l.history[0].content;
                 const adCat = guessAd(firstMsg);
+                const s = getStats(adCat);
                 
-                if(!zaraStats[adCat]) zaraStats[adCat] = { leads: 0, calidad: 0, agendados: 0, asistidos: 0 };
-                zaraStats[adCat].leads++;
+                s.zaraLeads++;
                 
-                if(l.tag === 'HOT' || l.tag === 'AGENDADO' || (l.history && l.history.length > 2)) zaraStats[adCat].calidad++;
+                if(l.tag === 'HOT' || l.tag === 'AGENDADO' || (l.history && l.history.length > 2)) s.calidad++;
 
                 const num = clean(l.phone || l.number);
                 const cita = reser.find(c => clean(c['Teléfono'] || c['Teléfonos']) === num);
                 
                 if(cita) {
-                    zaraStats[adCat].agendados++;
+                    s.agendados++;
                     const estadoCita = String(cita['Estado cita'] || cita['Estado de la cita']).toLowerCase();
                     if(estadoCita.includes('asiste') || estadoCita.includes('realizado') || estadoCita.includes('atendido')) {
-                        zaraStats[adCat].asistidos++;
+                        s.asistidos++;
                     }
                 }
             });
 
-            const cuerpo = document.getElementById('cuerpoCerro'); cuerpo.innerHTML = '';
-            let tGasto = 0, tMeta = 0, tZara = 0, tCal = 0, tAge = 0, tAsi = 0;
-
+            // 2. Procesar Meta (Inversión)
             meta.forEach(r => {
                 const nombre = r['Nombre del anuncio'] || 'Desconocido';
                 const gasto = parseFloat(String(r['Importe gastado (CLP)'] || 0).replace(/[^0-9.]/g, '')) || 0;
                 const convMeta = parseFloat(r['Resultados']) || 0;
+                
                 if(gasto === 0 && convMeta === 0) return; 
                 
                 const adCat = guessAd(nombre); 
-                const stats = zaraStats[adCat] || { leads: 0, calidad: 0, agendados: 0, asistidos: 0 };
+                const s = getStats(adCat);
                 
-                const leadsReales = stats.leads; 
-                stats.leads = 0; 
+                s.gasto += gasto;
+                s.metaConv += convMeta;
+                if(!s.ads.includes(nombre)) s.ads.push(nombre);
+            });
 
-                tGasto += gasto; tMeta += convMeta; tZara += leadsReales;
-                tCal += stats.calidad; tAge += stats.agendados; tAsi += stats.asistidos;
+            // 3. Renderizar Tabla
+            const cuerpo = document.getElementById('cuerpoCerro'); cuerpo.innerHTML = '';
+            let tGasto = 0, tMeta = 0, tZara = 0, tCal = 0, tAge = 0, tAsi = 0;
 
-                const cac = stats.asistidos > 0 ? (gasto / stats.asistidos) : 0;
+            Object.keys(stats).forEach(cat => {
+                const s = stats[cat];
+                if(s.gasto === 0 && s.zaraLeads === 0) return; // Ocultar si no hay actividad
+
+                tGasto += s.gasto; tMeta += s.metaConv; tZara += s.zaraLeads;
+                tCal += s.calidad; tAge += s.agendados; tAsi += s.asistidos;
+
+                const cac = s.asistidos > 0 ? (s.gasto / s.asistidos) : 0;
                 const cacStr = cac > 0 ? cac.toLocaleString('es-CL',{style:'currency',currency:'CLP'}) : '💀 SIN ASISTENCIA';
+                const adsList = s.ads.length > 0 ? `<span class="ad-names">${s.ads.join(', ')}</span>` : '';
 
                 cuerpo.innerHTML += `
                     <tr>
-                        <td><strong>${nombre}</strong></td>
-                        <td>${gasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td>
-                        <td>${convMeta}</td>
-                        <td>${leadsReales}</td>
-                        <td class="${stats.calidad > 0 ? 'win' : ''}">${stats.calidad}</td>
-                        <td class="${stats.agendados > 0 ? 'win' : ''}">${stats.agendados}</td>
-                        <td class="${stats.asistidos > 0 ? 'win' : 'lose'}">${stats.asistidos}</td>
-                        <td class="${stats.asistidos > 0 ? 'win' : 'lose'}">${cacStr}</td>
+                        <td><strong>${cat}</strong>${adsList}</td>
+                        <td>${s.gasto.toLocaleString('es-CL',{style:'currency',currency:'CLP'})}</td>
+                        <td>${s.metaConv}</td>
+                        <td>${s.zaraLeads}</td>
+                        <td class="${s.calidad > 0 ? 'win' : ''}">${s.calidad}</td>
+                        <td class="${s.agendados > 0 ? 'win' : ''}">${s.agendados}</td>
+                        <td class="${s.asistidos > 0 ? 'win' : 'lose'}">${s.asistidos}</td>
+                        <td class="${s.asistidos > 0 ? 'win' : 'lose'}">${cacStr}</td>
                     </tr>
                 `;
             });
