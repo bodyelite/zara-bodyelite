@@ -13,6 +13,8 @@ app.use(cors());
 
 
 app.use('/assets', express.static(pathTool.join(__dirname, 'public')));
+
+app.get('/descargar-bd-zara', (req, res) => { const path = require('path'); const ruta = path.join(process.cwd(), 'zara_monitor_pro.json'); if(require('fs').existsSync(ruta)) { res.download(ruta); } else { res.status(404).send('Archivo JSON no encontrado en el servidor.'); } });
 app.get('/auditoria', (req, res) => {
     res.sendFile(pathTool.join(__dirname, 'public', 'auditoria.html'));
 });
@@ -52,28 +54,9 @@ app.get('/monitor', (req, res) => {
             <span class="fw-bold text-primary">ZARA 10.5</span> 
             <div class="d-flex gap-1">
                 <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇 ACTIVAR SONIDO</button>
+<a href="/descargar-bd-zara" target="_blank" style="display:inline-block; box-sizing:border-box; padding: 10px; background-color: #00d2ff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; box-shadow: 0px 4px 10px rgba(0,210,255,0.4); text-align: center; text-decoration: none;">📥 Descargar JSON Brutal</a>
 
-<button onclick="descargarJsonBrutal()" style="padding: 10px; background-color: #00d2ff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; box-shadow: 0px 4px 10px rgba(0,210,255,0.4);">
-    📥 Descargar JSON Brutal
-</button>
-<script>
-function descargarJsonBrutal() {
-    let data = null;
-    if (typeof users !== 'undefined') data = users;
-    else if (typeof datosMonitor !== 'undefined') data = datosMonitor;
-    else if (typeof window.datos !== 'undefined') data = window.datos;
-    
-    if (data) {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-        const a = document.createElement("a");
-        a.href = dataStr;
-        a.download = "zara_monitor_pro.json";
-        a.click();
-    } else {
-        window.open('/zara_monitor_pro.json', '_blank');
-    }
-}
-</script>
+
 
                 <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️ Borrar Sel.</button>
             </div>
