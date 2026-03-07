@@ -6,11 +6,34 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.get('/api/download', (req, res) => {
-    const data = { sesiones: getSesiones(), botStatus: getBotStatus() };
-    res.setHeader('Content-disposition', 'attachment; filename=zara_data_backup.json');
-    res.set('Content-Type', 'application/json');
-    res.status(200).send(JSON.stringify(data, null, 2));
+app.get('/api/export-csv', (req, res) => {
+    const sesiones = getSesiones();
+    let csv = '\uFEFF'; 
+    csv += 'Fecha de Ingreso;Telefono;Nombre;Estado;Primer Mensaje;Bitacora\n';
+
+    const fmtDate = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    for (const [phone, u] of Object.entries(sesiones)) {
+        let firstUserMsg = u.history && u.history.find(m => m.role === 'user');
+        let fechaTs = firstUserMsg ? firstUserMsg.timestamp : (u.lastInteraction || Date.now());
+        let fecha = fmtDate.format(new Date(fechaTs)).replace(/\//g, '-');
+        
+        let tel = u.phone || phone;
+        let nombre = (u.name || 'Cliente').replace(/"/g, '""');
+        let estado = u.tag || 'NUEVO';
+        let primerMsj = (firstUserMsg ? firstUserMsg.content : '').replace(/"/g, '""').replace(/\n/g, ' ');
+        
+        let bitacora = '';
+        if (u.notes && u.notes.length > 0) {
+            bitacora = u.notes.map(n => n.text).join(' | ').replace(/"/g, '""').replace(/\n/g, ' ');
+        }
+
+        csv += `"${fecha}";"${tel}";"${nombre}";"${estado}";"${primerMsj}";"${bitacora}"\n`;
+    }
+
+    res.setHeader('Content-disposition', 'attachment; filename=BASE_ANALISIS_META.csv');
+    res.set('Content-Type', 'text/csv; charset=utf-8');
+    res.status(200).send(csv);
 });
 
 app.get('/monitor', (req, res) => {
@@ -46,7 +69,7 @@ app.get('/monitor', (req, res) => {
             <span class="fw-bold text-primary">ZARA 10.5</span> 
             <div class="d-flex gap-1">
                 <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇</button>
-                <a href="/api/download" class="btn btn-xs btn-success fw-bold" style="font-size:10px; padding:2px 6px;">📥 DATA</a>
+                <a href="/api/export-csv" class="btn btn-xs btn-info fw-bold text-white" style="font-size:10px; padding:2px 6px; background-color:#0ea5e9; border:none;">📊 EXCEL META</a>
                 <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️</button>
             </div>
         </div>
