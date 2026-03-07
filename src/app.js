@@ -109,7 +109,7 @@ export async function procesarEvento(e) {
     const n=v.contacts?.[0]?.profile?.name||"Cliente"; 
     
     if(!sesiones[p]) { 
-        sesiones[p]={name:n, history:[], phone:p, tag:"NUEVO", origin:"meta", lastInteraction:Date.now(), unread:true, notes:[]}; 
+        sesiones[p]={name:n, history:[], phone:p, tag:"NUEVO", origin:"meta", ad_id: m?.referral?.ad_id || "", ad_title: m?.referral?.headline || "", lastInteraction:Date.now(), unread:true, notes:[]}; 
         await notificarStaff(`🚨 NUEVO: ${n}`); 
     } else { 
         sesiones[p].unread = true; 

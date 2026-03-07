@@ -10,49 +10,33 @@
         .box { background: #0f172a; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-        input[type="date"], input[type="file"] { width: 100%; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; }
-        button { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; transition: 0.2s; border-radius: 4px; letter-spacing: 1px; }
-        button:hover { background: #0ea5e9; }
+        input[type="date"], input[type="file"] { width: 100%; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; margin-bottom: 10px; }
+        button { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; background: #0f172a; }
-        th { background: #334155; color: #38bdf8; padding: 14px; text-align: left; text-transform: uppercase; border-right: 1px solid #1e293b; }
-        th:last-child { border-right: none; }
-        td { padding: 14px; border-bottom: 1px solid #334155; vertical-align: middle; border-right: 1px solid #1e293b; }
-        td:last-child { border-right: none; }
-        .frase { font-weight: bold; color: #f8fafc; max-width: 250px; line-height: 1.4; }
+        th { background: #334155; color: #38bdf8; padding: 14px; text-align: left; }
+        td { padding: 14px; border-bottom: 1px solid #334155; }
         .win { color: #10b981; font-weight: bold; }
         .lose { color: #f43f5e; font-weight: bold; }
         .warn { color: #fbbf24; font-weight: bold; }
-        .challa { color: #64748b; }
-        .badge { background: #1e293b; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; margin-right: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>✈️ RADAR DE CONTROL DE TRÁFICO (MODO COLUMNA N)</h1>
-        
+        <h1>✈️ RADAR ESTRATÉGICO DE CONVERSIÓN</h1>
         <div class="box">
             <div class="grid-2">
-                <div><label>Filtro Zara: Desde</label><input type="date" id="fi" value="2026-03-01"></div>
-                <div><label>Filtro Zara: Hasta</label><input type="date" id="ff" value="2026-03-31"></div>
+                <div><label>Desde</label><input type="date" id="fi" value="2026-03-01"></div>
+                <div><label>Hasta</label><input type="date" id="ff" value="2026-03-31"></div>
             </div>
-            <label>1. CARGAR RESERVO (EXCEL CITAS)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv">
-            <label>2. CARGAR MONITOR ZARA (JSON BRUTAL)</label><input type="file" id="fz" accept=".json">
+            <label>1. EXCEL RESERVO (ASISTENCIAS)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv">
+            <label>2. JSON BRUTAL ZARA (LEADS)</label><input type="file" id="fz" accept=".json">
         </div>
-
-        <button onclick="ejecutarRadar()">DESPLEGAR PIPELINE QUIRÚRGICO</button>
+        <button onclick="ejecutarRadar()">DESPLEGAR PIPELINE DE CAMPAÑAS</button>
 
         <div id="res" style="display:none;">
             <table>
                 <thead>
-                    <tr>
-                        <th>Campaña (Frase Gatillo)</th>
-                        <th>Tráfico (Leads)</th>
-                        <th>Tracción (Calidad)</th>
-                        <th style="background:#1e293b; border-bottom: 2px solid #38bdf8;">Agendados Totales</th>
-                        <th>⏳ Futuros (Pendientes)</th>
-                        <th>💰 Asistidos (En Caja)</th>
-                        <th>💀 Caídos (Fuga)</th>
-                    </tr>
+                    <tr><th>CAMPAÑA / ORIGEN</th><th>TRÁFICO</th><th>CALIDAD</th><th style="background:#1e293b">AGENDADOS</th><th>ASISTIDOS 💰</th><th>CAÍDOS 💀</th></tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
             </table>
@@ -61,105 +45,72 @@
 
     <script>
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
-        const cleanName = (n) => String(n || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, ' ').trim();
+        const cleanName = (n) => String(n || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
-        // Leemos el Excel como un array de arrays (header: 1) para ubicar columnas por posición exacta
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
         async function ejecutarRadar() {
             const fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0];
-            if(!fr || !fz) return alert('Subí los archivos.');
+            if(!fr || !fz) return alert('Sube Reservo y el JSON de Zara.');
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
             
             const [reserArr, monRaw] = await Promise.all([rxArray(fr), rj(fz)]);
-            const usersObj = monRaw.users || monRaw || {};
-            const leads = Array.isArray(usersObj) ? usersObj : Object.values(usersObj);
+            const leads = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
             
-            // Procesamos Reservo desde el array crudo
             const headers = reserArr[0] || [];
-            // Buscamos dinámicamente qué columnas tienen Teléfono y Nombre, pero forzamos Estado en la Columna N (índice 13)
             let colTel = headers.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
             let colNombre = headers.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
-            const colEstadoN = 13; // 0=A, 1=B, ..., 13=N
+            const colEstadoN = 13;
 
             const reserData = reserArr.slice(1).map(row => ({
                 telefono: row[colTel] ? clean(row[colTel]) : '',
                 nombre: row[colNombre] ? cleanName(row[colNombre]) : '',
-                estadoColumnaN: String(row[colEstadoN] || '').toLowerCase()
+                estado: String(row[colEstadoN] || '').toLowerCase()
             }));
 
-            const statsPorFrase = {};
+            const stats = {};
 
             leads.forEach(l => {
-                let ts = l.lastInteraction || 0;
-                if(l.history && l.history.length > 0) { ts = l.history[0].timestamp || ts; }
+                let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
                 if(ts < fi || ts > ff) return;
 
-                let frase = "Sin frase inicial / Retargeting";
-                if(l.history && l.history.length > 0) frase = l.history[0].content.trim();
+                let frase = l.history?.[0]?.content.toLowerCase() || "";
+                let origen = "Orgánico / Directo";
                 
-                if(!statsPorFrase[frase]) statsPorFrase[frase] = { leads: 0, calidad: 0, agendados: 0, futuros: 0, asistidos: 0, caidos: 0 };
-                const s = statsPorFrase[frase];
+                if (l.ad_id) origen = "🎯 META AD: " + (l.ad_title || l.ad_id);
+                else if (frase.includes('lipo')) origen = "🔥 CAMPAÑA LIPO";
+                else if (frase.includes('facial') || frase.includes('rostro')) origen = "✨ CAMPAÑA FACIAL";
+                else if (frase.includes('push') || frase.includes('gluteo')) origen = "🍑 CAMPAÑA PUSH UP";
+                else if (frase.includes('web') || frase.includes('pagina')) origen = "🌐 TRÁFICO WEB";
+
+                if(!stats[origen]) stats[origen] = { leads:0, calidad:0, agendados:0, asistidos:0, caidos:0 };
+                const s = stats[origen];
                 s.leads++;
-                
-                if(l.tag === 'HOT' || l.tag === 'AGENDADO' || (l.history && l.history.length > 2)) s.calidad++;
+                if(l.tag === 'HOT' || l.tag === 'AGENDADO' || l.history?.length > 2) s.calidad++;
 
-                const numZara = clean(l.phone || l.number);
-                const nombreZara = cleanName(l.name);
-
-                const citasPaciente = reserData.filter(c => {
-                    const matchPhone = (numZara.length >= 8 && c.telefono === numZara);
-                    const matchName = (nombreZara.length > 4 && c.nombre.length > 4) && 
-                                      (nombreZara.includes(c.nombre) || c.nombre.includes(nombreZara));
-                    return matchPhone || matchName;
-                });
+                const p = clean(l.phone || l.number);
+                const n = cleanName(l.name);
+                const match = reserData.filter(c => (p.length >= 8 && c.telefono === p) || (n.length > 4 && c.nombre.includes(n)));
                 
-                if(citasPaciente.length > 0) {
+                if(match.length > 0) {
                     s.agendados++;
-                    let estadoFinal = 'futuro'; 
-                    
-                    citasPaciente.forEach(cita => {
-                        const est = cita.estadoColumnaN;
-                        // Evaluación estricta de la Columna N
-                        if(est.includes('asiste') || est.includes('realizado') || est.includes('atendido')) {
-                            estadoFinal = 'asistido';
-                        } else if (est.includes('no llegó') || est.includes('anula') || est.includes('no asiste') || est.includes('cancelad')) {
-                            if(estadoFinal !== 'asistido') estadoFinal = 'caido';
-                        }
-                    });
-
-                    if(estadoFinal === 'asistido') s.asistidos++;
-                    else if(estadoFinal === 'caido') s.caidos++;
-                    else s.futuros++;
+                    let asiste = match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado'));
+                    let cae = match.some(c => c.estado.includes('no llegó') || c.estado.includes('anula') || c.estado.includes('cancelad'));
+                    if(asiste) s.asistidos++; else if(cae) s.caidos++;
                 }
             });
 
-            const cuerpo = document.getElementById('cuerpoTabla'); cuerpo.innerHTML = '';
-            const frasesOrdenadas = Object.keys(statsPorFrase).sort((a,b) => statsPorFrase[b].agendados - statsPorFrase[a].agendados || statsPorFrase[b].leads - statsPorFrase[a].leads);
-
-            frasesOrdenadas.forEach(f => {
-                const s = statsPorFrase[f];
-                if(s.leads === 0) return;
-                
-                cuerpo.innerHTML += `
-                    <tr>
-                        <td class="frase">"${f}"</td>
-                        <td><span class="badge">${s.leads}</span></td>
-                        <td class="${s.calidad > 0 ? 'win' : 'challa'}">${s.calidad}</td>
-                        <td style="background:#1e293b; font-size:15px; font-weight:bold; text-align:center;">${s.agendados}</td>
-                        <td class="${s.futuros > 0 ? 'warn' : 'challa'}">${s.futuros}</td>
-                        <td class="${s.asistidos > 0 ? 'win' : 'challa'}">${s.asistidos}</td>
-                        <td class="${s.caidos > 0 ? 'lose' : 'challa'}">${s.caidos}</td>
-                    </tr>
-                `;
-            });
+            document.getElementById('cuerpoTabla').innerHTML = Object.keys(stats).sort((a,b)=>stats[b].agendados - stats[a].agendados).map(f => {
+                const s = stats[f];
+                return `<tr><td><b>${f}</b></td><td>${s.leads}</td><td class="win">${s.calidad}</td>
+                <td style="background:#1e293b; font-weight:bold;">${s.agendados}</td>
+                <td class="win">${s.asistidos}</td><td class="lose">${s.caidos}</td></tr>`;
+            }).join('');
             document.getElementById('res').style.display = 'block';
         }
     </script>
 </body>
 </html>
-
-<div style="margin: 20px auto; max-width: 1000px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid #333;"><label style="color: #00d2ff; font-weight: bold; font-family: monospace; font-size: 12px; display: block; margin-bottom: 8px;">3. CARGAR META (EXCEL/CSV CAMPAÑAS)</label><input type="file" id="fileMeta" accept=".csv, .xlsx, .xls" style="color: white; width: 100%; background: #1a1a2e; border: 1px solid #333; padding: 5px;"></div>
