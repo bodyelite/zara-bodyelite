@@ -347,3 +347,9 @@ app.get('/descargar-datos-zara', (req, res) => {
     if (err) console.error('Error en descarga:', err);
   });
 });
+
+app.get('/descargar-datos-zara', (req, res) => {
+  res.download('/opt/render/project/src/data/sessions.json', 'zara_monitor.json', (err) => {
+    if (err) console.error('Error en descarga:', err);
+  });
+});
