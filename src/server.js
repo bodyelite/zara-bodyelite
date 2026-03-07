@@ -315,5 +315,6 @@ app.post('/api/delete-client', (req, res) => { eliminarCliente(req.body.phone); 
 app.get('/webhook', (req, res) => { if (req.query['hub.verify_token'] === 'BODYELITE_SECRET_123') res.send(req.query['hub.challenge']); else res.sendStatus(403); });
 app.post('/webhook', async (req, res) => { try { await procesarEvento(req.body); res.sendStatus(200); } catch (e) { console.error(e); res.sendStatus(500); } });
 
+app.get("/auditoria", (req, res) => res.sendFile(process.cwd() + "/src/public/auditoria.html"));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`ZARA 10.5 VISUAL UP 🚀`));
