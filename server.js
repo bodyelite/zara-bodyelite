@@ -10,27 +10,22 @@ app.get('/api/export-csv', (req, res) => {
     const sesiones = getSesiones();
     let csv = '\uFEFF'; 
     csv += 'Fecha de Ingreso;Telefono;Nombre;Estado;Primer Mensaje;Bitacora\n';
-
     const fmtDate = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', year: 'numeric' });
 
     for (const [phone, u] of Object.entries(sesiones)) {
         let firstUserMsg = u.history && u.history.find(m => m.role === 'user');
         let fechaTs = firstUserMsg ? firstUserMsg.timestamp : (u.lastInteraction || Date.now());
         let fecha = fmtDate.format(new Date(fechaTs)).replace(/\//g, '-');
-        
         let tel = u.phone || phone;
         let nombre = (u.name || 'Cliente').replace(/"/g, '""');
         let estado = u.tag || 'NUEVO';
         let primerMsj = (firstUserMsg ? firstUserMsg.content : '').replace(/"/g, '""').replace(/\n/g, ' ');
-        
         let bitacora = '';
         if (u.notes && u.notes.length > 0) {
             bitacora = u.notes.map(n => n.text).join(' | ').replace(/"/g, '""').replace(/\n/g, ' ');
         }
-
         csv += `"${fecha}";"${tel}";"${nombre}";"${estado}";"${primerMsj}";"${bitacora}"\n`;
     }
-
     res.setHeader('Content-disposition', 'attachment; filename=BASE_ANALISIS_META.csv');
     res.set('Content-Type', 'text/csv; charset=utf-8');
     res.status(200).send(csv);
@@ -63,14 +58,15 @@ app.get('/monitor', (req, res) => {
         .action-btn:hover { opacity:1; transform:scale(1.1); }
     </style>
     </head><body>
+    
     <div class="d-flex w-100 h-100">
     <div class="sidebar">
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
             <span class="fw-bold text-primary">ZARA 10.5</span> 
             <div class="d-flex gap-1">
-                <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇</button>
-                <a href="/api/export-csv" class="btn btn-xs btn-info fw-bold text-white" style="font-size:10px; padding:2px 6px; background-color:#0ea5e9; border:none;">📊 EXCEL META</a>
-                <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️</button>
+                <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇 SONIDO</button>
+                <a href="/api/export-csv" class="btn btn-xs fw-bold text-white" style="font-size:10px; padding:2px 6px; background-color:#10b981; border:none; text-decoration:none;">📊 EXCEL META</a>
+                <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️ Borrar Sel.</button>
             </div>
         </div>
         <div class="p-2 border-bottom bg-white"><input id="search" class="form-control form-control-sm" placeholder="🔍 Buscar..." onkeyup="renderList()"></div>
@@ -93,67 +89,207 @@ app.get('/monitor', (req, res) => {
         </div>
         <div id="chat" class="chat-box"></div>
         <div class="p-3 bg-white border-top d-flex gap-2">
-            <input id="txt" class="form-control" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') send()">
+            <input id="txt" class="form-control" placeholder="Escribe un mensaje manual..." onkeypress="if(event.key==='Enter') send()">
             <button onclick="send()" class="btn btn-primary fw-bold">ENVIAR</button>
         </div>
     </div>
     <div class="info-panel">
         <div class="mb-3 border-bottom pb-3">
-            <label class="small fw-bold text-muted mb-1">CARGA MASIVA</label>
-            <textarea id="csvInput" class="form-control form-control-sm mb-2" rows="2" placeholder="Nombre|Telef|Msg"></textarea>
-            <button onclick="processCsv()" class="btn btn-danger btn-sm w-100 fw-bold">🚀 ENVIAR</button>
+            <label class="small fw-bold text-muted mb-1">CARGA MASIVA EXCEL / CSV</label>
+            <textarea id="csvInput" class="form-control form-control-sm mb-2" rows="3" placeholder="Pega aquí desde Excel (Nombre | Telefono | Mensaje)"></textarea>
+            <button onclick="processCsv()" class="btn btn-danger btn-sm w-100 fw-bold">🚀 PROCESAR Y ENVIAR</button>
         </div>
         <div class="mb-3 border-bottom pb-3">
-            <label class="small fw-bold text-muted">ESTADO</label>
-            <select id="tagSelector" class="form-select form-select-sm mt-1" onchange="updateTag()">
-                <option value="NUEVO">NUEVO</option><option value="PUSH">PUSH</option><option value="INTERESADO">INTERESADO</option>
-                <option value="HOT">HOT</option><option value="AGENDADO">AGENDADO</option><option value="GESTIÓN">GESTIÓN</option>
-                <option value="ABANDONADOS">ABANDONADOS</option>
-            </select>
+            <label class="small fw-bold text-muted">ESTADO ACTUAL</label>
+            <div class="d-flex gap-1 mt-1">
+                <select id="tagSelector" class="form-select form-select-sm" onchange="updateTag()">
+                    <option value="NUEVO">NUEVO</option><option value="PUSH">PUSH</option><option value="INTERESADO">INTERESADO</option>
+                    <option value="HOT">HOT</option><option value="AGENDADO">AGENDADO</option><option value="GESTIÓN">GESTIÓN</option>
+                    <option value="ABANDONADOS">ABANDONADOS</option>
+                </select>
+            </div>
             <button onclick="recalc()" class="btn btn-warning btn-sm w-100 mt-2 fw-bold">♻️ RECALCULAR</button>
         </div>
         <div class="flex-grow-1 d-flex flex-column" style="overflow:hidden">
-            <label class="small fw-bold text-muted">BITÁCORA</label>
-            <textarea id="noteInput" class="form-control form-control-sm mb-1" rows="2" placeholder="Nota..."></textarea>
+            <label class="small fw-bold text-muted">TAREA ZARA</label>
+            <textarea id="noteInput" class="form-control form-control-sm mb-1" rows="2" placeholder="Tarea..."></textarea>
             <div class="d-flex align-items-center gap-2 mb-2">
-                <input type="checkbox" id="checkZara" onchange="toggleDate()"> <span style="font-size:10px">Programar</span>
+                <input type="checkbox" id="checkZara" onchange="toggleDate()"> <span style="font-size:10px">Asignar a Zara</span>
             </div>
             <input type="datetime-local" id="dateInput" class="form-control form-control-sm mb-2" style="display:none">
             <button onclick="addNote()" class="btn btn-outline-secondary btn-sm w-100 mb-2">Guardar</button>
+            <label class="small fw-bold text-muted">BITÁCORA</label>
             <div id="log" style="flex:1;overflow-y:auto;background:#f9fafb;border:1px solid #eee;border-radius:4px;padding:5px"></div>
         </div>
     </div>
     </div>
     <script>
-    let d={users:{}}; let cur=null; let tab='NUEVO'; let selection = new Set();
+    let d={users:{}}; let cur=null; let tab='NUEVO';
+    let selection = new Set(); 
+    let lastGlobalTime = 0;
+    
+    let audioCtx = null;
+    let audioEnabled = false;
+
+    function playBeep() {
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'triangle'; osc.frequency.value = 900; 
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        } catch(e) { console.error("Error audio", e); }
+    }
+
+    function enableAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        playBeep();
+        audioEnabled = true;
+        const btn = document.getElementById('btnSound');
+        btn.className = 'btn btn-xs btn-success fw-bold';
+        btn.innerText = '🔊 ON';
+    }
+    
     const fmt = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+    const fmtTime = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false });
+
     function toggleDate(){ document.getElementById('dateInput').style.display = document.getElementById('checkZara').checked ? 'block' : 'none'; }
-    async function r(){ try{ const x=await fetch('/api/data'); d=await x.json(); renderList(); if(cur && d.users[cur]) renderChat(); }catch(e){} }
+    
+    async function r(){ 
+        try{ 
+            const x=await fetch('/api/data'); 
+            d=await x.json(); 
+            let maxT = 0;
+            Object.values(d.users).forEach(u => {
+                const history = u.history || [];
+                const lastMsg = history.length > 0 ? history[history.length - 1] : null;
+                if (lastMsg && lastMsg.role === 'user' && u.lastInteraction > maxT) { maxT = u.lastInteraction; }
+            });
+            if(audioEnabled && lastGlobalTime > 0 && maxT > lastGlobalTime) { playBeep(); }
+            if (maxT > lastGlobalTime) lastGlobalTime = maxT;
+            renderList(); 
+            if(cur && d.users[cur]) renderChat(); 
+        }catch(e){} 
+    }
     setInterval(r,3000); r();
+    
+    function toggleSel(p, event) {
+        event.stopPropagation();
+        if(selection.has(p)) { selection.delete(p); } else { selection.add(p); }
+    }
+
     function renderList(){
         const l=document.getElementById('list'); l.innerHTML='';
         const s=document.getElementById('search').value.toLowerCase();
+        
         Object.entries(d.users).sort(([,a],[,b])=>b.lastInteraction-a.lastInteraction).forEach(([key, u])=>{
             const phone = u.phone || key;
             let show = (tab==='TODOS' || u.tag===tab || (tab==='NUEVO' && (!u.tag || u.tag==='NUEVO')));
             if(s) show = (u.name.toLowerCase().includes(s) || phone.includes(s));
+            
             if(show){
+                const time = fmtTime.format(new Date(u.lastInteraction)); 
                 const badgeColor = u.tag==='HOT'?'bg-HOT':(u.tag==='PUSH'?'bg-PUSH':'bg-NUEVO');
-                l.innerHTML += '<div class="client-item '+(cur===phone?'active':'')+'" onclick="selectUser(\\''+phone+'\\')">' +
-                    '<div style="flex:1"><b>'+u.name+'</b><br><small>'+phone+'</small></div>' +
-                    '<div><span class="badge-tag '+badgeColor+'">'+(u.tag||'NUEVO')+'</span></div>' +
-                    '</div>';
+                const badge = u.tag ? '<span class="badge-tag '+badgeColor+'">'+u.tag+'</span>' : '';
+                const dot = u.unread ? '<div class="unread-dot"></div>' : '';
+                const active = cur===phone ? 'active' : '';
+                const isChecked = selection.has(phone) ? 'checked' : '';
+                
+                l.innerHTML += '<div class="client-item '+active+'">' +
+                    '<input type="checkbox" class="cb m-0 me-2" onclick="toggleSel(\\''+phone+'\\', event)" '+isChecked+'>' +
+                    '<div style="flex:1; overflow:hidden;" onclick="selectUser(\\''+phone+'\\')">' +
+                        '<div class="d-flex justify-content-between align-items-center">' +
+                            '<span class="fw-bold text-truncate" style="max-width:120px">'+u.name+'</span>' +
+                            '<span style="font-size:10px;color:#9ca3af">'+time+'</span>' +
+                        '</div>' +
+                        '<div class="d-flex justify-content-between align-items-center mt-1">' +
+                            '<span style="font-size:10px;color:#6b7280">'+phone+'</span>' +
+                            badge +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="d-flex align-items-center ms-2 gap-1">' +
+                         dot +
+                         '<button class="action-btn text-primary" onclick="event.stopPropagation();markUnread(\\''+phone+'\\')" title="Marcar No Leído">📩</button>' +
+                         '<button class="action-btn text-danger" onclick="event.stopPropagation();delClient(\\''+phone+'\\')" title="Eliminar">×</button>' +
+                    '</div>' +
+                '</div>';
             }
         });
+        
+        if(cur && d.users[cur]) {
+             const btn = document.getElementById('botToggle');
+             const isOn = d.botStatus[cur] !== false;
+             btn.className = 'btn btn-sm ' + (isOn?'btn-success':'btn-secondary');
+             btn.innerText = isOn ? 'BOT ON 🤖' : 'BOT OFF 🛑';
+        }
     }
-    function selectUser(p){ cur=p; fetch('/api/leido', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p})}); r(); }
+
+    function selectUser(p){
+        cur=p; fetch('/api/leido', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone:p})}); r();
+        const u = d.users[p];
+        const phone = u.phone || p;
+        document.getElementById('chatHeader').innerHTML = '<div><span class="fw-bold">'+u.name+'</span> <span class="text-muted small">'+phone+'</span></div><button id="botToggle" onclick="toggleBot(\\''+phone+'\\')" class="btn btn-sm btn-secondary" style="font-size:10px">...</button>';
+        document.getElementById('tagSelector').value = u.tag || 'NUEVO';
+        renderLog(u);
+    }
+
     function renderChat(){
         const c=document.getElementById('chat'); const u = d.users[cur];
-        c.innerHTML=(u.history||[]).map(m=>'<div class="msg '+(m.role==='user'?'msg-user':'msg-bot')+'">'+m.content+'</div>').join('');
+        c.innerHTML=(u.history||[]).map(m=>{
+            const dateStr = fmt.format(new Date(m.timestamp));
+            return '<div class="msg '+(m.role==='user'?'msg-user':'msg-bot')+'">'+m.content+'<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px">'+dateStr+'</div></div>';
+        }).join('');
     }
+
+    function renderLog(u){
+        const log = document.getElementById('log');
+        const phone = u.phone || cur; 
+        if(!u.notes || u.notes.length===0) { log.innerHTML='<div class="text-center text-muted mt-3" style="font-size:10px">Sin notas</div>'; return; }
+        
+        log.innerHTML = u.notes.map((n,i) => {
+            const dateLink = n.targetDate ? '<div class="text-primary">📅 '+fmt.format(new Date(n.targetDate))+'</div>' : '';
+            return '<div style="padding:5px;border-bottom:1px solid #eee;font-size:11px;background:'+(n.status==='executed'?'#dcfce7':'#fff')+'">' +
+                   '<div class="d-flex justify-content-between"><b>'+(n.isScheduled?'⏰':'📝')+' '+fmt.format(new Date(n.date))+'</b><span style="cursor:pointer;color:red" onclick="delNote(\\''+phone+'\\','+i+')">×</span></div>' +
+                   '<div>'+n.text+'</div>'+dateLink+'</div>';
+        }).reverse().join('');
+    }
+
+    function setFiltro(t,e){tab=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));e.classList.add('active');renderList();}
     async function send(){const t=document.getElementById('txt').value; if(t){await fetch('/api/manual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,text:t})});document.getElementById('txt').value='';r();}}
+    async function toggleBot(p){
+        const btn = document.getElementById('botToggle');
+        btn.innerText = '...';
+        await fetch('/api/bot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
+        r();
+    }
     async function updateTag(){const t=document.getElementById('tagSelector').value; await fetch('/api/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,tag:t})});r();}
     async function recalc(){await fetch('/api/recalc');r();}
+    async function addNote(){const t=document.getElementById('noteInput').value; const d=document.getElementById('dateInput').value; const c=document.getElementById('checkZara').checked; await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:cur,text:t,isScheduled:c,targetDate:d})}); document.getElementById('noteInput').value=''; r();}
+    async function delNote(p,i){if(confirm('Borrar?')) await fetch('/api/delete-note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,index:i})}); r();}
+    async function processCsv(){const raw=document.getElementById('csvInput').value; if(!raw)return; await fetch('/api/push-batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw})}); alert('Enviando...'); document.getElementById('csvInput').value=''; r();}
+    
+    async function markUnread(p){ await fetch('/api/unread',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); r(); }
+    async function delClient(p){ 
+        if(confirm('¿Eliminar cliente?')) {
+            await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})}); 
+            if(cur===p) cur=null; 
+            if(selection.has(p)) selection.delete(p); 
+            r(); 
+        }
+    }
+    async function delMasivo(){ 
+        const s = Array.from(selection);
+        if(s.length && confirm('¿Borrar '+s.length+' clientes?')) {
+            for(let p of s) await fetch('/api/delete-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
+            selection.clear();
+            r();
+        }
+    }
     </script></body></html>`;
     res.send(html);
 });
@@ -161,8 +297,19 @@ app.get('/monitor', (req, res) => {
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ok:true}); });
 app.post('/api/tag', (req, res) => { updateTagManual(req.body.phone, req.body.tag); res.json({ok:true}); });
+app.post('/api/note', (req, res) => { agregarNota(req.body.phone, req.body.text, req.body.isScheduled, req.body.targetDate); res.json({ok:true}); });
+app.post('/api/delete-note', (req, res) => { eliminarNota(req.body.phone, req.body.index); res.json({ok:true}); });
 app.get('/api/recalc', (req, res) => { const c = forzarRecalculo(); res.json({count:c}); });
+app.post('/api/push-batch', async (req, res) => {
+    try {
+        const rows = req.body.raw.split('\n').filter(r => r.trim());
+        const lista = rows.map(r => { const [n, p, m] = r.split('|'); return { nombre: n, telefono: p, mensaje: m }; });
+        const c = await procesarPushBatch(lista);
+        res.json({ count: c });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
 app.post('/api/leido', (req, res) => { marcarLeido(req.body.phone); res.json({ok:true}); });
+app.post('/api/unread', (req, res) => { marcarComoNoLeido(req.body.phone); res.json({ok:true}); });
 app.post('/api/delete-client', (req, res) => { eliminarCliente(req.body.phone); res.json({ok:true}); });
 
 app.get('/webhook', (req, res) => { if (req.query['hub.verify_token'] === 'BODYELITE_SECRET_123') res.send(req.query['hub.challenge']); else res.sendStatus(403); });
