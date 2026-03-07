@@ -342,3 +342,8 @@ app.post('/webhook', async (req, res) => { try { await procesarEvento(req.body);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`ZARA 10.5 VISUAL UP 🚀`));
 // Revision Auditoria: 1772743730652
+app.get('/descargar-datos-zara', (req, res) => {
+  res.download('/opt/render/project/src/data/sessions.json', 'zara_monitor.json', (err) => {
+    if (err) console.error('Error en descarga:', err);
+  });
+});
