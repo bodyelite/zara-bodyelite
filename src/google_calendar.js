@@ -6,6 +6,15 @@ dotenv.config();
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
 
+const HORARIOS_ATENCION = {
+    1: { inicio: 10, fin: 19 },
+    2: { inicio: 10, fin: 17 },
+    3: { inicio: 10, fin: 19 },
+    4: { inicio: 10, fin: 17 },
+    5: { inicio: 10, fin: 19 },
+    6: { inicio: 10, fin: 13 }
+};
+
 function getAuthClient() {
     let key = process.env.GOOGLE_PRIVATE_KEY;
     const email = process.env.GOOGLE_CLIENT_EMAIL;
@@ -19,52 +28,44 @@ export async function checkAvailability() {
         const auth = getAuthClient();
         const calendar = google.calendar({ version: 'v3', auth });
         const now = DateTime.now().setZone('America/Santiago');
-        
         const response = await calendar.events.list({
             calendarId: CALENDAR_ID,
             timeMin: now.toISO(),
-            timeMax: now.plus({ days: 10 }).endOf('day').toISO(),
+            timeMax: now.plus({ days: 7 }).endOf('day').toISO(),
             singleEvents: true,
             orderBy: 'startTime',
         });
-
         const events = response.data.items || [];
-        if (events.length === 0) return "La agenda está completamente libre.";
-
-        // Extraemos los eventos existentes y le decimos a Zara que están OCUPADOS
+        let resumen = "Horarios: Lun/Mie/Vie 10-19h, Mar/Jue 10-17h, Sab 10-13h.\n";
         const ocupados = events
             .filter(e => e.start.dateTime)
-            .slice(0, 10)
-            .map(e => DateTime.fromISO(e.start.dateTime).setZone('America/Santiago').toFormat('dd/MM HH:mm'))
-            .join(', ');
-        
-        return ocupados ? `Atención, estas horas ya están OCUPADAS: ${ocupados}. No las ofrezcas.` : "Agenda libre.";
-    } catch (e) { 
-        console.error("Error leyendo calendario:", e);
-        return "Agenda con disponibilidad, pero confirma antes de asegurar."; 
-    }
+            .map(e => {
+                const start = DateTime.fromISO(e.start.dateTime).setZone('America/Santiago');
+                const end = DateTime.fromISO(e.end.dateTime).setZone('America/Santiago');
+                return `${start.toFormat('dd/MM HH:mm')} a ${end.toFormat('HH:mm')}`;
+            }).join(', ');
+        return resumen + (ocupados ? `OCUPADO: ${ocupados}.` : "Libre.") + " No agendes fuera de rango ni en horas ocupadas.";
+    } catch (e) { return "Error agenda."; }
 }
 
 export async function agendarEvento(nombre, fechaInicioISO) {
     try {
         const auth = getAuthClient();
         const calendar = google.calendar({ version: 'v3', auth });
-        
         const inicio = DateTime.fromISO(fechaInicioISO).setZone('America/Santiago');
-        const fin = inicio.plus({ hours: 1 });
-
+        const horario = HORARIOS_ATENCION[inicio.weekday];
+        if (!horario || inicio.hour < horario.inicio || (inicio.hour + inicio.minute/60) >= horario.fin) {
+            return { ok: false, msg: "Esa hora está fuera del horario de atención." };
+        }
         const response = await calendar.events.insert({
             calendarId: CALENDAR_ID,
             resource: {
-                summary: `[Reservo] - ${nombre}`,
-                description: "Cita agendada automáticamente por ZARA 7.0.",
+                summary: `Evaluación: ${nombre}`,
+                description: "Agendado por ZARA 7.0",
                 start: { dateTime: inicio.toISO(), timeZone: 'America/Santiago' },
-                end: { dateTime: fin.toISO(), timeZone: 'America/Santiago' },
+                end: { dateTime: inicio.plus({ minutes: 60 }).toISO(), timeZone: 'America/Santiago' },
             }
         });
-        return response.data.htmlLink ? true : false;
-    } catch (e) {
-        console.error("Error escribiendo en calendario:", e);
-        return false;
-    }
+        return { ok: !!response.data.htmlLink };
+    } catch (e) { return { ok: false }; }
 }

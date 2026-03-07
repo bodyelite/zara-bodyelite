@@ -1,7 +1,3 @@
-import pathTool from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = pathTool.dirname(__filename);
 import express from 'express';
 import cors from 'cors';
 import { getSesiones, getBotStatus, enviarMensajeManual, updateTagManual, toggleBot, agregarNota, eliminarNota, procesarEvento, forzarRecalculo, procesarPushBatch, marcarLeido, marcarComoNoLeido, eliminarCliente } from './app.js';
@@ -10,17 +6,32 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.get('/api/export-csv', (req, res) => {
+    const sesiones = getSesiones();
+    let csv = '\uFEFF'; 
+    csv += 'Fecha de Ingreso;Telefono;Nombre;Estado;Primer Mensaje;Bitacora\n';
+    const fmtDate = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', year: 'numeric' });
 
-
-app.use('/assets', express.static(pathTool.join(__dirname, 'public')));
-
-app.get('/descargar-bd-zara', (req, res) => { const path = require('path'); const ruta = path.join(process.cwd(), 'zara_monitor_pro.json'); if(require('fs').existsSync(ruta)) { res.download(ruta); } else { res.status(404).send('Archivo JSON no encontrado en el servidor.'); } });
-app.get('/auditoria', (req, res) => {
-    res.sendFile(pathTool.join(__dirname, 'public', 'auditoria.html'));
+    for (const [phone, u] of Object.entries(sesiones)) {
+        let firstUserMsg = u.history && u.history.find(m => m.role === 'user');
+        let fechaTs = firstUserMsg ? firstUserMsg.timestamp : (u.lastInteraction || Date.now());
+        let fecha = fmtDate.format(new Date(fechaTs)).replace(/\//g, '-');
+        let tel = u.phone || phone;
+        let nombre = (u.name || 'Cliente').replace(/"/g, '""');
+        let estado = u.tag || 'NUEVO';
+        let primerMsj = (firstUserMsg ? firstUserMsg.content : '').replace(/"/g, '""').replace(/\n/g, ' ');
+        let bitacora = '';
+        if (u.notes && u.notes.length > 0) {
+            bitacora = u.notes.map(n => n.text).join(' | ').replace(/"/g, '""').replace(/\n/g, ' ');
+        }
+        csv += `"${fecha}";"${tel}";"${nombre}";"${estado}";"${primerMsj}";"${bitacora}"\n`;
+    }
+    res.setHeader('Content-disposition', 'attachment; filename=BASE_ANALISIS_META.csv');
+    res.set('Content-Type', 'text/csv; charset=utf-8');
+    res.status(200).send(csv);
 });
 
 app.get('/monitor', (req, res) => {
-    // Usamos una variable para construir el HTML y evitar conflictos de comillas
     let html = `<!DOCTYPE html><html><head><title>ZARA 10.5</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta charset="UTF-8">
@@ -53,11 +64,8 @@ app.get('/monitor', (req, res) => {
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
             <span class="fw-bold text-primary">ZARA 10.5</span> 
             <div class="d-flex gap-1">
-                <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇 ACTIVAR SONIDO</button>
-<a href="/descargar-bd-zara" target="_blank" style="display:inline-block; box-sizing:border-box; padding: 10px; background-color: #00d2ff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; box-shadow: 0px 4px 10px rgba(0,210,255,0.4); text-align: center; text-decoration: none;">📥 Descargar JSON Brutal</a>
-
-
-
+                <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇 SONIDO</button>
+                <a href="/api/export-csv" class="btn btn-xs fw-bold text-white" style="font-size:10px; padding:2px 6px; background-color:#10b981; border:none; text-decoration:none;">📊 EXCEL META</a>
                 <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️ Borrar Sel.</button>
             </div>
         </div>
@@ -120,42 +128,27 @@ app.get('/monitor', (req, res) => {
     let selection = new Set(); 
     let lastGlobalTime = 0;
     
-    // --- SISTEMA DE AUDIO POTENCIADO ---
     let audioCtx = null;
     let audioEnabled = false;
 
     function playBeep() {
         if (!audioCtx) return;
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         try {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            // Sonido fuerte (Triangle Wave)
-            osc.type = 'triangle'; 
-            osc.frequency.value = 900; 
-            
-            // Volumen alto
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'triangle'; osc.frequency.value = 900; 
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         } catch(e) { console.error("Error audio", e); }
     }
 
     function enableAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         playBeep();
-        
         audioEnabled = true;
         const btn = document.getElementById('btnSound');
         btn.className = 'btn btn-xs btn-success fw-bold';
@@ -171,22 +164,14 @@ app.get('/monitor', (req, res) => {
         try{ 
             const x=await fetch('/api/data'); 
             d=await x.json(); 
-            
             let maxT = 0;
             Object.values(d.users).forEach(u => {
                 const history = u.history || [];
                 const lastMsg = history.length > 0 ? history[history.length - 1] : null;
-                
-                if (lastMsg && lastMsg.role === 'user' && u.lastInteraction > maxT) {
-                    maxT = u.lastInteraction;
-                }
+                if (lastMsg && lastMsg.role === 'user' && u.lastInteraction > maxT) { maxT = u.lastInteraction; }
             });
-
-            if(audioEnabled && lastGlobalTime > 0 && maxT > lastGlobalTime) {
-                playBeep();
-            }
+            if(audioEnabled && lastGlobalTime > 0 && maxT > lastGlobalTime) { playBeep(); }
             if (maxT > lastGlobalTime) lastGlobalTime = maxT;
-
             renderList(); 
             if(cur && d.users[cur]) renderChat(); 
         }catch(e){} 
@@ -195,11 +180,7 @@ app.get('/monitor', (req, res) => {
     
     function toggleSel(p, event) {
         event.stopPropagation();
-        if(selection.has(p)) {
-            selection.delete(p);
-        } else {
-            selection.add(p);
-        }
+        if(selection.has(p)) { selection.delete(p); } else { selection.add(p); }
     }
 
     function renderList(){
@@ -207,9 +188,7 @@ app.get('/monitor', (req, res) => {
         const s=document.getElementById('search').value.toLowerCase();
         
         Object.entries(d.users).sort(([,a],[,b])=>b.lastInteraction-a.lastInteraction).forEach(([key, u])=>{
-            
             const phone = u.phone || key;
-            
             let show = (tab==='TODOS' || u.tag===tab || (tab==='NUEVO' && (!u.tag || u.tag==='NUEVO')));
             if(s) show = (u.name.toLowerCase().includes(s) || phone.includes(s));
             
@@ -219,7 +198,6 @@ app.get('/monitor', (req, res) => {
                 const badge = u.tag ? '<span class="badge-tag '+badgeColor+'">'+u.tag+'</span>' : '';
                 const dot = u.unread ? '<div class="unread-dot"></div>' : '';
                 const active = cur===phone ? 'active' : '';
-                
                 const isChecked = selection.has(phone) ? 'checked' : '';
                 
                 l.innerHTML += '<div class="client-item '+active+'">' +
@@ -313,14 +291,12 @@ app.get('/monitor', (req, res) => {
         }
     }
     </script></body></html>`;
-    
     res.send(html);
 });
 
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ok:true}); });
 app.post('/api/tag', (req, res) => { updateTagManual(req.body.phone, req.body.tag); res.json({ok:true}); });
-app.post('/api/bot', (req, res) => { toggleBot(req.body.phone); res.json({ok:true}); });
 app.post('/api/note', (req, res) => { agregarNota(req.body.phone, req.body.text, req.body.isScheduled, req.body.targetDate); res.json({ok:true}); });
 app.post('/api/delete-note', (req, res) => { eliminarNota(req.body.phone, req.body.index); res.json({ok:true}); });
 app.get('/api/recalc', (req, res) => { const c = forzarRecalculo(); res.json({count:c}); });
@@ -341,15 +317,3 @@ app.post('/webhook', async (req, res) => { try { await procesarEvento(req.body);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`ZARA 10.5 VISUAL UP 🚀`));
-// Revision Auditoria: 1772743730652
-app.get('/descargar-datos-zara', (req, res) => {
-  res.download('/opt/render/project/src/data/sessions.json', 'zara_monitor.json', (err) => {
-    if (err) console.error('Error en descarga:', err);
-  });
-});
-
-app.get('/descargar-datos-zara', (req, res) => {
-  res.download('/opt/render/project/src/data/sessions.json', 'zara_monitor.json', (err) => {
-    if (err) console.error('Error en descarga:', err);
-  });
-});
