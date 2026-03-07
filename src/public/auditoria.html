@@ -2,62 +2,68 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>PIPELINE DE CONVERSIÓN META - BODY ELITE</title>
+    <title>DASHBOARD DE VERDAD ABSOLUTA - BODY ELITE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
-        .container { max-width: 1300px; margin: auto; background: #1e293b; padding: 30px; border-radius: 8px; border: 1px solid #334155; }
-        .box { background: #0f172a; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .container { max-width: 1400px; margin: auto; }
+        .box { background: #1e293b; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-        input[type="date"], input[type="file"] { width: 100%; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; }
-        button { background: #10b981; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; transition: 0.2s;}
-        button:hover { background: #059669; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; background: #0f172a; text-align: center; }
+        input[type="date"], input[type="file"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; }
+        button { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; transition: 0.2s;}
+        button:hover { background: #0ea5e9; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; background: #0f172a; text-align: center; }
         th { background: #334155; color: #38bdf8; padding: 12px; border-bottom: 2px solid #1e293b; font-size: 11px; }
-        td { padding: 14px; border-bottom: 1px solid #334155; vertical-align: middle; }
+        td { padding: 12px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
         .win { color: #10b981; font-weight: bold; }
-        .lose { color: #f43f5e; font-weight: bold; }
-        .money { color: #fbbf24; font-weight: bold; }
+        .warn { color: #fbbf24; font-weight: bold; }
         .text-left { text-align: left; }
-        .challa { color: #64748b; }
+        .frase-gatillo { font-style: italic; color: #94a3b8; max-width: 300px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        h2 { font-size: 16px; color: #f8fafc; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 30px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 PIPELINE DE CONVERSIÓN (META ➔ ZARA ➔ RESERVO)</h1>
+        <h1 style="color: #38bdf8;">⚖️ DASHBOARD DE VERDAD ABSOLUTA</h1>
         <div class="box">
-            <div class="grid-2">
+            <div class="grid-3">
+                <div><label>1. Reservo (Caja)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
+                <div><label>2. JSON Zara (Chats)</label><input type="file" id="fz" accept=".json"></div>
+                <div><label style="color: #38bdf8;">3. Meta Ads (Gasto)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div><label>Desde</label><input type="date" id="fi" value="2026-03-01"></div>
                 <div><label>Hasta</label><input type="date" id="ff" value="2026-03-31"></div>
             </div>
-            <label>1. EXCEL RESERVO (ASISTENCIAS EN SILLA)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv">
-            <label>2. JSON BRUTAL ZARA (CHATS Y BITÁCORA)</label><input type="file" id="fz" accept=".json">
-            <label style="color: #10b981;">3. META ADS (INVERSIÓN GASTADA)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls" style="border-color: #10b981;">
+            <button onclick="ejecutarRadar()">CRUZAR BASES DE DATOS</button>
         </div>
-        <button onclick="ejecutarRadar()">CALCULAR EMBUDO Y CAC FINAL</button>
 
         <div id="res" style="display:none;">
+            <h2>💳 1. LA FACTURA DE META (Lo que te cobraron)</h2>
+            <table id="tablaMeta">
+                <thead><tr><th class="text-left">NOMBRE REAL DE LA CAMPAÑA EN META</th><th>INVERSIÓN GASTADA (CLP)</th></tr></thead>
+                <tbody id="cuerpoMeta"></tbody>
+            </table>
+
+            <h2>🎯 2. EL EMBUDO DE ZARA Y RESERVO (Lo que realmente pasó)</h2>
             <table>
                 <thead>
                     <tr>
-                        <th class="text-left">MENSAJE / CAMPAÑA GATILLO</th>
-                        <th>INVERSIÓN META ($)</th>
-                        <th>ENTRARON (INICIO CHAT)</th>
-                        <th>AVANZAN (TRACCIÓN)</th>
-                        <th>AGENDARON (BITÁCORA/ZARA)</th>
-                        <th style="background:#1e293b">LLEGARON (RESERVO)</th>
-                        <th>COSTO x LEAD SENTADO (CAC)</th>
+                        <th class="text-left">FRASE DE ENTRADA (ANUNCIO)</th>
+                        <th>CLICS (CHALLA)</th>
+                        <th>TRACCIÓN REAL (>5 Msjs)</th>
+                        <th>AGENDAN (BITÁCORA/TAG)</th>
+                        <th style="background:#1e293b">EN SILLA (RESERVO)</th>
                     </tr>
                 </thead>
-                <tbody id="cuerpoTabla"></tbody>
+                <tbody id="cuerpoEmbudo"></tbody>
             </table>
         </div>
     </div>
 
     <script>
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
-        const cleanName = (n) => String(n || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP'}).format(n);
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1})); reader.readAsArrayBuffer(f); }); }
@@ -73,28 +79,31 @@
             const [reserArr, monRaw] = await Promise.all([rxArray(fr), rj(fz)]);
             const leads = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
             
-            // 1. EXTRAER INVERSIÓN META
-            let gastos = { "LIPO": 0, "FACIAL": 0, "PUSH UP": 0, "OTRAS/ORGÁNICO": 0 };
+            // 1. RENDERIZAR META DIRECTO (SIN FILTROS)
+            let metaHtml = "";
             if(fm) {
                 try {
                     const metaArr = await rxArray(fm);
-                    const metaHeaders = metaArr[0] || [];
-                    let cCamp = metaHeaders.findIndex(h => String(h).toLowerCase().includes('campaña') || String(h).toLowerCase().includes('campaign'));
-                    let cSpend = metaHeaders.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
+                    const metaH = metaArr[0] || [];
+                    let cCamp = metaH.findIndex(h => String(h).toLowerCase().includes('campaña') || String(h).toLowerCase().includes('campaign'));
+                    let cSpend = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
                     
                     if(cCamp !== -1 && cSpend !== -1) {
+                        let resumenMeta = {};
                         metaArr.slice(1).forEach(r => {
-                            let campName = String(r[cCamp] || '').toLowerCase();
+                            let camp = String(r[cCamp] || 'Desconocida');
                             let spend = parseFloat(r[cSpend]) || 0;
-                            if(campName.includes('lipo')) gastos["LIPO"] += spend;
-                            else if(campName.includes('facial') || campName.includes('rostro')) gastos["FACIAL"] += spend;
-                            else if(campName.includes('push') || campName.includes('gluteo')) gastos["PUSH UP"] += spend;
+                            if(spend > 0) { resumenMeta[camp] = (resumenMeta[camp] || 0) + spend; }
                         });
+                        metaHtml = Object.entries(resumenMeta).sort((a,b)=>b[1]-a[1]).map(([c, s]) => 
+                            `<tr><td class="text-left" style="font-weight:bold;">${c}</td><td class="warn">${fmtMoney(s)}</td></tr>`
+                        ).join('');
                     }
-                } catch(e) { console.error("Error Meta", e); }
+                } catch(e) { console.error(e); }
             }
+            document.getElementById('cuerpoMeta').innerHTML = metaHtml || "<tr><td colspan='2'>No se pudo leer el CSV de Meta.</td></tr>";
 
-            // 2. EXTRAER RESERVO
+            // 2. EXTRAER RESERVO (MÁS AGRESIVO)
             const headers = reserArr[0] || [];
             let colTel = headers.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
             let colNombre = headers.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
@@ -102,75 +111,66 @@
 
             const reserData = reserArr.slice(1).map(row => ({
                 telefono: row[colTel] ? clean(row[colTel]) : '',
-                nombre: row[colNombre] ? cleanName(row[colNombre]) : '',
+                nombreOriginal: String(row[colNombre] || '').toLowerCase().trim(),
                 estado: String(row[colEstadoN] || row[2] || '').toLowerCase()
             }));
 
-            // 3. EMBUDO POR FRASE (ZARA)
-            const stats = {
-                "LIPO": { entraron:0, avanzan:0, agendaron:0, llegaron:0 },
-                "FACIAL": { entraron:0, avanzan:0, agendaron:0, llegaron:0 },
-                "PUSH UP": { entraron:0, avanzan:0, agendaron:0, llegaron:0 },
-                "OTRAS/ORGÁNICO": { entraron:0, avanzan:0, agendaron:0, llegaron:0 }
-            };
+            // 3. EMBUDO AGRUPADO POR FRASE EXACTA
+            const stats = {};
 
             leads.forEach(l => {
                 let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
                 if(ts < fi || ts > ff) return;
 
-                let primerMensaje = l.history?.[0]?.content.toLowerCase() || "";
-                let bucket = "OTRAS/ORGÁNICO";
+                let frase = l.history?.[0]?.content.trim() || "Contacto Orgánico / Retargeting";
+                if(frase.length > 60) frase = frase.substring(0, 60) + "..."; // Acortar frases largas
+
+                if(!stats[frase]) stats[frase] = { clics:0, traccion:0, agendan:0, ensilla:0 };
+                const s = stats[frase];
                 
-                if (primerMensaje.includes('lipo')) bucket = "LIPO";
-                else if (primerMensaje.includes('facial') || primerMensaje.includes('rostro')) bucket = "FACIAL";
-                else if (primerMensaje.includes('push') || primerMensaje.includes('gluteo')) bucket = "PUSH UP";
+                s.clics++; 
 
-                const s = stats[bucket];
-                s.entraron++; // Paso 1: Entraron (Escribieron)
+                // TRACCIÓN EXIGENTE (>4 mensajes en el historial significa que hubo al menos 2 idas y vueltas)
+                let esReal = false;
+                if (l.history?.length >= 5) esReal = true;
+                if (l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
+                if(esReal) s.traccion++;
 
-                // Paso 2: Avanzan (Tracción Real, superan la challa)
-                let avanza = false;
-                if (l.history?.length > 2) avanza = true;
-                if (l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') avanza = true;
-                if(avanza) s.avanzan++;
+                // AGENDADO EN ZARA
+                let promesa = false;
+                if (l.tag === 'AGENDADO') promesa = true;
+                if (l.notes?.some(n => n.text.toLowerCase().includes('agenda') || n.text.toLowerCase().includes('cita'))) promesa = true;
+                if(promesa) s.agendan++;
 
-                // Paso 3: Agendaron (Promesa en Bitácora o Tag)
-                let agendo = false;
-                if (l.tag === 'AGENDADO') agendo = true;
-                if (l.notes?.some(n => n.text.toLowerCase().includes('agenda'))) agendo = true;
-                if(agendo) s.agendaron++;
-
-                // Paso 4: Llegaron (Cruce con Reservo)
-                if(agendo) {
+                // EN SILLA (RESERVO) - CRUCE MÁS BLANDO PARA NOMBRES
+                if(promesa || esReal) {
                     const p = clean(l.phone || l.number);
-                    const n = cleanName(l.name);
-                    const match = reserData.filter(c => (p.length >= 8 && c.telefono === p) || (n.length > 4 && c.nombre.includes(n)));
-                    if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendido'))) {
-                        s.llegaron++;
+                    const n = String(l.name || '').toLowerCase().trim().split(' ')[0]; // Solo el primer nombre para buscar coincidencias parciales
+                    
+                    const match = reserData.filter(c => 
+                        (p.length >= 8 && c.telefono.includes(p)) || 
+                        (n.length > 3 && c.nombreOriginal.includes(n))
+                    );
+                    
+                    // Estados positivos ampliados
+                    if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendid') || c.estado.includes('ok') || c.estado.includes('confirm'))) {
+                        s.ensilla++;
                     }
                 }
             });
 
-            // 4. RENDERIZAR TABLA
-            document.getElementById('cuerpoTabla').innerHTML = ["LIPO", "FACIAL", "PUSH UP", "OTRAS/ORGÁNICO"].map(b => {
-                const s = stats[b];
-                const inv = gastos[b] || 0;
-                if(s.entraron === 0 && inv === 0) return '';
-                
-                let cac = "---";
-                if(s.llegaron > 0) cac = fmtMoney(inv / s.llegaron);
-                else if(inv > 0 && s.llegaron === 0) cac = "PERDIDA ($" + fmtMoney(inv) + ")";
-
+            // 4. PINTAR EMBUDO
+            document.getElementById('cuerpoEmbudo').innerHTML = Object.entries(stats).sort((a,b)=>b[1].ensilla - a[1].ensilla || b[1].clics - a[1].clics).map(([f, s]) => {
+                if(s.clics === 0) return '';
                 return `<tr>
-                    <td class="text-left" style="font-weight:bold; color:#38bdf8;">🔥 CAMPAÑA ${b}</td>
-                    <td class="money">${inv > 0 ? fmtMoney(inv) : '---'}</td>
-                    <td>${s.entraron}</td>
-                    <td class="${s.avanzan > 0 ? 'win' : 'challa'}">${s.avanzan}</td>
-                    <td class="${s.agendaron > 0 ? 'win' : 'challa'}">${s.agendaron}</td>
-                    <td style="background:#1e293b; font-weight:bold; font-size:15px; color:${s.llegaron > 0 ? '#10b981' : '#f43f5e'};">${s.llegaron}</td>
-                    <td style="font-weight:bold; color:${s.llegaron > 0 ? '#10b981' : '#f43f5e'};">${cac}</td>
+                    <td class="text-left"><span class="frase-gatillo">"${f}"</span></td>
+                    <td>${s.clics}</td>
+                    <td class="${s.traccion > 0 ? 'win' : ''}">${s.traccion}</td>
+                    <td class="${s.agendan > 0 ? 'warn' : ''}">${s.agendan}</td>
+                    <td style="background:#1e293b; font-weight:bold; font-size:15px; color:${s.ensilla > 0 ? '#10b981' : '#f8fafc'};">${s.ensilla}</td>
                 </tr>`;
             }).join('');
+            
             document.getElementById('res').style.display = 'block';
         }
     </script>
