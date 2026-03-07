@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>DASHBOARD INTERACTIVO CAC - BODY ELITE</title>
+    <title>DASHBOARD CAC AUTOMATIZADO - BODY ELITE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
@@ -11,8 +11,8 @@
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         input[type="date"], input[type="file"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; }
-        button { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; transition: 0.2s;}
-        button:hover { background: #0ea5e9; }
+        button { background: #10b981; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; transition: 0.2s;}
+        button:hover { background: #059669; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; background: #0f172a; text-align: center; }
         th { background: #334155; color: #38bdf8; padding: 12px; border-bottom: 2px solid #1e293b; font-size: 11px; text-transform: uppercase;}
         td { padding: 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
@@ -20,38 +20,38 @@
         .warn { color: #fbbf24; font-weight: bold; }
         .text-left { text-align: left; }
         .frase-gatillo { font-weight: bold; color: #e2e8f0; }
-        select { background: #1e293b; color: #f8fafc; border: 1px solid #38bdf8; padding: 8px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 12px; width: 100%; cursor: pointer;}
-        select:focus { outline: none; border-color: #10b981; }
+        .challa { color: #64748b; }
         .cac-result { font-size: 16px; font-weight: 900; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="color: #38bdf8;">🎯 RADIOGRAFÍA DE COSTO DE ADQUISICIÓN (CAC)</h1>
+        <h1 style="color: #10b981;">⚙️ CAC AUTOMÁTICO: MOTOR DE CRUCE</h1>
         <div class="box">
             <div class="grid-3">
                 <div><label>1. Reservo (En Silla)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
                 <div><label>2. JSON Zara (Chats)</label><input type="file" id="fz" accept=".json"></div>
-                <div><label style="color: #10b981;">3. Meta Ads (Gasto por Anuncio)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls"></div>
+                <div><label style="color: #10b981;">3. Meta Ads (Gasto Anuncios)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls"></div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div><label>Desde</label><input type="date" id="fi" value="2026-03-01"></div>
                 <div><label>Hasta</label><input type="date" id="ff" value="2026-03-31"></div>
             </div>
-            <button onclick="ejecutarRadar()">PROCESAR EMBUDO Y HABILITAR CRUCE</button>
+            <button onclick="ejecutarRadar()">CALCULAR CAC DIRECTO</button>
         </div>
 
         <div id="res" style="display:none;">
             <table>
                 <thead>
                     <tr>
-                        <th class="text-left">1. FRASE DE ENTRADA (WhatsApp)</th>
-                        <th>2. ENTRARON</th>
-                        <th>3. TRACCIÓN (>4 Msjs)</th>
-                        <th>4. AGENDAN (Bitácora)</th>
-                        <th style="background:#1e293b">5. LLEGARON A CLÍNICA</th>
-                        <th style="width: 250px;">6. ASIGNAR INVERSIÓN (META)</th>
-                        <th>7. COSTO X PACIENTE (CAC)</th>
+                        <th class="text-left">MENSAJE DE ENTRADA</th>
+                        <th>ANUNCIO META ASIGNADO</th>
+                        <th>GASTO META</th>
+                        <th>ENTRARON</th>
+                        <th>TRACCIÓN (>4)</th>
+                        <th>AGENDAN</th>
+                        <th style="background:#1e293b">EN SILLA (RESERVO)</th>
+                        <th>COSTO X PACIENTE (CAC)</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoEmbudo"></tbody>
@@ -63,27 +63,19 @@
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP'}).format(n);
 
+        // DICCIONARIO MAESTRO: Mensaje de WhatsApp -> Nombre del Anuncio en Meta
+        const DICCIONARIO_ANUNCIOS = {
+            "quiero agendar mi evaluación diagnóstica lipo": "lipo fran",
+            "hola, quiero agendar diagnostico facial": "facial pia",
+            "quiero mi evaluación rostro": "rostro verano"
+        };
+
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
-        // Función global para calcular el CAC al cambiar el dropdown
-        window.calcularCac = function(selectElement, sentados) {
-            let gasto = parseFloat(selectElement.value);
-            let tdCac = selectElement.parentElement.nextElementSibling;
-            
-            if (gasto === 0) {
-                tdCac.innerHTML = '<span style="color:#94a3b8">---</span>';
-            } else if (sentados === 0) {
-                tdCac.innerHTML = '<span style="color:#f43f5e">PÉRDIDA ($' + fmtMoney(gasto) + ')</span>';
-            } else {
-                let cac = gasto / sentados;
-                tdCac.innerHTML = '<span class="cac-result" style="color:#10b981">$' + fmtMoney(cac) + '</span>';
-            }
-        };
-
         async function ejecutarRadar() {
             const fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0], fm = document.getElementById('fm').files[0];
-            if(!fr || !fz || !fm) return alert('Se exigen los 3 archivos para operar el cruce.');
+            if(!fr || !fz || !fm) return alert('Se exigen los 3 archivos para el cruce automático.');
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
@@ -91,24 +83,18 @@
             const [reserArr, monRaw, metaArr] = await Promise.all([rxArray(fr), rj(fz), rxArray(fm)]);
             const leads = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
             
-            // 1. EXTRAER LISTA DE ANUNCIOS Y GASTO DE META
-            let listaAnunciosMeta = `<option value="0">SELECCIONA EL ANUNCIO...</option>`;
+            // 1. LEER META Y GUARDAR GASTO POR ANUNCIO
+            let resumenMeta = {};
             try {
                 const metaH = metaArr[0] || [];
                 let cCamp = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name') || String(h).toLowerCase().includes('campaña'));
                 let cSpend = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
                 
                 if(cCamp !== -1 && cSpend !== -1) {
-                    let resumenMeta = {};
                     metaArr.slice(1).forEach(r => {
-                        let camp = String(r[cCamp] || 'Desconocido');
+                        let camp = String(r[cCamp] || '').toLowerCase().trim();
                         let spend = parseFloat(r[cSpend]) || 0;
                         if(spend > 0) { resumenMeta[camp] = (resumenMeta[camp] || 0) + spend; }
-                    });
-                    
-                    // Crear las opciones del Dropdown
-                    Object.entries(resumenMeta).sort((a,b)=>b[1]-a[1]).forEach(([nombre, gasto]) => {
-                        listaAnunciosMeta += `<option value="${gasto}">${nombre} (Gastó $${fmtMoney(gasto)})</option>`;
                     });
                 }
             } catch(e) { console.error("Error leyendo Meta:", e); }
@@ -132,52 +118,72 @@
                 let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
                 if(ts < fi || ts > ff) return;
 
-                let frase = l.history?.[0]?.content.trim() || "Contacto Directo / Sin Frase Meta";
+                let fraseOriginal = l.history?.[0]?.content.trim() || "";
+                let fraseFiltro = fraseOriginal.toLowerCase();
                 
-                if(!stats[frase]) stats[frase] = { clics:0, traccion:0, agendan:0, ensilla:0 };
-                const s = stats[frase];
+                if(!fraseOriginal) return;
+
+                if(!stats[fraseOriginal]) stats[fraseOriginal] = { clics:0, traccion:0, agendan:0, ensilla:0, key: fraseFiltro };
+                const s = stats[fraseOriginal];
                 
                 s.clics++; 
 
-                // TRACCIÓN EXIGENTE (>4 mensajes en el historial significa que hubo diálogo real)
                 let esReal = false;
-                if (l.history?.length >= 5) esReal = true;
-                if (l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
+                if (l.history?.length >= 5 || l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
                 if(esReal) s.traccion++;
 
-                // AGENDADO EN ZARA
                 let promesa = false;
-                if (l.tag === 'AGENDADO') promesa = true;
-                if (l.notes?.some(n => n.text.toLowerCase().includes('agenda') || n.text.toLowerCase().includes('cita'))) promesa = true;
+                if (l.tag === 'AGENDADO' || l.notes?.some(n => n.text.toLowerCase().includes('agenda') || n.text.toLowerCase().includes('cita'))) promesa = true;
                 if(promesa) s.agendan++;
 
-                // EN SILLA (RESERVO)
                 if(promesa || esReal) {
                     const p = clean(l.phone || l.number);
                     const n = String(l.name || '').toLowerCase().trim().split(' ')[0]; 
                     
-                    const match = reserData.filter(c => 
-                        (p.length >= 8 && c.telefono.includes(p)) || 
-                        (n.length > 3 && c.nombreOriginal.includes(n))
-                    );
-                    
+                    const match = reserData.filter(c => (p.length >= 8 && c.telefono.includes(p)) || (n.length > 3 && c.nombreOriginal.includes(n)));
                     if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendid') || c.estado.includes('ok') || c.estado.includes('confirm'))) {
                         s.ensilla++;
                     }
                 }
             });
 
-            // 4. PINTAR EMBUDO CON DROPDOWN INTERACTIVO
+            // 4. PINTAR EMBUDO Y CRUZAR CON DICCIONARIO
             document.getElementById('cuerpoEmbudo').innerHTML = Object.entries(stats).sort((a,b)=>b[1].ensilla - a[1].ensilla || b[1].clics - a[1].clics).map(([f, s]) => {
                 if(s.clics === 0) return '';
+                
+                // Buscar en el diccionario
+                let anuncioTarget = DICCIONARIO_ANUNCIOS[s.key] || null;
+                let gasto = 0;
+                let nombreDisplay = "ORGÁNICO / NO MAPEADO";
+                let cacHtml = '<span style="color:#94a3b8">---</span>';
+
+                if (anuncioTarget) {
+                    // Buscar el gasto real en el objeto resumenMeta usando el nombre del anuncio
+                    let matchMeta = Object.keys(resumenMeta).find(k => k.includes(anuncioTarget));
+                    if (matchMeta) {
+                        gasto = resumenMeta[matchMeta];
+                        nombreDisplay = matchMeta.toUpperCase();
+                    } else {
+                        nombreDisplay = anuncioTarget.toUpperCase() + " (NO HALLADO EN EXCEL)";
+                    }
+                }
+
+                // Calcular CAC
+                if (gasto > 0 && s.ensilla > 0) {
+                    cacHtml = '<span class="cac-result" style="color:#10b981">$' + fmtMoney(gasto / s.ensilla) + '</span>';
+                } else if (gasto > 0 && s.ensilla === 0) {
+                    cacHtml = '<span style="color:#f43f5e">PÉRDIDA ($' + fmtMoney(gasto) + ')</span>';
+                }
+
                 return `<tr>
                     <td class="text-left"><span class="frase-gatillo">"${f}"</span></td>
+                    <td style="color:#38bdf8; font-size:11px;">${nombreDisplay}</td>
+                    <td class="warn">${gasto > 0 ? '$' + fmtMoney(gasto) : '---'}</td>
                     <td>${s.clics}</td>
-                    <td class="${s.traccion > 0 ? 'win' : ''}">${s.traccion}</td>
-                    <td class="${s.agendan > 0 ? 'warn' : ''}">${s.agendan}</td>
+                    <td class="${s.traccion > 0 ? 'win' : 'challa'}">${s.traccion}</td>
+                    <td class="${s.agendan > 0 ? 'warn' : 'challa'}">${s.agendan}</td>
                     <td style="background:#1e293b; font-weight:bold; font-size:15px; color:${s.ensilla > 0 ? '#10b981' : '#f8fafc'};">${s.ensilla}</td>
-                    <td><select onchange="calcularCac(this, ${s.ensilla})">${listaAnunciosMeta}</select></td>
-                    <td><span style="color:#94a3b8">---</span></td>
+                    <td>${cacHtml}</td>
                 </tr>`;
             }).join('');
             
