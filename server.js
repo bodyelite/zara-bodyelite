@@ -9,3 +9,13 @@ app.get('/download-monitor', (req, res) => {
     }
   });
 });
+
+app.get('/descargar-zara', (req, res) => {
+  const filePath = '/opt/render/project/src/data/sessions.json';
+  res.download(filePath, 'zara_monitor_reporte.json', (err) => {
+    if (err) {
+      console.error('Error al descargar:', err);
+      res.status(500).send('Error en descarga');
+    }
+  });
+});
