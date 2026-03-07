@@ -66,6 +66,7 @@ app.get('/monitor', (req, res) => {
             <div class="d-flex gap-1">
                 <button id="btnSound" class="btn btn-xs btn-warning fw-bold" style="font-size:10px; padding:2px 6px;" onclick="enableAudio()">🔇 SONIDO</button>
                 <a href="/api/export-csv" class="btn btn-xs fw-bold text-white" style="font-size:10px; padding:2px 6px; background-color:#10b981; border:none; text-decoration:none;">📊 EXCEL META</a>
+                <a href="/api/download-json" class="btn btn-xs fw-bold text-white" style="font-size:10px; padding:2px 6px; background-color:#3b82f6; border:none; text-decoration:none;">📥 JSON BRUTAL</a>
                 <button class="btn btn-xs btn-outline-danger" style="font-size:10px; padding:2px 6px;" onclick="delMasivo()">🗑️ Borrar Sel.</button>
             </div>
         </div>
@@ -294,6 +295,11 @@ app.get('/monitor', (req, res) => {
     res.send(html);
 });
 
+app.get('/api/download-json', (req, res) => {
+    res.setHeader('Content-disposition', 'attachment; filename=ZARA_BRUTAL.json');
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify({ users: getSesiones(), botStatus: getBotStatus() }));
+});
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ok:true}); });
 app.post('/api/tag', (req, res) => { updateTagManual(req.body.phone, req.body.tag); res.json({ok:true}); });
