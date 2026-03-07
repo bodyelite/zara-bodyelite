@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>DASHBOARD DE VERDAD ABSOLUTA - BODY ELITE</title>
+    <title>DASHBOARD INTERACTIVO CAC - BODY ELITE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
@@ -13,48 +13,45 @@
         input[type="date"], input[type="file"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; }
         button { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; transition: 0.2s;}
         button:hover { background: #0ea5e9; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; background: #0f172a; text-align: center; }
-        th { background: #334155; color: #38bdf8; padding: 12px; border-bottom: 2px solid #1e293b; font-size: 11px; }
-        td { padding: 12px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; background: #0f172a; text-align: center; }
+        th { background: #334155; color: #38bdf8; padding: 12px; border-bottom: 2px solid #1e293b; font-size: 11px; text-transform: uppercase;}
+        td { padding: 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
         .win { color: #10b981; font-weight: bold; }
         .warn { color: #fbbf24; font-weight: bold; }
         .text-left { text-align: left; }
-        .frase-gatillo { font-style: italic; color: #94a3b8; max-width: 300px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        h2 { font-size: 16px; color: #f8fafc; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 30px; }
+        .frase-gatillo { font-weight: bold; color: #e2e8f0; }
+        select { background: #1e293b; color: #f8fafc; border: 1px solid #38bdf8; padding: 8px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 12px; width: 100%; cursor: pointer;}
+        select:focus { outline: none; border-color: #10b981; }
+        .cac-result { font-size: 16px; font-weight: 900; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="color: #38bdf8;">⚖️ DASHBOARD DE VERDAD ABSOLUTA</h1>
+        <h1 style="color: #38bdf8;">🎯 RADIOGRAFÍA DE COSTO DE ADQUISICIÓN (CAC)</h1>
         <div class="box">
             <div class="grid-3">
-                <div><label>1. Reservo (Caja)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
+                <div><label>1. Reservo (En Silla)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
                 <div><label>2. JSON Zara (Chats)</label><input type="file" id="fz" accept=".json"></div>
-                <div><label style="color: #38bdf8;">3. Meta Ads (Gasto)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls"></div>
+                <div><label style="color: #10b981;">3. Meta Ads (Gasto por Anuncio)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls"></div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div><label>Desde</label><input type="date" id="fi" value="2026-03-01"></div>
                 <div><label>Hasta</label><input type="date" id="ff" value="2026-03-31"></div>
             </div>
-            <button onclick="ejecutarRadar()">CRUZAR BASES DE DATOS</button>
+            <button onclick="ejecutarRadar()">PROCESAR EMBUDO Y HABILITAR CRUCE</button>
         </div>
 
         <div id="res" style="display:none;">
-            <h2>💳 1. LA FACTURA DE META (Lo que te cobraron)</h2>
-            <table id="tablaMeta">
-                <thead><tr><th class="text-left">NOMBRE REAL DE LA CAMPAÑA EN META</th><th>INVERSIÓN GASTADA (CLP)</th></tr></thead>
-                <tbody id="cuerpoMeta"></tbody>
-            </table>
-
-            <h2>🎯 2. EL EMBUDO DE ZARA Y RESERVO (Lo que realmente pasó)</h2>
             <table>
                 <thead>
                     <tr>
-                        <th class="text-left">FRASE DE ENTRADA (ANUNCIO)</th>
-                        <th>CLICS (CHALLA)</th>
-                        <th>TRACCIÓN REAL (>5 Msjs)</th>
-                        <th>AGENDAN (BITÁCORA/TAG)</th>
-                        <th style="background:#1e293b">EN SILLA (RESERVO)</th>
+                        <th class="text-left">1. FRASE DE ENTRADA (WhatsApp)</th>
+                        <th>2. ENTRARON</th>
+                        <th>3. TRACCIÓN (>4 Msjs)</th>
+                        <th>4. AGENDAN (Bitácora)</th>
+                        <th style="background:#1e293b">5. LLEGARON A CLÍNICA</th>
+                        <th style="width: 250px;">6. ASIGNAR INVERSIÓN (META)</th>
+                        <th>7. COSTO X PACIENTE (CAC)</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoEmbudo"></tbody>
@@ -69,41 +66,54 @@
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
+        // Función global para calcular el CAC al cambiar el dropdown
+        window.calcularCac = function(selectElement, sentados) {
+            let gasto = parseFloat(selectElement.value);
+            let tdCac = selectElement.parentElement.nextElementSibling;
+            
+            if (gasto === 0) {
+                tdCac.innerHTML = '<span style="color:#94a3b8">---</span>';
+            } else if (sentados === 0) {
+                tdCac.innerHTML = '<span style="color:#f43f5e">PÉRDIDA ($' + fmtMoney(gasto) + ')</span>';
+            } else {
+                let cac = gasto / sentados;
+                tdCac.innerHTML = '<span class="cac-result" style="color:#10b981">$' + fmtMoney(cac) + '</span>';
+            }
+        };
+
         async function ejecutarRadar() {
             const fr = document.getElementById('fr').files[0], fz = document.getElementById('fz').files[0], fm = document.getElementById('fm').files[0];
-            if(!fr || !fz) return alert('Faltan Reservo o JSON de Zara.');
+            if(!fr || !fz || !fm) return alert('Se exigen los 3 archivos para operar el cruce.');
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
             
-            const [reserArr, monRaw] = await Promise.all([rxArray(fr), rj(fz)]);
+            const [reserArr, monRaw, metaArr] = await Promise.all([rxArray(fr), rj(fz), rxArray(fm)]);
             const leads = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
             
-            // 1. RENDERIZAR META DIRECTO (SIN FILTROS)
-            let metaHtml = "";
-            if(fm) {
-                try {
-                    const metaArr = await rxArray(fm);
-                    const metaH = metaArr[0] || [];
-                    let cCamp = metaH.findIndex(h => String(h).toLowerCase().includes('campaña') || String(h).toLowerCase().includes('campaign'));
-                    let cSpend = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
+            // 1. EXTRAER LISTA DE ANUNCIOS Y GASTO DE META
+            let listaAnunciosMeta = `<option value="0">SELECCIONA EL ANUNCIO...</option>`;
+            try {
+                const metaH = metaArr[0] || [];
+                let cCamp = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name') || String(h).toLowerCase().includes('campaña'));
+                let cSpend = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
+                
+                if(cCamp !== -1 && cSpend !== -1) {
+                    let resumenMeta = {};
+                    metaArr.slice(1).forEach(r => {
+                        let camp = String(r[cCamp] || 'Desconocido');
+                        let spend = parseFloat(r[cSpend]) || 0;
+                        if(spend > 0) { resumenMeta[camp] = (resumenMeta[camp] || 0) + spend; }
+                    });
                     
-                    if(cCamp !== -1 && cSpend !== -1) {
-                        let resumenMeta = {};
-                        metaArr.slice(1).forEach(r => {
-                            let camp = String(r[cCamp] || 'Desconocida');
-                            let spend = parseFloat(r[cSpend]) || 0;
-                            if(spend > 0) { resumenMeta[camp] = (resumenMeta[camp] || 0) + spend; }
-                        });
-                        metaHtml = Object.entries(resumenMeta).sort((a,b)=>b[1]-a[1]).map(([c, s]) => 
-                            `<tr><td class="text-left" style="font-weight:bold;">${c}</td><td class="warn">${fmtMoney(s)}</td></tr>`
-                        ).join('');
-                    }
-                } catch(e) { console.error(e); }
-            }
-            document.getElementById('cuerpoMeta').innerHTML = metaHtml || "<tr><td colspan='2'>No se pudo leer el CSV de Meta.</td></tr>";
+                    // Crear las opciones del Dropdown
+                    Object.entries(resumenMeta).sort((a,b)=>b[1]-a[1]).forEach(([nombre, gasto]) => {
+                        listaAnunciosMeta += `<option value="${gasto}">${nombre} (Gastó $${fmtMoney(gasto)})</option>`;
+                    });
+                }
+            } catch(e) { console.error("Error leyendo Meta:", e); }
 
-            // 2. EXTRAER RESERVO (MÁS AGRESIVO)
+            // 2. EXTRAER RESERVO
             const headers = reserArr[0] || [];
             let colTel = headers.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
             let colNombre = headers.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
@@ -122,15 +132,14 @@
                 let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
                 if(ts < fi || ts > ff) return;
 
-                let frase = l.history?.[0]?.content.trim() || "Contacto Orgánico / Retargeting";
-                if(frase.length > 60) frase = frase.substring(0, 60) + "..."; // Acortar frases largas
-
+                let frase = l.history?.[0]?.content.trim() || "Contacto Directo / Sin Frase Meta";
+                
                 if(!stats[frase]) stats[frase] = { clics:0, traccion:0, agendan:0, ensilla:0 };
                 const s = stats[frase];
                 
                 s.clics++; 
 
-                // TRACCIÓN EXIGENTE (>4 mensajes en el historial significa que hubo al menos 2 idas y vueltas)
+                // TRACCIÓN EXIGENTE (>4 mensajes en el historial significa que hubo diálogo real)
                 let esReal = false;
                 if (l.history?.length >= 5) esReal = true;
                 if (l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
@@ -142,24 +151,23 @@
                 if (l.notes?.some(n => n.text.toLowerCase().includes('agenda') || n.text.toLowerCase().includes('cita'))) promesa = true;
                 if(promesa) s.agendan++;
 
-                // EN SILLA (RESERVO) - CRUCE MÁS BLANDO PARA NOMBRES
+                // EN SILLA (RESERVO)
                 if(promesa || esReal) {
                     const p = clean(l.phone || l.number);
-                    const n = String(l.name || '').toLowerCase().trim().split(' ')[0]; // Solo el primer nombre para buscar coincidencias parciales
+                    const n = String(l.name || '').toLowerCase().trim().split(' ')[0]; 
                     
                     const match = reserData.filter(c => 
                         (p.length >= 8 && c.telefono.includes(p)) || 
                         (n.length > 3 && c.nombreOriginal.includes(n))
                     );
                     
-                    // Estados positivos ampliados
                     if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendid') || c.estado.includes('ok') || c.estado.includes('confirm'))) {
                         s.ensilla++;
                     }
                 }
             });
 
-            // 4. PINTAR EMBUDO
+            // 4. PINTAR EMBUDO CON DROPDOWN INTERACTIVO
             document.getElementById('cuerpoEmbudo').innerHTML = Object.entries(stats).sort((a,b)=>b[1].ensilla - a[1].ensilla || b[1].clics - a[1].clics).map(([f, s]) => {
                 if(s.clics === 0) return '';
                 return `<tr>
@@ -168,6 +176,8 @@
                     <td class="${s.traccion > 0 ? 'win' : ''}">${s.traccion}</td>
                     <td class="${s.agendan > 0 ? 'warn' : ''}">${s.agendan}</td>
                     <td style="background:#1e293b; font-weight:bold; font-size:15px; color:${s.ensilla > 0 ? '#10b981' : '#f8fafc'};">${s.ensilla}</td>
+                    <td><select onchange="calcularCac(this, ${s.ensilla})">${listaAnunciosMeta}</select></td>
+                    <td><span style="color:#94a3b8">---</span></td>
                 </tr>`;
             }).join('');
             
