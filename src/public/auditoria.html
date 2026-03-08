@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>BODY ELITE - CEO DASHBOARD (PIPELINE & FUGAS)</title>
+    <title>BODY ELITE - CEO DASHBOARD (TIME-FRAME EXACTO)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -17,6 +17,7 @@
         .upload-section { display: grid; grid-template-columns: repeat(3, 1fr) 200px; gap: 15px; background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 30px; align-items: end; }
         .upload-box label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
         .upload-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--blue); padding: 12px; border-radius: 6px; box-sizing: border-box; font-family: monospace; }
+        .date-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn { background: var(--green); color: #000; border: none; padding: 14px; font-weight: 900; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.2s; height: 43px; }
         .btn:hover { background: #059669; color: #fff; transform: translateY(-2px); }
 
@@ -53,8 +54,18 @@
     <div class="container">
         <div class="header">
             <div>
-                <h1>⚡ BODY ELITE: CONTROL DE FUGAS Y PIPELINE</h1>
-                <p>Auditoría de Inversión, Caída de Clics Meta y Citas Futuras</p>
+                <h1>⚡ BODY ELITE: AUDITORÍA DE RANGOS EXACTOS</h1>
+                <p>Cruce Quirúrgico: Zara Timeframe (Ventana) + Reservo Pipeline (+30 Días)</p>
+            </div>
+            <div class="date-box">
+                <div>
+                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">DESDE (INICIO)</label>
+                    <input type="date" id="fi" value="2026-03-01" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:8px; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">HASTA (FIN)</label>
+                    <input type="date" id="ff" value="2026-03-07" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:8px; border-radius:4px;">
+                </div>
             </div>
         </div>
 
@@ -74,12 +85,12 @@
             <button class="btn" onclick="ejecutarRadar()">PROCESAR DATA</button>
         </div>
 
-        <div id="loader">CALCULANDO PIPELINE Y FECHAS FUTURAS... ⚙️</div>
+        <div id="loader">APLICANDO VENTANA DE TIEMPO Y PIPELINE A FUTURO... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="kpi-grid">
                 <div class="kpi-card blue">
-                    <div class="kpi-title">INVERSIÓN META</div>
+                    <div class="kpi-title">INVERSIÓN META (EN RANGO)</div>
                     <p class="kpi-value" id="kpi-gasto">$0</p>
                 </div>
                 <div class="kpi-card red">
@@ -87,11 +98,11 @@
                     <p class="kpi-value" id="kpi-fuga">0%</p>
                 </div>
                 <div class="kpi-card alert">
-                    <div class="kpi-title">EMBUDO ZARA (ENTRAN/AVANZAN)</div>
+                    <div class="kpi-title">ZARA: ENTRAN / AVANZAN</div>
                     <p class="kpi-value" id="kpi-leads">0 / 0</p>
                 </div>
                 <div class="kpi-card purple">
-                    <div class="kpi-title">PIPELINE (CITAS FUTURAS)</div>
+                    <div class="kpi-title">PIPELINE (+30 DÍAS)</div>
                     <p class="kpi-value" id="kpi-futuros">0</p>
                 </div>
                 <div class="kpi-card green">
@@ -111,8 +122,8 @@
                             <th>CLICS META</th>
                             <th>LLEGAN A ZARA</th>
                             <th style="color:var(--red);">TASA FUGA</th>
-                            <th>AVANZADOS</th>
-                            <th>AGENDADOS</th>
+                            <th>AVANZAN (ZARA)</th>
+                            <th>AGENDAN (ZARA)</th>
                             <th style="background: rgba(139,92,246,0.1); color:var(--purple);">FUTUROS ⏳</th>
                             <th style="background: rgba(16,185,129,0.1); color:var(--green);">ASISTIÓ ✅</th>
                             <th style="background: rgba(14,165,233,0.1); color:var(--blue);">COMPRÓ 💰</th>
@@ -130,7 +141,6 @@
         const normalizeStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits: 0}).format(n);
         
-        // Convertidor de Fechas Excel a JS Timestamp
         function excelToDate(serial) {
             if(!serial || isNaN(serial)) return 0;
             return Math.round((parseFloat(serial) - 25569) * 86400 * 1000);
@@ -146,12 +156,29 @@
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
-        function parseDate(dateStr) { if(!dateStr) return 0; let d = new Date(dateStr); return isNaN(d.getTime()) ? 0 : d.getTime(); }
+        
+        function parseDate(dateStr) { 
+            if(!dateStr) return 0; 
+            let parts = dateStr.split('-');
+            if(parts.length === 3) return new Date(parts[0], parts[1]-1, parts[2]).getTime();
+            return new Date(dateStr).getTime(); 
+        }
 
         async function ejecutarRadar() {
             const fm = document.getElementById('fm').files[0], fz = document.getElementById('fz').files[0], fr = document.getElementById('fr').files[0];
             if(!fm || !fz || !fr) return alert('CEO, sube los 3 archivos.');
             
+            // VENTANA DE TIEMPO ESTRICTA DE LA UI
+            const fi_val = document.getElementById('fi').value;
+            const ff_val = document.getElementById('ff').value;
+            if(!fi_val || !ff_val) return alert("Define el rango de fechas Arriba.");
+            
+            const fi = new Date(fi_val + 'T00:00:00').getTime();
+            const ff = new Date(ff_val + 'T23:59:59').getTime();
+            
+            // LÍMITE DE RESERVO (+30 Días desde el inicio para atrapar futuros)
+            const limiteFuturo = fi + (30 * 24 * 60 * 60 * 1000);
+
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
 
@@ -167,7 +194,7 @@
 
                 let metaGlobals = { gasto: 0, asistidos: 0, comprados: 0, entraron: 0, avanzados: 0, resMeta: 0, futuros: 0 };
 
-                // 1. LEER META
+                // 1. LEER META Y RECORTE DE DÍAS (CLAMP)
                 const metaH = metaArr[0] || [];
                 let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name'));
                 let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
@@ -184,8 +211,14 @@
                     if(spend > 0) {
                         let dias = 1;
                         if(cIni !== -1 && cFin !== -1) {
-                            let msDiff = parseDate(r[cFin]) - parseDate(r[cIni]);
-                            if(msDiff > 0) dias = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
+                            let inicioMeta = parseDate(r[cIni]);
+                            let finMeta = parseDate(r[cFin]);
+                            // Clampear días al rango solicitado en la UI
+                            let inicioReal = Math.max(inicioMeta, fi);
+                            let finReal = Math.min(finMeta, ff);
+                            if (finReal >= inicioReal) {
+                                dias = Math.ceil((finReal - inicioReal) / (1000 * 60 * 60 * 24)) + 1;
+                            }
                         }
 
                         let keyTarget = "otros";
@@ -202,7 +235,7 @@
                     }
                 });
 
-                // 2. EXTRAER RESERVO (CON LECTURA DE FECHA PARA CITAS FUTURAS)
+                // 2. EXTRAER RESERVO
                 const reserHeaders = reserArr[0] || [];
                 let cTel = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
                 let cNom = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
@@ -220,11 +253,13 @@
                     tsFecha: excelToDate(row[cFec])
                 }));
 
-                const limiteHoy = new Date().getTime() - (24 * 60 * 60 * 1000); // Citas desde ayer hacia adelante son "Futuras/Activas"
-
-                // 3. PROCESAR ZARA
+                // 3. PROCESAR ZARA (FILTRO ESTRICTO DE VENTANA DE TIEMPO)
                 leadsZara.forEach(l => {
-                    // Buscar en los 2 primeros mensajes en caso de que hayan saludado primero
+                    let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
+                    
+                    // REGLA DE ORO: Si el lead no entró en la ventana solicitada, SE IGNORA.
+                    if(ts < fi || ts > ff) return; 
+
                     let historialText = l.history?.slice(0,2).map(m => normalizeStr(m.content)).join(" ") || "";
                     if(!historialText) return;
 
@@ -245,7 +280,7 @@
                     if (l.tag === 'AGENDADO' || l.notes?.some(n => normalizeStr(n.text).includes('agenda') || normalizeStr(n.text).includes('cita'))) promesa = true;
                     if(promesa) s.agendan++;
 
-                    // Cruce Binario y de Tiempos con Reservo
+                    // Cruce con Reservo (+30 Días)
                     if(promesa || esReal) {
                         const p = clean(l.phone || l.number);
                         const n = normalizeStr(l.name).split(' ')[0]; 
@@ -260,12 +295,14 @@
                             if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
                             if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
                             
-                            // SI LA CITA ES DE HOY EN ADELANTE Y NO ESTÁ CANCELADA -> ES PIPELINE (Futuro)
-                            if (c.tsFecha > limiteHoy && !['anula', 'no asiste', 'cancelado', 'no llegó'].includes(c.estado)) {
+                            // SI LA CITA ES DESPUÉS DE LA FECHA FIN DEL REPORTE (ff) PERO DENTRO DE LOS 30 DÍAS -> ES FUTURO
+                            let citaActiva = !['anula', 'no asiste', 'cancelado', 'no llegó'].includes(c.estado);
+                            if (citaActiva && c.tsFecha > ff && c.tsFecha <= limiteFuturo) {
                                 esFuturo = true;
                             }
                         });
 
+                        // Para esta ventana de tiempo, si la cita es futura, se va a pipeline.
                         if(asiste) { s.silla++; metaGlobals.asistidos++; }
                         if(compro) { s.compraron++; metaGlobals.comprados++; }
                         if(esFuturo && !asiste) { s.futuros++; metaGlobals.futuros++; }
@@ -280,21 +317,19 @@
 
                     let costoDia = s.dias > 0 ? s.gasto / s.dias : s.gasto;
                     
-                    // Cálculo de Fuga
                     let tasaFuga = 0;
                     if(s.resMeta > 0) {
                         tasaFuga = Math.max(0, Math.round(((s.resMeta - s.entraron) / s.resMeta) * 100));
                     }
                     let fugaHtml = s.resMeta > 0 ? `${tasaFuga}%` : '-';
 
-                    // Cálculo CAC Inteligente
                     let cacHtml = '';
                     if (s.gasto > 0 && s.silla > 0) {
                         cacHtml = `<span class="badge win">CAC $${fmtMoney(s.gasto / s.silla)}</span>`;
                     } else if (s.gasto > 0 && s.silla === 0 && s.futuros > 0) {
-                        cacHtml = `<span class="badge wait">EN PROCESO (ESPERANDO CITA)</span>`;
+                        cacHtml = `<span class="badge wait">EN PIPELINE</span>`;
                     } else if (s.gasto > 0 && s.silla === 0 && s.futuros === 0) {
-                        cacHtml = `<span class="badge lose">PÉRDIDA QUEMADA</span>`;
+                        cacHtml = `<span class="badge lose">PÉRDIDA</span>`;
                     } else {
                         cacHtml = `<span style="color:var(--muted)">---</span>`;
                     }
@@ -318,7 +353,6 @@
 
                 document.getElementById('cuerpoEmbudo').innerHTML = html;
 
-                // Actualizar KPIs
                 document.getElementById('kpi-gasto').innerText = fmtMoney(metaGlobals.gasto);
                 
                 let fugaGlobal = metaGlobals.resMeta > 0 ? Math.round(((metaGlobals.resMeta - metaGlobals.entraron) / metaGlobals.resMeta) * 100) : 0;
