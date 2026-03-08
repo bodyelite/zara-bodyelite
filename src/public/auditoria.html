@@ -24,6 +24,8 @@
         th { background: #0F172A; color: var(--muted); padding: 12px 8px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid var(--border); line-height: 1.2; }
         td { padding: 12px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: rgba(255,255,255,0.02); }
+        tfoot { background: #060B14; font-weight: 900; font-size: 12px; }
+        tfoot td { border-top: 2px solid var(--border); }
         
         .text-left { text-align: left; }
         .badge { padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: 900; background: rgba(255,255,255,0.1); text-transform: uppercase; }
@@ -45,7 +47,7 @@
     <div class="container">
         <div class="header">
             <div>
-                <h1>⚡ BODY ELITE: AUDITORÍA ANUNCIO X ANUNCIO</h1>
+                <h1>⚡ BODY ELITE: AUDITORÍA MATEMÁTICA EXACTA</h1>
             </div>
             <div class="date-box">
                 <div>
@@ -75,7 +77,7 @@
             <button class="btn" onclick="ejecutarRadar()">DESPLEGAR MATRIZ</button>
         </div>
 
-        <div id="loader">CRUZANDO BITÁCORAS Y FECHAS FUTURAS... ⚙️</div>
+        <div id="loader">CALCULANDO EMBUDO EXACTO Y TOTALES... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="table-container">
@@ -98,6 +100,7 @@
                         </tr>
                     </thead>
                     <tbody id="cuerpoEmbudo"></tbody>
+                    <tfoot id="pieEmbudo"></tfoot>
                 </table>
             </div>
         </div>
@@ -108,7 +111,6 @@
         const normalizeStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits: 0}).format(n);
         
-        // Convertidor fecha cita Reservo (Columna Fecha, no creación)
         function excelToDate(serial) {
             if(!serial || isNaN(serial)) return 0;
             return Math.round((parseFloat(serial) - 25569) * 86400 * 1000) + (new Date().getTimezoneOffset() * 60000);
@@ -121,7 +123,6 @@
             return new Date(dateStr).getTime(); 
         }
 
-        // DICCIONARIO PUENTE (Frases clave para conectar Zara al Anuncio de Meta)
         const MAPA_FRASES = {
             "lipo fran": ["evaluacion diagnostica lipo", "lipo express", "lipo"],
             "facial pia": ["diagnostico facial", "hifu", "pink glow"],
@@ -137,8 +138,7 @@
             if (f.name.endsWith('.json')) {
                 return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); });
             } else {
-                let arr = await rxArray(f);
-                return arr; // Si el usuario sube el DASH en CSV
+                return await rxArray(f);
             }
         }
 
@@ -152,7 +152,7 @@
             
             const fi = new Date(fi_val + 'T00:00:00').getTime();
             const ff = new Date(ff_val + 'T23:59:59').getTime();
-            const limiteFuturo = fi + (45 * 24 * 60 * 60 * 1000); // Hasta 45 días al futuro para citas
+            const limiteFuturo = fi + (45 * 24 * 60 * 60 * 1000); 
 
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
@@ -160,9 +160,8 @@
             try {
                 const [metaArr, zaraRaw, reserArr] = await Promise.all([rxArray(fm), readZaraFile(fz), rxArray(fr)]);
                 
-                let anuncios = {}; // Diccionario principal por ANUNCIO
+                let anuncios = {}; 
 
-                // 1. LEER META Y CREAR FILAS POR ANUNCIO EXACTO
                 const metaH = metaArr[0] || [];
                 let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name'));
                 let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
@@ -172,7 +171,6 @@
                 
                 metaArr.slice(1).forEach(r => {
                     let nombreOriginal = String(r[cAnuncio] || '').trim();
-                    let nombreKey = normalizeStr(nombreOriginal);
                     let spend = parseFloat(r[cGasto]) || 0;
                     let resultados = parseInt(r[cRes]) || 0;
                     
@@ -197,10 +195,8 @@
                     }
                 });
                 
-                // Si encontramos leads sin anuncio, van a un balde "ORGÁNICO / NO IDENTIFICADO"
                 anuncios["ORGANICO_OTROS"] = { nombre: "ORGÁNICO / NO IDENTIFICADO", dias: 0, gasto: 0, resMeta: 0, entraron: 0, abandonados: 0, dormidos: 0, congelados: 0, agendados: 0, silla: 0, compraron: 0, futuros: 0 };
 
-                // 2. EXTRAER RESERVO (CON FECHA REAL DE CITA)
                 const reserHeaders = reserArr[0] || [];
                 let cTelR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
                 let cNomR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
@@ -222,11 +218,8 @@
                     };
                 });
 
-                // 3. PROCESAR ZARA (Soporta JSON o el DASH CSV que mostraste)
                 let leadsNormalizados = [];
-                
                 if (Array.isArray(zaraRaw)) {
-                    // Es el DASH CSV
                     let zh = zaraRaw[0] || [];
                     let cTelZ = zh.findIndex(h => String(h).toLowerCase().includes('telefono'));
                     let cNomZ = zh.findIndex(h => String(h).toLowerCase().includes('nombre'));
@@ -235,99 +228,84 @@
                     let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
                     
                     zaraRaw.slice(1).forEach(r => {
-                        let f = parseDateUI(String(r[cFecZ] || '').split(',')[0]); // "21-01-2026, 20:48" -> "21-01-2026"
+                        let f = parseDateUI(String(r[cFecZ] || '').split(',')[0]);
                         leadsNormalizados.push({
-                            ts: f,
-                            phone: clean(r[cTelZ]),
-                            name: normalizeStr(r[cNomZ]),
-                            tag: normalizeStr(r[cEstZ]).toUpperCase(),
-                            historial: normalizeStr(r[cMsgZ])
+                            ts: f, phone: clean(r[cTelZ]), name: normalizeStr(r[cNomZ]),
+                            tag: normalizeStr(r[cEstZ]).toUpperCase(), historial: normalizeStr(r[cMsgZ])
                         });
                     });
                 } else {
-                    // Es el JSON
                     let users = Array.isArray(zaraRaw.users) ? zaraRaw.users : Object.values(zaraRaw.users || {});
                     users.forEach(l => {
                         leadsNormalizados.push({
                             ts: l.history?.[0]?.timestamp || l.lastInteraction || 0,
-                            phone: clean(l.phone || l.number),
-                            name: normalizeStr(l.name),
+                            phone: clean(l.phone || l.number), name: normalizeStr(l.name),
                             tag: normalizeStr(l.tag).toUpperCase(),
                             historial: l.history?.slice(0,3).map(m => normalizeStr(m.content)).join(" ") || ""
                         });
                     });
                 }
 
-                // CRUZAR LEADS CON ANUNCIOS Y RESERVO
                 leadsNormalizados.forEach(l => {
-                    if(l.ts > 0 && (l.ts < fi || l.ts > ff)) return; // Filtro de ventana estricta
+                    if(l.ts > 0 && (l.ts < fi || l.ts > ff)) return; 
                     if(!l.historial && !l.tag) return;
 
-                    // A. BUSCAR EL ANUNCIO DUEÑO DEL LEAD
                     let adDuenio = "ORGANICO_OTROS";
-                    
-                    // Buscamos coincidencia en el diccionario puente
                     for (let adName in anuncios) {
                         let keyNorm = normalizeStr(adName);
-                        let frases = MAPA_FRASES[keyNorm] || [keyNorm]; // Si no está en el mapa, busca el nombre del anuncio
-                        
+                        let frases = MAPA_FRASES[keyNorm] || [keyNorm];
                         if (frases.some(f => l.historial.includes(f))) {
-                            adDuenio = adName;
-                            break;
+                            adDuenio = adName; break;
                         }
                     }
 
                     const s = anuncios[adDuenio];
                     s.entraron++;
 
-                    // B. SEMÁFORO DE BITÁCORA (LOS 4 ESTADOS)
-                    let esAbandonado = l.tag === 'ABANDONADOS' || l.tag === 'ELIMINADO';
-                    let esDormido = l.tag === 'NUEVO';
-                    let esCongelado = ['HOT', 'INTERESADO', 'GESTIÓN'].includes(l.tag);
-                    let esAgendado = l.tag === 'AGENDADO' || l.historial.includes('agenda');
+                    // AUTO-CORRECCIÓN: RESERVO ES EL REY
+                    const n = l.name.split(' ')[0]; 
+                    const matchReservo = reserData.filter(c => (l.phone.length >= 8 && c.telefono.includes(l.phone)) || (n.length >= 3 && c.nombreOriginal === n));
+                    
+                    let tieneCitaValida = false;
+                    let asiste = false;
+                    let compro = false;
+                    let esFuturo = false;
 
-                    if(esAbandonado) s.abandonados++;
-                    else if(esDormido) s.dormidos++;
-                    else if(esCongelado) s.congelados++;
-                    else if(esAgendado) s.agendados++;
-                    else s.abandonados++; // Fallback
+                    matchReservo.forEach(c => {
+                        let cancelada = ['anula', 'no asiste', 'cancelado', 'no llegó', 'eliminado'].includes(c.estado);
+                        if (!cancelada) {
+                            tieneCitaValida = true;
+                            if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
+                            if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
+                            if (c.tsFecha > ff && c.tsFecha <= limiteFuturo) esFuturo = true;
+                        }
+                    });
 
-                    // C. LA CAJA Y LA MÁQUINA DEL TIEMPO (RESERVO)
-                    // Solo cruzamos si al menos avanzó de Abandonado/Dormido
-                    if(esCongelado || esAgendado) {
-                        const n = l.name.split(' ')[0]; 
-                        const match = reserData.filter(c => (l.phone.length >= 8 && c.telefono.includes(l.phone)) || (n.length >= 3 && c.nombreOriginal === n));
-                        
-                        let asiste = false;
-                        let compro = false;
-                        let esFuturo = false;
-
-                        match.forEach(c => {
-                            // Citas canceladas se descartan de inmediato
-                            let cancelada = ['anula', 'no asiste', 'cancelado', 'no llegó', 'eliminado'].includes(c.estado);
-                            
-                            if (!cancelada) {
-                                if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
-                                if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
-                                
-                                // MÁQUINA DEL TIEMPO: Si la FECHA DE CITA es mayor a la ventana del reporte, es Futuro.
-                                if (c.tsFecha > ff && c.tsFecha <= limiteFuturo) {
-                                    esFuturo = true;
-                                }
-                            }
-                        });
-
-                        if(asiste) s.silla++;
-                        if(compro) s.compraron++;
-                        if(esFuturo && !asiste) s.futuros++;
+                    // ASIGNACIÓN MATEMÁTICA ESTRICTA (Solo 1 bucket por lead)
+                    if (tieneCitaValida || l.tag === 'AGENDADO' || l.historial.includes('agenda')) {
+                        s.agendados++; // Si está en Reservo, es Agendado obligatorio.
+                    } else if (['HOT', 'INTERESADO', 'GESTIÓN'].includes(l.tag)) {
+                        s.congelados++;
+                    } else if (l.tag === 'NUEVO') {
+                        s.dormidos++;
+                    } else {
+                        s.abandonados++; // Fallback para que cuadre la suma
                     }
+
+                    if(asiste) s.silla++;
+                    if(compro) s.compraron++;
+                    if(esFuturo && !asiste) s.futuros++;
                 });
 
-                // 4. RENDERIZAR TABLA ANUNCIO X ANUNCIO
                 let html = "";
+                let tGasto=0, tMeta=0, tEntr=0, tAban=0, tDorm=0, tCong=0, tAgen=0, tFut=0, tSill=0, tComp=0;
 
                 Object.values(anuncios).sort((a,b) => b.gasto - a.gasto).forEach(s => {
-                    if(s.gasto === 0 && s.entraron === 0) return; // Omitir basura
+                    if(s.gasto === 0 && s.entraron === 0) return; 
+
+                    tGasto += s.gasto; tMeta += s.resMeta; tEntr += s.entraron; tAban += s.abandonados;
+                    tDorm += s.dormidos; tCong += s.congelados; tAgen += s.agendados; 
+                    tFut += s.futuros; tSill += s.silla; tComp += s.compraron;
 
                     let costoDia = s.dias > 0 ? s.gasto / s.dias : s.gasto;
                     
@@ -362,6 +340,24 @@
                 });
 
                 document.getElementById('cuerpoEmbudo').innerHTML = html;
+                
+                let cacTotal = tComp > 0 ? tGasto / tComp : 0;
+                document.getElementById('pieEmbudo').innerHTML = `<tr>
+                    <td class="text-left" style="color:var(--blue);">TOTALES / PROMEDIOS</td>
+                    <td class="money">${fmtMoney(tGasto)}</td>
+                    <td class="money neutral">---</td>
+                    <td>${tMeta}</td>
+                    <td style="border-left: 2px solid var(--border); color:white;">${tEntr}</td>
+                    <td class="col-challa">${tAban}</td>
+                    <td class="col-dormido">${tDorm}</td>
+                    <td class="col-congelado">${tCong}</td>
+                    <td class="col-agendado">${tAgen}</td>
+                    <td style="border-left: 2px solid var(--border); font-size:13px; color:var(--purple);">${tFut}</td>
+                    <td style="font-size:14px; color:var(--green);">${tSill}</td>
+                    <td style="font-size:14px; color:var(--blue);">${tComp}</td>
+                    <td style="border-left: 2px solid var(--border); color:var(--green); font-size:14px;">${cacTotal > 0 ? fmtMoney(cacTotal) : '---'}</td>
+                </tr>`;
+
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
 
