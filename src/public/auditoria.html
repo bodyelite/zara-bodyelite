@@ -78,7 +78,7 @@
         <div class="header">
             <div>
                 <h1>BODY ELITE <span>CEO BOARD</span></h1>
-                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">El Triángulo Exacto (1 Anuncio = 1 Mensaje)</p>
+                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">Reglas Estrictas: Solo los 3 Anuncios Activos</p>
             </div>
             <div class="date-box">
                 <div>
@@ -108,7 +108,7 @@
             <button class="btn" onclick="ejecutarRadar()">CALCULAR RETORNO</button>
         </div>
 
-        <div id="loader">EJECUTANDO EL TRIÁNGULO DE LA VERDAD... ⚙️</div>
+        <div id="loader">FILTRANDO SOLO CAMPAÑAS ACTIVAS... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="decision-grid" id="gridTarjetas"></div>
@@ -117,7 +117,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-left" style="width: 200px;">ANUNCIO META</th>
+                            <th class="text-left" style="width: 200px;">CÉLULA DE CAMPAÑA</th>
                             <th>GASTO TOTAL</th>
                             <th>COSTO DÍA</th>
                             <th>RESULTADOS (META)</th>
@@ -163,19 +163,12 @@
             return new Date(dateStr).getTime(); 
         }
 
-        // ==========================================
-        // EL TRIÁNGULO MAESTRO (1 ANUNCIO = 1 FRASE)
-        // Agrega aquí la frase exacta que dispara cada anuncio de Meta.
-        // ==========================================
-        const TRIANGULO_MAESTRO = {
-            "video_fran": ["evaluacion diagnostica lipo"],
-            "carrusel_hifu": ["diagnostica facial", "limpieza facial"],
-            "rostro_verano": ["evaluacion rostro"],
-            "lipo_trajeblanco": ["lipo express"],
-            "gluteos_piscina": ["evaluacion gluteos"],
-            "chats_antiage": ["antiage"],
-            "push up - v": ["plan push up"]
-        };
+        // LAS ÚNICAS 3 REGLAS QUE IMPORTAN (COMO TÚ LO EXIGISTE)
+        const REGLAS_ESTRICTAS = [
+            { id: "LIPO FRAN", keysMeta: ["lipo fran", "lipo_trajeblanco", "video_fran"], fraseExacta: "quiero agendar mi evaluacion diagnostica lipo" },
+            { id: "FACIAL PIA", keysMeta: ["facial pia", "carrusel_hifu", "chats_antiage", "notas_antiage"], fraseExacta: "hola, quiero agendar diagnostico facial" },
+            { id: "ROSTRO VERANO", keysMeta: ["rostro verano", "rostro_verano"], fraseExacta: "quiero mi evaluacion rostro" }
+        ];
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
         
@@ -216,6 +209,13 @@
                 const [metaArr, zaraRaw, reserArr] = await Promise.all([rxArray(fm), readDashCSV(fz), rxArray(fr)]);
                 let anuncios = {}; 
 
+                // INICIALIZAR LAS 3 CAMPAÑAS Y EL BALDE ORGÁNICO
+                REGLAS_ESTRICTAS.forEach(r => {
+                    anuncios[r.id] = { nombre: r.id, dias: 0, gasto: 0, resMeta: 0, entraron: 0, dormidos: 0, conIntencion: 0, agendaron: 0, compraron: 0 };
+                });
+                anuncios["ORGANICO_OTROS"] = { nombre: "ORGÁNICO / NO IDENTIFICADO", dias: 0, gasto: 0, resMeta: 0, entraron: 0, dormidos: 0, conIntencion: 0, agendaron: 0, compraron: 0 };
+
+                // 1. LEER META
                 const metaH = metaArr[0] || [];
                 let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name'));
                 let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
@@ -225,6 +225,7 @@
                 
                 metaArr.slice(1).forEach(r => {
                     let nombreOriginal = String(r[cAnuncio] || '').trim();
+                    let nombreNorm = normalizeStr(nombreOriginal);
                     let spend = parseFloat(r[cGasto]) || 0;
                     let resultados = parseInt(r[cRes]) || 0;
                     
@@ -236,20 +237,20 @@
                             if (finReal >= inicioReal) dias = Math.ceil((finReal - inicioReal) / 86400000) + 1;
                         }
 
-                        if(!anuncios[nombreOriginal]) {
-                            anuncios[nombreOriginal] = { 
-                                nombre: nombreOriginal, dias: 0, gasto: 0, resMeta: 0, 
-                                entraron: 0, dormidos: 0, conIntencion: 0, agendaron: 0, compraron: 0
-                            };
+                        let keyTarget = "ORGANICO_OTROS";
+                        for (let regla of REGLAS_ESTRICTAS) {
+                            if (regla.keysMeta.some(k => nombreNorm.includes(k))) {
+                                keyTarget = regla.id; break;
+                            }
                         }
-                        anuncios[nombreOriginal].gasto += spend;
-                        anuncios[nombreOriginal].resMeta += resultados;
-                        anuncios[nombreOriginal].dias = Math.max(anuncios[nombreOriginal].dias, dias);
+
+                        anuncios[keyTarget].gasto += spend;
+                        anuncios[keyTarget].resMeta += resultados;
+                        anuncios[keyTarget].dias = Math.max(anuncios[keyTarget].dias, dias);
                     }
                 });
-                
-                anuncios["ORGANICO_OTROS"] = { nombre: "ORGÁNICO / NO IDENTIFICADO", dias: 0, gasto: 0, resMeta: 0, entraron: 0, dormidos: 0, conIntencion: 0, agendaron: 0, compraron: 0 };
 
+                // 2. EXTRAER RESERVO
                 const reserHeaders = reserArr[0] || [];
                 let cTelR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
                 let cNomR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
@@ -268,6 +269,7 @@
                     };
                 });
 
+                // 3. PROCESAR DASH CSV (BÚSQUEDA ESTRICTA DE LA FRASE)
                 let leadsNormalizados = [];
                 let zh = zaraRaw[0] || [];
                 let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
@@ -275,10 +277,9 @@
                 let cNomZ = zh.findIndex(h => String(h).toLowerCase().includes('nombre'));
                 let cEstZ = zh.findIndex(h => String(h).toLowerCase().includes('estado'));
                 let cMsgZ = zh.findIndex(h => String(h).toLowerCase().includes('primer mensaje'));
-                let cBitZ = zh.findIndex(h => String(h).toLowerCase().includes('bitacora'));
 
                 if(cFecZ === -1) cFecZ = 0; if(cTelZ === -1) cTelZ = 1; if(cNomZ === -1) cNomZ = 2; 
-                if(cEstZ === -1) cEstZ = 3; if(cMsgZ === -1) cMsgZ = 4; if(cBitZ === -1) cBitZ = 5;
+                if(cEstZ === -1) cEstZ = 3; if(cMsgZ === -1) cMsgZ = 4;
 
                 zaraRaw.slice(1).forEach(r => {
                     let f = parseChileanDate(r[cFecZ]);
@@ -294,13 +295,9 @@
                     if(!l.historial && !l.tag) return;
 
                     let adDuenio = "ORGANICO_OTROS";
-                    for (let adName in anuncios) {
-                        let keyNorm = normalizeStr(adName);
-                        // Aplicamos el Triángulo Maestro aquí
-                        let frasesExactas = TRIANGULO_MAESTRO[keyNorm]; 
-                        if (frasesExactas && frasesExactas.some(f => l.historial.includes(normalizeStr(f)))) { 
-                            adDuenio = adName; 
-                            break; 
+                    for (let regla of REGLAS_ESTRICTAS) {
+                        if (l.historial.includes(regla.fraseExacta)) {
+                            adDuenio = regla.id; break; 
                         }
                     }
 
