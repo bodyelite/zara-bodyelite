@@ -78,7 +78,7 @@
         <div class="header">
             <div>
                 <h1>BODY ELITE <span>CEO BOARD</span></h1>
-                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">Pipeline de Ventas Oficial (Meta ➔ Dash CSV ➔ Reservo)</p>
+                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">El Triángulo Exacto (1 Anuncio = 1 Mensaje)</p>
             </div>
             <div class="date-box">
                 <div>
@@ -108,7 +108,7 @@
             <button class="btn" onclick="ejecutarRadar()">CALCULAR RETORNO</button>
         </div>
 
-        <div id="loader">CRUZANDO CON LA BITÁCORA DEL DASH... ⚙️</div>
+        <div id="loader">EJECUTANDO EL TRIÁNGULO DE LA VERDAD... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="decision-grid" id="gridTarjetas"></div>
@@ -146,14 +146,11 @@
             return Math.round((parseFloat(serial) - 25569) * 86400 * 1000) + (new Date().getTimezoneOffset() * 60000);
         }
 
-        // Lector de fecha Chilena (DD-MM-YYYY) para el Dash CSV
         function parseChileanDate(dateStr) {
             if(!dateStr) return 0;
             let parts = String(dateStr).split(' ')[0].split('-');
             if(parts.length === 3) {
-                // Si viene como DD-MM-YYYY
                 if (parts[0].length <= 2) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
-                // Si viene como YYYY-MM-DD
                 return new Date(parts[0], parts[1]-1, parts[2]).getTime();
             }
             return new Date(dateStr).getTime();
@@ -166,29 +163,30 @@
             return new Date(dateStr).getTime(); 
         }
 
-        const MAPA_FRASES = {
-            "lipo_trajeblanco": ["lipo express", "lipo"],
-            "gluteos_piscina": ["push up", "gluteos", "gluteo"],
-            "push up - v": ["push up", "gluteos", "gluteo"],
-            "rostro_verano": ["evaluacion rostro", "rostro"],
-            "carrusel_hifu": ["facial", "hifu", "limpieza facial", "antiage", "pink glow", "marzo"],
-            "chats_antiage": ["facial", "hifu", "limpieza facial", "antiage", "pink glow", "marzo"],
-            "notas_antiage": ["facial", "hifu", "limpieza facial", "antiage", "pink glow", "marzo"]
+        // ==========================================
+        // EL TRIÁNGULO MAESTRO (1 ANUNCIO = 1 FRASE)
+        // Agrega aquí la frase exacta que dispara cada anuncio de Meta.
+        // ==========================================
+        const TRIANGULO_MAESTRO = {
+            "video_fran": ["evaluacion diagnostica lipo"],
+            "carrusel_hifu": ["diagnostica facial", "limpieza facial"],
+            "rostro_verano": ["evaluacion rostro"],
+            "lipo_trajeblanco": ["lipo express"],
+            "gluteos_piscina": ["evaluacion gluteos"],
+            "chats_antiage": ["antiage"],
+            "push up - v": ["plan push up"]
         };
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
         
-        // Función específica para leer el Dash CSV separado por punto y coma (;)
         async function readDashCSV(f) {
             return new Promise(resolve => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    let text = e.target.result;
-                    let lines = text.split('\n');
+                    let lines = e.target.result.split('\n');
                     let data = [];
                     lines.forEach(line => {
                         if (line.trim()) {
-                            // Limpia comillas dobles que exporta excel
                             let row = line.split(';').map(c => c.replace(/^"|"$/g, '').trim());
                             data.push(row);
                         }
@@ -215,9 +213,7 @@
             document.getElementById('loader').style.display = 'block';
 
             try {
-                // Leemos Meta y Reservo con XLSX, pero el Dash con nuestra función de punto y coma
                 const [metaArr, zaraRaw, reserArr] = await Promise.all([rxArray(fm), readDashCSV(fz), rxArray(fr)]);
-                
                 let anuncios = {}; 
 
                 const metaH = metaArr[0] || [];
@@ -272,7 +268,6 @@
                     };
                 });
 
-                // PROCESAR DASH CSV OFICIAL
                 let leadsNormalizados = [];
                 let zh = zaraRaw[0] || [];
                 let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
@@ -282,22 +277,15 @@
                 let cMsgZ = zh.findIndex(h => String(h).toLowerCase().includes('primer mensaje'));
                 let cBitZ = zh.findIndex(h => String(h).toLowerCase().includes('bitacora'));
 
-                // Si no encuentra las columnas exactas, asumimos las posiciones por defecto del CSV:
                 if(cFecZ === -1) cFecZ = 0; if(cTelZ === -1) cTelZ = 1; if(cNomZ === -1) cNomZ = 2; 
                 if(cEstZ === -1) cEstZ = 3; if(cMsgZ === -1) cMsgZ = 4; if(cBitZ === -1) cBitZ = 5;
 
                 zaraRaw.slice(1).forEach(r => {
                     let f = parseChileanDate(r[cFecZ]);
                     let msg = normalizeStr(r[cMsgZ]);
-                    let notas = normalizeStr(r[cBitZ]);
-                    let textoCompleto = msg + " " + notas; // Juntamos mensaje y bitácora por si hay pistas del anuncio ahí
-                    
                     leadsNormalizados.push({ 
-                        ts: f, 
-                        phone: clean(r[cTelZ]), 
-                        name: normalizeStr(r[cNomZ]), 
-                        tag: normalizeStr(r[cEstZ]).toUpperCase(), 
-                        historial: textoCompleto 
+                        ts: f, phone: clean(r[cTelZ]), name: normalizeStr(r[cNomZ]), 
+                        tag: normalizeStr(r[cEstZ]).toUpperCase(), historial: msg 
                     });
                 });
 
@@ -308,8 +296,12 @@
                     let adDuenio = "ORGANICO_OTROS";
                     for (let adName in anuncios) {
                         let keyNorm = normalizeStr(adName);
-                        let frases = MAPA_FRASES[keyNorm] || [keyNorm];
-                        if (frases.some(f => l.historial.includes(f))) { adDuenio = adName; break; }
+                        // Aplicamos el Triángulo Maestro aquí
+                        let frasesExactas = TRIANGULO_MAESTRO[keyNorm]; 
+                        if (frasesExactas && frasesExactas.some(f => l.historial.includes(normalizeStr(f)))) { 
+                            adDuenio = adName; 
+                            break; 
+                        }
                     }
 
                     const s = anuncios[adDuenio];
@@ -329,7 +321,6 @@
                         }
                     });
 
-                    // LECTURA DIRECTA DEL DASH (Evita errores de interpretación)
                     let tieneIntencion = false;
                     if (['HOT', 'INTERESADO', 'GESTIÓN', 'AGENDADO'].includes(l.tag) || l.historial.includes('agenda')) {
                         tieneIntencion = true;
