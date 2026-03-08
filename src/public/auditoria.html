@@ -26,6 +26,7 @@
         .ad-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
         .ad-card.good::before { background: var(--green); }
         .ad-card.bad::before { background: var(--red); }
+        .ad-card.warning::before { background: var(--alert); }
         .ad-card.neutral::before { background: var(--muted); }
         
         .ad-header { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -34,6 +35,7 @@
         .ad-status { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
         .ad-status.potenciar { background: rgba(16,185,129,0.15); color: var(--green); }
         .ad-status.apagar { background: rgba(239,68,68,0.15); color: var(--red); }
+        .ad-status.observacion { background: rgba(245,158,11,0.15); color: var(--alert); }
         .ad-status.organico { background: rgba(156,163,175,0.15); color: var(--muted); }
 
         .pipeline-flow { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
@@ -52,6 +54,7 @@
         .ad-cac-val { font-size: 18px; font-weight: 900; font-family: monospace; }
         .cac-good { color: var(--green); }
         .cac-bad { color: var(--red); }
+        .cac-warning { color: var(--alert); }
 
         .table-container { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
@@ -75,16 +78,16 @@
         <div class="header">
             <div>
                 <h1>BODY ELITE <span>CEO BOARD</span></h1>
-                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">Análisis Binario de Rendimiento (Meta ➔ Zara ➔ Reservo)</p>
+                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">Pipeline de Ventas Oficial (Meta ➔ Dash CSV ➔ Reservo)</p>
             </div>
             <div class="date-box">
                 <div>
                     <label style="font-size:10px; color:var(--muted); font-weight:800; display:block; margin-bottom:5px;">RANGO DESDE</label>
-                    <input type="date" id="fi" value="2026-03-01" style="background:#000; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px;">
+                    <input type="date" id="fi" value="2026-02-01" style="background:#000; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px;">
                 </div>
                 <div>
                     <label style="font-size:10px; color:var(--muted); font-weight:800; display:block; margin-bottom:5px;">RANGO HASTA</label>
-                    <input type="date" id="ff" value="2026-03-07" style="background:#000; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px;">
+                    <input type="date" id="ff" value="2026-03-31" style="background:#000; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px;">
                 </div>
             </div>
         </div>
@@ -95,8 +98,8 @@
                 <input type="file" id="fm" accept=".csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
-                <label>2. ZARA (JSON O DASH)</label>
-                <input type="file" id="fz" accept=".json, .csv, .xlsx, .xls">
+                <label style="color:var(--green);">2. ZARA (DASH CSV OFICIAL)</label>
+                <input type="file" id="fz" accept=".csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
                 <label>3. RESERVO (CITAS CSV)</label>
@@ -105,7 +108,7 @@
             <button class="btn" onclick="ejecutarRadar()">CALCULAR RETORNO</button>
         </div>
 
-        <div id="loader">DESTILANDO LA VERDAD... ⚙️</div>
+        <div id="loader">CRUZANDO CON LA BITÁCORA DEL DASH... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="decision-grid" id="gridTarjetas"></div>
@@ -118,12 +121,12 @@
                             <th>GASTO TOTAL</th>
                             <th>COSTO DÍA</th>
                             <th>RESULTADOS (META)</th>
-                            <th style="border-left: 2px solid var(--border); color:var(--text);">ENTRARON (ZARA)</th>
+                            <th style="border-left: 2px solid var(--border); color:var(--text);">ENTRARON (DASH)</th>
                             <th class="col-dormido">DORMIDOS 💤</th>
                             <th class="col-intencion">CON INTENCIÓN 🔥</th>
                             <th style="border-left: 2px solid var(--border); color:var(--green);">AGENDARON (RESERVO)</th>
                             <th style="color:var(--blue);">COMPRARON 💰</th>
-                            <th style="border-left: 2px solid var(--border);">CAC (COSTO X AGENDA)</th>
+                            <th style="border-left: 2px solid var(--border);">ESTADO / CAC</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoEmbudo"></tbody>
@@ -143,6 +146,19 @@
             return Math.round((parseFloat(serial) - 25569) * 86400 * 1000) + (new Date().getTimezoneOffset() * 60000);
         }
 
+        // Lector de fecha Chilena (DD-MM-YYYY) para el Dash CSV
+        function parseChileanDate(dateStr) {
+            if(!dateStr) return 0;
+            let parts = String(dateStr).split(' ')[0].split('-');
+            if(parts.length === 3) {
+                // Si viene como DD-MM-YYYY
+                if (parts[0].length <= 2) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                // Si viene como YYYY-MM-DD
+                return new Date(parts[0], parts[1]-1, parts[2]).getTime();
+            }
+            return new Date(dateStr).getTime();
+        }
+
         function parseDateUI(dateStr) { 
             if(!dateStr) return 0; 
             let parts = dateStr.split('-');
@@ -150,7 +166,6 @@
             return new Date(dateStr).getTime(); 
         }
 
-        // DICCIONARIO EXPANDIDO (Ahora incluye todas las variantes faciales de tu Dash)
         const MAPA_FRASES = {
             "lipo_trajeblanco": ["lipo express", "lipo"],
             "gluteos_piscina": ["push up", "gluteos", "gluteo"],
@@ -163,10 +178,25 @@
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
         
-        async function readZaraFile(f) {
-            if (f.name.endsWith('.json')) {
-                return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); });
-            } else { return await rxArray(f); }
+        // Función específica para leer el Dash CSV separado por punto y coma (;)
+        async function readDashCSV(f) {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    let text = e.target.result;
+                    let lines = text.split('\n');
+                    let data = [];
+                    lines.forEach(line => {
+                        if (line.trim()) {
+                            // Limpia comillas dobles que exporta excel
+                            let row = line.split(';').map(c => c.replace(/^"|"$/g, '').trim());
+                            data.push(row);
+                        }
+                    });
+                    resolve(data);
+                };
+                reader.readAsText(f);
+            });
         }
 
         async function ejecutarRadar() {
@@ -185,7 +215,8 @@
             document.getElementById('loader').style.display = 'block';
 
             try {
-                const [metaArr, zaraRaw, reserArr] = await Promise.all([rxArray(fm), readZaraFile(fz), rxArray(fr)]);
+                // Leemos Meta y Reservo con XLSX, pero el Dash con nuestra función de punto y coma
+                const [metaArr, zaraRaw, reserArr] = await Promise.all([rxArray(fm), readDashCSV(fz), rxArray(fr)]);
                 
                 let anuncios = {}; 
 
@@ -241,29 +272,34 @@
                     };
                 });
 
+                // PROCESAR DASH CSV OFICIAL
                 let leadsNormalizados = [];
-                if (Array.isArray(zaraRaw)) {
-                    let zh = zaraRaw[0] || [];
-                    let cTelZ = zh.findIndex(h => String(h).toLowerCase().includes('telefono'));
-                    let cNomZ = zh.findIndex(h => String(h).toLowerCase().includes('nombre'));
-                    let cEstZ = zh.findIndex(h => String(h).toLowerCase().includes('estado'));
-                    let cMsgZ = zh.findIndex(h => String(h).toLowerCase().includes('primer mensaje'));
-                    let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
+                let zh = zaraRaw[0] || [];
+                let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
+                let cTelZ = zh.findIndex(h => String(h).toLowerCase().includes('telefono'));
+                let cNomZ = zh.findIndex(h => String(h).toLowerCase().includes('nombre'));
+                let cEstZ = zh.findIndex(h => String(h).toLowerCase().includes('estado'));
+                let cMsgZ = zh.findIndex(h => String(h).toLowerCase().includes('primer mensaje'));
+                let cBitZ = zh.findIndex(h => String(h).toLowerCase().includes('bitacora'));
+
+                // Si no encuentra las columnas exactas, asumimos las posiciones por defecto del CSV:
+                if(cFecZ === -1) cFecZ = 0; if(cTelZ === -1) cTelZ = 1; if(cNomZ === -1) cNomZ = 2; 
+                if(cEstZ === -1) cEstZ = 3; if(cMsgZ === -1) cMsgZ = 4; if(cBitZ === -1) cBitZ = 5;
+
+                zaraRaw.slice(1).forEach(r => {
+                    let f = parseChileanDate(r[cFecZ]);
+                    let msg = normalizeStr(r[cMsgZ]);
+                    let notas = normalizeStr(r[cBitZ]);
+                    let textoCompleto = msg + " " + notas; // Juntamos mensaje y bitácora por si hay pistas del anuncio ahí
                     
-                    zaraRaw.slice(1).forEach(r => {
-                        let f = parseDateUI(String(r[cFecZ] || '').split(',')[0]);
-                        leadsNormalizados.push({ ts: f, phone: clean(r[cTelZ]), name: normalizeStr(r[cNomZ]), tag: normalizeStr(r[cEstZ]).toUpperCase(), historial: normalizeStr(r[cMsgZ]) });
+                    leadsNormalizados.push({ 
+                        ts: f, 
+                        phone: clean(r[cTelZ]), 
+                        name: normalizeStr(r[cNomZ]), 
+                        tag: normalizeStr(r[cEstZ]).toUpperCase(), 
+                        historial: textoCompleto 
                     });
-                } else {
-                    let users = Array.isArray(zaraRaw.users) ? zaraRaw.users : Object.values(zaraRaw.users || {});
-                    users.forEach(l => {
-                        leadsNormalizados.push({
-                            ts: l.history?.[0]?.timestamp || l.lastInteraction || 0,
-                            phone: clean(l.phone || l.number), name: normalizeStr(l.name), tag: normalizeStr(l.tag).toUpperCase(),
-                            historial: l.history?.slice(0,3).map(m => normalizeStr(m.content)).join(" ") || ""
-                        });
-                    });
-                }
+                });
 
                 leadsNormalizados.forEach(l => {
                     if(l.ts > 0 && (l.ts < fi || l.ts > ff)) return; 
@@ -293,6 +329,7 @@
                         }
                     });
 
+                    // LECTURA DIRECTA DEL DASH (Evita errores de interpretación)
                     let tieneIntencion = false;
                     if (['HOT', 'INTERESADO', 'GESTIÓN', 'AGENDADO'].includes(l.tag) || l.historial.includes('agenda')) {
                         tieneIntencion = true;
@@ -323,6 +360,9 @@
                         if (s.agendaron > 0) {
                             estadoClass = "good"; badgeClass = "potenciar"; badgeText = "🔥 POTENCIAR";
                             cacText = "$" + fmtMoney(cac); cacClass = "cac-good";
+                        } else if (s.conIntencion > 0) {
+                            estadoClass = "warning"; badgeClass = "observacion"; badgeText = "👀 EN OBSERVACIÓN";
+                            cacText = "EN PIPELINE"; cacClass = "cac-warning";
                         } else {
                             estadoClass = "bad"; badgeClass = "apagar"; badgeText = "💀 APAGAR";
                             cacText = "PÉRDIDA"; cacClass = "cac-bad";
@@ -343,7 +383,7 @@
                             <div class="pipeline-flow">
                                 <div class="flow-step"><div class="flow-val val-meta">${s.resMeta}</div><div class="flow-label">Meta</div></div>
                                 <div class="flow-arrow">➔</div>
-                                <div class="flow-step"><div class="flow-val val-zara">${s.entraron}</div><div class="flow-label">Zara</div></div>
+                                <div class="flow-step"><div class="flow-val val-zara">${s.entraron}</div><div class="flow-label">Dash</div></div>
                                 <div class="flow-arrow">➔</div>
                                 <div class="flow-step"><div class="flow-val val-int">${s.conIntencion}</div><div class="flow-label">Intención</div></div>
                                 <div class="flow-arrow">➔</div>
@@ -351,7 +391,7 @@
                             </div>
 
                             <div class="ad-footer">
-                                <span class="ad-cac-label">Costo por Agendado (CAC)</span>
+                                <span class="ad-cac-label">Estado CAC</span>
                                 <span class="ad-cac-val ${cacClass}">${cacText}</span>
                             </div>
                         </div>`;
@@ -367,7 +407,7 @@
                         <td class="col-intencion">${s.conIntencion}</td>
                         <td class="col-agendado" style="border-left: 2px solid var(--border);">${s.agendaron}</td>
                         <td style="font-size:14px; font-weight:900; color:var(--blue);">${s.compraron}</td>
-                        <td style="border-left: 2px solid var(--border); font-family:monospace; font-size:14px; font-weight:bold; color:${cac > 0 ? 'var(--green)' : (s.gasto > 0 ? 'var(--red)' : 'var(--muted)')};">${cac > 0 ? '$'+fmtMoney(cac) : (s.gasto > 0 ? 'PÉRDIDA' : '---')}</td>
+                        <td style="border-left: 2px solid var(--border); font-family:monospace; font-size:13px; font-weight:bold;" class="${cacClass}">${cacText}</td>
                     </tr>`;
                 });
 
@@ -393,7 +433,7 @@
 
             } catch(e) {
                 console.error(e);
-                alert('Error procesando archivos. Revisa la consola.');
+                alert('Error procesando el archivo CSV del Dash. Revisa el formato.');
                 document.getElementById('loader').style.display = 'none';
             }
         }
