@@ -20,7 +20,6 @@
         .btn { background: var(--blue); color: #fff; border: none; padding: 14px; font-weight: 900; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; transition: 0.3s; height: 44px; }
         .btn:hover { background: #2563EB; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
 
-        /* GRID DE DECISIÓN (TARJETAS VISUALES) */
         .decision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 40px; }
         .ad-card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: 0.3s; }
         .ad-card:hover { transform: translateY(-5px); border-color: var(--blue); }
@@ -54,7 +53,6 @@
         .cac-good { color: var(--green); }
         .cac-bad { color: var(--red); }
 
-        /* TABLA SIMPLIFICADA */
         .table-container { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
         th { background: #000; color: var(--muted); padding: 16px 12px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid var(--border); font-size: 10px; letter-spacing: 0.5px; }
@@ -110,7 +108,6 @@
         <div id="loader">DESTILANDO LA VERDAD... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
-            
             <div class="decision-grid" id="gridTarjetas"></div>
 
             <div class="table-container">
@@ -153,13 +150,15 @@
             return new Date(dateStr).getTime(); 
         }
 
+        // DICCIONARIO EXPANDIDO (Ahora incluye todas las variantes faciales de tu Dash)
         const MAPA_FRASES = {
-            "lipo fran": ["evaluacion diagnostica lipo", "lipo express", "lipo"],
-            "facial pia": ["diagnostico facial", "hifu", "pink glow"],
-            "rostro verano": ["evaluacion rostro", "rostro"],
-            "push up - v": ["push up", "gluteos", "gluteo"],
+            "lipo_trajeblanco": ["lipo express", "lipo"],
             "gluteos_piscina": ["push up", "gluteos", "gluteo"],
-            "lipo_trajeblanco": ["lipo express", "lipo"]
+            "push up - v": ["push up", "gluteos", "gluteo"],
+            "rostro_verano": ["evaluacion rostro", "rostro"],
+            "carrusel_hifu": ["facial", "hifu", "limpieza facial", "antiage", "pink glow", "marzo"],
+            "chats_antiage": ["facial", "hifu", "limpieza facial", "antiage", "pink glow", "marzo"],
+            "notas_antiage": ["facial", "hifu", "limpieza facial", "antiage", "pink glow", "marzo"]
         };
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
@@ -284,30 +283,23 @@
                     const matchReservo = reserData.filter(c => (l.phone.length >= 8 && c.telefono.includes(l.phone)) || (n.length >= 3 && c.nombreOriginal === n));
                     
                     let tieneCitaValida = false;
-                    let asiste = false;
                     let compro = false;
 
                     matchReservo.forEach(c => {
                         let cancelada = ['anula', 'no asiste', 'cancelado', 'no llegó', 'eliminado'].includes(c.estado);
-                        // Citas hasta 60 días en el futuro cuentan como agendadas
                         if (!cancelada && c.tsFecha <= limiteFuturo) {
                             tieneCitaValida = true;
-                            if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
                             if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
                         }
                     });
 
-                    // SIMPLIFICACIÓN PITAGÓRICA: Solo hay 2 estados en Zara (Intención vs Dormido)
                     let tieneIntencion = false;
                     if (['HOT', 'INTERESADO', 'GESTIÓN', 'AGENDADO'].includes(l.tag) || l.historial.includes('agenda')) {
                         tieneIntencion = true;
                     }
-                    
-                    // Reservo Manda: Si agendó en la vida real, tiene intención sí o sí.
                     if (tieneCitaValida) tieneIntencion = true;
 
                     if (tieneIntencion) s.conIntencion++; else s.dormidos++;
-
                     if (tieneCitaValida) s.agendaron++;
                     if (compro) s.compraron++;
                 });
@@ -325,7 +317,6 @@
                     let costoDia = s.dias > 0 ? s.gasto / s.dias : s.gasto;
                     let cac = s.agendaron > 0 ? s.gasto / s.agendaron : 0;
                     
-                    // LÓGICA DE DECISIÓN DE LA TARJETA
                     let estadoClass = "neutral", badgeClass = "organico", badgeText = "ORGÁNICO", cacText = "---", cacClass = "";
                     
                     if (s.gasto > 0) {
@@ -338,7 +329,6 @@
                         }
                     }
 
-                    // GENERAR TARJETA VISUAL
                     if (s.nombre !== "ORGÁNICO / NO IDENTIFICADO" || s.entraron > 0) {
                         htmlGrid += `
                         <div class="ad-card ${estadoClass}">
@@ -367,7 +357,6 @@
                         </div>`;
                     }
 
-                    // GENERAR FILA DE TABLA
                     htmlTabla += `<tr>
                         <td class="text-left"><b style="color:var(--text); font-size:12px;">${s.nombre.toUpperCase()}</b></td>
                         <td class="money">${s.gasto > 0 ? fmtMoney(s.gasto) : '---'}</td>
