@@ -2,101 +2,131 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>BODY ELITE - CEO PIPELINE (ANUNCIO X ANUNCIO)</title>
+    <title>BODY ELITE - CEO DECISION BOARD</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0B1120; --card: #1E293B; --border: #334155; --text: #F8FAFC; --muted: #94A3B8; --green: #10B981; --red: #F43F5E; --blue: #0EA5E9; --alert: #F59E0B; --purple: #8B5CF6; --gray: #64748B; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 30px; }
-        .container { max-width: 1700px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-        .header h1 { margin: 0; font-weight: 900; font-size: 26px; color: var(--blue); letter-spacing: -1px; }
+        :root { --bg: #060B14; --card: #111827; --border: #1F2937; --text: #F9FAFB; --muted: #9CA3AF; --green: #10B981; --red: #EF4444; --blue: #3B82F6; --alert: #F59E0B; --purple: #8B5CF6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 40px; }
+        .container { max-width: 1600px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .header h1 { margin: 0; font-weight: 900; font-size: 28px; color: var(--text); letter-spacing: -1px; }
+        .header span { color: var(--blue); }
         
-        .upload-section { display: grid; grid-template-columns: repeat(3, 1fr) 200px; gap: 15px; background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; align-items: end; }
-        .upload-box label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
-        .upload-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--blue); padding: 10px; border-radius: 4px; box-sizing: border-box; font-family: monospace; font-size: 11px;}
-        .date-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { background: var(--green); color: #000; border: none; padding: 12px; font-weight: 900; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-size: 13px; transition: 0.2s; height: 39px; }
-        .btn:hover { background: #059669; color: #fff; }
+        .upload-section { display: grid; grid-template-columns: repeat(3, 1fr) 200px; gap: 15px; background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 30px; align-items: end; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .upload-box label { display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;}
+        .upload-box input { width: 100%; background: #000; border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 8px; box-sizing: border-box; font-family: monospace; font-size: 12px;}
+        .date-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { background: var(--blue); color: #fff; border: none; padding: 14px; font-weight: 900; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; transition: 0.3s; height: 44px; }
+        .btn:hover { background: #2563EB; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
 
-        .table-container { background: var(--card); border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }
-        th { background: #0F172A; color: var(--muted); padding: 12px 8px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid var(--border); line-height: 1.2; }
-        td { padding: 12px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        /* GRID DE DECISIÓN (TARJETAS VISUALES) */
+        .decision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .ad-card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: 0.3s; }
+        .ad-card:hover { transform: translateY(-5px); border-color: var(--blue); }
+        .ad-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
+        .ad-card.good::before { background: var(--green); }
+        .ad-card.bad::before { background: var(--red); }
+        .ad-card.neutral::before { background: var(--muted); }
+        
+        .ad-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .ad-title { font-size: 16px; font-weight: 900; margin: 0; color: var(--text); text-transform: uppercase; }
+        .ad-spend { font-size: 14px; color: var(--muted); font-family: monospace; font-weight: 600; margin-top: 4px; }
+        .ad-status { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+        .ad-status.potenciar { background: rgba(16,185,129,0.15); color: var(--green); }
+        .ad-status.apagar { background: rgba(239,68,68,0.15); color: var(--red); }
+        .ad-status.organico { background: rgba(156,163,175,0.15); color: var(--muted); }
+
+        .pipeline-flow { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        .flow-step { text-align: center; }
+        .flow-val { font-size: 20px; font-weight: 900; margin-bottom: 2px; }
+        .flow-label { font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+        .flow-arrow { color: var(--border); font-size: 12px; }
+        
+        .val-meta { color: var(--muted); }
+        .val-zara { color: var(--text); }
+        .val-int { color: var(--alert); }
+        .val-res { color: var(--green); }
+
+        .ad-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; }
+        .ad-cac-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+        .ad-cac-val { font-size: 18px; font-weight: 900; font-family: monospace; }
+        .cac-good { color: var(--green); }
+        .cac-bad { color: var(--red); }
+
+        /* TABLA SIMPLIFICADA */
+        .table-container { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+        th { background: #000; color: var(--muted); padding: 16px 12px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid var(--border); font-size: 10px; letter-spacing: 0.5px; }
+        td { padding: 16px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: rgba(255,255,255,0.02); }
-        tfoot { background: #060B14; font-weight: 900; font-size: 12px; }
-        tfoot td { border-top: 2px solid var(--border); }
+        tfoot { background: #000; font-weight: 900; font-size: 13px; }
+        tfoot td { border-top: 2px solid var(--border); color: var(--text); }
         
         .text-left { text-align: left; }
-        .badge { padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: 900; background: rgba(255,255,255,0.1); text-transform: uppercase; }
-        .badge.win { background: rgba(16, 185, 129, 0.2); color: var(--green); }
-        .badge.lose { background: rgba(244, 63, 94, 0.2); color: var(--red); }
-        .badge.wait { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
-        .money { font-family: monospace; font-size: 12px; font-weight: bold; }
-        .money.neutral { color: var(--alert); }
-        
-        .col-challa { color: var(--gray); }
-        .col-dormido { color: var(--text); }
-        .col-congelado { color: var(--alert); font-weight: bold; }
-        .col-agendado { color: var(--green); font-weight: bold; }
+        .money { font-family: monospace; font-weight: bold; }
+        .col-dormido { color: var(--muted); }
+        .col-intencion { color: var(--alert); font-weight: bold; }
+        .col-agendado { color: var(--green); font-weight: bold; font-size: 14px; }
 
-        #loader { display: none; text-align: center; padding: 50px; font-weight: bold; color: var(--blue); }
+        #loader { display: none; text-align: center; padding: 80px; font-weight: 900; color: var(--blue); font-size: 18px; letter-spacing: 2px; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>⚡ BODY ELITE: AUDITORÍA MATEMÁTICA EXACTA</h1>
+                <h1>BODY ELITE <span>CEO BOARD</span></h1>
+                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">Análisis Binario de Rendimiento (Meta ➔ Zara ➔ Reservo)</p>
             </div>
             <div class="date-box">
                 <div>
-                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">VENTANA DESDE</label>
-                    <input type="date" id="fi" value="2026-03-01" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:6px; border-radius:4px;">
+                    <label style="font-size:10px; color:var(--muted); font-weight:800; display:block; margin-bottom:5px;">RANGO DESDE</label>
+                    <input type="date" id="fi" value="2026-03-01" style="background:#000; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px;">
                 </div>
                 <div>
-                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">VENTANA HASTA</label>
-                    <input type="date" id="ff" value="2026-03-07" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:6px; border-radius:4px;">
+                    <label style="font-size:10px; color:var(--muted); font-weight:800; display:block; margin-bottom:5px;">RANGO HASTA</label>
+                    <input type="date" id="ff" value="2026-03-07" style="background:#000; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px;">
                 </div>
             </div>
         </div>
 
         <div class="upload-section">
             <div class="upload-box">
-                <label>1. META (ANUNCIOS CSV)</label>
+                <label>1. META (GASTO CSV)</label>
                 <input type="file" id="fm" accept=".csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
-                <label>2. ZARA (JSON O DASH CSV)</label>
+                <label>2. ZARA (JSON O DASH)</label>
                 <input type="file" id="fz" accept=".json, .csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
-                <label>3. RESERVO (CITAS CSV/XLS)</label>
+                <label>3. RESERVO (CITAS CSV)</label>
                 <input type="file" id="fr" accept=".xlsx,.xls,.csv">
             </div>
-            <button class="btn" onclick="ejecutarRadar()">DESPLEGAR MATRIZ</button>
+            <button class="btn" onclick="ejecutarRadar()">CALCULAR RETORNO</button>
         </div>
 
-        <div id="loader">CALCULANDO EMBUDO EXACTO Y TOTALES... ⚙️</div>
+        <div id="loader">DESTILANDO LA VERDAD... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
+            
+            <div class="decision-grid" id="gridTarjetas"></div>
+
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-left" style="width: 180px;">ANUNCIO META</th>
-                            <th>GASTO<br>TOTAL</th>
-                            <th>COSTO<br>DÍA</th>
-                            <th>RESULTADOS<br>(META)</th>
-                            <th style="border-left: 2px solid var(--border);">ENTRARON<br>(ZARA)</th>
-                            <th class="col-challa">ABANDONADO<br>💀</th>
-                            <th class="col-dormido">DORMIDO<br>(Nuevos) 💤</th>
-                            <th class="col-congelado">CONGELADOS<br>(Hot/Int/Gest) 🧊</th>
-                            <th class="col-agendado">AGENDADOS<br>(Promesa) 📅</th>
-                            <th style="border-left: 2px solid var(--border); background: rgba(139,92,246,0.1); color:var(--purple);">CITAS<br>FUTURAS ⏳</th>
-                            <th style="background: rgba(16,185,129,0.1); color:var(--green);">ASISTIÓ<br>EN SILLA ✅</th>
-                            <th style="background: rgba(14,165,233,0.1); color:var(--blue);">COMPRÓ<br>PLAN 💰</th>
-                            <th style="border-left: 2px solid var(--border);">CAC<br>(COSTO X VENTA)</th>
+                            <th class="text-left" style="width: 200px;">ANUNCIO META</th>
+                            <th>GASTO TOTAL</th>
+                            <th>COSTO DÍA</th>
+                            <th>RESULTADOS (META)</th>
+                            <th style="border-left: 2px solid var(--border); color:var(--text);">ENTRARON (ZARA)</th>
+                            <th class="col-dormido">DORMIDOS 💤</th>
+                            <th class="col-intencion">CON INTENCIÓN 🔥</th>
+                            <th style="border-left: 2px solid var(--border); color:var(--green);">AGENDARON (RESERVO)</th>
+                            <th style="color:var(--blue);">COMPRARON 💰</th>
+                            <th style="border-left: 2px solid var(--border);">CAC (COSTO X AGENDA)</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoEmbudo"></tbody>
@@ -137,9 +167,7 @@
         async function readZaraFile(f) {
             if (f.name.endsWith('.json')) {
                 return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); });
-            } else {
-                return await rxArray(f);
-            }
+            } else { return await rxArray(f); }
         }
 
         async function ejecutarRadar() {
@@ -148,11 +176,11 @@
             
             const fi_val = document.getElementById('fi').value;
             const ff_val = document.getElementById('ff').value;
-            if(!fi_val || !ff_val) return alert("Define la ventana de tiempo.");
+            if(!fi_val || !ff_val) return alert("Define el rango de fechas.");
             
             const fi = new Date(fi_val + 'T00:00:00').getTime();
             const ff = new Date(ff_val + 'T23:59:59').getTime();
-            const limiteFuturo = fi + (45 * 24 * 60 * 60 * 1000); 
+            const limiteFuturo = fi + (60 * 24 * 60 * 60 * 1000); 
 
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
@@ -185,8 +213,7 @@
                         if(!anuncios[nombreOriginal]) {
                             anuncios[nombreOriginal] = { 
                                 nombre: nombreOriginal, dias: 0, gasto: 0, resMeta: 0, 
-                                entraron: 0, abandonados: 0, dormidos: 0, congelados: 0, agendados: 0, 
-                                silla: 0, compraron: 0, futuros: 0 
+                                entraron: 0, dormidos: 0, conIntencion: 0, agendaron: 0, compraron: 0
                             };
                         }
                         anuncios[nombreOriginal].gasto += spend;
@@ -195,7 +222,7 @@
                     }
                 });
                 
-                anuncios["ORGANICO_OTROS"] = { nombre: "ORGÁNICO / NO IDENTIFICADO", dias: 0, gasto: 0, resMeta: 0, entraron: 0, abandonados: 0, dormidos: 0, congelados: 0, agendados: 0, silla: 0, compraron: 0, futuros: 0 };
+                anuncios["ORGANICO_OTROS"] = { nombre: "ORGÁNICO / NO IDENTIFICADO", dias: 0, gasto: 0, resMeta: 0, entraron: 0, dormidos: 0, conIntencion: 0, agendaron: 0, compraron: 0 };
 
                 const reserHeaders = reserArr[0] || [];
                 let cTelR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
@@ -210,11 +237,8 @@
                     let rawFecha = row[cFecR];
                     let timestamp = (typeof rawFecha === 'number') ? excelToDate(rawFecha) : parseDateUI(String(rawFecha));
                     return {
-                        telefono: clean(row[cTelR]),
-                        nombreOriginal: normalizeStr(row[cNomR]).split(' ')[0], 
-                        estado: normalizeStr(row[cEstR]),
-                        pago: normalizeStr(row[cPagoR]),
-                        tsFecha: timestamp
+                        telefono: clean(row[cTelR]), nombreOriginal: normalizeStr(row[cNomR]).split(' ')[0], 
+                        estado: normalizeStr(row[cEstR]), pago: normalizeStr(row[cPagoR]), tsFecha: timestamp
                     };
                 });
 
@@ -229,18 +253,14 @@
                     
                     zaraRaw.slice(1).forEach(r => {
                         let f = parseDateUI(String(r[cFecZ] || '').split(',')[0]);
-                        leadsNormalizados.push({
-                            ts: f, phone: clean(r[cTelZ]), name: normalizeStr(r[cNomZ]),
-                            tag: normalizeStr(r[cEstZ]).toUpperCase(), historial: normalizeStr(r[cMsgZ])
-                        });
+                        leadsNormalizados.push({ ts: f, phone: clean(r[cTelZ]), name: normalizeStr(r[cNomZ]), tag: normalizeStr(r[cEstZ]).toUpperCase(), historial: normalizeStr(r[cMsgZ]) });
                     });
                 } else {
                     let users = Array.isArray(zaraRaw.users) ? zaraRaw.users : Object.values(zaraRaw.users || {});
                     users.forEach(l => {
                         leadsNormalizados.push({
                             ts: l.history?.[0]?.timestamp || l.lastInteraction || 0,
-                            phone: clean(l.phone || l.number), name: normalizeStr(l.name),
-                            tag: normalizeStr(l.tag).toUpperCase(),
+                            phone: clean(l.phone || l.number), name: normalizeStr(l.name), tag: normalizeStr(l.tag).toUpperCase(),
                             historial: l.history?.slice(0,3).map(m => normalizeStr(m.content)).join(" ") || ""
                         });
                     });
@@ -254,108 +274,129 @@
                     for (let adName in anuncios) {
                         let keyNorm = normalizeStr(adName);
                         let frases = MAPA_FRASES[keyNorm] || [keyNorm];
-                        if (frases.some(f => l.historial.includes(f))) {
-                            adDuenio = adName; break;
-                        }
+                        if (frases.some(f => l.historial.includes(f))) { adDuenio = adName; break; }
                     }
 
                     const s = anuncios[adDuenio];
                     s.entraron++;
 
-                    // AUTO-CORRECCIÓN: RESERVO ES EL REY
                     const n = l.name.split(' ')[0]; 
                     const matchReservo = reserData.filter(c => (l.phone.length >= 8 && c.telefono.includes(l.phone)) || (n.length >= 3 && c.nombreOriginal === n));
                     
                     let tieneCitaValida = false;
                     let asiste = false;
                     let compro = false;
-                    let esFuturo = false;
 
                     matchReservo.forEach(c => {
                         let cancelada = ['anula', 'no asiste', 'cancelado', 'no llegó', 'eliminado'].includes(c.estado);
-                        if (!cancelada) {
+                        // Citas hasta 60 días en el futuro cuentan como agendadas
+                        if (!cancelada && c.tsFecha <= limiteFuturo) {
                             tieneCitaValida = true;
                             if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
                             if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
-                            if (c.tsFecha > ff && c.tsFecha <= limiteFuturo) esFuturo = true;
                         }
                     });
 
-                    // ASIGNACIÓN MATEMÁTICA ESTRICTA (Solo 1 bucket por lead)
-                    if (tieneCitaValida || l.tag === 'AGENDADO' || l.historial.includes('agenda')) {
-                        s.agendados++; // Si está en Reservo, es Agendado obligatorio.
-                    } else if (['HOT', 'INTERESADO', 'GESTIÓN'].includes(l.tag)) {
-                        s.congelados++;
-                    } else if (l.tag === 'NUEVO') {
-                        s.dormidos++;
-                    } else {
-                        s.abandonados++; // Fallback para que cuadre la suma
+                    // SIMPLIFICACIÓN PITAGÓRICA: Solo hay 2 estados en Zara (Intención vs Dormido)
+                    let tieneIntencion = false;
+                    if (['HOT', 'INTERESADO', 'GESTIÓN', 'AGENDADO'].includes(l.tag) || l.historial.includes('agenda')) {
+                        tieneIntencion = true;
                     }
+                    
+                    // Reservo Manda: Si agendó en la vida real, tiene intención sí o sí.
+                    if (tieneCitaValida) tieneIntencion = true;
 
-                    if(asiste) s.silla++;
-                    if(compro) s.compraron++;
-                    if(esFuturo && !asiste) s.futuros++;
+                    if (tieneIntencion) s.conIntencion++; else s.dormidos++;
+
+                    if (tieneCitaValida) s.agendaron++;
+                    if (compro) s.compraron++;
                 });
 
-                let html = "";
-                let tGasto=0, tMeta=0, tEntr=0, tAban=0, tDorm=0, tCong=0, tAgen=0, tFut=0, tSill=0, tComp=0;
+                let htmlTabla = "";
+                let htmlGrid = "";
+                let tGasto=0, tMeta=0, tEntr=0, tDorm=0, tInt=0, tAgen=0, tComp=0;
 
                 Object.values(anuncios).sort((a,b) => b.gasto - a.gasto).forEach(s => {
                     if(s.gasto === 0 && s.entraron === 0) return; 
 
-                    tGasto += s.gasto; tMeta += s.resMeta; tEntr += s.entraron; tAban += s.abandonados;
-                    tDorm += s.dormidos; tCong += s.congelados; tAgen += s.agendados; 
-                    tFut += s.futuros; tSill += s.silla; tComp += s.compraron;
+                    tGasto += s.gasto; tMeta += s.resMeta; tEntr += s.entraron;
+                    tDorm += s.dormidos; tInt += s.conIntencion; tAgen += s.agendaron; tComp += s.compraron;
 
                     let costoDia = s.dias > 0 ? s.gasto / s.dias : s.gasto;
+                    let cac = s.agendaron > 0 ? s.gasto / s.agendaron : 0;
                     
-                    let cacHtml = '';
-                    if (s.gasto > 0 && s.compraron > 0) {
-                        cacHtml = `<span class="badge win">$${fmtMoney(s.gasto / s.compraron)}</span>`;
-                    } else if (s.gasto > 0 && s.silla > 0) {
-                        cacHtml = `<span class="badge wait">ASISTIÓ (NO PAGÓ)</span>`;
-                    } else if (s.gasto > 0 && s.silla === 0 && s.futuros > 0) {
-                        cacHtml = `<span class="badge wait">EN PIPELINE</span>`;
-                    } else if (s.gasto > 0 && s.silla === 0 && s.futuros === 0) {
-                        cacHtml = `<span class="badge lose">PÉRDIDA</span>`;
-                    } else {
-                        cacHtml = `<span style="color:var(--muted)">---</span>`;
+                    // LÓGICA DE DECISIÓN DE LA TARJETA
+                    let estadoClass = "neutral", badgeClass = "organico", badgeText = "ORGÁNICO", cacText = "---", cacClass = "";
+                    
+                    if (s.gasto > 0) {
+                        if (s.agendaron > 0) {
+                            estadoClass = "good"; badgeClass = "potenciar"; badgeText = "🔥 POTENCIAR";
+                            cacText = "$" + fmtMoney(cac); cacClass = "cac-good";
+                        } else {
+                            estadoClass = "bad"; badgeClass = "apagar"; badgeText = "💀 APAGAR";
+                            cacText = "PÉRDIDA"; cacClass = "cac-bad";
+                        }
                     }
 
-                    html += `<tr>
-                        <td class="text-left"><b style="color:var(--blue); font-size:12px;">${s.nombre.toUpperCase()}</b></td>
+                    // GENERAR TARJETA VISUAL
+                    if (s.nombre !== "ORGÁNICO / NO IDENTIFICADO" || s.entraron > 0) {
+                        htmlGrid += `
+                        <div class="ad-card ${estadoClass}">
+                            <div class="ad-header">
+                                <div>
+                                    <h3 class="ad-title">${s.nombre}</h3>
+                                    <div class="ad-spend">Gasto: $${fmtMoney(s.gasto)}</div>
+                                </div>
+                                <div class="ad-status ${badgeClass}">${badgeText}</div>
+                            </div>
+                            
+                            <div class="pipeline-flow">
+                                <div class="flow-step"><div class="flow-val val-meta">${s.resMeta}</div><div class="flow-label">Meta</div></div>
+                                <div class="flow-arrow">➔</div>
+                                <div class="flow-step"><div class="flow-val val-zara">${s.entraron}</div><div class="flow-label">Zara</div></div>
+                                <div class="flow-arrow">➔</div>
+                                <div class="flow-step"><div class="flow-val val-int">${s.conIntencion}</div><div class="flow-label">Intención</div></div>
+                                <div class="flow-arrow">➔</div>
+                                <div class="flow-step"><div class="flow-val val-res">${s.agendaron}</div><div class="flow-label">Agendados</div></div>
+                            </div>
+
+                            <div class="ad-footer">
+                                <span class="ad-cac-label">Costo por Agendado (CAC)</span>
+                                <span class="ad-cac-val ${cacClass}">${cacText}</span>
+                            </div>
+                        </div>`;
+                    }
+
+                    // GENERAR FILA DE TABLA
+                    htmlTabla += `<tr>
+                        <td class="text-left"><b style="color:var(--text); font-size:12px;">${s.nombre.toUpperCase()}</b></td>
                         <td class="money">${s.gasto > 0 ? fmtMoney(s.gasto) : '---'}</td>
                         <td class="money neutral">${s.gasto > 0 ? fmtMoney(costoDia) : '---'}</td>
-                        <td>${s.resMeta > 0 ? s.resMeta : '-'}</td>
-                        <td style="border-left: 2px solid var(--border); font-weight:bold;">${s.entraron}</td>
-                        <td class="col-challa">${s.abandonados}</td>
+                        <td style="color:var(--muted)">${s.resMeta > 0 ? s.resMeta : '-'}</td>
+                        <td style="border-left: 2px solid var(--border); font-weight:900; font-size:14px;">${s.entraron}</td>
                         <td class="col-dormido">${s.dormidos}</td>
-                        <td class="col-congelado">${s.congelados}</td>
-                        <td class="col-agendado">${s.agendados}</td>
-                        <td style="border-left: 2px solid var(--border); font-size:13px; font-weight:900; color:var(--purple);">${s.futuros}</td>
-                        <td style="font-size:14px; font-weight:900; color:var(--green);">${s.silla}</td>
+                        <td class="col-intencion">${s.conIntencion}</td>
+                        <td class="col-agendado" style="border-left: 2px solid var(--border);">${s.agendaron}</td>
                         <td style="font-size:14px; font-weight:900; color:var(--blue);">${s.compraron}</td>
-                        <td style="border-left: 2px solid var(--border);">${cacHtml}</td>
+                        <td style="border-left: 2px solid var(--border); font-family:monospace; font-size:14px; font-weight:bold; color:${cac > 0 ? 'var(--green)' : (s.gasto > 0 ? 'var(--red)' : 'var(--muted)')};">${cac > 0 ? '$'+fmtMoney(cac) : (s.gasto > 0 ? 'PÉRDIDA' : '---')}</td>
                     </tr>`;
                 });
 
-                document.getElementById('cuerpoEmbudo').innerHTML = html;
+                document.getElementById('gridTarjetas').innerHTML = htmlGrid;
+                document.getElementById('cuerpoEmbudo').innerHTML = htmlTabla;
                 
-                let cacTotal = tComp > 0 ? tGasto / tComp : 0;
+                let cacTotal = tAgen > 0 ? tGasto / tAgen : 0;
                 document.getElementById('pieEmbudo').innerHTML = `<tr>
                     <td class="text-left" style="color:var(--blue);">TOTALES / PROMEDIOS</td>
                     <td class="money">${fmtMoney(tGasto)}</td>
                     <td class="money neutral">---</td>
-                    <td>${tMeta}</td>
-                    <td style="border-left: 2px solid var(--border); color:white;">${tEntr}</td>
-                    <td class="col-challa">${tAban}</td>
+                    <td style="color:var(--muted)">${tMeta}</td>
+                    <td style="border-left: 2px solid var(--border); font-weight:900; font-size:14px;">${tEntr}</td>
                     <td class="col-dormido">${tDorm}</td>
-                    <td class="col-congelado">${tCong}</td>
-                    <td class="col-agendado">${tAgen}</td>
-                    <td style="border-left: 2px solid var(--border); font-size:13px; color:var(--purple);">${tFut}</td>
-                    <td style="font-size:14px; color:var(--green);">${tSill}</td>
-                    <td style="font-size:14px; color:var(--blue);">${tComp}</td>
-                    <td style="border-left: 2px solid var(--border); color:var(--green); font-size:14px;">${cacTotal > 0 ? fmtMoney(cacTotal) : '---'}</td>
+                    <td class="col-intencion">${tInt}</td>
+                    <td class="col-agendado" style="border-left: 2px solid var(--border);">${tAgen}</td>
+                    <td style="font-size:14px; font-weight:900; color:var(--blue);">${tComp}</td>
+                    <td style="border-left: 2px solid var(--border); color:var(--green); font-family:monospace; font-size:14px; font-weight:bold;">${cacTotal > 0 ? '$'+fmtMoney(cacTotal) : '---'}</td>
                 </tr>`;
 
                 document.getElementById('loader').style.display = 'none';
