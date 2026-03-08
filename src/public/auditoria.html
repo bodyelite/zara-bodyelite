@@ -2,212 +2,381 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>DASHBOARD DE VERDAD ABSOLUTA - BODY ELITE</title>
+    <title>BODY ELITE - CEO DASHBOARD</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
-        .container { max-width: 1400px; margin: auto; }
-        .box { background: #1e293b; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-        input[type="date"], input[type="file"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; }
-        button { background: #10b981; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; transition: 0.2s;}
-        button:hover { background: #059669; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; background: #0f172a; text-align: center; }
-        th { background: #334155; color: #38bdf8; padding: 12px; border-bottom: 2px solid #1e293b; font-size: 11px; text-transform: uppercase;}
-        td { padding: 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
-        .win { color: #10b981; font-weight: bold; }
-        .warn { color: #fbbf24; font-weight: bold; }
+        :root { --bg: #0B1120; --card: #1E293B; --border: #334155; --text: #F8FAFC; --muted: #94A3B8; --green: #10B981; --red: #F43F5E; --blue: #0EA5E9; --alert: #F59E0B; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 30px; }
+        .container { max-width: 1500px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .header h1 { margin: 0; font-weight: 900; font-size: 28px; color: var(--blue); letter-spacing: -1px; }
+        .header p { margin: 5px 0 0 0; color: var(--muted); font-size: 14px; }
+        
+        .upload-section { display: grid; grid-template-columns: repeat(3, 1fr) 200px; gap: 15px; background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 30px; align-items: end; }
+        .upload-box label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+        .upload-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--blue); padding: 12px; border-radius: 6px; box-sizing: border-box; font-family: monospace; }
+        .btn { background: var(--green); color: #000; border: none; padding: 14px; font-weight: 900; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.2s; height: 43px; }
+        .btn:hover { background: #059669; color: #fff; transform: translateY(-2px); }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        .kpi-card.blue::before { background: var(--blue); }
+        .kpi-card.green::before { background: var(--green); }
+        .kpi-card.red::before { background: var(--red); }
+        .kpi-card.alert::before { background: var(--alert); }
+        .kpi-title { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+        .kpi-value { font-size: 36px; font-weight: 900; margin: 0; letter-spacing: -1px; }
+        
+        .charts-section { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .chart-box { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); height: 350px; }
+        .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 15px; color: var(--blue); text-transform: uppercase; }
+
+        .table-container { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
+        th { background: #0F172A; color: var(--muted); padding: 16px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
+        td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
         .text-left { text-align: left; }
-        .challa { color: #64748b; }
-        .cac-result { font-size: 16px; font-weight: 900; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.1); }
+        .badge.win { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+        .badge.lose { background: rgba(244, 63, 94, 0.2); color: var(--red); }
+        .money { font-family: monospace; font-size: 14px; font-weight: bold; }
+        .money.good { color: var(--green); }
+        .money.bad { color: var(--red); }
+        .money.neutral { color: var(--alert); }
+
+        /* Loader */
+        #loader { display: none; text-align: center; padding: 50px; font-weight: bold; color: var(--blue); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="color: #10b981;">🎯 TRIÁNGULO DE CONVERSIÓN (CAC)</h1>
-        <div class="box">
-            <div class="grid-3">
-                <div><label>1. Excel Meta (Anuncios)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls"></div>
-                <div><label>2. JSON Zara (Chats)</label><input type="file" id="fz" accept=".json"></div>
-                <div><label>3. Reservo (Caja)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
+        <div class="header">
+            <div>
+                <h1>⚡ BODY ELITE: C3 TO BMW DASHBOARD</h1>
+                <p>Monitor de Inteligencia de Negocios y Retorno de Inversión (CAC)</p>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div><label>Desde (Fecha Zara)</label><input type="date" id="fi" value="2026-03-01"></div>
-                <div><label>Hasta (Fecha Zara)</label><input type="date" id="ff" value="2026-03-31"></div>
-            </div>
-            <button onclick="ejecutarRadar()">CRUZAR MATRIZ DE NEGOCIO</button>
         </div>
 
-        <div id="res" style="display:none;">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="text-left">ANUNCIO META / ORIGEN</th>
-                        <th>MENSAJE GATILLO</th>
-                        <th>INVERSIÓN META</th>
-                        <th>ENTRARON A ZARA</th>
-                        <th>TRACCIÓN (>4)</th>
-                        <th>AGENDAN (PROMESA)</th>
-                        <th style="background:#1e293b">EN SILLA (RESERVO)</th>
-                        <th>CAC (COSTO X PACIENTE)</th>
-                    </tr>
-                </thead>
-                <tbody id="cuerpoEmbudo"></tbody>
-            </table>
+        <div class="upload-section">
+            <div class="upload-box">
+                <label>1. META (ANUNCIOS CSV)</label>
+                <input type="file" id="fm" accept=".csv, .xlsx, .xls">
+            </div>
+            <div class="upload-box">
+                <label>2. ZARA (JSON HISTORIAL)</label>
+                <input type="file" id="fz" accept=".json">
+            </div>
+            <div class="upload-box">
+                <label>3. RESERVO (CITAS CSV/XLS)</label>
+                <input type="file" id="fr" accept=".xlsx,.xls,.csv">
+            </div>
+            <button class="btn" onclick="ejecutarRadar()">PROCESAR DATA</button>
+        </div>
+
+        <div id="loader">PROCESANDO MATRIZ DE NEGOCIO... ESTO ES PRECISIÓN SUIZA ⚙️</div>
+
+        <div id="dashboard" style="display:none;">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-title">INVERSIÓN TOTAL META</div>
+                    <p class="kpi-value" id="kpi-gasto">$0</p>
+                </div>
+                <div class="kpi-card alert">
+                    <div class="kpi-title">LEADS (CHALLA VS AVANZAN)</div>
+                    <p class="kpi-value" id="kpi-leads">0 / 0</p>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-title">PACIENTES EN SILLA (RESERVO)</div>
+                    <p class="kpi-value" id="kpi-asistidos">0</p>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-title">CAC GLOBAL (COSTO X SILLA)</div>
+                    <p class="kpi-value" id="kpi-cac">$0</p>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-box">
+                    <div class="chart-title">EMBUDO DE CONVERSIÓN DE LA SEMANA</div>
+                    <canvas id="funnelChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">DISTRIBUCIÓN DE GASTO POR ANUNCIO</div>
+                    <canvas id="spendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="text-left">ANUNCIO META</th>
+                            <th>DÍAS ON</th>
+                            <th>COSTO DÍA</th>
+                            <th>GASTO TOTAL</th>
+                            <th>CHATS META</th>
+                            <th>CHATS ZARA</th>
+                            <th>AVANZADOS</th>
+                            <th>AGENDADOS</th>
+                            <th style="background: rgba(16,185,129,0.1); color:#10B981;">ASISTIÓ</th>
+                            <th style="background: rgba(14,165,233,0.1); color:#0EA5E9;">COMPRÓ</th>
+                            <th>COSTO X ASISTIDO (CAC)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoEmbudo"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
+        let myFunnelChart = null;
+        let mySpendChart = null;
+
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
         const normalizeStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-        const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP'}).format(n);
+        const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits: 0}).format(n);
 
-        // DICCIONARIO ESTRATÉGICO: Anuncio -> Mensaje Exacto
+        // DICCIONARIO MAESTRO AMPLIADO
         const DICCIONARIO = [
             { id: "lipo fran", frase: "quiero agendar mi evaluacion diagnostica lipo" },
             { id: "facial pia", frase: "hola, quiero agendar diagnostico facial" },
-            { id: "rostro verano", frase: "quiero mi evaluacion rostro" }
+            { id: "rostro verano", frase: "quiero mi evaluacion rostro" },
+            { id: "lipo express", frase: "quiero mas informacion de la lipo express" },
+            { id: "push up", frase: "quiero mas informacion del plan push up" },
+            { id: "body tensor", frase: "quiero mas informacion del plan body tensor" }
         ];
 
-        async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1})); reader.readAsArrayBuffer(f); }); }
+        async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
+        // Parsear fechas de string a timestamp
+        function parseDate(dateStr) {
+            if(!dateStr) return 0;
+            let d = new Date(dateStr);
+            if(isNaN(d.getTime())) return 0;
+            return d.getTime();
+        }
+
         async function ejecutarRadar() {
             const fm = document.getElementById('fm').files[0], fz = document.getElementById('fz').files[0], fr = document.getElementById('fr').files[0];
-            if(!fm || !fz || !fr) return alert('Se exigen los 3 archivos para operar la matriz.');
+            if(!fm || !fz || !fr) return alert('CEO, sube los 3 archivos para que el motor arranque.');
             
-            const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
-            const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
-            
-            const [metaArr, monRaw, reserArr] = await Promise.all([rxArray(fm), rj(fz), rxArray(fr)]);
-            const leadsZara = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
-            
-            // 1. INICIALIZAR EMBUDO BASE
-            let embudo = {
-                "lipo fran": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Quiero agendar mi evaluación diagnóstica lipo" },
-                "facial pia": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Hola, Quiero agendar diagnostico facial" },
-                "rostro verano": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Quiero mi evaluación Rostro" },
-                "organico_otros": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Varios (Instagram, Directo, Otros)" }
-            };
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
 
-            // 2. LEER META Y ASIGNAR GASTOS
             try {
+                const [metaArr, monRaw, reserArr] = await Promise.all([rxArray(fm), rj(fz), rxArray(fr)]);
+                const leadsZara = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
+                
+                let embudo = {};
+                let metaGlobals = { gasto: 0, asistidos: 0, entraron: 0, avanzados: 0 };
+
+                // 1. LEER META
                 const metaH = metaArr[0] || [];
                 let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name'));
                 let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
+                let cRes = metaH.findIndex(h => String(h).toLowerCase() === 'resultados' || String(h).toLowerCase().includes('results'));
+                let cIni = metaH.findIndex(h => String(h).toLowerCase().includes('inicio del informe'));
+                let cFin = metaH.findIndex(h => String(h).toLowerCase().includes('fin del informe'));
                 
-                if(cAnuncio !== -1 && cGasto !== -1) {
-                    metaArr.slice(1).forEach(r => {
-                        let nombreAnuncio = normalizeStr(r[cAnuncio]);
-                        let spend = parseFloat(r[cGasto]) || 0;
-                        if(spend > 0) {
-                            let asignado = false;
-                            for (let camp of DICCIONARIO) {
-                                if (nombreAnuncio.includes(normalizeStr(camp.id))) {
-                                    embudo[camp.id].gasto += spend;
-                                    asignado = true;
-                                    break;
-                                }
-                            }
-                            // Si Meta tiene otros anuncios con gasto que no están en el diccionario
-                            if(!asignado) embudo["organico_otros"].gasto += spend;
-                        }
-                    });
-                }
-            } catch(e) { console.error("Error leyendo Meta:", e); }
-
-            // 3. EXTRAER RESERVO (LA CAJA)
-            const reserHeaders = reserArr[0] || [];
-            let cTel = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
-            let cNom = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
-            let cTrat = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tratamiento'));
-            let cEst = reserHeaders.findIndex(h => String(h).toLowerCase().includes('estado cita'));
-            
-            // Si no encuentra columnas por nombre, forzamos índices clásicos de tu Excel
-            if(cTel === -1) cTel = 11; if(cNom === -1) cNom = 9; if(cEst === -1) cEst = 13;
-
-            const reserData = reserArr.slice(1).map(row => ({
-                telefono: clean(row[cTel]),
-                nombreOriginal: normalizeStr(row[cNom]).split(' ')[0], 
-                estado: normalizeStr(row[cEst]),
-                tratamiento: normalizeStr(row[cTrat])
-            }));
-
-            // 4. PROCESAR ZARA (FILTROS)
-            leadsZara.forEach(l => {
-                let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
-                if(ts < fi || ts > ff) return;
-
-                let fraseOriginal = l.history?.[0]?.content || "";
-                let fraseNorm = normalizeStr(fraseOriginal);
-                
-                // Buscar si la frase pertenece a un anuncio
-                let bucket = "organico_otros";
-                for (let camp of DICCIONARIO) {
-                    if (fraseNorm.includes(camp.frase)) {
-                        bucket = camp.id;
-                        break;
-                    }
-                }
-
-                const s = embudo[bucket];
-                s.entraron++; 
-
-                // TRACCIÓN
-                let esReal = false;
-                if (l.history?.length >= 5 || l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
-                if(esReal) s.traccion++;
-
-                // PROMESA
-                let promesa = false;
-                if (l.tag === 'AGENDADO' || l.notes?.some(n => normalizeStr(n.text).includes('agenda') || normalizeStr(n.text).includes('cita'))) promesa = true;
-                if(promesa) s.agendan++;
-
-                // EN SILLA
-                if(promesa || esReal) {
-                    const p = clean(l.phone || l.number);
-                    const n = normalizeStr(l.name).split(' ')[0]; 
+                metaArr.slice(1).forEach(r => {
+                    let nombreOriginal = String(r[cAnuncio] || '').trim();
+                    let nombreAnuncio = normalizeStr(nombreOriginal);
+                    let spend = parseFloat(r[cGasto]) || 0;
+                    let resultados = parseInt(r[cRes]) || 0;
                     
-                    const match = reserData.filter(c => (p.length >= 8 && c.telefono.includes(p)) || (n.length > 3 && c.nombreOriginal.includes(n)));
-                    if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendid') || c.estado.includes('ok') || c.estado.includes('confirm'))) {
-                        s.silla++;
+                    if(spend > 0) {
+                        let dias = 1;
+                        if(cIni !== -1 && cFin !== -1) {
+                            let msDiff = parseDate(r[cFin]) - parseDate(r[cIni]);
+                            if(msDiff > 0) dias = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
+                        }
+
+                        // Identificar si está en el diccionario para cruce, si no, lo guardamos con su nombre real
+                        let keyTarget = nombreOriginal;
+                        for (let camp of DICCIONARIO) {
+                            if (nombreAnuncio.includes(normalizeStr(camp.id))) {
+                                keyTarget = camp.id; break;
+                            }
+                        }
+
+                        if(!embudo[keyTarget]) {
+                            embudo[keyTarget] = { nombre: keyTarget, dias: dias, gasto: 0, resMeta: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, compraron: 0, matchFrase: "" };
+                            // Asignar frase del diccionario si existe
+                            let dMatch = DICCIONARIO.find(d => d.id === keyTarget);
+                            if(dMatch) embudo[keyTarget].matchFrase = dMatch.frase;
+                        }
+                        
+                        embudo[keyTarget].gasto += spend;
+                        embudo[keyTarget].resMeta += resultados;
+                        embudo[keyTarget].dias = Math.max(embudo[keyTarget].dias, dias);
+                        metaGlobals.gasto += spend;
                     }
-                }
-            });
+                });
 
-            // 5. RENDERIZAR RESULTADO FINAL
-            let html = "";
-            Object.keys(embudo).forEach(key => {
-                const s = embudo[key];
-                if(s.entraron === 0 && s.gasto === 0) return;
-
-                let nombreCampaña = key === "organico_otros" ? "ORGÁNICO / OTROS ANUNCIOS" : "🎯 " + key.toUpperCase();
-                let gastoDisplay = s.gasto > 0 ? '$' + fmtMoney(s.gasto) : '---';
+                // 2. EXTRAER RESERVO
+                const reserHeaders = reserArr[0] || [];
+                let cTel = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
+                let cNom = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
+                let cEst = reserHeaders.findIndex(h => String(h).toLowerCase().includes('estado cita'));
+                let cPago = reserHeaders.findIndex(h => String(h).toLowerCase().includes('estado pago'));
                 
-                let cacHtml = '<span style="color:#94a3b8">---</span>';
-                if (s.gasto > 0 && s.silla > 0) {
-                    cacHtml = '<span class="cac-result" style="color:#10b981">$' + fmtMoney(s.gasto / s.silla) + '</span>';
-                } else if (s.gasto > 0 && s.silla === 0) {
-                    cacHtml = '<span style="color:#f43f5e">PÉRDIDA ($' + fmtMoney(s.gasto) + ')</span>';
-                } else if (s.gasto === 0 && s.silla > 0) {
-                    cacHtml = '<span class="cac-result" style="color:#10b981">PURA GANANCIA</span>';
-                }
+                if(cTel === -1) cTel = 11; if(cNom === -1) cNom = 9; if(cEst === -1) cEst = 13; if(cPago === -1) cPago = 14;
 
-                html += `<tr>
-                    <td class="text-left"><b>${nombreCampaña}</b></td>
-                    <td style="font-size:10px; color:#94a3b8; max-width:200px;">"${s.msj}"</td>
-                    <td class="warn">${gastoDisplay}</td>
-                    <td>${s.entraron}</td>
-                    <td class="${s.traccion > 0 ? 'win' : 'challa'}">${s.traccion}</td>
-                    <td class="${s.agendan > 0 ? 'warn' : 'challa'}">${s.agendan}</td>
-                    <td style="background:#1e293b; font-weight:bold; font-size:15px; color:${s.silla > 0 ? '#10b981' : '#f8fafc'};">${s.silla}</td>
-                    <td>${cacHtml}</td>
-                </tr>`;
-            });
+                const reserData = reserArr.slice(1).map(row => ({
+                    telefono: clean(row[cTel]),
+                    nombreOriginal: normalizeStr(row[cNom]).split(' ')[0], 
+                    estado: normalizeStr(row[cEst]),
+                    pago: normalizeStr(row[cPago])
+                }));
 
-            document.getElementById('cuerpoEmbudo').innerHTML = html;
-            document.getElementById('res').style.display = 'block';
+                // 3. PROCESAR ZARA (FILTROS DE TU DASHBOARD)
+                leadsZara.forEach(l => {
+                    let fraseOriginal = l.history?.[0]?.content || "";
+                    let fraseNorm = normalizeStr(fraseOriginal);
+                    if(!fraseNorm) return;
+
+                    // Asignar a campaña
+                    let targetKey = null;
+                    for (let camp of DICCIONARIO) {
+                        if (fraseNorm.includes(camp.frase)) {
+                            targetKey = camp.id; break;
+                        }
+                    }
+
+                    if(targetKey && embudo[targetKey]) {
+                        const s = embudo[targetKey];
+                        s.entraron++;
+                        metaGlobals.entraron++;
+
+                        // TRACCIÓN (Avanzados)
+                        let esReal = false;
+                        if (l.history?.length >= 5 || l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
+                        if(esReal) { s.traccion++; metaGlobals.avanzados++; }
+
+                        // PROMESA (Agendados)
+                        let promesa = false;
+                        if (l.tag === 'AGENDADO' || l.notes?.some(n => normalizeStr(n.text).includes('agenda') || normalizeStr(n.text).includes('cita'))) promesa = true;
+                        if(promesa) s.agendan++;
+
+                        // RESERVO (Asistió y Compró)
+                        if(promesa || esReal) {
+                            const p = clean(l.phone || l.number);
+                            const n = normalizeStr(l.name).split(' ')[0]; 
+                            
+                            const match = reserData.filter(c => (p.length >= 8 && c.telefono.includes(p)) || (n.length > 3 && c.nombreOriginal.includes(n)));
+                            
+                            if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendid') || c.estado.includes('ok') || c.estado.includes('confirm'))) {
+                                s.silla++;
+                                metaGlobals.asistidos++;
+                            }
+                            // Compró = Estado Pago es Pagado o Abono
+                            if(match.some(c => c.pago.includes('pagado') || c.pago.includes('abono') || c.pago.includes('si'))) {
+                                s.compraron++;
+                            }
+                        }
+                    }
+                });
+
+                // 4. RENDERIZAR TABLA Y GRÁFICOS
+                let html = "";
+                let chartLabels = [];
+                let chartChats = [];
+                let chartAvanzados = [];
+                let chartSilla = [];
+                let chartSpend = [];
+
+                Object.values(embudo).sort((a,b) => b.gasto - a.gasto).forEach(s => {
+                    if(s.gasto === 0) return;
+
+                    let costoDia = s.gasto / s.dias;
+                    
+                    let cac = 0;
+                    let cacHtml = '';
+                    if (s.silla > 0) {
+                        cac = s.gasto / s.silla;
+                        cacHtml = `<span class="badge win">${fmtMoney(cac)}</span>`;
+                    } else {
+                        cacHtml = `<span class="badge lose">PÉRDIDA</span>`;
+                    }
+
+                    html += `<tr>
+                        <td class="text-left"><b style="color:var(--blue);">${s.nombre.toUpperCase()}</b></td>
+                        <td>${s.dias}</td>
+                        <td class="money neutral">${fmtMoney(costoDia)}</td>
+                        <td class="money">${fmtMoney(s.gasto)}</td>
+                        <td>${s.resMeta}</td>
+                        <td>${s.entraron}</td>
+                        <td style="color:var(--green); font-weight:bold;">${s.traccion}</td>
+                        <td>${s.agendan}</td>
+                        <td style="font-size:16px; font-weight:900; color:var(--green);">${s.silla}</td>
+                        <td style="font-size:16px; font-weight:900; color:var(--blue);">${s.compraron}</td>
+                        <td>${cacHtml}</td>
+                    </tr>`;
+
+                    chartLabels.push(s.nombre.toUpperCase());
+                    chartChats.push(s.entraron);
+                    chartAvanzados.push(s.traccion);
+                    chartSilla.push(s.silla);
+                    chartSpend.push(s.gasto);
+                });
+
+                document.getElementById('cuerpoEmbudo').innerHTML = html;
+
+                // Actualizar KPIs
+                document.getElementById('kpi-gasto').innerText = fmtMoney(metaGlobals.gasto);
+                document.getElementById('kpi-leads').innerText = `${metaGlobals.entraron} / ${metaGlobals.avanzados}`;
+                document.getElementById('kpi-asistidos').innerText = metaGlobals.asistidos;
+                
+                let globalCac = metaGlobals.asistidos > 0 ? metaGlobals.gasto / metaGlobals.asistidos : 0;
+                document.getElementById('kpi-cac').innerText = globalCac > 0 ? fmtMoney(globalCac) : "PÉRDIDA";
+
+                // Ocultar Loader, Mostrar Dashboard
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+
+                // Destruir gráficos anteriores si existen
+                if(myFunnelChart) myFunnelChart.destroy();
+                if(mySpendChart) mySpendChart.destroy();
+
+                // Chart 1: Funnel
+                const ctx1 = document.getElementById('funnelChart').getContext('2d');
+                myFunnelChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [
+                            { label: 'Entraron (Challa)', data: chartChats, backgroundColor: '#334155', borderRadius: 4 },
+                            { label: 'Avanzaron (Tracción)', data: chartAvanzados, backgroundColor: '#0EA5E9', borderRadius: 4 },
+                            { label: 'Asistieron (Silla)', data: chartSilla, backgroundColor: '#10B981', borderRadius: 4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8' } } }, scales: { y: { grid: { color: '#334155' }, ticks: { color: '#94A3B8' } }, x: { grid: { display: false }, ticks: { color: '#94A3B8' } } } }
+                });
+
+                // Chart 2: Spend Distribution
+                const ctx2 = document.getElementById('spendChart').getContext('2d');
+                mySpendChart = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{ data: chartSpend, backgroundColor: ['#0EA5E9', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94A3B8' } } }, cutout: '75%' }
+                });
+
+            } catch(e) {
+                console.error(e);
+                alert('Error procesando archivos. Revisa la consola.');
+                document.getElementById('loader').style.display = 'none';
+            }
         }
     </script>
 </body>
