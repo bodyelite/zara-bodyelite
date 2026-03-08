@@ -2,50 +2,41 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>BODY ELITE - CEO DASHBOARD (TIME-FRAME EXACTO)</title>
+    <title>BODY ELITE - CEO PIPELINE (ANUNCIO X ANUNCIO)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0B1120; --card: #1E293B; --border: #334155; --text: #F8FAFC; --muted: #94A3B8; --green: #10B981; --red: #F43F5E; --blue: #0EA5E9; --alert: #F59E0B; --purple: #8B5CF6; }
+        :root { --bg: #0B1120; --card: #1E293B; --border: #334155; --text: #F8FAFC; --muted: #94A3B8; --green: #10B981; --red: #F43F5E; --blue: #0EA5E9; --alert: #F59E0B; --purple: #8B5CF6; --gray: #64748B; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 30px; }
-        .container { max-width: 1600px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-        .header h1 { margin: 0; font-weight: 900; font-size: 28px; color: var(--blue); letter-spacing: -1px; }
-        .header p { margin: 5px 0 0 0; color: var(--muted); font-size: 14px; }
+        .container { max-width: 1700px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .header h1 { margin: 0; font-weight: 900; font-size: 26px; color: var(--blue); letter-spacing: -1px; }
         
-        .upload-section { display: grid; grid-template-columns: repeat(3, 1fr) 200px; gap: 15px; background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 30px; align-items: end; }
+        .upload-section { display: grid; grid-template-columns: repeat(3, 1fr) 200px; gap: 15px; background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; align-items: end; }
         .upload-box label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
-        .upload-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--blue); padding: 12px; border-radius: 6px; box-sizing: border-box; font-family: monospace; }
+        .upload-box input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--blue); padding: 10px; border-radius: 4px; box-sizing: border-box; font-family: monospace; font-size: 11px;}
         .date-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { background: var(--green); color: #000; border: none; padding: 14px; font-weight: 900; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.2s; height: 43px; }
-        .btn:hover { background: #059669; color: #fff; transform: translateY(-2px); }
+        .btn { background: var(--green); color: #000; border: none; padding: 12px; font-weight: 900; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-size: 13px; transition: 0.2s; height: 39px; }
+        .btn:hover { background: #059669; color: #fff; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px; }
-        .kpi-card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); position: relative; overflow: hidden; }
-        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
-        .kpi-card.blue::before { background: var(--blue); }
-        .kpi-card.purple::before { background: var(--purple); }
-        .kpi-card.green::before { background: var(--green); }
-        .kpi-card.alert::before { background: var(--alert); }
-        .kpi-card.red::before { background: var(--red); }
-        .kpi-title { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-        .kpi-value { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -1px; }
-        
-        .table-container { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
-        th { background: #0F172A; color: var(--muted); padding: 14px 10px; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
-        td { padding: 14px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
+        .table-container { background: var(--card); border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }
+        th { background: #0F172A; color: var(--muted); padding: 12px 8px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid var(--border); line-height: 1.2; }
+        td { padding: 12px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: rgba(255,255,255,0.02); }
         
         .text-left { text-align: left; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; background: rgba(255,255,255,0.1); text-transform: uppercase; }
+        .badge { padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: 900; background: rgba(255,255,255,0.1); text-transform: uppercase; }
         .badge.win { background: rgba(16, 185, 129, 0.2); color: var(--green); }
         .badge.lose { background: rgba(244, 63, 94, 0.2); color: var(--red); }
         .badge.wait { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
-        .money { font-family: monospace; font-size: 13px; font-weight: bold; }
+        .money { font-family: monospace; font-size: 12px; font-weight: bold; }
         .money.neutral { color: var(--alert); }
+        
+        .col-challa { color: var(--gray); }
+        .col-dormido { color: var(--text); }
+        .col-congelado { color: var(--alert); font-weight: bold; }
+        .col-agendado { color: var(--green); font-weight: bold; }
 
         #loader { display: none; text-align: center; padding: 50px; font-weight: bold; color: var(--blue); }
     </style>
@@ -54,17 +45,16 @@
     <div class="container">
         <div class="header">
             <div>
-                <h1>⚡ BODY ELITE: AUDITORÍA DE RANGOS EXACTOS</h1>
-                <p>Cruce Quirúrgico: Zara Timeframe (Ventana) + Reservo Pipeline (+30 Días)</p>
+                <h1>⚡ BODY ELITE: AUDITORÍA ANUNCIO X ANUNCIO</h1>
             </div>
             <div class="date-box">
                 <div>
-                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">DESDE (INICIO)</label>
-                    <input type="date" id="fi" value="2026-03-01" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:8px; border-radius:4px;">
+                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">VENTANA DESDE</label>
+                    <input type="date" id="fi" value="2026-03-01" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:6px; border-radius:4px;">
                 </div>
                 <div>
-                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">HASTA (FIN)</label>
-                    <input type="date" id="ff" value="2026-03-07" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:8px; border-radius:4px;">
+                    <label style="font-size:10px; color:var(--muted); font-weight:bold;">VENTANA HASTA</label>
+                    <input type="date" id="ff" value="2026-03-07" style="background:var(--bg); border:1px solid var(--border); color:var(--blue); padding:6px; border-radius:4px;">
                 </div>
             </div>
         </div>
@@ -75,59 +65,36 @@
                 <input type="file" id="fm" accept=".csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
-                <label>2. ZARA (JSON HISTORIAL)</label>
-                <input type="file" id="fz" accept=".json">
+                <label>2. ZARA (JSON O DASH CSV)</label>
+                <input type="file" id="fz" accept=".json, .csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
                 <label>3. RESERVO (CITAS CSV/XLS)</label>
                 <input type="file" id="fr" accept=".xlsx,.xls,.csv">
             </div>
-            <button class="btn" onclick="ejecutarRadar()">PROCESAR DATA</button>
+            <button class="btn" onclick="ejecutarRadar()">DESPLEGAR MATRIZ</button>
         </div>
 
-        <div id="loader">APLICANDO VENTANA DE TIEMPO Y PIPELINE A FUTURO... ⚙️</div>
+        <div id="loader">CRUZANDO BITÁCORAS Y FECHAS FUTURAS... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
-            <div class="kpi-grid">
-                <div class="kpi-card blue">
-                    <div class="kpi-title">INVERSIÓN META (EN RANGO)</div>
-                    <p class="kpi-value" id="kpi-gasto">$0</p>
-                </div>
-                <div class="kpi-card red">
-                    <div class="kpi-title">FUGA DE CLICS META</div>
-                    <p class="kpi-value" id="kpi-fuga">0%</p>
-                </div>
-                <div class="kpi-card alert">
-                    <div class="kpi-title">ZARA: ENTRAN / AVANZAN</div>
-                    <p class="kpi-value" id="kpi-leads">0 / 0</p>
-                </div>
-                <div class="kpi-card purple">
-                    <div class="kpi-title">PIPELINE (+30 DÍAS)</div>
-                    <p class="kpi-value" id="kpi-futuros">0</p>
-                </div>
-                <div class="kpi-card green">
-                    <div class="kpi-title">EN SILLA / COMPRARON</div>
-                    <p class="kpi-value" id="kpi-asistidos">0 / 0</p>
-                </div>
-            </div>
-
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-left">LÍNEA DE NEGOCIO</th>
-                            <th>DÍAS</th>
-                            <th>COSTO DÍA</th>
-                            <th>GASTO TOTAL</th>
-                            <th>CLICS META</th>
-                            <th>LLEGAN A ZARA</th>
-                            <th style="color:var(--red);">TASA FUGA</th>
-                            <th>AVANZAN (ZARA)</th>
-                            <th>AGENDAN (ZARA)</th>
-                            <th style="background: rgba(139,92,246,0.1); color:var(--purple);">FUTUROS ⏳</th>
-                            <th style="background: rgba(16,185,129,0.1); color:var(--green);">ASISTIÓ ✅</th>
-                            <th style="background: rgba(14,165,233,0.1); color:var(--blue);">COMPRÓ 💰</th>
-                            <th>ESTADO CAC</th>
+                            <th class="text-left" style="width: 180px;">ANUNCIO META</th>
+                            <th>GASTO<br>TOTAL</th>
+                            <th>COSTO<br>DÍA</th>
+                            <th>RESULTADOS<br>(META)</th>
+                            <th style="border-left: 2px solid var(--border);">ENTRARON<br>(ZARA)</th>
+                            <th class="col-challa">ABANDONADO<br>💀</th>
+                            <th class="col-dormido">DORMIDO<br>(Nuevos) 💤</th>
+                            <th class="col-congelado">CONGELADOS<br>(Hot/Int/Gest) 🧊</th>
+                            <th class="col-agendado">AGENDADOS<br>(Promesa) 📅</th>
+                            <th style="border-left: 2px solid var(--border); background: rgba(139,92,246,0.1); color:var(--purple);">CITAS<br>FUTURAS ⏳</th>
+                            <th style="background: rgba(16,185,129,0.1); color:var(--green);">ASISTIÓ<br>EN SILLA ✅</th>
+                            <th style="background: rgba(14,165,233,0.1); color:var(--blue);">COMPRÓ<br>PLAN 💰</th>
+                            <th style="border-left: 2px solid var(--border);">CAC<br>(COSTO X VENTA)</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoEmbudo"></tbody>
@@ -141,60 +108,61 @@
         const normalizeStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits: 0}).format(n);
         
+        // Convertidor fecha cita Reservo (Columna Fecha, no creación)
         function excelToDate(serial) {
             if(!serial || isNaN(serial)) return 0;
-            return Math.round((parseFloat(serial) - 25569) * 86400 * 1000);
+            return Math.round((parseFloat(serial) - 25569) * 86400 * 1000) + (new Date().getTimezoneOffset() * 60000);
         }
 
-        const DICCIONARIO = [
-            { id: "lipo", keys: ["lipo", "lipolitico", "blanco", "express"], nombre: "🔥 LIPO EXPRESS" },
-            { id: "gluteos", keys: ["gluteo", "push", "piscina"], nombre: "🍑 GLÚTEOS / PUSH UP" },
-            { id: "facial", keys: ["rostro", "facial", "hifu", "antiage", "pink", "glow", "peeling"], nombre: "✨ ROSTRO / FACIAL" },
-            { id: "corporal", keys: ["tensor", "corporal", "prosculpt", "abdomen"], nombre: "💪 CORPORAL" },
-            { id: "depilacion", keys: ["depilacion", "summer", "laser"], nombre: "☀️ DEPILACIÓN LÁSER" }
-        ];
-
-        async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
-        async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
-        
-        function parseDate(dateStr) { 
+        function parseDateUI(dateStr) { 
             if(!dateStr) return 0; 
             let parts = dateStr.split('-');
             if(parts.length === 3) return new Date(parts[0], parts[1]-1, parts[2]).getTime();
             return new Date(dateStr).getTime(); 
         }
 
+        // DICCIONARIO PUENTE (Frases clave para conectar Zara al Anuncio de Meta)
+        const MAPA_FRASES = {
+            "lipo fran": ["evaluacion diagnostica lipo", "lipo express", "lipo"],
+            "facial pia": ["diagnostico facial", "hifu", "pink glow"],
+            "rostro verano": ["evaluacion rostro", "rostro"],
+            "push up - v": ["push up", "gluteos", "gluteo"],
+            "gluteos_piscina": ["push up", "gluteos", "gluteo"],
+            "lipo_trajeblanco": ["lipo express", "lipo"]
+        };
+
+        async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
+        
+        async function readZaraFile(f) {
+            if (f.name.endsWith('.json')) {
+                return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); });
+            } else {
+                let arr = await rxArray(f);
+                return arr; // Si el usuario sube el DASH en CSV
+            }
+        }
+
         async function ejecutarRadar() {
             const fm = document.getElementById('fm').files[0], fz = document.getElementById('fz').files[0], fr = document.getElementById('fr').files[0];
             if(!fm || !fz || !fr) return alert('CEO, sube los 3 archivos.');
             
-            // VENTANA DE TIEMPO ESTRICTA DE LA UI
             const fi_val = document.getElementById('fi').value;
             const ff_val = document.getElementById('ff').value;
-            if(!fi_val || !ff_val) return alert("Define el rango de fechas Arriba.");
+            if(!fi_val || !ff_val) return alert("Define la ventana de tiempo.");
             
             const fi = new Date(fi_val + 'T00:00:00').getTime();
             const ff = new Date(ff_val + 'T23:59:59').getTime();
-            
-            // LÍMITE DE RESERVO (+30 Días desde el inicio para atrapar futuros)
-            const limiteFuturo = fi + (30 * 24 * 60 * 60 * 1000);
+            const limiteFuturo = fi + (45 * 24 * 60 * 60 * 1000); // Hasta 45 días al futuro para citas
 
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
 
             try {
-                const [metaArr, monRaw, reserArr] = await Promise.all([rxArray(fm), rj(fz), rxArray(fr)]);
-                const leadsZara = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
+                const [metaArr, zaraRaw, reserArr] = await Promise.all([rxArray(fm), readZaraFile(fz), rxArray(fr)]);
                 
-                let embudo = {};
-                DICCIONARIO.forEach(d => {
-                    embudo[d.id] = { nombre: d.nombre, dias: 0, gasto: 0, resMeta: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, compraron: 0, futuros: 0 };
-                });
-                embudo["otros"] = { nombre: "🌿 ORGÁNICO / OTROS", dias: 0, gasto: 0, resMeta: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, compraron: 0, futuros: 0 };
+                let anuncios = {}; // Diccionario principal por ANUNCIO
 
-                let metaGlobals = { gasto: 0, asistidos: 0, comprados: 0, entraron: 0, avanzados: 0, resMeta: 0, futuros: 0 };
-
-                // 1. LEER META Y RECORTE DE DÍAS (CLAMP)
+                // 1. LEER META Y CREAR FILAS POR ANUNCIO EXACTO
                 const metaH = metaArr[0] || [];
                 let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name'));
                 let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
@@ -204,128 +172,170 @@
                 
                 metaArr.slice(1).forEach(r => {
                     let nombreOriginal = String(r[cAnuncio] || '').trim();
-                    let nombreAnuncio = normalizeStr(nombreOriginal);
+                    let nombreKey = normalizeStr(nombreOriginal);
                     let spend = parseFloat(r[cGasto]) || 0;
                     let resultados = parseInt(r[cRes]) || 0;
                     
                     if(spend > 0) {
                         let dias = 1;
                         if(cIni !== -1 && cFin !== -1) {
-                            let inicioMeta = parseDate(r[cIni]);
-                            let finMeta = parseDate(r[cFin]);
-                            // Clampear días al rango solicitado en la UI
-                            let inicioReal = Math.max(inicioMeta, fi);
-                            let finReal = Math.min(finMeta, ff);
-                            if (finReal >= inicioReal) {
-                                dias = Math.ceil((finReal - inicioReal) / (1000 * 60 * 60 * 24)) + 1;
-                            }
+                            let f1 = parseDateUI(r[cIni]), f2 = parseDateUI(r[cFin]);
+                            let inicioReal = Math.max(f1, fi), finReal = Math.min(f2, ff);
+                            if (finReal >= inicioReal) dias = Math.ceil((finReal - inicioReal) / 86400000) + 1;
                         }
 
-                        let keyTarget = "otros";
-                        for (let cat of DICCIONARIO) {
-                            if (cat.keys.some(k => nombreAnuncio.includes(k))) { keyTarget = cat.id; break; }
+                        if(!anuncios[nombreOriginal]) {
+                            anuncios[nombreOriginal] = { 
+                                nombre: nombreOriginal, dias: 0, gasto: 0, resMeta: 0, 
+                                entraron: 0, abandonados: 0, dormidos: 0, congelados: 0, agendados: 0, 
+                                silla: 0, compraron: 0, futuros: 0 
+                            };
                         }
-                        
-                        embudo[keyTarget].gasto += spend;
-                        embudo[keyTarget].resMeta += resultados;
-                        embudo[keyTarget].dias = Math.max(embudo[keyTarget].dias, dias);
-                        
-                        metaGlobals.gasto += spend;
-                        metaGlobals.resMeta += resultados;
+                        anuncios[nombreOriginal].gasto += spend;
+                        anuncios[nombreOriginal].resMeta += resultados;
+                        anuncios[nombreOriginal].dias = Math.max(anuncios[nombreOriginal].dias, dias);
                     }
                 });
-
-                // 2. EXTRAER RESERVO
-                const reserHeaders = reserArr[0] || [];
-                let cTel = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
-                let cNom = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
-                let cEst = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'estado cita' || String(h).toLowerCase().includes('estado cita'));
-                let cPago = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'estado pago' || String(h).toLowerCase().includes('estado pago'));
-                let cFec = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'fecha');
                 
-                if(cTel === -1) cTel = 11; if(cNom === -1) cNom = 9; if(cEst === -1) cEst = 13; if(cPago === -1) cPago = 14; if(cFec === -1) cFec = 1;
+                // Si encontramos leads sin anuncio, van a un balde "ORGÁNICO / NO IDENTIFICADO"
+                anuncios["ORGANICO_OTROS"] = { nombre: "ORGÁNICO / NO IDENTIFICADO", dias: 0, gasto: 0, resMeta: 0, entraron: 0, abandonados: 0, dormidos: 0, congelados: 0, agendados: 0, silla: 0, compraron: 0, futuros: 0 };
 
-                const reserData = reserArr.slice(1).map(row => ({
-                    telefono: clean(row[cTel]),
-                    nombreOriginal: normalizeStr(row[cNom]).split(' ')[0], 
-                    estado: normalizeStr(row[cEst]),
-                    pago: normalizeStr(row[cPago]),
-                    tsFecha: excelToDate(row[cFec])
-                }));
+                // 2. EXTRAER RESERVO (CON FECHA REAL DE CITA)
+                const reserHeaders = reserArr[0] || [];
+                let cTelR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
+                let cNomR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
+                let cEstR = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'estado cita' || String(h).toLowerCase().includes('estado cita'));
+                let cPagoR = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'estado pago' || String(h).toLowerCase().includes('estado pago'));
+                let cFecR = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'fecha');
+                
+                if(cTelR === -1) cTelR = 11; if(cNomR === -1) cNomR = 9; if(cEstR === -1) cEstR = 13; if(cPagoR === -1) cPagoR = 14; if(cFecR === -1) cFecR = 1;
 
-                // 3. PROCESAR ZARA (FILTRO ESTRICTO DE VENTANA DE TIEMPO)
-                leadsZara.forEach(l => {
-                    let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
+                const reserData = reserArr.slice(1).map(row => {
+                    let rawFecha = row[cFecR];
+                    let timestamp = (typeof rawFecha === 'number') ? excelToDate(rawFecha) : parseDateUI(String(rawFecha));
+                    return {
+                        telefono: clean(row[cTelR]),
+                        nombreOriginal: normalizeStr(row[cNomR]).split(' ')[0], 
+                        estado: normalizeStr(row[cEstR]),
+                        pago: normalizeStr(row[cPagoR]),
+                        tsFecha: timestamp
+                    };
+                });
+
+                // 3. PROCESAR ZARA (Soporta JSON o el DASH CSV que mostraste)
+                let leadsNormalizados = [];
+                
+                if (Array.isArray(zaraRaw)) {
+                    // Es el DASH CSV
+                    let zh = zaraRaw[0] || [];
+                    let cTelZ = zh.findIndex(h => String(h).toLowerCase().includes('telefono'));
+                    let cNomZ = zh.findIndex(h => String(h).toLowerCase().includes('nombre'));
+                    let cEstZ = zh.findIndex(h => String(h).toLowerCase().includes('estado'));
+                    let cMsgZ = zh.findIndex(h => String(h).toLowerCase().includes('primer mensaje'));
+                    let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
                     
-                    // REGLA DE ORO: Si el lead no entró en la ventana solicitada, SE IGNORA.
-                    if(ts < fi || ts > ff) return; 
+                    zaraRaw.slice(1).forEach(r => {
+                        let f = parseDateUI(String(r[cFecZ] || '').split(',')[0]); // "21-01-2026, 20:48" -> "21-01-2026"
+                        leadsNormalizados.push({
+                            ts: f,
+                            phone: clean(r[cTelZ]),
+                            name: normalizeStr(r[cNomZ]),
+                            tag: normalizeStr(r[cEstZ]).toUpperCase(),
+                            historial: normalizeStr(r[cMsgZ])
+                        });
+                    });
+                } else {
+                    // Es el JSON
+                    let users = Array.isArray(zaraRaw.users) ? zaraRaw.users : Object.values(zaraRaw.users || {});
+                    users.forEach(l => {
+                        leadsNormalizados.push({
+                            ts: l.history?.[0]?.timestamp || l.lastInteraction || 0,
+                            phone: clean(l.phone || l.number),
+                            name: normalizeStr(l.name),
+                            tag: normalizeStr(l.tag).toUpperCase(),
+                            historial: l.history?.slice(0,3).map(m => normalizeStr(m.content)).join(" ") || ""
+                        });
+                    });
+                }
 
-                    let historialText = l.history?.slice(0,2).map(m => normalizeStr(m.content)).join(" ") || "";
-                    if(!historialText) return;
+                // CRUZAR LEADS CON ANUNCIOS Y RESERVO
+                leadsNormalizados.forEach(l => {
+                    if(l.ts > 0 && (l.ts < fi || l.ts > ff)) return; // Filtro de ventana estricta
+                    if(!l.historial && !l.tag) return;
 
-                    let keyTarget = "otros";
-                    for (let cat of DICCIONARIO) {
-                        if (cat.keys.some(k => historialText.includes(k))) { keyTarget = cat.id; break; }
+                    // A. BUSCAR EL ANUNCIO DUEÑO DEL LEAD
+                    let adDuenio = "ORGANICO_OTROS";
+                    
+                    // Buscamos coincidencia en el diccionario puente
+                    for (let adName in anuncios) {
+                        let keyNorm = normalizeStr(adName);
+                        let frases = MAPA_FRASES[keyNorm] || [keyNorm]; // Si no está en el mapa, busca el nombre del anuncio
+                        
+                        if (frases.some(f => l.historial.includes(f))) {
+                            adDuenio = adName;
+                            break;
+                        }
                     }
 
-                    const s = embudo[keyTarget];
+                    const s = anuncios[adDuenio];
                     s.entraron++;
-                    metaGlobals.entraron++;
 
-                    let esReal = false;
-                    if (l.history?.length >= 5 || ['HOT','INTERESADO','AGENDADO','GESTIÓN'].includes(l.tag)) esReal = true;
-                    if(esReal) { s.traccion++; metaGlobals.avanzados++; }
+                    // B. SEMÁFORO DE BITÁCORA (LOS 4 ESTADOS)
+                    let esAbandonado = l.tag === 'ABANDONADOS' || l.tag === 'ELIMINADO';
+                    let esDormido = l.tag === 'NUEVO';
+                    let esCongelado = ['HOT', 'INTERESADO', 'GESTIÓN'].includes(l.tag);
+                    let esAgendado = l.tag === 'AGENDADO' || l.historial.includes('agenda');
 
-                    let promesa = false;
-                    if (l.tag === 'AGENDADO' || l.notes?.some(n => normalizeStr(n.text).includes('agenda') || normalizeStr(n.text).includes('cita'))) promesa = true;
-                    if(promesa) s.agendan++;
+                    if(esAbandonado) s.abandonados++;
+                    else if(esDormido) s.dormidos++;
+                    else if(esCongelado) s.congelados++;
+                    else if(esAgendado) s.agendados++;
+                    else s.abandonados++; // Fallback
 
-                    // Cruce con Reservo (+30 Días)
-                    if(promesa || esReal) {
-                        const p = clean(l.phone || l.number);
-                        const n = normalizeStr(l.name).split(' ')[0]; 
-                        
-                        const match = reserData.filter(c => (p.length >= 8 && c.telefono.includes(p)) || (n.length >= 3 && c.nombreOriginal === n));
+                    // C. LA CAJA Y LA MÁQUINA DEL TIEMPO (RESERVO)
+                    // Solo cruzamos si al menos avanzó de Abandonado/Dormido
+                    if(esCongelado || esAgendado) {
+                        const n = l.name.split(' ')[0]; 
+                        const match = reserData.filter(c => (l.phone.length >= 8 && c.telefono.includes(l.phone)) || (n.length >= 3 && c.nombreOriginal === n));
                         
                         let asiste = false;
                         let compro = false;
                         let esFuturo = false;
 
                         match.forEach(c => {
-                            if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
-                            if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
+                            // Citas canceladas se descartan de inmediato
+                            let cancelada = ['anula', 'no asiste', 'cancelado', 'no llegó', 'eliminado'].includes(c.estado);
                             
-                            // SI LA CITA ES DESPUÉS DE LA FECHA FIN DEL REPORTE (ff) PERO DENTRO DE LOS 30 DÍAS -> ES FUTURO
-                            let citaActiva = !['anula', 'no asiste', 'cancelado', 'no llegó'].includes(c.estado);
-                            if (citaActiva && c.tsFecha > ff && c.tsFecha <= limiteFuturo) {
-                                esFuturo = true;
+                            if (!cancelada) {
+                                if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
+                                if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
+                                
+                                // MÁQUINA DEL TIEMPO: Si la FECHA DE CITA es mayor a la ventana del reporte, es Futuro.
+                                if (c.tsFecha > ff && c.tsFecha <= limiteFuturo) {
+                                    esFuturo = true;
+                                }
                             }
                         });
 
-                        // Para esta ventana de tiempo, si la cita es futura, se va a pipeline.
-                        if(asiste) { s.silla++; metaGlobals.asistidos++; }
-                        if(compro) { s.compraron++; metaGlobals.comprados++; }
-                        if(esFuturo && !asiste) { s.futuros++; metaGlobals.futuros++; }
+                        if(asiste) s.silla++;
+                        if(compro) s.compraron++;
+                        if(esFuturo && !asiste) s.futuros++;
                     }
                 });
 
-                // 4. RENDERIZAR TABLA
+                // 4. RENDERIZAR TABLA ANUNCIO X ANUNCIO
                 let html = "";
 
-                Object.values(embudo).sort((a,b) => b.gasto - a.gasto).forEach(s => {
-                    if(s.gasto === 0 && s.entraron === 0) return;
+                Object.values(anuncios).sort((a,b) => b.gasto - a.gasto).forEach(s => {
+                    if(s.gasto === 0 && s.entraron === 0) return; // Omitir basura
 
                     let costoDia = s.dias > 0 ? s.gasto / s.dias : s.gasto;
                     
-                    let tasaFuga = 0;
-                    if(s.resMeta > 0) {
-                        tasaFuga = Math.max(0, Math.round(((s.resMeta - s.entraron) / s.resMeta) * 100));
-                    }
-                    let fugaHtml = s.resMeta > 0 ? `${tasaFuga}%` : '-';
-
                     let cacHtml = '';
-                    if (s.gasto > 0 && s.silla > 0) {
-                        cacHtml = `<span class="badge win">CAC $${fmtMoney(s.gasto / s.silla)}</span>`;
+                    if (s.gasto > 0 && s.compraron > 0) {
+                        cacHtml = `<span class="badge win">$${fmtMoney(s.gasto / s.compraron)}</span>`;
+                    } else if (s.gasto > 0 && s.silla > 0) {
+                        cacHtml = `<span class="badge wait">ASISTIÓ (NO PAGÓ)</span>`;
                     } else if (s.gasto > 0 && s.silla === 0 && s.futuros > 0) {
                         cacHtml = `<span class="badge wait">EN PIPELINE</span>`;
                     } else if (s.gasto > 0 && s.silla === 0 && s.futuros === 0) {
@@ -335,33 +345,23 @@
                     }
 
                     html += `<tr>
-                        <td class="text-left"><b style="color:var(--blue); font-size:12px;">${s.nombre}</b></td>
-                        <td>${s.dias > 0 ? s.dias : '-'}</td>
-                        <td class="money neutral">${s.gasto > 0 ? fmtMoney(costoDia) : '---'}</td>
+                        <td class="text-left"><b style="color:var(--blue); font-size:12px;">${s.nombre.toUpperCase()}</b></td>
                         <td class="money">${s.gasto > 0 ? fmtMoney(s.gasto) : '---'}</td>
-                        <td>${s.resMeta}</td>
-                        <td>${s.entraron}</td>
-                        <td style="color:var(--red); font-weight:bold;">${fugaHtml}</td>
-                        <td style="color:var(--green); font-weight:bold;">${s.traccion}</td>
-                        <td>${s.agendan}</td>
-                        <td style="font-size:14px; font-weight:900; color:var(--purple);">${s.futuros}</td>
+                        <td class="money neutral">${s.gasto > 0 ? fmtMoney(costoDia) : '---'}</td>
+                        <td>${s.resMeta > 0 ? s.resMeta : '-'}</td>
+                        <td style="border-left: 2px solid var(--border); font-weight:bold;">${s.entraron}</td>
+                        <td class="col-challa">${s.abandonados}</td>
+                        <td class="col-dormido">${s.dormidos}</td>
+                        <td class="col-congelado">${s.congelados}</td>
+                        <td class="col-agendado">${s.agendados}</td>
+                        <td style="border-left: 2px solid var(--border); font-size:13px; font-weight:900; color:var(--purple);">${s.futuros}</td>
                         <td style="font-size:14px; font-weight:900; color:var(--green);">${s.silla}</td>
                         <td style="font-size:14px; font-weight:900; color:var(--blue);">${s.compraron}</td>
-                        <td>${cacHtml}</td>
+                        <td style="border-left: 2px solid var(--border);">${cacHtml}</td>
                     </tr>`;
                 });
 
                 document.getElementById('cuerpoEmbudo').innerHTML = html;
-
-                document.getElementById('kpi-gasto').innerText = fmtMoney(metaGlobals.gasto);
-                
-                let fugaGlobal = metaGlobals.resMeta > 0 ? Math.round(((metaGlobals.resMeta - metaGlobals.entraron) / metaGlobals.resMeta) * 100) : 0;
-                document.getElementById('kpi-fuga').innerText = fugaGlobal + "%";
-                
-                document.getElementById('kpi-leads').innerText = `${metaGlobals.entraron} / ${metaGlobals.avanzados}`;
-                document.getElementById('kpi-futuros').innerText = metaGlobals.futuros;
-                document.getElementById('kpi-asistidos').innerText = `${metaGlobals.asistidos} / ${metaGlobals.comprados}`;
-                
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
 
