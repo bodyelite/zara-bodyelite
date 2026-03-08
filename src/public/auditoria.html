@@ -78,7 +78,7 @@
         <div class="header">
             <div>
                 <h1>BODY ELITE <span>CEO BOARD</span></h1>
-                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">Reglas Estrictas: Solo los 3 Anuncios Activos</p>
+                <p style="margin-top: 5px; color: var(--muted); font-size: 14px;">Indexación Blindada: Cruce exacto de Teléfonos (.0 fix) y Frases</p>
             </div>
             <div class="date-box">
                 <div>
@@ -108,7 +108,7 @@
             <button class="btn" onclick="ejecutarRadar()">CALCULAR RETORNO</button>
         </div>
 
-        <div id="loader">FILTRANDO SOLO CAMPAÑAS ACTIVAS... ⚙️</div>
+        <div id="loader">CRUZANDO TELÉFONOS EN RESERVO... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="decision-grid" id="gridTarjetas"></div>
@@ -117,7 +117,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-left" style="width: 200px;">CÉLULA DE CAMPAÑA</th>
+                            <th class="text-left" style="width: 200px;">ANUNCIO META</th>
                             <th>GASTO TOTAL</th>
                             <th>COSTO DÍA</th>
                             <th>RESULTADOS (META)</th>
@@ -137,7 +137,9 @@
     </div>
 
     <script>
-        const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
+        // EL ARREGLO MAESTRO: Si viene un .0 de excel, lo cortamos antes de limpiar no-dígitos.
+        const cleanPhone = (n) => String(n || '').split('.')[0].replace(/\D/g,'').slice(-8);
+        
         const normalizeStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits: 0}).format(n);
         
@@ -163,10 +165,10 @@
             return new Date(dateStr).getTime(); 
         }
 
-        // LAS ÚNICAS 3 REGLAS QUE IMPORTAN (COMO TÚ LO EXIGISTE)
+        // TUS 3 REGLAS ESTRICTAS DE NEGOCIO (Ni una más, ni una menos)
         const REGLAS_ESTRICTAS = [
             { id: "LIPO FRAN", keysMeta: ["lipo fran", "lipo_trajeblanco", "video_fran"], fraseExacta: "quiero agendar mi evaluacion diagnostica lipo" },
-            { id: "FACIAL PIA", keysMeta: ["facial pia", "carrusel_hifu", "chats_antiage", "notas_antiage"], fraseExacta: "hola, quiero agendar diagnostico facial" },
+            { id: "FACIAL PIA", keysMeta: ["facial pia", "carrusel_hifu", "chats_antiage", "notas_antiage", "rostro_verano"], fraseExacta: "hola, quiero agendar diagnostico facial" },
             { id: "ROSTRO VERANO", keysMeta: ["rostro verano", "rostro_verano"], fraseExacta: "quiero mi evaluacion rostro" }
         ];
 
@@ -264,8 +266,11 @@
                     let rawFecha = row[cFecR];
                     let timestamp = (typeof rawFecha === 'number') ? excelToDate(rawFecha) : parseDateUI(String(rawFecha));
                     return {
-                        telefono: clean(row[cTelR]), nombreOriginal: normalizeStr(row[cNomR]).split(' ')[0], 
-                        estado: normalizeStr(row[cEstR]), pago: normalizeStr(row[cPagoR]), tsFecha: timestamp
+                        telefono: cleanPhone(row[cTelR]), // USO DEL NUEVO CLEANPHONE
+                        nombreOriginal: normalizeStr(row[cNomR]).split(' ')[0], 
+                        estado: normalizeStr(row[cEstR]), 
+                        pago: normalizeStr(row[cPagoR]), 
+                        tsFecha: timestamp
                     };
                 });
 
@@ -284,9 +289,14 @@
                 zaraRaw.slice(1).forEach(r => {
                     let f = parseChileanDate(r[cFecZ]);
                     let msg = normalizeStr(r[cMsgZ]);
+                    let rawPhone = r[cTelZ];
+                    
                     leadsNormalizados.push({ 
-                        ts: f, phone: clean(r[cTelZ]), name: normalizeStr(r[cNomZ]), 
-                        tag: normalizeStr(r[cEstZ]).toUpperCase(), historial: msg 
+                        ts: f, 
+                        phone: cleanPhone(rawPhone), // USO DEL NUEVO CLEANPHONE
+                        name: normalizeStr(r[cNomZ]), 
+                        tag: normalizeStr(r[cEstZ]).toUpperCase(), 
+                        historial: msg 
                     });
                 });
 
@@ -294,6 +304,7 @@
                     if(l.ts > 0 && (l.ts < fi || l.ts > ff)) return; 
                     if(!l.historial && !l.tag) return;
 
+                    // Asignación de la frase exacta de Meta
                     let adDuenio = "ORGANICO_OTROS";
                     for (let regla of REGLAS_ESTRICTAS) {
                         if (l.historial.includes(regla.fraseExacta)) {
@@ -304,8 +315,13 @@
                     const s = anuncios[adDuenio];
                     s.entraron++;
 
+                    // CRUCE DE TELÉFONO BLINDADO
                     const n = l.name.split(' ')[0]; 
-                    const matchReservo = reserData.filter(c => (l.phone.length >= 8 && c.telefono.includes(l.phone)) || (n.length >= 3 && c.nombreOriginal === n));
+                    const matchReservo = reserData.filter(c => {
+                        let isPhoneMatch = (l.phone.length >= 8 && c.telefono === l.phone); // Exact match en los ultimos 8 digitos
+                        let isNameMatch = (n.length >= 3 && c.nombreOriginal.includes(n));
+                        return isPhoneMatch || isNameMatch;
+                    });
                     
                     let tieneCitaValida = false;
                     let compro = false;
