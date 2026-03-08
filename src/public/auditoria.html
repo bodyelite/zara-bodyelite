@@ -2,142 +2,211 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>RADAR DE PRECISIÓN CEO - BODY ELITE</title>
+    <title>DASHBOARD DE VERDAD ABSOLUTA - BODY ELITE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'SF Mono', monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
         .container { max-width: 1400px; margin: auto; }
         .box { background: #1e293b; padding: 20px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         input[type="date"], input[type="file"] { width: 100%; background: #0f172a; border: 1px solid #334155; color: #38bdf8; padding: 12px; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; }
-        button { background: #10b981; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; }
+        button { background: #10b981; color: #0f172a; border: none; padding: 15px; width: 100%; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 16px; border-radius: 4px; transition: 0.2s;}
+        button:hover { background: #059669; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; background: #0f172a; text-align: center; }
-        th { background: #334155; color: #38bdf8; padding: 12px; border-bottom: 2px solid #1e293b; font-size: 11px; }
-        td { padding: 14px; border-bottom: 1px solid #1e293b; }
+        th { background: #334155; color: #38bdf8; padding: 12px; border-bottom: 2px solid #1e293b; font-size: 11px; text-transform: uppercase;}
+        td { padding: 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
         .win { color: #10b981; font-weight: bold; }
-        .money { color: #fbbf24; font-weight: bold; }
+        .warn { color: #fbbf24; font-weight: bold; }
         .text-left { text-align: left; }
+        .challa { color: #64748b; }
+        .cac-result { font-size: 16px; font-weight: 900; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="color: #38bdf8;">🎯 ANÁLISIS DESDE EL ORIGEN (META -> ZARA -> RESERVO)</h1>
+        <h1 style="color: #10b981;">🎯 TRIÁNGULO DE CONVERSIÓN (CAC)</h1>
         <div class="box">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div class="grid-3">
                 <div><label>1. Excel Meta (Anuncios)</label><input type="file" id="fm" accept=".csv, .xlsx, .xls"></div>
-                <div><label>2. JSON Zara (Monitor)</label><input type="file" id="fz" accept=".json"></div>
+                <div><label>2. JSON Zara (Chats)</label><input type="file" id="fz" accept=".json"></div>
                 <div><label>3. Reservo (Caja)</label><input type="file" id="fr" accept=".xlsx,.xls,.csv"></div>
             </div>
-            <button onclick="ejecutarRadar()">CALCULAR RETORNO REAL</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div><label>Desde (Fecha Zara)</label><input type="date" id="fi" value="2026-03-01"></div>
+                <div><label>Hasta (Fecha Zara)</label><input type="date" id="ff" value="2026-03-31"></div>
+            </div>
+            <button onclick="ejecutarRadar()">CRUZAR MATRIZ DE NEGOCIO</button>
         </div>
 
         <div id="res" style="display:none;">
             <table>
                 <thead>
                     <tr>
-                        <th class="text-left">ANUNCIO (META)</th>
-                        <th>INVERSIÓN ($)</th>
-                        <th>CHATS EN META</th>
-                        <th>CHATS EN ZARA</th>
-                        <th>AVANZAN (>4 MSJS)</th>
-                        <th>AGENDAN (ZARA)</th>
-                        <th style="background:#1e293b">LLEGARON (RESERVO)</th>
-                        <th>CAC FINAL</th>
+                        <th class="text-left">ANUNCIO META / ORIGEN</th>
+                        <th>MENSAJE GATILLO</th>
+                        <th>INVERSIÓN META</th>
+                        <th>ENTRARON A ZARA</th>
+                        <th>TRACCIÓN (>4)</th>
+                        <th>AGENDAN (PROMESA)</th>
+                        <th style="background:#1e293b">EN SILLA (RESERVO)</th>
+                        <th>CAC (COSTO X PACIENTE)</th>
                     </tr>
                 </thead>
-                <tbody id="cuerpoTabla"></tbody>
+                <tbody id="cuerpoEmbudo"></tbody>
             </table>
         </div>
     </div>
 
     <script>
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
+        const normalizeStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP'}).format(n);
 
-        // MAPEO MANUAL: El nombre exacto de tu anuncio en Meta -> Frase que dispara en WhatsApp
-        const MAPEO = {
-            "lipo fran": "quiero agendar mi evaluación diagnóstica lipo",
-            "facial pia": "hola, quiero agendar diagnostico facial",
-            "rostro verano": "quiero mi evaluación rostro"
-        };
+        // DICCIONARIO ESTRATÉGICO: Anuncio -> Mensaje Exacto
+        const DICCIONARIO = [
+            { id: "lipo fran", frase: "quiero agendar mi evaluacion diagnostica lipo" },
+            { id: "facial pia", frase: "hola, quiero agendar diagnostico facial" },
+            { id: "rostro verano", frase: "quiero mi evaluacion rostro" }
+        ];
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
         
         async function ejecutarRadar() {
             const fm = document.getElementById('fm').files[0], fz = document.getElementById('fz').files[0], fr = document.getElementById('fr').files[0];
-            if(!fm || !fz || !fr) return alert('Sube los 3 archivos.');
+            if(!fm || !fz || !fr) return alert('Se exigen los 3 archivos para operar la matriz.');
+            
+            const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
+            const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
             
             const [metaArr, monRaw, reserArr] = await Promise.all([rxArray(fm), rj(fz), rxArray(fr)]);
             const leadsZara = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
             
-            // Procesar Reservo
-            const reserHeaders = reserArr[0] || [];
-            let cTelR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
-            let cNomR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
-            const reserData = reserArr.slice(1).map(row => ({
-                tel: clean(row[cTelR]),
-                nom: String(row[cNomR] || '').toLowerCase(),
-                est: String(row[13] || row[2] || '').toLowerCase()
-            }));
+            // 1. INICIALIZAR EMBUDO BASE
+            let embudo = {
+                "lipo fran": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Quiero agendar mi evaluación diagnóstica lipo" },
+                "facial pia": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Hola, Quiero agendar diagnostico facial" },
+                "rostro verano": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Quiero mi evaluación Rostro" },
+                "organico_otros": { gasto: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, msj: "Varios (Instagram, Directo, Otros)" }
+            };
 
-            // Procesar Meta y buscar en los otros mundos
-            const metaH = metaArr[0] || [];
-            let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name'));
-            let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
-            let cRes = metaH.findIndex(h => String(h).toLowerCase() === 'resultados' || String(h).toLowerCase().includes('results'));
-
-            let tablaHtml = "";
-
-            metaArr.slice(1).forEach(row => {
-                let nombreAnuncio = String(row[cAnuncio] || '').toLowerCase().trim();
-                let inversion = parseFloat(row[cGasto]) || 0;
-                let resultadosMeta = parseInt(row[cRes]) || 0;
-
-                if (inversion <= 0) return;
-
-                // Buscar frase asociada en el mapa
-                let fraseAsociada = MAPEO[nombreAnuncio] || null;
+            // 2. LEER META Y ASIGNAR GASTOS
+            try {
+                const metaH = metaArr[0] || [];
+                let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') || String(h).toLowerCase().includes('ad name'));
+                let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
                 
-                let countZara = 0, countAvanzan = 0, countAgendan = 0, countLlegaron = 0;
-
-                if (fraseAsociada) {
-                    const leadsDeEsteAnuncio = leadsZara.filter(l => l.history?.[0]?.content.toLowerCase().includes(fraseAsociada));
-                    countZara = leadsDeEsteAnuncio.length;
-
-                    leadsDeEsteAnuncio.forEach(l => {
-                        // 1. Avanzan (>4 msjs o tag)
-                        if (l.history?.length >= 5 || l.tag === 'HOT' || l.tag === 'INTERESADO') countAvanzan++;
-                        
-                        // 2. Agendan (Tag o Bitácora)
-                        let agendo = l.tag === 'AGENDADO' || l.notes?.some(n => n.text.toLowerCase().includes('agenda'));
-                        if (agendo) {
-                            countAgendan++;
-                            // 3. Llegaron (Reservo)
-                            let p = clean(l.phone), n = String(l.name || '').toLowerCase().split(' ')[0];
-                            let match = reserData.filter(c => (p.length >= 8 && c.tel.includes(p)) || (n.length > 3 && c.nom.includes(n)));
-                            if (match.some(c => c.est.includes('asiste') || c.est.includes('realizado') || c.est.includes('atendid') || c.est.includes('ok'))) {
-                                countLlegaron++;
+                if(cAnuncio !== -1 && cGasto !== -1) {
+                    metaArr.slice(1).forEach(r => {
+                        let nombreAnuncio = normalizeStr(r[cAnuncio]);
+                        let spend = parseFloat(r[cGasto]) || 0;
+                        if(spend > 0) {
+                            let asignado = false;
+                            for (let camp of DICCIONARIO) {
+                                if (nombreAnuncio.includes(normalizeStr(camp.id))) {
+                                    embudo[camp.id].gasto += spend;
+                                    asignado = true;
+                                    break;
+                                }
                             }
+                            // Si Meta tiene otros anuncios con gasto que no están en el diccionario
+                            if(!asignado) embudo["organico_otros"].gasto += spend;
                         }
                     });
                 }
+            } catch(e) { console.error("Error leyendo Meta:", e); }
 
-                let cac = countLlegaron > 0 ? fmtMoney(inversion / countLlegaron) : (inversion > 0 ? "PÉRDIDA" : "---");
+            // 3. EXTRAER RESERVO (LA CAJA)
+            const reserHeaders = reserArr[0] || [];
+            let cTel = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
+            let cNom = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
+            let cTrat = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tratamiento'));
+            let cEst = reserHeaders.findIndex(h => String(h).toLowerCase().includes('estado cita'));
+            
+            // Si no encuentra columnas por nombre, forzamos índices clásicos de tu Excel
+            if(cTel === -1) cTel = 11; if(cNom === -1) cNom = 9; if(cEst === -1) cEst = 13;
 
-                tablaHtml += `<tr>
-                    <td class="text-left"><b>${nombreAnuncio.toUpperCase()}</b></td>
-                    <td class="money">${fmtMoney(inversion)}</td>
-                    <td>${resultadosMeta}</td>
-                    <td>${countZara}</td>
-                    <td class="win">${countAvanzan}</td>
-                    <td>${countAgendan}</td>
-                    <td style="background:#1e293b; font-weight:bold; color:#10b981;">${countLlegaron}</td>
-                    <td class="win">${cac}</td>
+            const reserData = reserArr.slice(1).map(row => ({
+                telefono: clean(row[cTel]),
+                nombreOriginal: normalizeStr(row[cNom]).split(' ')[0], 
+                estado: normalizeStr(row[cEst]),
+                tratamiento: normalizeStr(row[cTrat])
+            }));
+
+            // 4. PROCESAR ZARA (FILTROS)
+            leadsZara.forEach(l => {
+                let ts = l.history?.[0]?.timestamp || l.lastInteraction || 0;
+                if(ts < fi || ts > ff) return;
+
+                let fraseOriginal = l.history?.[0]?.content || "";
+                let fraseNorm = normalizeStr(fraseOriginal);
+                
+                // Buscar si la frase pertenece a un anuncio
+                let bucket = "organico_otros";
+                for (let camp of DICCIONARIO) {
+                    if (fraseNorm.includes(camp.frase)) {
+                        bucket = camp.id;
+                        break;
+                    }
+                }
+
+                const s = embudo[bucket];
+                s.entraron++; 
+
+                // TRACCIÓN
+                let esReal = false;
+                if (l.history?.length >= 5 || l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
+                if(esReal) s.traccion++;
+
+                // PROMESA
+                let promesa = false;
+                if (l.tag === 'AGENDADO' || l.notes?.some(n => normalizeStr(n.text).includes('agenda') || normalizeStr(n.text).includes('cita'))) promesa = true;
+                if(promesa) s.agendan++;
+
+                // EN SILLA
+                if(promesa || esReal) {
+                    const p = clean(l.phone || l.number);
+                    const n = normalizeStr(l.name).split(' ')[0]; 
+                    
+                    const match = reserData.filter(c => (p.length >= 8 && c.telefono.includes(p)) || (n.length > 3 && c.nombreOriginal.includes(n)));
+                    if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendid') || c.estado.includes('ok') || c.estado.includes('confirm'))) {
+                        s.silla++;
+                    }
+                }
+            });
+
+            // 5. RENDERIZAR RESULTADO FINAL
+            let html = "";
+            Object.keys(embudo).forEach(key => {
+                const s = embudo[key];
+                if(s.entraron === 0 && s.gasto === 0) return;
+
+                let nombreCampaña = key === "organico_otros" ? "ORGÁNICO / OTROS ANUNCIOS" : "🎯 " + key.toUpperCase();
+                let gastoDisplay = s.gasto > 0 ? '$' + fmtMoney(s.gasto) : '---';
+                
+                let cacHtml = '<span style="color:#94a3b8">---</span>';
+                if (s.gasto > 0 && s.silla > 0) {
+                    cacHtml = '<span class="cac-result" style="color:#10b981">$' + fmtMoney(s.gasto / s.silla) + '</span>';
+                } else if (s.gasto > 0 && s.silla === 0) {
+                    cacHtml = '<span style="color:#f43f5e">PÉRDIDA ($' + fmtMoney(s.gasto) + ')</span>';
+                } else if (s.gasto === 0 && s.silla > 0) {
+                    cacHtml = '<span class="cac-result" style="color:#10b981">PURA GANANCIA</span>';
+                }
+
+                html += `<tr>
+                    <td class="text-left"><b>${nombreCampaña}</b></td>
+                    <td style="font-size:10px; color:#94a3b8; max-width:200px;">"${s.msj}"</td>
+                    <td class="warn">${gastoDisplay}</td>
+                    <td>${s.entraron}</td>
+                    <td class="${s.traccion > 0 ? 'win' : 'challa'}">${s.traccion}</td>
+                    <td class="${s.agendan > 0 ? 'warn' : 'challa'}">${s.agendan}</td>
+                    <td style="background:#1e293b; font-weight:bold; font-size:15px; color:${s.silla > 0 ? '#10b981' : '#f8fafc'};">${s.silla}</td>
+                    <td>${cacHtml}</td>
                 </tr>`;
             });
 
-            document.getElementById('cuerpoTabla').innerHTML = tablaHtml;
+            document.getElementById('cuerpoEmbudo').innerHTML = html;
             document.getElementById('res').style.display = 'block';
         }
     </script>
