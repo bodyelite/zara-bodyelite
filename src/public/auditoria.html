@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>BODY ELITE - CEO DASHBOARD</title>
+    <title>BODY ELITE - CEO DASHBOARD (PIPELINE & FUGAS)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0B1120; --card: #1E293B; --border: #334155; --text: #F8FAFC; --muted: #94A3B8; --green: #10B981; --red: #F43F5E; --blue: #0EA5E9; --alert: #F59E0B; }
+        :root { --bg: #0B1120; --card: #1E293B; --border: #334155; --text: #F8FAFC; --muted: #94A3B8; --green: #10B981; --red: #F43F5E; --blue: #0EA5E9; --alert: #F59E0B; --purple: #8B5CF6; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 30px; }
-        .container { max-width: 1500px; margin: auto; }
+        .container { max-width: 1600px; margin: auto; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
         .header h1 { margin: 0; font-weight: 900; font-size: 28px; color: var(--blue); letter-spacing: -1px; }
         .header p { margin: 5px 0 0 0; color: var(--muted); font-size: 14px; }
@@ -20,37 +20,32 @@
         .btn { background: var(--green); color: #000; border: none; padding: 14px; font-weight: 900; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.2s; height: 43px; }
         .btn:hover { background: #059669; color: #fff; transform: translateY(-2px); }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .kpi-card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px; }
+        .kpi-card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); position: relative; overflow: hidden; }
         .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
         .kpi-card.blue::before { background: var(--blue); }
+        .kpi-card.purple::before { background: var(--purple); }
         .kpi-card.green::before { background: var(--green); }
-        .kpi-card.red::before { background: var(--red); }
         .kpi-card.alert::before { background: var(--alert); }
-        .kpi-title { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
-        .kpi-value { font-size: 36px; font-weight: 900; margin: 0; letter-spacing: -1px; }
+        .kpi-card.red::before { background: var(--red); }
+        .kpi-title { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        .kpi-value { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -1px; }
         
-        .charts-section { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .chart-box { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); height: 350px; }
-        .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 15px; color: var(--blue); text-transform: uppercase; }
-
         .table-container { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; padding: 1px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
-        th { background: #0F172A; color: var(--muted); padding: 16px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
-        td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+        th { background: #0F172A; color: var(--muted); padding: 14px 10px; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
+        td { padding: 14px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover { background: rgba(255,255,255,0.02); }
         
         .text-left { text-align: left; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.1); }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; background: rgba(255,255,255,0.1); text-transform: uppercase; }
         .badge.win { background: rgba(16, 185, 129, 0.2); color: var(--green); }
         .badge.lose { background: rgba(244, 63, 94, 0.2); color: var(--red); }
-        .money { font-family: monospace; font-size: 14px; font-weight: bold; }
-        .money.good { color: var(--green); }
-        .money.bad { color: var(--red); }
+        .badge.wait { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
+        .money { font-family: monospace; font-size: 13px; font-weight: bold; }
         .money.neutral { color: var(--alert); }
 
-        /* Loader */
         #loader { display: none; text-align: center; padding: 50px; font-weight: bold; color: var(--blue); }
     </style>
 </head>
@@ -58,8 +53,8 @@
     <div class="container">
         <div class="header">
             <div>
-                <h1>⚡ BODY ELITE: C3 TO BMW DASHBOARD</h1>
-                <p>Monitor de Inteligencia de Negocios y Retorno de Inversión (CAC)</p>
+                <h1>⚡ BODY ELITE: CONTROL DE FUGAS Y PIPELINE</h1>
+                <p>Auditoría de Inversión, Caída de Clics Meta y Citas Futuras</p>
             </div>
         </div>
 
@@ -79,36 +74,29 @@
             <button class="btn" onclick="ejecutarRadar()">PROCESAR DATA</button>
         </div>
 
-        <div id="loader">PROCESANDO MATRIZ DE NEGOCIO... ESTO ES PRECISIÓN SUIZA ⚙️</div>
+        <div id="loader">CALCULANDO PIPELINE Y FECHAS FUTURAS... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="kpi-grid">
                 <div class="kpi-card blue">
-                    <div class="kpi-title">INVERSIÓN TOTAL META</div>
+                    <div class="kpi-title">INVERSIÓN META</div>
                     <p class="kpi-value" id="kpi-gasto">$0</p>
                 </div>
+                <div class="kpi-card red">
+                    <div class="kpi-title">FUGA DE CLICS META</div>
+                    <p class="kpi-value" id="kpi-fuga">0%</p>
+                </div>
                 <div class="kpi-card alert">
-                    <div class="kpi-title">LEADS (CHALLA VS AVANZAN)</div>
+                    <div class="kpi-title">EMBUDO ZARA (ENTRAN/AVANZAN)</div>
                     <p class="kpi-value" id="kpi-leads">0 / 0</p>
                 </div>
+                <div class="kpi-card purple">
+                    <div class="kpi-title">PIPELINE (CITAS FUTURAS)</div>
+                    <p class="kpi-value" id="kpi-futuros">0</p>
+                </div>
                 <div class="kpi-card green">
-                    <div class="kpi-title">PACIENTES EN SILLA (RESERVO)</div>
-                    <p class="kpi-value" id="kpi-asistidos">0</p>
-                </div>
-                <div class="kpi-card red">
-                    <div class="kpi-title">CAC GLOBAL (COSTO X SILLA)</div>
-                    <p class="kpi-value" id="kpi-cac">$0</p>
-                </div>
-            </div>
-
-            <div class="charts-section">
-                <div class="chart-box">
-                    <div class="chart-title">EMBUDO DE CONVERSIÓN DE LA SEMANA</div>
-                    <canvas id="funnelChart"></canvas>
-                </div>
-                <div class="chart-box">
-                    <div class="chart-title">DISTRIBUCIÓN DE GASTO POR ANUNCIO</div>
-                    <canvas id="spendChart"></canvas>
+                    <div class="kpi-title">EN SILLA / COMPRARON</div>
+                    <p class="kpi-value" id="kpi-asistidos">0 / 0</p>
                 </div>
             </div>
 
@@ -116,17 +104,19 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-left">ANUNCIO META</th>
-                            <th>DÍAS ON</th>
+                            <th class="text-left">LÍNEA DE NEGOCIO</th>
+                            <th>DÍAS</th>
                             <th>COSTO DÍA</th>
                             <th>GASTO TOTAL</th>
-                            <th>CHATS META</th>
-                            <th>CHATS ZARA</th>
+                            <th>CLICS META</th>
+                            <th>LLEGAN A ZARA</th>
+                            <th style="color:var(--red);">TASA FUGA</th>
                             <th>AVANZADOS</th>
                             <th>AGENDADOS</th>
-                            <th style="background: rgba(16,185,129,0.1); color:#10B981;">ASISTIÓ</th>
-                            <th style="background: rgba(14,165,233,0.1); color:#0EA5E9;">COMPRÓ</th>
-                            <th>COSTO X ASISTIDO (CAC)</th>
+                            <th style="background: rgba(139,92,246,0.1); color:var(--purple);">FUTUROS ⏳</th>
+                            <th style="background: rgba(16,185,129,0.1); color:var(--green);">ASISTIÓ ✅</th>
+                            <th style="background: rgba(14,165,233,0.1); color:var(--blue);">COMPRÓ 💰</th>
+                            <th>ESTADO CAC</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoEmbudo"></tbody>
@@ -136,37 +126,31 @@
     </div>
 
     <script>
-        let myFunnelChart = null;
-        let mySpendChart = null;
-
         const clean = (n) => String(n || '').replace(/\D/g,'').slice(-8);
         const normalizeStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits: 0}).format(n);
+        
+        // Convertidor de Fechas Excel a JS Timestamp
+        function excelToDate(serial) {
+            if(!serial || isNaN(serial)) return 0;
+            return Math.round((parseFloat(serial) - 25569) * 86400 * 1000);
+        }
 
-        // DICCIONARIO MAESTRO AMPLIADO
         const DICCIONARIO = [
-            { id: "lipo fran", frase: "quiero agendar mi evaluacion diagnostica lipo" },
-            { id: "facial pia", frase: "hola, quiero agendar diagnostico facial" },
-            { id: "rostro verano", frase: "quiero mi evaluacion rostro" },
-            { id: "lipo express", frase: "quiero mas informacion de la lipo express" },
-            { id: "push up", frase: "quiero mas informacion del plan push up" },
-            { id: "body tensor", frase: "quiero mas informacion del plan body tensor" }
+            { id: "lipo", keys: ["lipo", "lipolitico", "blanco", "express"], nombre: "🔥 LIPO EXPRESS" },
+            { id: "gluteos", keys: ["gluteo", "push", "piscina"], nombre: "🍑 GLÚTEOS / PUSH UP" },
+            { id: "facial", keys: ["rostro", "facial", "hifu", "antiage", "pink", "glow", "peeling"], nombre: "✨ ROSTRO / FACIAL" },
+            { id: "corporal", keys: ["tensor", "corporal", "prosculpt", "abdomen"], nombre: "💪 CORPORAL" },
+            { id: "depilacion", keys: ["depilacion", "summer", "laser"], nombre: "☀️ DEPILACIÓN LÁSER" }
         ];
 
         async function rxArray(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]], {header: 1, raw: false})); reader.readAsArrayBuffer(f); }); }
         async function rj(f) { return new Promise(r => { const reader = new FileReader(); reader.onload = (e) => r(JSON.parse(e.target.result)); reader.readAsText(f); }); }
-        
-        // Parsear fechas de string a timestamp
-        function parseDate(dateStr) {
-            if(!dateStr) return 0;
-            let d = new Date(dateStr);
-            if(isNaN(d.getTime())) return 0;
-            return d.getTime();
-        }
+        function parseDate(dateStr) { if(!dateStr) return 0; let d = new Date(dateStr); return isNaN(d.getTime()) ? 0 : d.getTime(); }
 
         async function ejecutarRadar() {
             const fm = document.getElementById('fm').files[0], fz = document.getElementById('fz').files[0], fr = document.getElementById('fr').files[0];
-            if(!fm || !fz || !fr) return alert('CEO, sube los 3 archivos para que el motor arranque.');
+            if(!fm || !fz || !fr) return alert('CEO, sube los 3 archivos.');
             
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
@@ -176,7 +160,12 @@
                 const leadsZara = Array.isArray(monRaw.users) ? monRaw.users : Object.values(monRaw.users || {});
                 
                 let embudo = {};
-                let metaGlobals = { gasto: 0, asistidos: 0, entraron: 0, avanzados: 0 };
+                DICCIONARIO.forEach(d => {
+                    embudo[d.id] = { nombre: d.nombre, dias: 0, gasto: 0, resMeta: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, compraron: 0, futuros: 0 };
+                });
+                embudo["otros"] = { nombre: "🌿 ORGÁNICO / OTROS", dias: 0, gasto: 0, resMeta: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, compraron: 0, futuros: 0 };
+
+                let metaGlobals = { gasto: 0, asistidos: 0, comprados: 0, entraron: 0, avanzados: 0, resMeta: 0, futuros: 0 };
 
                 // 1. LEER META
                 const metaH = metaArr[0] || [];
@@ -199,178 +188,148 @@
                             if(msDiff > 0) dias = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
                         }
 
-                        // Identificar si está en el diccionario para cruce, si no, lo guardamos con su nombre real
-                        let keyTarget = nombreOriginal;
-                        for (let camp of DICCIONARIO) {
-                            if (nombreAnuncio.includes(normalizeStr(camp.id))) {
-                                keyTarget = camp.id; break;
-                            }
-                        }
-
-                        if(!embudo[keyTarget]) {
-                            embudo[keyTarget] = { nombre: keyTarget, dias: dias, gasto: 0, resMeta: 0, entraron: 0, traccion: 0, agendan: 0, silla: 0, compraron: 0, matchFrase: "" };
-                            // Asignar frase del diccionario si existe
-                            let dMatch = DICCIONARIO.find(d => d.id === keyTarget);
-                            if(dMatch) embudo[keyTarget].matchFrase = dMatch.frase;
+                        let keyTarget = "otros";
+                        for (let cat of DICCIONARIO) {
+                            if (cat.keys.some(k => nombreAnuncio.includes(k))) { keyTarget = cat.id; break; }
                         }
                         
                         embudo[keyTarget].gasto += spend;
                         embudo[keyTarget].resMeta += resultados;
                         embudo[keyTarget].dias = Math.max(embudo[keyTarget].dias, dias);
+                        
                         metaGlobals.gasto += spend;
+                        metaGlobals.resMeta += resultados;
                     }
                 });
 
-                // 2. EXTRAER RESERVO
+                // 2. EXTRAER RESERVO (CON LECTURA DE FECHA PARA CITAS FUTURAS)
                 const reserHeaders = reserArr[0] || [];
                 let cTel = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
                 let cNom = reserHeaders.findIndex(h => String(h).toLowerCase().includes('paciente') || String(h).toLowerCase().includes('nombre'));
-                let cEst = reserHeaders.findIndex(h => String(h).toLowerCase().includes('estado cita'));
-                let cPago = reserHeaders.findIndex(h => String(h).toLowerCase().includes('estado pago'));
+                let cEst = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'estado cita' || String(h).toLowerCase().includes('estado cita'));
+                let cPago = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'estado pago' || String(h).toLowerCase().includes('estado pago'));
+                let cFec = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'fecha');
                 
-                if(cTel === -1) cTel = 11; if(cNom === -1) cNom = 9; if(cEst === -1) cEst = 13; if(cPago === -1) cPago = 14;
+                if(cTel === -1) cTel = 11; if(cNom === -1) cNom = 9; if(cEst === -1) cEst = 13; if(cPago === -1) cPago = 14; if(cFec === -1) cFec = 1;
 
                 const reserData = reserArr.slice(1).map(row => ({
                     telefono: clean(row[cTel]),
                     nombreOriginal: normalizeStr(row[cNom]).split(' ')[0], 
                     estado: normalizeStr(row[cEst]),
-                    pago: normalizeStr(row[cPago])
+                    pago: normalizeStr(row[cPago]),
+                    tsFecha: excelToDate(row[cFec])
                 }));
 
-                // 3. PROCESAR ZARA (FILTROS DE TU DASHBOARD)
-                leadsZara.forEach(l => {
-                    let fraseOriginal = l.history?.[0]?.content || "";
-                    let fraseNorm = normalizeStr(fraseOriginal);
-                    if(!fraseNorm) return;
+                const limiteHoy = new Date().getTime() - (24 * 60 * 60 * 1000); // Citas desde ayer hacia adelante son "Futuras/Activas"
 
-                    // Asignar a campaña
-                    let targetKey = null;
-                    for (let camp of DICCIONARIO) {
-                        if (fraseNorm.includes(camp.frase)) {
-                            targetKey = camp.id; break;
-                        }
+                // 3. PROCESAR ZARA
+                leadsZara.forEach(l => {
+                    // Buscar en los 2 primeros mensajes en caso de que hayan saludado primero
+                    let historialText = l.history?.slice(0,2).map(m => normalizeStr(m.content)).join(" ") || "";
+                    if(!historialText) return;
+
+                    let keyTarget = "otros";
+                    for (let cat of DICCIONARIO) {
+                        if (cat.keys.some(k => historialText.includes(k))) { keyTarget = cat.id; break; }
                     }
 
-                    if(targetKey && embudo[targetKey]) {
-                        const s = embudo[targetKey];
-                        s.entraron++;
-                        metaGlobals.entraron++;
+                    const s = embudo[keyTarget];
+                    s.entraron++;
+                    metaGlobals.entraron++;
 
-                        // TRACCIÓN (Avanzados)
-                        let esReal = false;
-                        if (l.history?.length >= 5 || l.tag === 'HOT' || l.tag === 'INTERESADO' || l.tag === 'AGENDADO') esReal = true;
-                        if(esReal) { s.traccion++; metaGlobals.avanzados++; }
+                    let esReal = false;
+                    if (l.history?.length >= 5 || ['HOT','INTERESADO','AGENDADO','GESTIÓN'].includes(l.tag)) esReal = true;
+                    if(esReal) { s.traccion++; metaGlobals.avanzados++; }
 
-                        // PROMESA (Agendados)
-                        let promesa = false;
-                        if (l.tag === 'AGENDADO' || l.notes?.some(n => normalizeStr(n.text).includes('agenda') || normalizeStr(n.text).includes('cita'))) promesa = true;
-                        if(promesa) s.agendan++;
+                    let promesa = false;
+                    if (l.tag === 'AGENDADO' || l.notes?.some(n => normalizeStr(n.text).includes('agenda') || normalizeStr(n.text).includes('cita'))) promesa = true;
+                    if(promesa) s.agendan++;
 
-                        // RESERVO (Asistió y Compró)
-                        if(promesa || esReal) {
-                            const p = clean(l.phone || l.number);
-                            const n = normalizeStr(l.name).split(' ')[0]; 
+                    // Cruce Binario y de Tiempos con Reservo
+                    if(promesa || esReal) {
+                        const p = clean(l.phone || l.number);
+                        const n = normalizeStr(l.name).split(' ')[0]; 
+                        
+                        const match = reserData.filter(c => (p.length >= 8 && c.telefono.includes(p)) || (n.length >= 3 && c.nombreOriginal === n));
+                        
+                        let asiste = false;
+                        let compro = false;
+                        let esFuturo = false;
+
+                        match.forEach(c => {
+                            if (['asiste', 'atendido', 'realizado', 'confirmado'].includes(c.estado)) asiste = true;
+                            if (['pagado', 'abono', 'plan', 'si'].includes(c.pago)) compro = true;
                             
-                            const match = reserData.filter(c => (p.length >= 8 && c.telefono.includes(p)) || (n.length > 3 && c.nombreOriginal.includes(n)));
-                            
-                            if(match.some(c => c.estado.includes('asiste') || c.estado.includes('realizado') || c.estado.includes('atendid') || c.estado.includes('ok') || c.estado.includes('confirm'))) {
-                                s.silla++;
-                                metaGlobals.asistidos++;
+                            // SI LA CITA ES DE HOY EN ADELANTE Y NO ESTÁ CANCELADA -> ES PIPELINE (Futuro)
+                            if (c.tsFecha > limiteHoy && !['anula', 'no asiste', 'cancelado', 'no llegó'].includes(c.estado)) {
+                                esFuturo = true;
                             }
-                            // Compró = Estado Pago es Pagado o Abono
-                            if(match.some(c => c.pago.includes('pagado') || c.pago.includes('abono') || c.pago.includes('si'))) {
-                                s.compraron++;
-                            }
-                        }
+                        });
+
+                        if(asiste) { s.silla++; metaGlobals.asistidos++; }
+                        if(compro) { s.compraron++; metaGlobals.comprados++; }
+                        if(esFuturo && !asiste) { s.futuros++; metaGlobals.futuros++; }
                     }
                 });
 
-                // 4. RENDERIZAR TABLA Y GRÁFICOS
+                // 4. RENDERIZAR TABLA
                 let html = "";
-                let chartLabels = [];
-                let chartChats = [];
-                let chartAvanzados = [];
-                let chartSilla = [];
-                let chartSpend = [];
 
                 Object.values(embudo).sort((a,b) => b.gasto - a.gasto).forEach(s => {
-                    if(s.gasto === 0) return;
+                    if(s.gasto === 0 && s.entraron === 0) return;
 
-                    let costoDia = s.gasto / s.dias;
+                    let costoDia = s.dias > 0 ? s.gasto / s.dias : s.gasto;
                     
-                    let cac = 0;
+                    // Cálculo de Fuga
+                    let tasaFuga = 0;
+                    if(s.resMeta > 0) {
+                        tasaFuga = Math.max(0, Math.round(((s.resMeta - s.entraron) / s.resMeta) * 100));
+                    }
+                    let fugaHtml = s.resMeta > 0 ? `${tasaFuga}%` : '-';
+
+                    // Cálculo CAC Inteligente
                     let cacHtml = '';
-                    if (s.silla > 0) {
-                        cac = s.gasto / s.silla;
-                        cacHtml = `<span class="badge win">${fmtMoney(cac)}</span>`;
+                    if (s.gasto > 0 && s.silla > 0) {
+                        cacHtml = `<span class="badge win">CAC $${fmtMoney(s.gasto / s.silla)}</span>`;
+                    } else if (s.gasto > 0 && s.silla === 0 && s.futuros > 0) {
+                        cacHtml = `<span class="badge wait">EN PROCESO (ESPERANDO CITA)</span>`;
+                    } else if (s.gasto > 0 && s.silla === 0 && s.futuros === 0) {
+                        cacHtml = `<span class="badge lose">PÉRDIDA QUEMADA</span>`;
                     } else {
-                        cacHtml = `<span class="badge lose">PÉRDIDA</span>`;
+                        cacHtml = `<span style="color:var(--muted)">---</span>`;
                     }
 
                     html += `<tr>
-                        <td class="text-left"><b style="color:var(--blue);">${s.nombre.toUpperCase()}</b></td>
-                        <td>${s.dias}</td>
-                        <td class="money neutral">${fmtMoney(costoDia)}</td>
-                        <td class="money">${fmtMoney(s.gasto)}</td>
+                        <td class="text-left"><b style="color:var(--blue); font-size:12px;">${s.nombre}</b></td>
+                        <td>${s.dias > 0 ? s.dias : '-'}</td>
+                        <td class="money neutral">${s.gasto > 0 ? fmtMoney(costoDia) : '---'}</td>
+                        <td class="money">${s.gasto > 0 ? fmtMoney(s.gasto) : '---'}</td>
                         <td>${s.resMeta}</td>
                         <td>${s.entraron}</td>
+                        <td style="color:var(--red); font-weight:bold;">${fugaHtml}</td>
                         <td style="color:var(--green); font-weight:bold;">${s.traccion}</td>
                         <td>${s.agendan}</td>
-                        <td style="font-size:16px; font-weight:900; color:var(--green);">${s.silla}</td>
-                        <td style="font-size:16px; font-weight:900; color:var(--blue);">${s.compraron}</td>
+                        <td style="font-size:14px; font-weight:900; color:var(--purple);">${s.futuros}</td>
+                        <td style="font-size:14px; font-weight:900; color:var(--green);">${s.silla}</td>
+                        <td style="font-size:14px; font-weight:900; color:var(--blue);">${s.compraron}</td>
                         <td>${cacHtml}</td>
                     </tr>`;
-
-                    chartLabels.push(s.nombre.toUpperCase());
-                    chartChats.push(s.entraron);
-                    chartAvanzados.push(s.traccion);
-                    chartSilla.push(s.silla);
-                    chartSpend.push(s.gasto);
                 });
 
                 document.getElementById('cuerpoEmbudo').innerHTML = html;
 
                 // Actualizar KPIs
                 document.getElementById('kpi-gasto').innerText = fmtMoney(metaGlobals.gasto);
-                document.getElementById('kpi-leads').innerText = `${metaGlobals.entraron} / ${metaGlobals.avanzados}`;
-                document.getElementById('kpi-asistidos').innerText = metaGlobals.asistidos;
                 
-                let globalCac = metaGlobals.asistidos > 0 ? metaGlobals.gasto / metaGlobals.asistidos : 0;
-                document.getElementById('kpi-cac').innerText = globalCac > 0 ? fmtMoney(globalCac) : "PÉRDIDA";
-
-                // Ocultar Loader, Mostrar Dashboard
+                let fugaGlobal = metaGlobals.resMeta > 0 ? Math.round(((metaGlobals.resMeta - metaGlobals.entraron) / metaGlobals.resMeta) * 100) : 0;
+                document.getElementById('kpi-fuga').innerText = fugaGlobal + "%";
+                
+                document.getElementById('kpi-leads').innerText = `${metaGlobals.entraron} / ${metaGlobals.avanzados}`;
+                document.getElementById('kpi-futuros').innerText = metaGlobals.futuros;
+                document.getElementById('kpi-asistidos').innerText = `${metaGlobals.asistidos} / ${metaGlobals.comprados}`;
+                
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
-
-                // Destruir gráficos anteriores si existen
-                if(myFunnelChart) myFunnelChart.destroy();
-                if(mySpendChart) mySpendChart.destroy();
-
-                // Chart 1: Funnel
-                const ctx1 = document.getElementById('funnelChart').getContext('2d');
-                myFunnelChart = new Chart(ctx1, {
-                    type: 'bar',
-                    data: {
-                        labels: chartLabels,
-                        datasets: [
-                            { label: 'Entraron (Challa)', data: chartChats, backgroundColor: '#334155', borderRadius: 4 },
-                            { label: 'Avanzaron (Tracción)', data: chartAvanzados, backgroundColor: '#0EA5E9', borderRadius: 4 },
-                            { label: 'Asistieron (Silla)', data: chartSilla, backgroundColor: '#10B981', borderRadius: 4 }
-                        ]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8' } } }, scales: { y: { grid: { color: '#334155' }, ticks: { color: '#94A3B8' } }, x: { grid: { display: false }, ticks: { color: '#94A3B8' } } } }
-                });
-
-                // Chart 2: Spend Distribution
-                const ctx2 = document.getElementById('spendChart').getContext('2d');
-                mySpendChart = new Chart(ctx2, {
-                    type: 'doughnut',
-                    data: {
-                        labels: chartLabels,
-                        datasets: [{ data: chartSpend, backgroundColor: ['#0EA5E9', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6'], borderWidth: 0 }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94A3B8' } } }, cutout: '75%' }
-                });
 
             } catch(e) {
                 console.error(e);
