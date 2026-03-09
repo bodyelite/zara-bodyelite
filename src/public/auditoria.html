@@ -78,7 +78,7 @@
         <div class="header">
             <div>
                 <h1>BODY ELITE <span>CEO RADAR</span></h1>
-                <div class="header-subtitle">Inteligencia de Adquisición: Inversión ➔ Tracción ➔ Cierre</div>
+                <div class="header-subtitle">Integración de Totales: Meta + Reservo Completo</div>
             </div>
             <div class="date-box">
                 <div class="date-col">
@@ -245,7 +245,7 @@
                     }
                 });
 
-                // 2. RESERVO (LA CAMISA DE FUERZA ESTÁ FUERA)
+                // 2. RESERVO (EL MOTOR GLOBAL DE AGENDAS)
                 const reserHeaders = reserArr[0] || [];
                 let cFecCitaR = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'fecha');
                 let cTreatR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tratamiento'));
@@ -255,32 +255,36 @@
                 if(cFecCitaR === -1) cFecCitaR = 1; if(cTreatR === -1) cTreatR = 6; 
                 if(cTelR === -1) cTelR = 11; if(cEstR === -1) cEstR = 13;
 
-                let telefonosAgendados = new Set();
+                let totalAgendasValidas = 0;
+                let telefonosAgendados = new Set(); // Para hacer el cruce con WhatsApp
 
                 reserArr.slice(1).forEach(row => {
                     let treat = norm(row[cTreatR]);
-                    if (!treat.includes('evalua') && !treat.includes('eval.')) return; // Atrapa cualquier variante de evaluacion
+                    if (!treat.includes('evalua') && !treat.includes('eval.')) return; 
 
                     let tsCita = typeof row[cFecCitaR] === 'number' ? excelToDate(row[cFecCitaR]) : parseChileanDate(row[cFecCitaR]);
                     let estado = norm(row[cEstR]);
                     let phone = cleanPhone(row[cTelR]);
 
-                    if (phone.length < 8) return;
-
-                    // Logica Guillotina de Tiempo basada en HOY (sin importar cuando se creo la cita)
+                    // Lógica Guillotina de Tiempo (Pasado = Atendido. Futuro = Vivo)
                     let esValida = false;
                     if (tsCita < hoyTs) {
-                        // Pasado: Tiene que estar atendido
                         if (['atendido', 'asiste', 'asistio', 'realizado'].some(e => estado.includes(e))) esValida = true;
                     } else {
-                        // Futuro o Hoy: Cualquier cosa que no sea anulada es valida
-                        if (!['anulado', 'cancelado', 'eliminado', 'no asiste', 'no llego'].some(e => estado.includes(e))) esValida = true;
+                        if (!['anulado', 'cancelado', 'eliminado', 'no asiste', 'no llego', 'suspend'].some(e => estado.includes(e))) esValida = true;
                     }
 
-                    if (esValida) telefonosAgendados.add(phone);
+                    if (esValida) {
+                        totalAgendasValidas++; // CONTAMOS EL TOTAL GLOBAL DEL NEGOCIO
+                        if (phone.length >= 8) {
+                            telefonosAgendados.add(phone); 
+                        }
+                    }
                 });
 
-                // 3. DASH ZARA (INTELIGENCIA FLEXIBLE)
+                let agendasReclamadasPorDash = 0;
+
+                // 3. DASH ZARA (CRUCE FLEXIBLE)
                 let zh = zaraRaw[0] || [];
                 let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
                 let cTelZ = zh.findIndex(h => String(h).toLowerCase().includes('telefono'));
@@ -293,7 +297,7 @@
 
                 zaraRaw.slice(1).forEach(r => {
                     let ts = parseChileanDate(r[cFecZ]);
-                    if(ts < fi || ts > ff) return; // LA COHORTE MANDA ACÁ
+                    if(ts < fi || ts > ff) return; // COHORTE ZARA
                     
                     let msg = norm(r[cMsgZ]);
                     let tag = norm(r[cEstZ]);
@@ -314,21 +318,27 @@
                     if (['hot', 'interesado', 'gestión', 'gestion', 'agendado'].includes(tag)) tieneIntencion = true;
                     if (bit.includes("agendad") || bit.includes("hora") || bit.includes("cita") || bit.includes("reserva")) tieneIntencion = true;
 
-                    // CRUCE DE FUEGO CON RESERVO
+                    // SI ESTÁ EN RESERVO, LO RECLAMA ESTE ANUNCIO
                     if (telefonosAgendados.has(phone)) {
                         s.agendaron++;
-                        tieneIntencion = true; // Si esta agendado en Reservo, obviamente tiene intencion
+                        agendasReclamadasPorDash++;
+                        telefonosAgendados.delete(phone); // Lo sacamos para no contarlo doble
+                        tieneIntencion = true; 
                     }
 
                     if (tieneIntencion) s.conIntencion++;
                 });
 
-                // 4. RENDERIZAR
+                // 4. EL RESTO DE LAS AGENDAS QUE NO VINIERON DE WHATSAPP (Llamadas, Walk-ins, sin teléfono, etc)
+                // Se van directo a la bolsa de Orgánico para que te cuadre la matemática general de tu clínica.
+                anuncios["ORGÁNICO / OTROS"].agendaron += (totalAgendasValidas - agendasReclamadasPorDash);
+
+                // 5. RENDERIZAR TABLERO
                 let htmlTabla = "", htmlGrid = "";
                 let tGasto=0, tMeta=0, tEntr=0, tInt=0, tAgen=0;
 
                 Object.values(anuncios).sort((a,b) => b.gasto - a.gasto).forEach(s => {
-                    if(s.gasto === 0 && s.entraron === 0) return; 
+                    if(s.gasto === 0 && s.entraron === 0 && s.agendaron === 0) return; 
 
                     tGasto += s.gasto; tMeta += s.resMeta; tEntr += s.entraron;
                     tInt += s.conIntencion; tAgen += s.agendaron;
@@ -348,7 +358,7 @@
                         }
                     }
 
-                    if (s.nombre !== "ORGÁNICO / OTROS" || s.entraron > 0) {
+                    if (s.nombre !== "ORGÁNICO / OTROS" || s.entraron > 0 || s.agendaron > 0) {
                         htmlGrid += `
                         <div class="funnel-row ${estadoClass}">
                             <div class="ad-identity">
@@ -411,13 +421,13 @@
                 let efecTotal = tEntr > 0 ? (tAgen / tEntr) * 100 : 0;
                 
                 document.getElementById('pieEmbudo').innerHTML = `<tr>
-                    <td style="text-align:left; color:var(--blue);">TOTALES / PROMEDIO</td>
+                    <td style="text-align:left; color:var(--blue);">TOTAL NEGOCIO</td>
                     <td style="font-family:monospace; font-weight:bold;">$${fmtMoney(tGasto)}</td>
                     <td style="color:var(--muted)">${tMeta}</td>
                     <td style="border-left: 2px solid var(--border); font-weight:900; font-size:14px;">${tEntr}</td>
                     <td style="color:var(--muted); font-family:monospace;">$${fmtMoney(cplTotal)}</td>
                     <td style="border-left: 2px solid var(--border); color:var(--alert); font-weight:bold;">${tInt}</td>
-                    <td style="color:var(--green); font-weight:900; font-size:14px;">${tAgen}</td>
+                    <td style="color:var(--green); font-weight:900; font-size:15px; text-decoration: underline;">${tAgen}</td>
                     <td style="color:var(--blue); font-weight:bold;">${efecTotal.toFixed(1)}%</td>
                     <td style="border-left: 2px solid var(--border); color:var(--green); font-family:monospace; font-size:15px; font-weight:900;">${cacTotal > 0 ? '$'+fmtMoney(cacTotal) : '---'}</td>
                 </tr>`;
