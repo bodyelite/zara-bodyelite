@@ -27,7 +27,6 @@
         .btn { background: var(--blue); color: #fff; border: none; padding: 14px; font-weight: 900; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.3s; height: 48px; letter-spacing: 1px; }
         .btn:hover { background: #2563EB; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); transform: translateY(-2px); }
 
-        /* EL PIPELINE VISUAL */
         .pipeline-container { display: flex; flex-direction: column; gap: 20px; margin-bottom: 50px; }
         .funnel-row { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 5px 25px rgba(0,0,0,0.4); position: relative; overflow: hidden; transition: 0.3s; }
         .funnel-row:hover { border-color: #374151; transform: scale(1.01); }
@@ -83,11 +82,11 @@
             </div>
             <div class="date-box">
                 <div class="date-col">
-                    <label>RANGO DESDE</label>
+                    <label>RANGO DESDE (COHORTE ZARA)</label>
                     <input type="date" id="fi" value="2026-03-01">
                 </div>
                 <div class="date-col">
-                    <label>RANGO HASTA</label>
+                    <label>RANGO HASTA (COHORTE ZARA)</label>
                     <input type="date" id="ff" value="2026-03-09">
                 </div>
             </div>
@@ -103,7 +102,7 @@
                 <input type="file" id="fz" accept=".csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
-                <label style="color:var(--green);">3. CIERRE (RESERVO)</label>
+                <label style="color:var(--green);">3. CIERRE (RESERVO FULL)</label>
                 <input type="file" id="fr" accept=".xlsx,.xls,.csv">
             </div>
             <button class="btn" onclick="ejecutarRadar()">CALCULAR ROI</button>
@@ -200,7 +199,10 @@
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
-            const today = new Date().getTime();
+            
+            let hoyReal = new Date();
+            hoyReal.setHours(0,0,0,0);
+            const hoyTs = hoyReal.getTime();
 
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
@@ -243,25 +245,21 @@
                     }
                 });
 
-                // 2. RESERVO (FILTRO ESTRICTO)
+                // 2. RESERVO (LA CAMISA DE FUERZA ESTÁ FUERA)
                 const reserHeaders = reserArr[0] || [];
-                let cFecIngresoR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('fecha creación utc'));
                 let cFecCitaR = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'fecha');
                 let cTreatR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tratamiento'));
                 let cTelR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tel') || String(h).toLowerCase().includes('celular'));
                 let cEstR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('estado cita'));
                 
-                if(cFecIngresoR === -1) cFecIngresoR = 19; if(cFecCitaR === -1) cFecCitaR = 1; 
-                if(cTreatR === -1) cTreatR = 6; if(cTelR === -1) cTelR = 11; if(cEstR === -1) cEstR = 13;
+                if(cFecCitaR === -1) cFecCitaR = 1; if(cTreatR === -1) cTreatR = 6; 
+                if(cTelR === -1) cTelR = 11; if(cEstR === -1) cEstR = 13;
 
                 let telefonosAgendados = new Set();
 
                 reserArr.slice(1).forEach(row => {
                     let treat = norm(row[cTreatR]);
-                    if (!treat.includes('evaluacion')) return; // Filtro estricto: Solo evaluaciones
-
-                    let tsIngreso = typeof row[cFecIngresoR] === 'number' ? excelToDate(row[cFecIngresoR]) : parseChileanDate(row[cFecIngresoR]);
-                    if (tsIngreso < fi || tsIngreso > ff) return; // Filtro de cohorte
+                    if (!treat.includes('evalua') && !treat.includes('eval.')) return; // Atrapa cualquier variante de evaluacion
 
                     let tsCita = typeof row[cFecCitaR] === 'number' ? excelToDate(row[cFecCitaR]) : parseChileanDate(row[cFecCitaR]);
                     let estado = norm(row[cEstR]);
@@ -269,12 +267,14 @@
 
                     if (phone.length < 8) return;
 
-                    // Logica Guillotina de Tiempo
+                    // Logica Guillotina de Tiempo basada en HOY (sin importar cuando se creo la cita)
                     let esValida = false;
-                    if (tsCita < today) {
-                        if (['atendido', 'asiste', 'asistio', 'realizado'].includes(estado)) esValida = true;
+                    if (tsCita < hoyTs) {
+                        // Pasado: Tiene que estar atendido
+                        if (['atendido', 'asiste', 'asistio', 'realizado'].some(e => estado.includes(e))) esValida = true;
                     } else {
-                        if (!['anulado', 'cancelado', 'eliminado', 'no asiste', 'no llego'].includes(estado)) esValida = true;
+                        // Futuro o Hoy: Cualquier cosa que no sea anulada es valida
+                        if (!['anulado', 'cancelado', 'eliminado', 'no asiste', 'no llego'].some(e => estado.includes(e))) esValida = true;
                     }
 
                     if (esValida) telefonosAgendados.add(phone);
@@ -293,7 +293,7 @@
 
                 zaraRaw.slice(1).forEach(r => {
                     let ts = parseChileanDate(r[cFecZ]);
-                    if(ts < fi || ts > ff) return; 
+                    if(ts < fi || ts > ff) return; // LA COHORTE MANDA ACÁ
                     
                     let msg = norm(r[cMsgZ]);
                     let tag = norm(r[cEstZ]);
@@ -305,18 +305,19 @@
                     let adDuenio = "ORGÁNICO / OTROS";
                     if (msg.includes("lipo")) adDuenio = "LIPO FRAN";
                     else if (msg.includes("rostro")) adDuenio = "ROSTRO VERANO";
-                    else if (msg.includes("facial") || msg.includes("diagnosti") || msg.includes("limpieza")) adDuenio = "FACIAL PIA";
+                    else if (msg.includes("facial") || msg.includes("diagnosti") || msg.includes("limpieza") || msg.includes("hifu")) adDuenio = "FACIAL PIA";
 
                     const s = anuncios[adDuenio];
                     s.entraron++;
 
                     let tieneIntencion = false;
                     if (['hot', 'interesado', 'gestión', 'gestion', 'agendado'].includes(tag)) tieneIntencion = true;
-                    if (bit.includes("agendad") || bit.includes("hora") || bit.includes("cita")) tieneIntencion = true;
+                    if (bit.includes("agendad") || bit.includes("hora") || bit.includes("cita") || bit.includes("reserva")) tieneIntencion = true;
 
+                    // CRUCE DE FUEGO CON RESERVO
                     if (telefonosAgendados.has(phone)) {
                         s.agendaron++;
-                        tieneIntencion = true;
+                        tieneIntencion = true; // Si esta agendado en Reservo, obviamente tiene intencion
                     }
 
                     if (tieneIntencion) s.conIntencion++;
