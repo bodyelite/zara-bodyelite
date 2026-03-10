@@ -53,19 +53,36 @@ export async function agendarEvento(nombre, fechaInicioISO) {
         const auth = getAuthClient();
         const calendar = google.calendar({ version: 'v3', auth });
         const inicio = DateTime.fromISO(fechaInicioISO, { zone: 'America/Santiago' });
+        const fin = inicio.plus({ minutes: 60 });
         const horario = HORARIOS_ATENCION[inicio.weekday];
+
         if (!horario || inicio.hour < horario.inicio || (inicio.hour + inicio.minute/60) >= horario.fin) {
-            return { ok: false, msg: "Esa hora está fuera del horario de atención." };
+            return { ok: false, msg: "Esa hora está fuera del horario de atención o el día no es válido." };
         }
+
+        const freeBusyResponse = await calendar.freebusy.query({
+            requestBody: {
+                timeMin: inicio.toISO(),
+                timeMax: fin.toISO(),
+                timeZone: 'America/Santiago',
+                items: [{ id: CALENDAR_ID }]
+            }
+        });
+
+        const busyBlocks = freeBusyResponse.data.calendars[CALENDAR_ID].busy;
+        if (busyBlocks && busyBlocks.length > 0) {
+            return { ok: false, msg: "Esa hora exacta ya está ocupada en el calendario. Ofrece otro horario disponible de la misma jornada (mañana o tarde)." };
+        }
+
         const response = await calendar.events.insert({
             calendarId: CALENDAR_ID,
             resource: {
                 summary: `Evaluación: ${nombre}`,
                 description: "Agendado por ZARA 7.0",
                 start: { dateTime: inicio.toISO(), timeZone: 'America/Santiago' },
-                end: { dateTime: inicio.plus({ minutes: 60 }).toISO(), timeZone: 'America/Santiago' },
+                end: { dateTime: fin.toISO(), timeZone: 'America/Santiago' },
             }
         });
         return { ok: !!response.data.htmlLink };
-    } catch (e) { return { ok: false }; }
+    } catch (e) { return { ok: false, msg: "Error de conexión al guardar en Calendar." }; }
 }
