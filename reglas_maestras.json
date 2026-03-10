@@ -1,0 +1,27 @@
+{
+  "motor_reglas": {
+    "descripcion": "Diccionario Maestro de Traccion: Meta -> Zara",
+    "metodo_lectura": "Normalizacion estricta (sin tildes, sin signos de puntuacion, lowercase, trim)",
+    "celulas_activas": [
+      {
+        "id_meta": "lipo fran",
+        "gatillos_whatsapp": [
+          "quiero agendar mi evaluacion diagnostica lipo"
+        ]
+      },
+      {
+        "id_meta": "Facial Pia",
+        "gatillos_whatsapp": [
+          "hola quiero agendar diagnostico facial",
+          "quiero agendar mi evaluacion diagnostica facial"
+        ]
+      },
+      {
+        "id_meta": "Rostro_Verano",
+        "gatillos_whatsapp": [
+          "quiero mi evaluacion rostro"
+        ]
+      }
+    ]
+  }
+}

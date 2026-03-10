@@ -1,0 +1,32 @@
+{
+  "modulo_reservo": {
+    "descripcion": "Cruce de Agendamiento y Validacion de Asistencia",
+    "columnas_requeridas": [
+      "Fecha creación UTC",
+      "Fecha",
+      "Tratamiento",
+      "Teléfonos",
+      "Estado cita"
+    ],
+    "filtros_estrictos": {
+      "tratamiento": {
+        "condicion": "Debe contener la palabra 'evaluacion' (normalizada)"
+      },
+      "fecha_ingreso": {
+        "columna": "Fecha creación UTC",
+        "condicion": "Debe estar dentro del Rango del Informe"
+      }
+    },
+    "logica_tiempo_estado": {
+      "cita_pasada": {
+        "condicion": "Fecha de la cita < Fecha actual",
+        "estados_validos_asistencia": ["atendido", "asiste", "realizado", "asistio"]
+      },
+      "cita_futura": {
+        "condicion": "Fecha de la cita >= Fecha actual",
+        "estados_invalidos_bloqueados": ["anulado", "cancelado", "eliminado", "no asiste", "no llego"]
+      }
+    },
+    "cruce_identidad": "Ultimos 8 digitos del Telefono cruzados con el Dash de Zara"
+  }
+}

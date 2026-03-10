@@ -1,0 +1,22 @@
+{
+  "modulo_meta": {
+    "descripcion": "Extraccion quirurgica y calculo de metricas reales de Meta",
+    "columnas_requeridas": [
+      "Nombre del anuncio",
+      "Entrega del anuncio",
+      "Importe gastado (CLP)",
+      "Resultados",
+      "Inicio del informe",
+      "Fin del informe",
+      "Fecha de creación"
+    ],
+    "filtros_estrictos": {
+      "columna_objetivo": "Entrega del anuncio",
+      "valores_permitidos": ["active", "activo", "curso"]
+    },
+    "motor_calculo": {
+      "ventana_dias_reales": "Calculado como: Fecha de Fin - MAX(Fecha de Inicio del informe, Fecha de creación del anuncio)",
+      "gasto_diario": "Importe gastado (CLP) / ventana_dias_reales"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "modulo_dash": {
+    "descripcion": "Clasificacion de Leads con Inteligencia Flexible en Zara",
+    "metodo_lectura": "Normalizacion estricta (sin tildes, lowercase, trim)",
+    "reglas_match_flexible": [
+      {
+        "id_meta": "LIPO FRAN",
+        "palabras_clave": ["lipo"]
+      },
+      {
+        "id_meta": "FACIAL PIA",
+        "palabras_clave": ["facial", "diagnosti", "limpieza", "hifu", "antiage"]
+      },
+      {
+        "id_meta": "ROSTRO VERANO",
+        "palabras_clave": ["rostro"]
+      }
+    ],
+    "clasificacion_temperatura": {
+      "avanzados": {
+        "estados_validos": ["hot", "agendado", "interesado", "gestión", "gestion"],
+        "palabras_clave_bitacora": ["agendad", "hora", "reserva", "cita"]
+      },
+      "congelados": {
+        "descripcion": "Todo lead que no avance a los estados de calor"
+      }
+    },
+    "comportamiento_residual": "Si el mensaje no contiene ninguna de las palabras_clave (ej: 'precio', 'hola'), se asigna obligatoriamente a ORGANICO_OTROS."
+  }
+}
