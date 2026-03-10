@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>BODY ELITE - CEO RADAR (VERSIÓN MAESTRA)</title>
+    <title>BODY ELITE - CEO ANALYTICS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
@@ -77,16 +77,16 @@
     <div class="container">
         <div class="header">
             <div>
-                <h1>BODY ELITE <span>CEO RADAR</span></h1>
-                <div class="header-subtitle">Integración de Totales: Meta + Reservo Completo</div>
+                <h1>BODY ELITE <span>CEO ANALYTICS</span></h1>
+                <div class="header-subtitle">Pipeline Maestro: Atribución 1 a 1 de Meta ➔ Zara ➔ Reservo</div>
             </div>
             <div class="date-box">
                 <div class="date-col">
-                    <label>RANGO DESDE (COHORTE ZARA)</label>
+                    <label>COHORTE DESDE (ZARA)</label>
                     <input type="date" id="fi" value="2026-03-01">
                 </div>
                 <div class="date-col">
-                    <label>RANGO HASTA (COHORTE ZARA)</label>
+                    <label>COHORTE HASTA (ZARA)</label>
                     <input type="date" id="ff" value="2026-03-09">
                 </div>
             </div>
@@ -94,21 +94,21 @@
 
         <div class="upload-section">
             <div class="upload-box">
-                <label>1. INVERSIÓN (META SUCIO)</label>
+                <label>1. META (INVERSIÓN RAW)</label>
                 <input type="file" id="fm" accept=".csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
-                <label style="color:var(--blue);">2. TRACCIÓN (ZARA DASH)</label>
+                <label style="color:var(--blue);">2. ZARA (TRACCIÓN DASH)</label>
                 <input type="file" id="fz" accept=".csv, .xlsx, .xls">
             </div>
             <div class="upload-box">
-                <label style="color:var(--green);">3. CIERRE (RESERVO FULL)</label>
+                <label style="color:var(--green);">3. RESERVO (CIERRE CITAS)</label>
                 <input type="file" id="fr" accept=".xlsx,.xls,.csv">
             </div>
-            <button class="btn" onclick="ejecutarRadar()">CALCULAR ROI</button>
+            <button class="btn" onclick="ejecutarRadar()">CALCULAR ROI REAL</button>
         </div>
 
-        <div id="loader">ENSAMBLANDO LA VERDAD... ⚙️</div>
+        <div id="loader">CRUZANDO BASES DE DATOS... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="pipeline-container" id="gridTarjetas"></div>
@@ -145,7 +145,7 @@
             return Math.round((parseFloat(serial) - 25569) * 86400 * 1000) + (new Date().getTimezoneOffset() * 60000);
         }
 
-        function parseChileanDate(dateStr) {
+        function parseDate(dateStr) {
             if(!dateStr) return 0;
             let parts = String(dateStr).split(' ')[0].split('-');
             if(parts.length >= 3) {
@@ -162,7 +162,7 @@
                     try {
                         const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
                         resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: false}));
-                    } catch(err) { reject("Error leyendo Excel"); }
+                    } catch(err) { reject(err); }
                 };
                 reader.readAsArrayBuffer(f);
             });
@@ -184,7 +184,7 @@
                             }
                         });
                         resolve(data);
-                    } catch(err) { reject("Error CSV"); }
+                    } catch(err) { reject(err); }
                 };
                 reader.readAsText(f);
             });
@@ -195,7 +195,7 @@
             const fz = document.getElementById('fz').files[0];
             const fr = document.getElementById('fr').files[0];
             
-            if(!fm || !fz || !fr) return alert('Faltan archivos.');
+            if(!fm || !fz || !fr) return alert('CEO, sube los 3 archivos para procesar el embudo.');
             
             const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
             const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
@@ -217,7 +217,7 @@
                     "ORGÁNICO / OTROS": { nombre: "ORGÁNICO / OTROS", gasto: 0, resMeta: 0, entraron: 0, conIntencion: 0, agendaron: 0 }
                 };
 
-                // 1. META (RAW)
+                // === 1. PROCESADOR META ===
                 const metaH = metaArr[0] || [];
                 let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') && !String(h).toLowerCase().includes('conjunto'));
                 let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
@@ -245,7 +245,7 @@
                     }
                 });
 
-                // 2. RESERVO (EL MOTOR GLOBAL DE AGENDAS)
+                // === 2. PROCESADOR RESERVO ===
                 const reserHeaders = reserArr[0] || [];
                 let cFecCitaR = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'fecha');
                 let cTreatR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tratamiento'));
@@ -256,17 +256,16 @@
                 if(cTelR === -1) cTelR = 11; if(cEstR === -1) cEstR = 13;
 
                 let totalAgendasValidas = 0;
-                let telefonosAgendados = new Set(); // Para hacer el cruce con WhatsApp
+                let mapTelefonosReservos = new Map();
 
                 reserArr.slice(1).forEach(row => {
                     let treat = norm(row[cTreatR]);
                     if (!treat.includes('evalua') && !treat.includes('eval.')) return; 
 
-                    let tsCita = typeof row[cFecCitaR] === 'number' ? excelToDate(row[cFecCitaR]) : parseChileanDate(row[cFecCitaR]);
+                    let tsCita = typeof row[cFecCitaR] === 'number' ? excelToDate(row[cFecCitaR]) : parseDate(row[cFecCitaR]);
                     let estado = norm(row[cEstR]);
                     let phone = cleanPhone(row[cTelR]);
 
-                    // Lógica Guillotina de Tiempo (Pasado = Atendido. Futuro = Vivo)
                     let esValida = false;
                     if (tsCita < hoyTs) {
                         if (['atendido', 'asiste', 'asistio', 'realizado'].some(e => estado.includes(e))) esValida = true;
@@ -275,16 +274,16 @@
                     }
 
                     if (esValida) {
-                        totalAgendasValidas++; // CONTAMOS EL TOTAL GLOBAL DEL NEGOCIO
+                        totalAgendasValidas++;
                         if (phone.length >= 8) {
-                            telefonosAgendados.add(phone); 
+                            mapTelefonosReservos.set(phone, true); 
                         }
                     }
                 });
 
-                let agendasReclamadasPorDash = 0;
+                let agendasAsignadas = 0;
 
-                // 3. DASH ZARA (CRUCE FLEXIBLE)
+                // === 3. PROCESADOR ZARA DASH (MAPEO POR DICCIONARIO) ===
                 let zh = zaraRaw[0] || [];
                 let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
                 let cTelZ = zh.findIndex(h => String(h).toLowerCase().includes('telefono'));
@@ -296,8 +295,8 @@
                 if(cEstZ === -1) cEstZ = 3; if(cMsgZ === -1) cMsgZ = 4; if(cBitZ === -1) cBitZ = 5;
 
                 zaraRaw.slice(1).forEach(r => {
-                    let ts = parseChileanDate(r[cFecZ]);
-                    if(ts < fi || ts > ff) return; // COHORTE ZARA
+                    let ts = parseDate(r[cFecZ]);
+                    if(ts < fi || ts > ff) return; 
                     
                     let msg = norm(r[cMsgZ]);
                     let tag = norm(r[cEstZ]);
@@ -318,22 +317,21 @@
                     if (['hot', 'interesado', 'gestión', 'gestion', 'agendado'].includes(tag)) tieneIntencion = true;
                     if (bit.includes("agendad") || bit.includes("hora") || bit.includes("cita") || bit.includes("reserva")) tieneIntencion = true;
 
-                    // SI ESTÁ EN RESERVO, LO RECLAMA ESTE ANUNCIO
-                    if (telefonosAgendados.has(phone)) {
+                    // Validar en Reservo
+                    if (mapTelefonosReservos.has(phone)) {
                         s.agendaron++;
-                        agendasReclamadasPorDash++;
-                        telefonosAgendados.delete(phone); // Lo sacamos para no contarlo doble
+                        agendasAsignadas++;
+                        mapTelefonosReservos.delete(phone);
                         tieneIntencion = true; 
                     }
 
                     if (tieneIntencion) s.conIntencion++;
                 });
 
-                // 4. EL RESTO DE LAS AGENDAS QUE NO VINIERON DE WHATSAPP (Llamadas, Walk-ins, sin teléfono, etc)
-                // Se van directo a la bolsa de Orgánico para que te cuadre la matemática general de tu clínica.
-                anuncios["ORGÁNICO / OTROS"].agendaron += (totalAgendasValidas - agendasReclamadasPorDash);
+                // Volcamos lo no asigando a Organico (el resto real del negocio)
+                anuncios["ORGÁNICO / OTROS"].agendaron += (totalAgendasValidas - agendasAsignadas);
 
-                // 5. RENDERIZAR TABLERO
+                // === 4. RENDER ===
                 let htmlTabla = "", htmlGrid = "";
                 let tGasto=0, tMeta=0, tEntr=0, tInt=0, tAgen=0;
 
@@ -367,7 +365,7 @@
                             </div>
                             
                             <div class="funnel-stage">
-                                <div class="stage-title">1. INVERSIÓN (META)</div>
+                                <div class="stage-title">1. META</div>
                                 <div class="stage-metrics">
                                     <div class="metric"><span class="metric-val c-meta">$${fmtMoney(s.gasto)}</span><span class="metric-lbl">Gasto</span></div>
                                 </div>
@@ -376,7 +374,7 @@
                             <div class="arrow">➔</div>
                             
                             <div class="funnel-stage">
-                                <div class="stage-title">2. TRACCIÓN (ZARA)</div>
+                                <div class="stage-title">2. ZARA</div>
                                 <div class="stage-metrics">
                                     <div class="metric"><span class="metric-val c-zara">${s.entraron}</span><span class="metric-lbl">Leads</span></div>
                                     <div class="metric"><span class="metric-val" style="color:#9CA3AF;">$${fmtMoney(cpl)}</span><span class="metric-lbl">Costo x Lead</span></div>
@@ -386,15 +384,15 @@
                             <div class="arrow">➔</div>
 
                             <div class="funnel-stage" style="flex: 0.8;">
-                                <div class="stage-title">3. CIERRE (RESERVO)</div>
+                                <div class="stage-title">3. RESERVO</div>
                                 <div class="stage-metrics">
                                     <div class="metric"><span class="metric-val c-res">${s.agendaron}</span><span class="metric-lbl">Agendas</span></div>
-                                    <div class="metric"><span class="metric-val c-blue">${efectividad.toFixed(0)}%</span><span class="metric-lbl">Efectividad</span></div>
+                                    <div class="metric"><span class="metric-val c-blue">${efectividad.toFixed(0)}%</span><span class="metric-lbl">Cierre</span></div>
                                 </div>
                             </div>
 
                             <div class="cac-box">
-                                <div class="cac-lbl">Costo x Agenda (CAC)</div>
+                                <div class="cac-lbl">Costo x Agenda</div>
                                 <div class="cac-val ${s.gasto>0 && s.agendaron===0 ? 'c-bad' : 'c-res'}">${cac > 0 ? '$'+fmtMoney(cac) : (s.gasto > 0 ? 'PÉRDIDA' : '---')}</div>
                             </div>
                         </div>`;
@@ -437,7 +435,7 @@
 
             } catch(e) {
                 console.error(e);
-                alert('🚨 ERROR: Revisa que los archivos sean correctos.');
+                alert('🚨 ERROR FATAL: Verifica que los archivos estén íntegros.');
                 document.getElementById('loader').style.display = 'none';
             }
         }
