@@ -52,7 +52,7 @@ export async function agendarEvento(nombre, fechaInicioISO) {
     try {
         const auth = getAuthClient();
         const calendar = google.calendar({ version: 'v3', auth });
-        const inicio = DateTime.fromISO(fechaInicioISO).setZone('America/Santiago');
+        const inicio = DateTime.fromISO(fechaInicioISO, { zone: 'America/Santiago' });
         const horario = HORARIOS_ATENCION[inicio.weekday];
         if (!horario || inicio.hour < horario.inicio || (inicio.hour + inicio.minute/60) >= horario.fin) {
             return { ok: false, msg: "Esa hora está fuera del horario de atención." };

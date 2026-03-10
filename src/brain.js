@@ -22,7 +22,7 @@ export async function pensar(historial, nombreCliente, tipoCampana = 'default', 
             parameters: {
                 type: "object",
                 properties: {
-                    fecha_iso: { type: "string", description: "ISO 8601 Chile" }
+                    fecha_iso: { type: "string", description: "ISO 8601 con zona horaria de Chile (Ejemplo: 2026-03-10T10:00:00-03:00)" }
                 },
                 required: ["fecha_iso"]
             }
