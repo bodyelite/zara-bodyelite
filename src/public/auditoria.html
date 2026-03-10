@@ -78,7 +78,7 @@
         <div class="header">
             <div>
                 <h1>BODY ELITE <span>CEO ANALYTICS</span></h1>
-                <div class="header-subtitle">Pipeline Maestro: Atribución 1 a 1 de Meta ➔ Zara ➔ Reservo</div>
+                <div class="header-subtitle">Lectura Nativa SheetJS + Diccionario Exacto</div>
             </div>
             <div class="date-box">
                 <div class="date-col">
@@ -108,7 +108,7 @@
             <button class="btn" onclick="ejecutarRadar()">CALCULAR ROI REAL</button>
         </div>
 
-        <div id="loader">CRUZANDO BASES DE DATOS... ⚙️</div>
+        <div id="loader">EXTRAYENDO DATA LIMPIA... ⚙️</div>
 
         <div id="dashboard" style="display:none;">
             <div class="pipeline-container" id="gridTarjetas"></div>
@@ -136,57 +136,45 @@
     </div>
 
     <script>
+        // Funciones Nucleares de Normalización
         const cleanPhone = (n) => String(n || '').split('.')[0].replace(/\D/g,'').slice(-8);
         const norm = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const fmtMoney = (n) => new Intl.NumberFormat('es-CL', {style:'currency', currency:'CLP', maximumFractionDigits: 0}).format(n);
         
-        function excelToDate(serial) {
-            if(!serial || isNaN(serial)) return 0;
-            return Math.round((parseFloat(serial) - 25569) * 86400 * 1000) + (new Date().getTimezoneOffset() * 60000);
-        }
-
-        function parseDate(dateStr) {
-            if(!dateStr) return 0;
-            let parts = String(dateStr).split(' ')[0].split('-');
-            if(parts.length >= 3) {
-                if (parts[0].length <= 2) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
-                return new Date(parts[0], parts[1]-1, parts[2]).getTime();
+        function getTimestamp(val) {
+            if (val === undefined || val === null || val === '') return 0;
+            // Si es un numero serial de Excel
+            if (typeof val === 'number') {
+                return Math.round((val - 25569) * 86400 * 1000) + (new Date().getTimezoneOffset() * 60000);
             }
-            return new Date(dateStr).getTime();
+            // Si es string de texto (ej: "2026-03-08" o "08-03-2026")
+            if (typeof val === 'string') {
+                let parts = val.split(' ')[0].split(/[-/]/);
+                if (parts.length >= 3) {
+                    let y = parts[0].length === 4 ? parts[0] : parts[2];
+                    let m = parts[1];
+                    let d = parts[0].length === 4 ? parts[2] : parts[0];
+                    return new Date(parseInt(y), parseInt(m)-1, parseInt(d), 12, 0, 0).getTime();
+                }
+                return new Date(val).getTime();
+            }
+            return 0;
         }
 
-        async function rxArray(f) {
+        // Lector Universal: No mas errores de split(',')
+        async function processFile(f) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
-                        const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                        resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: false}));
-                    } catch(err) { reject(err); }
+                        const data = new Uint8Array(e.target.result);
+                        const wb = XLSX.read(data, {type: 'array'});
+                        const sheet = wb.Sheets[wb.SheetNames[0]];
+                        resolve(XLSX.utils.sheet_to_json(sheet, {header: 1, defval: ""}));
+                    } catch(err) { reject("Error leyendo archivo: " + f.name); }
                 };
+                reader.onerror = () => reject("Falla al cargar: " + f.name);
                 reader.readAsArrayBuffer(f);
-            });
-        }
-        
-        async function readDashCSV(f) {
-            if (!f.name.toLowerCase().endsWith('.csv')) return rxArray(f);
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        let lines = e.target.result.split('\n');
-                        let data = [];
-                        lines.forEach(line => {
-                            if (line.trim()) {
-                                let row = line.split(';').map(c => c.replace(/^"|"$/g, '').trim());
-                                if(row.length === 1) row = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-                                data.push(row);
-                            }
-                        });
-                        resolve(data);
-                    } catch(err) { reject(err); }
-                };
-                reader.readAsText(f);
             });
         }
 
@@ -195,10 +183,13 @@
             const fz = document.getElementById('fz').files[0];
             const fr = document.getElementById('fr').files[0];
             
-            if(!fm || !fz || !fr) return alert('CEO, sube los 3 archivos para procesar el embudo.');
+            if(!fm || !fz || !fr) return alert('Sube los 3 archivos para procesar el embudo.');
             
-            const fi = new Date(document.getElementById('fi').value + 'T00:00:00').getTime();
-            const ff = new Date(document.getElementById('ff').value + 'T23:59:59').getTime();
+            const fiParts = document.getElementById('fi').value.split('-');
+            const fi = new Date(parseInt(fiParts[0]), parseInt(fiParts[1])-1, parseInt(fiParts[2]), 0, 0, 0).getTime();
+            
+            const ffParts = document.getElementById('ff').value.split('-');
+            const ff = new Date(parseInt(ffParts[0]), parseInt(ffParts[1])-1, parseInt(ffParts[2]), 23, 59, 59).getTime();
             
             let hoyReal = new Date();
             hoyReal.setHours(0,0,0,0);
@@ -208,7 +199,7 @@
             document.getElementById('loader').style.display = 'block';
 
             try {
-                const [metaArr, zaraRaw, reserArr] = await Promise.all([rxArray(fm), readDashCSV(fz), rxArray(fr)]);
+                const [metaArr, zaraRaw, reserArr] = await Promise.all([processFile(fm), processFile(fz), processFile(fr)]);
                 
                 let anuncios = {
                     "LIPO FRAN": { nombre: "LIPO FRAN", gasto: 0, resMeta: 0, entraron: 0, conIntencion: 0, agendaron: 0 },
@@ -217,22 +208,22 @@
                     "ORGÁNICO / OTROS": { nombre: "ORGÁNICO / OTROS", gasto: 0, resMeta: 0, entraron: 0, conIntencion: 0, agendaron: 0 }
                 };
 
-                // === 1. PROCESADOR META ===
+                // === 1. META ===
                 const metaH = metaArr[0] || [];
-                let cAnuncio = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') && !String(h).toLowerCase().includes('conjunto'));
-                let cGasto = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
-                let cRes = metaH.findIndex(h => String(h).toLowerCase() === 'resultados' || String(h).toLowerCase().includes('results'));
-                let cEntrega = metaH.findIndex(h => String(h).toLowerCase().includes('entrega'));
+                let cAnuncioM = metaH.findIndex(h => String(h).toLowerCase().includes('anuncio') && !String(h).toLowerCase().includes('conjunto'));
+                let cGastoM = metaH.findIndex(h => String(h).toLowerCase().includes('importe gastado') || String(h).toLowerCase().includes('spent'));
+                let cResM = metaH.findIndex(h => String(h).toLowerCase() === 'resultados' || String(h).toLowerCase().includes('results'));
+                let cEntregaM = metaH.findIndex(h => String(h).toLowerCase().includes('entrega'));
 
                 metaArr.slice(1).forEach(r => {
-                    let nombreOriginal = String(r[cAnuncio] || '').trim();
-                    let entrega = cEntrega !== -1 ? String(r[cEntrega] || '').toLowerCase() : 'active';
+                    let nombreOriginal = String(r[cAnuncioM] || '').trim();
+                    let entrega = cEntregaM !== -1 ? String(r[cEntregaM] || '').toLowerCase() : 'active';
                     
-                    if (!entrega.includes('active') && !entrega.includes('activo') && !entrega.includes('curso') && cEntrega !== -1) return;
+                    if (!entrega.includes('active') && !entrega.includes('activo') && !entrega.includes('curso') && cEntregaM !== -1) return;
 
                     let nombreNorm = norm(nombreOriginal);
-                    let spend = parseFloat(r[cGasto]) || 0;
-                    let resultados = parseInt(r[cRes]) || 0;
+                    let spend = parseFloat(r[cGastoM]) || 0;
+                    let resultados = parseInt(r[cResM]) || 0;
                     
                     if(spend > 0 || resultados > 0) {
                         let adKey = "ORGÁNICO / OTROS";
@@ -245,7 +236,7 @@
                     }
                 });
 
-                // === 2. PROCESADOR RESERVO ===
+                // === 2. RESERVO (AGENDAS GLOBALES) ===
                 const reserHeaders = reserArr[0] || [];
                 let cFecCitaR = reserHeaders.findIndex(h => String(h).toLowerCase().trim() === 'fecha');
                 let cTreatR = reserHeaders.findIndex(h => String(h).toLowerCase().includes('tratamiento'));
@@ -262,9 +253,11 @@
                     let treat = norm(row[cTreatR]);
                     if (!treat.includes('evalua') && !treat.includes('eval.')) return; 
 
-                    let tsCita = typeof row[cFecCitaR] === 'number' ? excelToDate(row[cFecCitaR]) : parseDate(row[cFecCitaR]);
+                    let tsCita = getTimestamp(row[cFecCitaR]);
                     let estado = norm(row[cEstR]);
                     let phone = cleanPhone(row[cTelR]);
+
+                    if (phone.length < 8) return;
 
                     let esValida = false;
                     if (tsCita < hoyTs) {
@@ -275,40 +268,50 @@
 
                     if (esValida) {
                         totalAgendasValidas++;
-                        if (phone.length >= 8) {
-                            mapTelefonosReservos.set(phone, true); 
-                        }
+                        mapTelefonosReservos.set(phone, true); 
                     }
                 });
 
-                let agendasAsignadas = 0;
+                let agendasAsignadasAMeta = 0;
 
-                // === 3. PROCESADOR ZARA DASH (MAPEO POR DICCIONARIO) ===
+                // === 3. ZARA DASH (TU DICCIONARIO EXACTO) ===
                 let zh = zaraRaw[0] || [];
                 let cFecZ = zh.findIndex(h => String(h).toLowerCase().includes('fecha'));
                 let cTelZ = zh.findIndex(h => String(h).toLowerCase().includes('telefono'));
                 let cEstZ = zh.findIndex(h => String(h).toLowerCase().includes('estado'));
                 let cMsgZ = zh.findIndex(h => String(h).toLowerCase().includes('primer mensaje'));
                 let cBitZ = zh.findIndex(h => String(h).toLowerCase().includes('bitacora'));
+                // Si subes el archivo con tu mapeo manual, lo aprovechamos
+                let cAnuncioZ = zh.findIndex(h => String(h).toLowerCase().trim() === 'anuncio');
 
                 if(cFecZ === -1) cFecZ = 0; if(cTelZ === -1) cTelZ = 1; 
                 if(cEstZ === -1) cEstZ = 3; if(cMsgZ === -1) cMsgZ = 4; if(cBitZ === -1) cBitZ = 5;
 
                 zaraRaw.slice(1).forEach(r => {
-                    let ts = parseDate(r[cFecZ]);
+                    let ts = getTimestamp(r[cFecZ]);
                     if(ts < fi || ts > ff) return; 
                     
                     let msg = norm(r[cMsgZ]);
                     let tag = norm(r[cEstZ]);
-                    let bit = norm(r[cBitZ] || '');
+                    let bit = norm(r[cBitZ]);
                     let phone = cleanPhone(r[cTelZ]);
 
                     if(!msg && !tag) return;
 
                     let adDuenio = "ORGÁNICO / OTROS";
-                    if (msg.includes("lipo")) adDuenio = "LIPO FRAN";
-                    else if (msg.includes("rostro")) adDuenio = "ROSTRO VERANO";
-                    else if (msg.includes("facial") || msg.includes("diagnosti") || msg.includes("limpieza") || msg.includes("hifu")) adDuenio = "FACIAL PIA";
+                    
+                    // Prioridad a tu columna ANUNCIO si existe
+                    if (cAnuncioZ !== -1 && r[cAnuncioZ] && String(r[cAnuncioZ]).trim() !== '0') {
+                        let manualAd = norm(r[cAnuncioZ]);
+                        if (manualAd.includes("lipo")) adDuenio = "LIPO FRAN";
+                        else if (manualAd.includes("rostro")) adDuenio = "ROSTRO VERANO";
+                        else if (manualAd.includes("facial") || manualAd.includes("pia")) adDuenio = "FACIAL PIA";
+                    } else {
+                        // Diccionario de Rescate
+                        if (msg.includes("lipo")) adDuenio = "LIPO FRAN";
+                        else if (msg.includes("rostro")) adDuenio = "ROSTRO VERANO";
+                        else if (msg.includes("facial") || msg.includes("diagnosti") || msg.includes("limpieza") || msg.includes("hifu") || msg.includes("antiage")) adDuenio = "FACIAL PIA";
+                    }
 
                     const s = anuncios[adDuenio];
                     s.entraron++;
@@ -317,19 +320,19 @@
                     if (['hot', 'interesado', 'gestión', 'gestion', 'agendado'].includes(tag)) tieneIntencion = true;
                     if (bit.includes("agendad") || bit.includes("hora") || bit.includes("cita") || bit.includes("reserva")) tieneIntencion = true;
 
-                    // Validar en Reservo
+                    // Si pisó Reservo, gana el punto
                     if (mapTelefonosReservos.has(phone)) {
                         s.agendaron++;
-                        agendasAsignadas++;
-                        mapTelefonosReservos.delete(phone);
+                        agendasAsignadasAMeta++;
+                        mapTelefonosReservos.delete(phone); 
                         tieneIntencion = true; 
                     }
 
                     if (tieneIntencion) s.conIntencion++;
                 });
 
-                // Volcamos lo no asigando a Organico (el resto real del negocio)
-                anuncios["ORGÁNICO / OTROS"].agendaron += (totalAgendasValidas - agendasAsignadas);
+                // Lo que sobró va a la bolsa central para cuadrar la clínica
+                anuncios["ORGÁNICO / OTROS"].agendaron += (totalAgendasValidas - agendasAsignadasAMeta);
 
                 // === 4. RENDER ===
                 let htmlTabla = "", htmlGrid = "";
@@ -363,16 +366,13 @@
                                 <div class="ad-name">${s.nombre}</div>
                                 <div class="ad-badge ${badgeClass}">${badgeText}</div>
                             </div>
-                            
                             <div class="funnel-stage">
                                 <div class="stage-title">1. META</div>
                                 <div class="stage-metrics">
                                     <div class="metric"><span class="metric-val c-meta">$${fmtMoney(s.gasto)}</span><span class="metric-lbl">Gasto</span></div>
                                 </div>
                             </div>
-                            
                             <div class="arrow">➔</div>
-                            
                             <div class="funnel-stage">
                                 <div class="stage-title">2. ZARA</div>
                                 <div class="stage-metrics">
@@ -380,9 +380,7 @@
                                     <div class="metric"><span class="metric-val" style="color:#9CA3AF;">$${fmtMoney(cpl)}</span><span class="metric-lbl">Costo x Lead</span></div>
                                 </div>
                             </div>
-
                             <div class="arrow">➔</div>
-
                             <div class="funnel-stage" style="flex: 0.8;">
                                 <div class="stage-title">3. RESERVO</div>
                                 <div class="stage-metrics">
@@ -390,7 +388,6 @@
                                     <div class="metric"><span class="metric-val c-blue">${efectividad.toFixed(0)}%</span><span class="metric-lbl">Cierre</span></div>
                                 </div>
                             </div>
-
                             <div class="cac-box">
                                 <div class="cac-lbl">Costo x Agenda</div>
                                 <div class="cac-val ${s.gasto>0 && s.agendaron===0 ? 'c-bad' : 'c-res'}">${cac > 0 ? '$'+fmtMoney(cac) : (s.gasto > 0 ? 'PÉRDIDA' : '---')}</div>
@@ -435,7 +432,7 @@
 
             } catch(e) {
                 console.error(e);
-                alert('🚨 ERROR FATAL: Verifica que los archivos estén íntegros.');
+                alert('🚨 ERROR: Sube los archivos originales sin alterar su estructura.');
                 document.getElementById('loader').style.display = 'none';
             }
         }
