@@ -301,6 +301,7 @@ app.get('/api/download-json', (req, res) => {
     res.send(JSON.stringify({ users: getSesiones(), botStatus: getBotStatus() }));
 });
 app.get('/api/data', (req, res) => res.json({ users: getSesiones(), botStatus: getBotStatus() }));
+app.post('/api/bot', (req, res) => { toggleBot(req.body.phone); res.json({ok:true}); });
 app.post('/api/manual', async (req, res) => { await enviarMensajeManual(req.body.phone, req.body.text); res.json({ok:true}); });
 app.post('/api/tag', (req, res) => { updateTagManual(req.body.phone, req.body.tag); res.json({ok:true}); });
 app.post('/api/note', (req, res) => { agregarNota(req.body.phone, req.body.text, req.body.isScheduled, req.body.targetDate); res.json({ok:true}); });
